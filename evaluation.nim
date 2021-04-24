@@ -1,0 +1,111 @@
+import position
+import types
+import bitboard
+import bitops
+import pieceSquareTable
+import utils
+
+template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
+    (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
+
+func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): Value =
+    const openingTable = [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value]
+    const endgameTable = [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value]
+    var index = square.int8 div 8
+    if us == black:
+        index = 7 - index
+    gamePhase.interpolate(openingTable[index], endgameTable[index])
+
+const penaltyIsolatedPawn = 10.Value
+const bonusBothBishops = 10.Value
+const bonusRookOnOpenFile = 5.Value
+const mobilityMultiplierKnight = 2.0
+const mobilityMultiplierBishop = 3.0
+const mobilityMultiplierRook = 4.0
+const mobilityMultiplierQueen = 2.0
+const penaltyRookSecondRankFromKing = 10.Value
+
+func evaluatePawn(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    result = 0
+    
+    # passed pawn
+    if position.isPassedPawn(us, enemy, square):
+        result += bonusPassedPawn(gamePhase, square, us)
+
+    # isolated pawn
+    if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
+    (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
+        result -= penaltyIsolatedPawn
+
+func evaluateKnight(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    (position.numReachableSquares(knight, square, us).float * mobilityMultiplierKnight).Value
+
+func evaluateBishop(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    result = (position.numReachableSquares(bishop, square, us).float * mobilityMultiplierBishop).Value
+    if (position[us] and position[bishop] and (not bitAt[square])) != 0:
+        result += bonusBothBishops
+
+func evaluateRook(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    result = (position.numReachableSquares(rook, square, us).float * mobilityMultiplierRook).Value
+    # rook on open file
+    if (files[square] and position[pawn]) == 0:
+        result += bonusRookOnOpenFile
+
+func evaluateQueen(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    (position.numReachableSquares(queen, square, us).float * mobilityMultiplierQueen).Value
+
+func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    result = 0
+    
+    # rook on second rank/file is bad
+    let enemyRooks = position[rook] and position[enemy];
+    for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
+        if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
+            result -= penaltyRookSecondRankFromKing
+            break
+
+func evaluatePiece(position: Position, piece: Piece, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
+    const evaluationFunctions = [
+        pawn: evaluatePawn,
+        knight: evaluateKnight,
+        bishop: evaluateBishop,
+        rook: evaluateRook,
+        queen: evaluateQueen,
+        king: evaluateKing
+    ]
+    assert piece != noPiece
+    evaluationFunctions[piece](position, square, us, enemy, gamePhase)
+    
+func evaluatePieceType(position: Position, piece: Piece, gamePhase: GamePhase, ourKing, enemyKing: Square): Value  =
+    let
+        us = position.us
+        enemy = position.enemy
+    
+    result = 0
+
+    var tmpOccupancy = position[piece]
+    while tmpOccupancy != 0:
+        let square = tmpOccupancy.removeTrailingOneBit.Square
+        let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
+        let currentEnemy = currentUs.switch
+
+        let currentResult = 
+            values[piece] +
+            defaultPieceSquareTable[gamePhase][currentUs][piece][square] +
+            position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase)
+        
+        if currentUs == us:
+            result += currentResult
+        else:
+            result -= currentResult
+
+func evaluate*(position: Position): Value =
+    if position.halfmoveClock >= 100:
+        return 0
+
+    result = 0
+    let gamePhase = position.gamePhase
+    let ourKing = position.kingSquare(position.us)
+    let enemyKing = position.kingSquare(position.enemy)
+    for piece in pawn..king:
+        result += position.evaluatePieceType(piece, gamePhase, ourKing, enemyKing)

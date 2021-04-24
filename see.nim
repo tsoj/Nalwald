@@ -1,0 +1,123 @@
+import position
+import types
+import move
+import bitboard
+import bitops
+
+func getLeastValuableAttacker(position: Position, target: Square, stage: var Piece = pawn): (Square, Piece) =
+    let
+        us = position.us
+        enemy = position.enemy
+        occupancy = position.occupancy
+
+    if stage == pawn:
+        let attack = pawnCaptureAttackTable[enemy][target] and position[pawn] and position[us]
+        if attack != 0:
+            return (attack.countTrailingZeroBits.Square, pawn)
+    
+    for piece in knight..king:
+        if stage <= piece:
+            stage = piece
+            let attack = attackMask(piece, target, occupancy) and position[piece] and position[us]
+            if attack != 0:
+                if piece == queen:
+                    stage = bishop
+                return (attack.countTrailingZeroBits.Square, piece)
+    (noSquare, noPiece)
+
+
+func see(position: var Position, target: Square, victim: Piece, stage: var array[white..black, Piece]): Value =
+
+    result = 0
+
+    let (source, attacker) = position.getLeastValuableAttacker(target, stage[position.us])
+    var currentVictim = attacker
+    if source != noSquare:
+
+        position.removePiece(position.enemy, victim, bitAt[target])
+
+        if attacker == pawn and (target >= a8 or target <= h1):
+            position.removePiece(position.us, attacker, bitAt[source])
+            position.addPiece(position.us, queen, bitAt[target])
+            result = values[queen] - values[pawn]
+            currentVictim = queen
+        else:
+            position.movePiece(position.us, attacker, bitAt[source], bitAt[target])
+        
+        position.us = position.enemy
+        position.enemy = position.enemy.switch
+
+        result += max(0, values[victim] - position.see(target, currentVictim, stage))
+
+func see*(position: Position, move: Move): Value =
+    let
+        us = position.us
+        enemy = position.enemy
+        captured = move.captured
+        source = move.source
+        target = move.target
+        moved = move.moved
+
+
+    var stage = [white: pawn, black: pawn]
+    var position = position
+    var currentVictim = moved
+
+    position.movePiece(us, moved, bitAt[source], bitAt[target])
+
+    if captured != noPiece:
+        position.removePiece(enemy, captured, bitAt[target])
+
+    if move.capturedEnPassant:
+        position.removePiece(enemy, pawn, pawnQuietAttackTable[enemy][target])
+        position.movePiece(us, pawn, bitAt[source], bitAt[target])
+    elif moved == pawn and (target >= a8 or target <= h1):
+        position.removePiece(position.us, moved, bitAt[source])
+        position.addPiece(position.us, queen, bitAt[target])
+        result = values[queen] - values[pawn]
+        currentVictim = queen
+    else:
+        position.movePiece(position.us, moved, bitAt[source], bitAt[target])
+
+    position.us = position.enemy
+    position.enemy = position.enemy.switch
+
+    result += values[captured] - position.see(target, currentVictim, stage)
+                
+proc seeTest*() =
+    const data =
+        [
+            ("4R3/2r3p1/5bk1/1p1r3p/p2PR1P1/P1BK1P2/1P6/8 b - - 0 1", "h5g4", 0.Value),
+            ("4R3/2r3p1/5bk1/1p1r1p1p/p2PR1P1/P1BK1P2/1P6/8 b - - 0 1", "h5g4", 0.Value),
+            ("4r1k1/5pp1/nbp4p/1p2p2q/1P2P1b1/1BP2N1P/1B2QPPK/3R4 b - - 0 1", "g4f3", 0.Value),
+            ("2r1r1k1/pp1bppbp/3p1np1/q3P3/2P2P2/1P2B3/P1N1B1PP/2RQ1RK1 b - - 0 1", "d6e5", values[pawn]),
+            ("7r/5qpk/p1Qp1b1p/3r3n/BB3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", 0.Value),
+            ("6rr/6pk/p1Qp1b1p/2n5/1B3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", -values[rook]),
+            ("7r/5qpk/2Qp1b1p/1N1r3n/BB3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", -values[rook]),
+            ("6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1", "f7f8q", values[bishop]-values[pawn]),
+            ("6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1", "f7f8n", values[knight]-values[pawn]),
+            ("7R/4bP2/8/8/1q6/3K4/5p2/4k3 w - - 0 1", "f7f8r", -values[pawn]),
+            ("8/4kp2/2npp3/1Nn5/1p2PQP1/7q/1PP1B3/4KR1r b - - 0 1", "h1f1", 0.Value),
+            ("8/4kp2/2npp3/1Nn5/1p2P1P1/7q/1PP1B3/4KR1r b - - 0 1", "h1f1", 0.Value),
+            ("2r2r1k/6bp/p7/2q2p1Q/3PpP2/1B6/P5PP/2RR3K b - - 0 1", "c5c1", 2*values[rook]-values[queen]),
+            ("r2qk1nr/pp2ppbp/2b3p1/2p1p3/8/2N2N2/PPPP1PPP/R1BQR1K1 w kq - 0 1", "f3e5", values[pawn]),
+            ("6r1/4kq2/b2p1p2/p1pPb3/p1P2B1Q/2P4P/2B1R1P1/6K1 w - - 0 1", "f4e5", 0.Value),
+            ("3q2nk/pb1r1p2/np6/3P2Pp/2p1P3/2R4B/PQ3P1P/3R2K1 w - h6 0 1", "g5h6", 0.Value),
+            ("3q2nk/pb1r1p2/np6/3P2Pp/2p1P3/2R1B2B/PQ3P1P/3R2K1 w - h6 0 1", "g5h6", values[pawn]),
+            ("2r4r/1P4pk/p2p1b1p/7n/BB3p2/2R2p2/P1P2P2/4RK2 w - - 0 1", "c3c8", values[rook]),
+            ("2r5/1P4pk/p2p1b1p/5b1n/BB3p2/2R2p2/P1P2P2/4RK2 w - - 0 1", "c3c8", values[rook]),
+            ("2r4k/2r4p/p7/2b2p1b/4pP2/1BR5/P1R3PP/2Q4K w - - 0 1", "c3c5", values[bishop]),
+            ("8/pp6/2pkp3/4bp2/2R3b1/2P5/PP4B1/1K6 w - - 0 1", "g2c6", values[pawn]-values[bishop]),
+            ("4q3/1p1pr1k1/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "e6e4", values[pawn]-values[rook]),
+            ("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "h7e4", values[pawn])
+        ]
+    for (fen, moveString, seeValue) in data:
+        var position = fen.toPosition
+        let move = moveString.toMove(position)
+        doAssert position.fen == fen
+        echo position.fen
+        echo move
+        let seeResult = position.see(move)
+        echo seeResult, (if seeResult == seeValue: " == " else: " != "), seeValue
+        doAssert seeResult == seeValue, "Failed see test"
+    echo "Finished see test successfully"

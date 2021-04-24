@@ -1,0 +1,5 @@
+Nalwald
+perf.data
+callgrind.out.*
+profile_results.txt
+.vscode
