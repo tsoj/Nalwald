@@ -16,7 +16,7 @@ You need a [Nim](https://nim-lang.org/) compiler and the Clang compiler
 ```
 nim c -d:danger --passC:"-flto -march=native" --passL:"-flto" --cc:clang --threads:on Nalwald.nim
 ```
-If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower binary.
+If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might cause the resulting binary to be slower.
 
 ##### Run:
 ```
