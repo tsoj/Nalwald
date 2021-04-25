@@ -42,8 +42,7 @@ func quiesce(
     position: Position,
     state: var SearchState,
     alpha, beta: Value, 
-    height: Ply,
-    doDeltaPruning: static bool = true
+    height: Ply
 ): Value =
     assert alpha < beta
 
@@ -80,10 +79,9 @@ func quiesce(
         moveCounter += 1
 
         # delta pruning
-        when doDeltaPruning:
-            if standPat + position.see(move) + deltaMargin < alpha and
-            not newPosition.inCheck(newPosition.us, newPosition.enemy):
-                continue
+        if standPat + position.see(move) + deltaMargin < alpha and
+        not newPosition.inCheck(newPosition.us, newPosition.enemy):
+            continue
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
