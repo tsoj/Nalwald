@@ -9,7 +9,7 @@
 You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 ##### Download:
 ```
-git clone https://gitlab.com/tsoj/nalwald.git
+git clone https://gitlab.com/tsoj/Nalwald.git
 ```
 ##### Compile
 You need a [Nim](https://nim-lang.org/) compiler and the Clang compiler
