@@ -6,7 +6,7 @@
 ( )   \  \_>   / \    |   |    / \    ( )
 |_|   /__\    /___\   /___\   /___\   /_\
 ```
-
+You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 ##### Download:
 ```
 git clone https://gitlab.com/tsoj/nalwald.git
