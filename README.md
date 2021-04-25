@@ -12,11 +12,11 @@ You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 git clone https://gitlab.com/tsoj/Nalwald.git
 ```
 ##### Compile
-You need a [Nim](https://nim-lang.org/) compiler and the Clang compiler
+You need the [Nim](https://nim-lang.org/) compiler (version 1.2.0 or higher) and the Clang compiler
 ```
 nim c -d:danger --passC:"-flto -march=native" --passL:"-flto -static" --cc:clang --threads:on Nalwald.nim
 ```
-If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might cause the resulting binary to be slower.
+If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower executable.
 
 If you are compiling on Windows and you want to use Clang then you need to replace `--passL:"-flto -static"` with `--passL:"-flto -static -fuse-ld=lld"`
 
