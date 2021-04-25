@@ -134,44 +134,5 @@ const zobristPieceBitmasks*: array[pawn..king, array[a1..h8, uint64]] = [[700060
     828735126049139470u64, 4526182360586942638u64, 13161654844582170748u64, 13162290258473107306u64,
     631901936163956552u64, 12210614368363093998u64, 9452445121676414469u64]]
 
-#[proc genRandUint64(): uint64 =
-    result = 0
-    for i in a1..h8:
-        if rand(0..1) == 0:
-            result = result or bitAt[i]
-
-let zobristPieceBitmasks: array[pawn..king, array[a1..h8, uint64]] = block:
-    var zobristPieceBitmasks: array[pawn..king, array[a1..h8, uint64]]
-    for piece in pawn..king:
-        for square in a1..h8:
-            zobristPieceBitmasks[piece][square] = genRanduint64()
-    zobristPieceBitmasks
-
-let zobristPlayerBitmasks: array[white..black, array[a1..h8, uint64]] = block:
-    var zobristPlayerBitmasks: array[white..black, array[a1..h8, uint64]]
-    for color in white..black:
-        for square in a1..h8:
-            zobristPlayerBitmasks[color][square] = genRanduint64()
-    zobristPlayerBitmasks
-
-let zobristSideToMoveBitmasks: array[white..black, uint64] =
-    [genRanduint64(), genRanduint64()]
-
-proc checkZobristBitmasks(): bool =
-    var masks: seq[uint64]
-    for piece in pawn..king:
-        for square in a1..h8:
-            masks.add(zobristPieceBitmasks[piece][square])
-    for color in white..black:
-        for square in a1..h8:
-            masks.add(zobristPlayerBitmasks[color][square])
-    masks.add(zobristSideToMoveBitmasks[white])
-    masks.add(zobristSideToMoveBitmasks[black])
-
-    for i in 0..<masks.len:
-        for j in (i+1)..<masks.len:
-            if masks[i] == masks[j]:
-                return false
-    true]#
 
 
