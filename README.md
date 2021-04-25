@@ -33,7 +33,6 @@ If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it m
   - rook on open file
   - rook on second rank/file of king
 - search:
-  - alpha-beta/negamax
   - principle variation search
   - quiescence search
   - transposition table
