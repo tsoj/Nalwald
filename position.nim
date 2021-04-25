@@ -9,8 +9,8 @@ import options
 import strutils
 
 type Position* = object
-    pieces*: array[pawn..king, Bitboard]
-    colors*: array[white..black, Bitboard]
+    pieces: array[pawn..king, Bitboard]
+    colors: array[white..black, Bitboard]
     enPassantCastling*: Bitboard
     zobristKey*: uint64
     us*, enemy*: Color
