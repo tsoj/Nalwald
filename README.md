@@ -18,6 +18,8 @@ nim c -d:danger --passC:"-flto -march=native" --passL:"-flto" --cc:clang --threa
 ```
 If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might cause the resulting binary to be slower.
 
+If you are compiling on Windows and you want to use Clang than you need to replace `--passL:"-flto"` with `--passL:"-flto -fuse-ld=lld"`
+
 ##### Run:
 ```
 ./Nalwald
