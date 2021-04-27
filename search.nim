@@ -12,6 +12,7 @@ import times
 import threadpool
 import utils
 import math
+import strutils
 
 
 const nullMoveDepthReduction = 4.Ply
@@ -424,4 +425,7 @@ proc uciSearch*(
 
         echo "bestmove ", bestMove
     except:
-        echo "info ", getCurrentExceptionMsg()
+        var errorMsg = getCurrentExceptionMsg()
+        echo "info ", errorMsg
+        errorMsg = errorMsg.replace(' ', '_')
+        echo "bestmove ", errorMsg

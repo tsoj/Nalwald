@@ -66,7 +66,7 @@ func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhas
 
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     result -= gamePhase.interpolate(
-        forOpening = (2*numPossibleQueenAttack).Value, forEndgame = (numPossibleQueenAttack div 4).Value
+        forOpening = (2.5*numPossibleQueenAttack.float).Value, forEndgame = 0.Value
     )
 
 func evaluatePiece(position: Position, piece: Piece, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
