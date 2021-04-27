@@ -23,7 +23,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.8"
+    echo "id name Nalwald 1.8.1"
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -39,7 +39,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
         if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
             echo "Invalid value"
         else:
-            uciState.hashTable = newHashTable(sizeInBytes = newHashSizeMB * mega)
+            uciState.hashTable.setLen(sizeInBytes = newHashSizeMB * mega)
     else:
         echo "Unknown parameters"
     
@@ -128,10 +128,8 @@ proc uciLoop*() =
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "---- Copyright (c) 2021 Jost Triller ----"
-    var uciState = UciState(
-        hashTable: newHashTable(sizeInBytes = defaultHashSizeMB * mega),
-        position: startposFen.toPosition
-    )
+    var uciState = UciState(position: startposFen.toPosition)
+    uciState.hashTable.setLen(sizeInBytes = defaultHashSizeMB * mega)
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:

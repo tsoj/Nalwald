@@ -15,7 +15,19 @@ import math
 
 
 const nullMoveDepthReduction = 4.Ply
-const futilityMargin = [0.Ply: 0.Value, 1.Ply: 2*values[pawn], 2.Ply: 4*values[pawn], 3.Ply: 8*values[pawn]]
+#TODO test more agressive futility pruning
+const futilityMargin = [
+    # 0.Ply: 0.Value,
+    # 1.Ply: 2*values[pawn],
+    # 2.Ply: 4*values[pawn],
+    # 3.Ply: 8*values[pawn]
+    0.Ply: 0.Value,
+    1.Ply: 2*values[pawn],
+    2.Ply: 3*values[pawn],
+    3.Ply: 5*values[pawn],
+    4.Ply: 7*values[pawn],
+    5.Ply: 10*values[pawn]
+]
 const deltaMargin = (15*values[pawn]) div 10
 
 type SearchState = object
@@ -152,6 +164,7 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
             state,
             alpha = -beta, beta = -beta + 1.Value,
             depth = depth - nullMoveDepthReduction, height = height + 3.Ply
+            # height + 3 is not a bug, it somehow improves the performance by ~20 Elo
         )
         if value >= beta:
             return value
@@ -291,19 +304,29 @@ iterator iterativeDeepeningSearch*(
         if abs(value) >= valueCheckmate:
             break
 
+#TODO fix disconnecting: add log
 
 type MoveTime = object
     maxTime, approxTime: Duration
 func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime =
+    # TODO: fix losing on time        
+
     doAssert movesToGo >= 0
-    const estimatedGameLength = 70
+    let estimatedGameLength = 70
     let estimatedMovesToGo = max(10, estimatedGameLength - halfmovesPlayed div 2)
-    var newMovesToGo = min(movesToGo, estimatedMovesToGo)
+    var newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
     result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), movetime)
     result.approxTime = initDuration(milliseconds = clamp(
-        timeLeft.inMilliseconds div max(newMovesToGo, 1), 0, int.high div 2) +
+        timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
         clamp(incPerMove.inMilliseconds, 0, int.high div 2))
+
+    if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 2):
+        result.approxTime = (12 * result.approxTime) div 10
+    elif incPerMove.inMilliseconds >= 200 and timeLeft > initDuration(seconds = 30):
+        result.approxTime = (11 * result.approxTime) div 10
+    elif timeLeft < initDuration(minutes = 1):
+        result.approxTime = (9 * result.approxTime) div 10
 
 iterator timeManagedSearch(
     position: Position,
@@ -373,35 +396,37 @@ proc uciSearch*(
     increment, timeLeft: array[white..black, Duration],
     movetime: Duration
 ): bool =
-    
-    var bestMove = noMove    
-    var iteration = 0
-    for (value, pv, nodes, minDepth, selDepth, passedTime) in timeManagedSearch(
-        position,
-        hashTable[],
-        positionHistory,
-        targetDepth,
-        stop,
-        movesToGo,
-        increment, timeLeft,
-        movetime
-    ):
-        doAssert pv.len >= 1
-        bestMove = pv[0]
+    try:
+        var bestMove = noMove    
+        var iteration = 0
+        for (value, pv, nodes, minDepth, selDepth, passedTime) in timeManagedSearch(
+            position,
+            hashTable[],
+            positionHistory,
+            targetDepth,
+            stop,
+            movesToGo,
+            increment, timeLeft,
+            movetime
+        ):
+            doAssert pv.len >= 1
+            bestMove = pv[0]
 
-        # uci info
-        var scoreString = " score cp " & $((100*value.int) div values[pawn].int)
-        if abs(value) >= valueCheckmate:
-            if value < 0:
-                scoreString = " score mate -"
-            else:
-                scoreString = " score mate "
-            scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
+            # uci info
+            var scoreString = " score cp " & $((100*value.int) div values[pawn].int)
+            if abs(value) >= valueCheckmate:
+                if value < 0:
+                    scoreString = " score mate -"
+                else:
+                    scoreString = " score mate "
+                scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
 
-        let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-        echo "info depth ", iteration+1, " mindepth ", minDepth, " seldepth ", selDepth, " nodes ", nodes,
-            " nps ", nps, " time ", passedTime.inMilliseconds, " hashfull ", hashTable[].hashFull, scoreString, " pv ", pv
+            let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
+            echo "info depth ", iteration+1, " mindepth ", minDepth, " seldepth ", selDepth, " nodes ", nodes,
+                " nps ", nps, " time ", passedTime.inMilliseconds, " hashfull ", hashTable[].hashFull, scoreString, " pv ", pv
 
-        iteration += 1
+            iteration += 1
 
-    echo "bestmove ", bestMove
+        echo "bestmove ", bestMove
+    except:
+        echo "info ", getCurrentExceptionMsg()

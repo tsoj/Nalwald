@@ -27,10 +27,11 @@ func clear*(ht: var HashTable) =
     for entry in ht.nonPvNodes.mitems:
         entry = noEntry
 
-func newHashTable*(sizeInBytes: int): HashTable =
+func setLen*(ht: var HashTable, sizeInBytes: int) =
+    # TODO: fix issue with using more ram than given
     let numEntries = sizeInBytes div sizeof(HashTableEntry)
-    result.nonPvNodes = newSeq[HashTableEntry](numEntries)
-    result.clear
+    ht.nonPvNodes.setLen(numEntries)
+    ht.clear
 
 func age*(ht: var HashTable)  =
     for (key, entry) in ht.pvNodes.mpairs:
