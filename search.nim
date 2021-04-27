@@ -15,12 +15,7 @@ import math
 
 
 const nullMoveDepthReduction = 4.Ply
-#TODO test more agressive futility pruning
 const futilityMargin = [
-    # 0.Ply: 0.Value,
-    # 1.Ply: 2*values[pawn],
-    # 2.Ply: 4*values[pawn],
-    # 3.Ply: 8*values[pawn]
     0.Ply: 0.Value,
     1.Ply: 2*values[pawn],
     2.Ply: 3*values[pawn],
