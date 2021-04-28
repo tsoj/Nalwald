@@ -74,6 +74,7 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
     uciState.position = fen.toPosition
 
     uciState.history.setLen(0)
+
     if params.len > index:
         doAssert params[index] == "moves"
         for i in (index + 1)..<params.len:

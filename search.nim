@@ -14,7 +14,6 @@ import utils
 import math
 import strutils
 
-
 const nullMoveDepthReduction = 4.Ply
 const futilityMargin = [
     0.Ply: 0.Value,
@@ -425,4 +424,8 @@ proc uciSearch*(
 
         echo "bestmove ", bestMove
     except:
-        echo "info string ", getCurrentExceptionMsg()
+        var errorMessage = "info string " & getCurrentExceptionMsg() & "\n" & getCurrentException().getStackTrace()
+        if errorMessage[^1] == '\n':
+            errorMessage.delete(errorMessage.len - 1, errorMessage.len - 1)
+        errorMessage = errorMessage.replace("\n", "\ninfo string ")
+        echo errorMessage

@@ -33,11 +33,14 @@ func setLen*(ht: var HashTable, sizeInBytes: int) =
     ht.clear
 
 func age*(ht: var HashTable)  =
+    var deleteQueue: seq[uint64]
     for (key, entry) in ht.pvNodes.mpairs:
         if entry.lookupCounter <= 0:
-            ht.pvNodes.del(key)
+            deleteQueue.add(key)
         else:
             entry.lookupCounter = 0
+    for key in deleteQueue:
+        ht.pvNodes.del(key)
 
 func add*(
     ht: var HashTable,

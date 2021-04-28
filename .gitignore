@@ -7,3 +7,4 @@ profile_results.txt
 massif.out
 *.profraw
 *.profdata
+*.log
