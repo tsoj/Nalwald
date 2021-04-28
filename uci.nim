@@ -12,7 +12,7 @@ import see
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     mega = 1_000_000
-    defaultHashSizeMB = 140
+    defaultHashSizeMB = 4
     maxHashSizeMB = 1048576
 
 type UciState = object
@@ -20,6 +20,7 @@ type UciState = object
     history: seq[Position]
     hashTable: HashTable
     stopFlag: Atomic[bool]
+    changedHashTableSize: bool
 
 
 proc uci() =
@@ -39,6 +40,10 @@ proc setOption(uciState: var UciState, params: seq[string]) =
         if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
             echo "Invalid value"
         else:
+            if uciState.changedHashTableSize:
+                # TODO: fix memory leak
+                echo "WARNING: changing size of hash table more than once may lead to memory leaks"
+            uciState.changedHashTableSize = true
             uciState.hashTable.setLen(sizeInBytes = newHashSizeMB * mega)
     else:
         echo "Unknown parameters"
@@ -128,7 +133,7 @@ proc uciLoop*() =
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "---- Copyright (c) 2021 Jost Triller ----"
-    var uciState = UciState(position: startposFen.toPosition)
+    var uciState = UciState(position: startposFen.toPosition, changedHashTableSize: false)
     uciState.hashTable.setLen(sizeInBytes = defaultHashSizeMB * mega)
     var searchThreadResult = FlowVar[bool]()
     while true:
@@ -184,6 +189,6 @@ proc uciLoop*() =
                 echo "  getfen"
                 echo "  test"
         except:
-            echo getCurrentExceptionMsg()
+            echo "info string ", getCurrentExceptionMsg()
 
     discard ^searchThreadResult

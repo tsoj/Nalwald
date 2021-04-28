@@ -28,7 +28,6 @@ func clear*(ht: var HashTable) =
         entry = noEntry
 
 func setLen*(ht: var HashTable, sizeInBytes: int) =
-    # TODO: fix issue with using more ram than given
     let numEntries = sizeInBytes div sizeof(HashTableEntry)
     ht.nonPvNodes.setLen(numEntries)
     ht.clear

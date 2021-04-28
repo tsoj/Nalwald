@@ -5,3 +5,5 @@ callgrind.out.*
 profile_results.txt
 .vscode
 massif.out
+*.profraw
+*.profdata
