@@ -17,7 +17,7 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
     
     historyTable[color][move.moved][move.target] = 
         min(historyTable[color][move.moved][move.target] + depth.int32 * depth.int32, maxHistoryTableValue.int32).Value
-    if historyTable[color][move.moved][move.target] > maxHistoryTableValue:
+    if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
         historyTable.halve
 
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
