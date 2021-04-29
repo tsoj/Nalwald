@@ -19,11 +19,12 @@ func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): Value =
 const penaltyIsolatedPawn = 10.Value
 const bonusBothBishops = 10.Value
 const bonusRookOnOpenFile = 5.Value
-const mobilityMultiplierKnight = 2.0
-const mobilityMultiplierBishop = 3.0
-const mobilityMultiplierRook = 4.0
-const mobilityMultiplierQueen = 2.0
+const mobilityMultiplierKnight: float32 = 2.0
+const mobilityMultiplierBishop: float32 = 3.0
+const mobilityMultiplierRook: float32 = 4.0
+const mobilityMultiplierQueen: float32 = 2.0
 const penaltyRookSecondRankFromKing = 10.Value
+const kingSafetyMultiplier: float32 = 2.5
 
 func evaluatePawn(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = 0
@@ -38,21 +39,21 @@ func evaluatePawn(position: Position, square: Square, us, enemy: Color, gamePhas
         result -= penaltyIsolatedPawn
 
 func evaluateKnight(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
-    (position.numReachableSquares(knight, square, us).float * mobilityMultiplierKnight).Value
+    (position.numReachableSquares(knight, square, us).float32 * mobilityMultiplierKnight).Value
 
 func evaluateBishop(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
-    result = (position.numReachableSquares(bishop, square, us).float * mobilityMultiplierBishop).Value
+    result = (position.numReachableSquares(bishop, square, us).float32 * mobilityMultiplierBishop).Value
     if (position[us] and position[bishop] and (not bitAt[square])) != 0:
         result += bonusBothBishops
 
 func evaluateRook(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
-    result = (position.numReachableSquares(rook, square, us).float * mobilityMultiplierRook).Value
+    result = (position.numReachableSquares(rook, square, us).float32 * mobilityMultiplierRook).Value
     # rook on open file
     if (files[square] and position[pawn]) == 0:
         result += bonusRookOnOpenFile
 
 func evaluateQueen(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
-    (position.numReachableSquares(queen, square, us).float * mobilityMultiplierQueen).Value
+    (position.numReachableSquares(queen, square, us).float32 * mobilityMultiplierQueen).Value
 
 func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = 0
@@ -65,7 +66,10 @@ func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhas
             break
 
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
-    result -= gamePhase.interpolate(forOpening = (2.5*numPossibleQueenAttack.float).Value, forEndgame = 0.Value)
+    result -= gamePhase.interpolate(
+        forOpening = (kingSafetyMultiplier*numPossibleQueenAttack.float32).Value,
+        forEndgame = 0.Value
+    )
 
 func evaluatePiece(position: Position, piece: Piece, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     const evaluationFunctions = [
