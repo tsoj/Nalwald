@@ -288,7 +288,7 @@ iterator iterativeDeepeningSearch*(
             state.measuredMinDepth = 0
 
         doAssert not hashResult.isEmpty
-        let pv = hashTable.getPv(position)
+        let pv = if state.numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
         doAssert pv.len >= 1
 
         yield (value, pv, state.countedNodes, state.measuredMinDepth, state.measuredSelectiveDepth)
@@ -429,3 +429,4 @@ proc uciSearch*(
             errorMessage.delete(errorMessage.len - 1, errorMessage.len - 1)
         errorMessage = errorMessage.replace("\n", "\ninfo string ")
         echo errorMessage
+        echo "bestmove ", noMove

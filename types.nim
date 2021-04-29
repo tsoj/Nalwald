@@ -71,9 +71,9 @@ func switch*(color: Color): Color =
     (color.uint8 xor 1).Color
 
 func `-`*(a: Ply, b: Ply): Ply =
-    max(a.int8 - b.int8, Ply.low)
+    max(a.int16 - b.int16, Ply.low.int16).Ply
 func `+`*(a: Ply, b: Ply): Ply =
-    min(a.int8 + b.int8, Ply.high)
+    min(a.int16 + b.int16, Ply.high.int16).Ply
 
 const values*: array[Piece, Value] = [
     pawn: 100.Value,

@@ -15,7 +15,8 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
     if move.isTactical:
         return
     
-    historyTable[color][move.moved][move.target] += depth.Value * depth.Value
+    historyTable[color][move.moved][move.target] = 
+        min(historyTable[color][move.moved][move.target] + depth.int32 * depth.int32, maxHistoryTableValue.int32).Value
     if historyTable[color][move.moved][move.target] > maxHistoryTableValue:
         historyTable.halve
 
