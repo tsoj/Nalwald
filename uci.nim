@@ -111,6 +111,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             return
      
     if searchThreadResult.isReady:
+        # TODO: fix crashes because of spawn
         searchThreadResult = spawn uciSearch(
             position = uciState.position,
             hashTable = addr uciState.hashTable,
