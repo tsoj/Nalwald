@@ -14,11 +14,11 @@ git clone https://gitlab.com/tsoj/Nalwald.git
 ##### Compile
 You need the [Nim](https://nim-lang.org/) compiler (version 1.2.0 or higher) and the Clang compiler
 ```
-nim c -d:danger --passC:"-flto -march=native" --passL:"-flto -static" --cc:clang --threads:on Nalwald.nim
+nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
 If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower executable.
 
-If you are compiling on Windows and you want to use Clang then you need to replace `--passL:"-flto -static"` with `--passL:"-flto -static -fuse-ld=lld"`
+If you are compiling on Windows and you want to use Clang then you need to replace `--passL:"-static"` with `--passL:"-static -fuse-ld=lld"`
 
 ##### Run:
 ```

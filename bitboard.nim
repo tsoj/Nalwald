@@ -216,16 +216,12 @@ func attackMaskKing*(square: Square, occupancy: Bitboard): Bitboard =
     kingAttackTable[square]
 
 func attackMask*(piece: Piece, square: Square, occupancy: Bitboard): Bitboard {.inline.} =
-    case piece:
-    of knight:
-        return attackMaskKnight(square, occupancy)
-    of bishop:
-        return attackMaskBishop(square, occupancy)
-    of rook:
-        return attackMaskRook(square, occupancy)
-    of queen:
-        return attackMaskQueen(square, occupancy)
-    of king:
-        return attackMaskKing(square, occupancy)
-    else:
-        assert false
+    const attackFunctions = [
+        knight: attackMaskKnight,
+        bishop: attackMaskBishop,
+        rook: attackMaskRook,
+        queen: attackMaskQueen,
+        king: attackMaskKing
+    ]
+    assert piece != pawn and piece != noPiece
+    attackFunctions[piece](square, occupancy)

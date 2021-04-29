@@ -83,7 +83,7 @@ func evaluatePiece(position: Position, piece: Piece, square: Square, us, enemy: 
     assert piece != noPiece
     evaluationFunctions[piece](position, square, us, enemy, gamePhase)
     
-func evaluatePieceType(position: Position, piece: Piece, gamePhase: GamePhase, ourKing, enemyKing: Square): Value  =
+func evaluatePieceType(position: Position, piece: Piece, gamePhase: GamePhase): Value  =
     let
         us = position.us
         enemy = position.enemy
@@ -94,7 +94,7 @@ func evaluatePieceType(position: Position, piece: Piece, gamePhase: GamePhase, o
     while tmpOccupancy != 0:
         let square = tmpOccupancy.removeTrailingOneBit.Square
         let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
-        let currentEnemy = currentUs.switch
+        let currentEnemy = currentUs.opposite
 
         let currentResult = 
             values[piece] +
@@ -112,7 +112,5 @@ func evaluate*(position: Position): Value =
 
     result = 0
     let gamePhase = position.gamePhase
-    let ourKing = position.kingSquare(position.us)
-    let enemyKing = position.kingSquare(position.enemy)
     for piece in pawn..king:
-        result += position.evaluatePieceType(piece, gamePhase, ourKing, enemyKing)
+        result += position.evaluatePieceType(piece, gamePhase)

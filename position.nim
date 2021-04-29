@@ -225,7 +225,7 @@ func doMove*(position: var Position, move: Move) =
         position.halfmoveClock = 0
 
     position.enemy = position.us
-    position.us = position.us.switch
+    position.us = position.us.opposite
     
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
@@ -239,7 +239,7 @@ func doNullMove*(position: var Position) =
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
 
     position.enemy = position.us
-    position.us = position.us.switch
+    position.us = position.us.opposite
 
 func isLegal*(position: Position, move: Move): bool =
     if not position.isPseudoLegal(move):

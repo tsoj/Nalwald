@@ -67,7 +67,7 @@ func goRight*(square: var Square): bool =
 func goNothing*(square: var Square): bool =
     true
 
-func switch*(color: Color): Color =
+func opposite*(color: Color): Color =
     (color.uint8 xor 1).Color
 
 func `-`*(a: Ply, b: Ply): Ply =

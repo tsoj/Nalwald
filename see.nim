@@ -45,7 +45,7 @@ func see(position: var Position, target: Square, victim: Piece, stage: var array
             position.movePiece(position.us, attacker, bitAt[source], bitAt[target])
         
         position.us = position.enemy
-        position.enemy = position.enemy.switch
+        position.enemy = position.enemy.opposite
 
         result += max(0, values[victim] - position.see(target, currentVictim, stage))
 
@@ -80,7 +80,7 @@ func see*(position: Position, move: Move): Value =
         position.movePiece(position.us, moved, bitAt[source], bitAt[target])
 
     position.us = position.enemy
-    position.enemy = position.enemy.switch
+    position.enemy = position.enemy.opposite
 
     result += values[captured] - position.see(target, currentVictim, stage)
                 
