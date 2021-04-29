@@ -43,7 +43,7 @@ If you are compiling on Windows and you want to use Clang then you need to repla
     - static exchange evaluation
     - killermoves
     - history heuristic
-  - nullmove pruning
+  - nullmove reduction
   - late move reductions
   - check extensions
   - delta pruning
