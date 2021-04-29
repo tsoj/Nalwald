@@ -18,8 +18,6 @@ nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --th
 ```
 If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower executable.
 
-If you are compiling on Windows and you want to use Clang then you need to replace `--passL:"-static"` with `--passL:"-static -fuse-ld=lld"`
-
 ##### Run:
 ```
 ./Nalwald
