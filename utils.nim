@@ -60,9 +60,12 @@ func toColoredPiece*(s: char): ColoredPiece =
 func mirror*(square: Square): Square =
     ((7 - square.int8 div 8) * 8 + square.int8 mod 8).Square
 
-func interpolate*(gamePhase: GamePhase, forOpening, forEndgame: Value): Value =
-    ((forOpening*(gamePhase - GamePhase.low) + forEndgame*(GamePhase.high - gamePhase)) div
-    (GamePhase.high - GamePhase.low)).Value
+func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
+    result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T
+    when T is SomeInteger:
+        result = result div (GamePhase.high - GamePhase.low).T
+    else:
+        result = result / (GamePhase.high - GamePhase.low).T
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
     let start = now()

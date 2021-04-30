@@ -8,35 +8,36 @@ import utils
 template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
-func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): Value =
-    const openingTable = [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value]
-    const endgameTable = [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value]
+const penaltyIsolatedPawn = 10.float32
+const bonusBothBishops = 10.float32
+const bonusRookOnOpenFile = 5.float32
+const mobilityMultiplierKnight = 2.0.float32
+const mobilityMultiplierBishop = 3.0.float32
+const mobilityMultiplierRook = 4.0.float32
+const mobilityMultiplierQueen = 2.0.float32
+const penaltyRookSecondRankFromKing = 10.float32
+const kingSafetyMultiplier = 2.5.float32
+
+const passedPawnOpeningTable = [0.float32, 0.float32, 0.float32, 10.float32, 15.float32, 20.float32, 45.float32, 0.float32]
+const passedPawnEndgameTable = [0.float32, 20.float32, 30.float32, 40.float32, 60.float32, 100.float32, 120.float32, 0.float32]
+
+func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): auto =
     var index = square.int8 div 8
     if us == black:
         index = 7 - index
-    gamePhase.interpolate(openingTable[index], endgameTable[index])
-
-const penaltyIsolatedPawn = 10.Value
-const bonusBothBishops = 10.Value
-const bonusRookOnOpenFile = 5.Value
-const mobilityMultiplierKnight: float32 = 2.0
-const mobilityMultiplierBishop: float32 = 3.0
-const mobilityMultiplierRook: float32 = 4.0
-const mobilityMultiplierQueen: float32 = 2.0
-const penaltyRookSecondRankFromKing = 10.Value
-const kingSafetyMultiplier: float32 = 2.5
+    gamePhase.interpolate(passedPawnOpeningTable[index], passedPawnEndgameTable[index])
 
 func evaluatePawn(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = 0
     
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
-        result += bonusPassedPawn(gamePhase, square, us)
+        result += bonusPassedPawn(gamePhase, square, us).Value
 
     # isolated pawn
     if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
     (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
-        result -= penaltyIsolatedPawn
+        result -= penaltyIsolatedPawn.Value
 
 func evaluateKnight(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     (position.numReachableSquares(knight, square, us).float32 * mobilityMultiplierKnight).Value
@@ -44,13 +45,13 @@ func evaluateKnight(position: Position, square: Square, us, enemy: Color, gamePh
 func evaluateBishop(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = (position.numReachableSquares(bishop, square, us).float32 * mobilityMultiplierBishop).Value
     if (position[us] and position[bishop] and (not bitAt[square])) != 0:
-        result += bonusBothBishops
+        result += bonusBothBishops.Value
 
 func evaluateRook(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = (position.numReachableSquares(rook, square, us).float32 * mobilityMultiplierRook).Value
     # rook on open file
     if (files[square] and position[pawn]) == 0:
-        result += bonusRookOnOpenFile
+        result += bonusRookOnOpenFile.Value
 
 func evaluateQueen(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     (position.numReachableSquares(queen, square, us).float32 * mobilityMultiplierQueen).Value
@@ -62,7 +63,7 @@ func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhas
     let enemyRooks = position[rook] and position[enemy];
     for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
         if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
-            result -= penaltyRookSecondRankFromKing
+            result -= penaltyRookSecondRankFromKing.Value
             break
 
     # kingsafety by pawn shielding
