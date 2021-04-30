@@ -65,6 +65,7 @@ func evaluateKing(position: Position, square: Square, us, enemy: Color, gamePhas
             result -= penaltyRookSecondRankFromKing
             break
 
+    # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     result -= gamePhase.interpolate(
         forOpening = (kingSafetyMultiplier*numPossibleQueenAttack.float32).Value,
