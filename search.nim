@@ -45,11 +45,14 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
+template isInNullWindow(): bool = beta == alpha + 1
+
 func quiesce(
     position: Position,
     state: var SearchState,
     alpha, beta: Value, 
-    height: Ply
+    height: Ply,
+    doQuietChecks: static bool
 ): Value =
     assert alpha < beta
 
@@ -77,7 +80,7 @@ func quiesce(
     if not inCheck and standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = inCheck):
+    for move in position.moveIterator(doQuiets = inCheck, doQuietChecks = doQuietChecks):
         var newPosition = position
         newPosition.doMove(move)
 
@@ -90,7 +93,7 @@ func quiesce(
         not newPosition.inCheck(newPosition.us, newPosition.enemy):
             continue
 
-        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
+        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doQuietChecks)
 
         if value >= beta:
             return beta
@@ -131,8 +134,6 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
         moveCounter = 0
         lmrMoveCounter = 0
 
-    template isInNullWindow(): bool = beta == alpha + 1
-
     # update alpha, beta or value based on hash table result
     if (not hashResult.isEmpty) and hashResult.depth >= depth and height > 0 and alpha > -valueInfinity:
         case hashResult.nodeType:
@@ -142,13 +143,15 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
             alpha = max(alpha, hashResult.value)
         of upperBound:
             beta = min(beta, hashResult.value)
+        else:
+            assert false
         if alpha >= beta:
             return beta
 
     if depth <= 0:
         state.measuredSelectiveDepth = max(state.measuredSelectiveDepth, height)
         state.measuredMinDepth = min(state.measuredMinDepth, height)
-        return position.quiesce(state, alpha = alpha, beta = beta, height)
+        return position.quiesce(state, alpha = alpha, beta = beta, height, doQuietChecks = false)
 
     # null move reduction
     if height > 0 and (not inCheck) and alpha > -valueInfinity and beta < valueInfinity and
@@ -415,7 +418,7 @@ proc uciSearch*(
                 scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
 
             let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-            echo "info depth ", iteration+1, " mindepth ", minDepth, " seldepth ", selDepth, " nodes ", nodes,
+            echo "info depth ", iteration+1, " seldepth ", selDepth, " nodes ", nodes,
                 " nps ", nps, " time ", passedTime.inMilliseconds, " hashfull ", hashTable[].hashFull, scoreString, " pv ", pv
 
             iteration += 1

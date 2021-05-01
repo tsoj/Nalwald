@@ -27,7 +27,8 @@ type
     NodeType* = enum
         pvNode,
         allNode,
-        cutNode
+        cutNode,
+        noNode
     GamePhase* = 2..32
 
 template isLeftEdge*(square: Square): bool =

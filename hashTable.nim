@@ -17,7 +17,7 @@ type
         nonPvNodes: seq[HashTableEntry]
         pvNodes: Table[uint64, CountedHashTableEntry]
 
-const noEntry = HashTableEntry(zobristKey: 0, value: valueInfinity, bestMove: noMove)
+const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, value: valueInfinity, bestMove: noMove)
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry

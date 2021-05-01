@@ -156,3 +156,53 @@ func legalMoves*(position: Position): seq[Move] =
         if newPosition.inCheck(position.us, position.enemy):
             continue
         result.add(moveArray[i])
+
+func generateQuietCheckingMoves*(position: Position, moves: var openArray[Move]): int =
+    let
+        kingSquare = position.kingSquare(position.enemy)
+        occupancy = position.occupancy
+        us = position.us
+        enemy = position.enemy
+
+    result = 0
+
+    for piece in knight..queen:
+        let allowedTargetMask = piece.attackMask(kingSquare, occupancy) and not occupancy
+        var pieceOccupancy = position[us] and position[piece]
+        while pieceOccupancy != 0:
+            let source = pieceOccupancy.removeTrailingOneBit.Square
+            var attackMask = piece.attackMask(source, occupancy) and allowedTargetMask
+            while attackMask != 0:
+                let target = attackMask.removeTrailingOneBit.Square                    
+                moves[result].create(
+                    source = source, target = target, enPassantTarget = noSquare,
+                    moved = piece, captured = noPiece, promoted = noPiece,
+                    castled = false, capturedEnPassant = false)
+                result += 1
+
+    var targetMask = pawnCaptureAttackTable[enemy][kingSquare] and not occupancy
+    while targetMask != 0:
+        let target = targetMask.removeTrailingOneBit.Square
+        let sourceMask = pawnQuietAttackTable[enemy][target]
+        if sourceMask == 0:
+            continue
+        let source = sourceMask.countTrailingZeroBits.Square
+        if (bitAt[source] and position[pawn] and position[us]) != 0:
+            moves[result].create(
+                source = source, target = target, enPassantTarget = noSquare,
+                moved = pawn, captured = noPiece, promoted = noPiece,
+                castled = false, capturedEnPassant = false)
+            result += 1
+
+        # double pushs
+        let doublePushSourceMask = pawnQuietAttackTable[enemy][source]
+        if doublePushSourceMask == 0:
+            continue
+        let doublePushSource = doublePushSourceMask.countTrailingZeroBits.Square
+        if (occupancy and bitAt[source]) == 0 and 
+        (bitAt[doublePushSource] and pawnHomeRank[us] and position[us] and position[pawn]) != 0:
+            moves[result].create(
+                source = doublePushSource, target = target, enPassantTarget = source,
+                moved = pawn, captured = noPiece, promoted = noPiece,
+                castled = false, capturedEnPassant = false)
+            result += 1
