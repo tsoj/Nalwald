@@ -8,13 +8,9 @@ import utils
 template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
-func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): Value =
-    const openingTable = [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value]
-    const endgameTable = [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value]
-    var index = square.int8 div 8
-    if us == black:
-        index = 7 - index
-    gamePhase.interpolate(openingTable[index], endgameTable[index])
+
+const openingPassedPawnTable = [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value]
+const endgamePassedPawnTable = [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value]
 
 const penaltyIsolatedPawn = 10.Value
 const bonusBothBishops = 10.Value
@@ -25,6 +21,35 @@ const mobilityMultiplierRook: float32 = 4.0
 const mobilityMultiplierQueen: float32 = 2.0
 const penaltyRookSecondRankFromKing = 10.Value
 const kingSafetyMultiplier: float32 = 2.5
+
+type EvalProperties = object
+    openingPst: array[pawn..king, array[a1..h8, Value]]
+    endgamePst: array[pawn..king, array[a1..h8, Value]]
+    openingPassedPawnTable: array[8, Value]
+    endgamePassedPawnTable: array[8, Value]
+    penaltyIsolatedPawn: Value
+    bonusBothBishops: Value
+    bonusRookOnOpenFile: Value
+    mobilityMultiplierKnight: float32
+    mobilityMultiplierBishop: float32
+    mobilityMultiplierRook: float32
+    mobilityMultiplierQueen: float32
+    penaltyRookSecondRankFromKing: Value
+    kingSafetyMultiplier: float32
+
+func getPstValue(evalProperties: EvalProperties, square: Square, piece: Piece, us: Color): Value =
+    let square = if us == black: square else: square.mirror
+    gamePhase.interpolate(
+        forOpening: evalProperties.openingPst[piece][square],
+        forEndgame: evalProperties.endgamePst[piece][square]
+    )
+
+
+func bonusPassedPawn(gamePhase: GamePhase, square: Square, us: Color): Value =
+    var index = square.int8 div 8
+    if us == black:
+        index = 7 - index
+    gamePhase.interpolate(openingPassedPawnTable[index], endgamePassedPawnTable[index])
 
 func evaluatePawn(position: Position, square: Square, us, enemy: Color, gamePhase: GamePhase): Value =
     result = 0
