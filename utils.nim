@@ -57,8 +57,13 @@ func toColoredPiece*(s: char): ColoredPiece =
     let color = if s.isLowerAscii: black else: white
     ColoredPiece(color: color, piece: piece)
 
+const mirrorTable = block:
+    var table: array[Square, Square]
+    for s in a1..h8:
+        table[s] = ((7 - s.int8 div 8) * 8 + s.int8 mod 8).Square
+    table
 func mirror*(square: Square): Square =
-    ((7 - square.int8 div 8) * 8 + square.int8 mod 8).Square
+    mirrorTable[square]
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T

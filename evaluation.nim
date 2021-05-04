@@ -8,195 +8,116 @@ import utils
 template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
-# const penaltyIsolatedPawn = 10.Value
+# const bonusIsolatedPawn = 10.Value
 # const bonusBothBishops = 10.Value
 # const bonusRookOnOpenFile = 5.Value
 # const mobilityMultiplierKnight: float32 = 2.0
 # const mobilityMultiplierBishop: float32 = 3.0
 # const mobilityMultiplierRook: float32 = 4.0
 # const mobilityMultiplierQueen: float32 = 2.0
-# const penaltyRookSecondRankFromKing = 10.Value
+# const bonusRookSecondRankFromKing = 10.Value
 # const kingSafetyMultiplier: float32 = 2.5
 
 type EvalPropertiesTemplate[ValueType] = object
-    openingPst: array[pawn..king, array[a1..h8, ValueType]]
-    endgamePst: array[pawn..king, array[a1..h8, ValueType]]
+    pst: array[GamePhase, array[pawn..king, array[a1..h8, ValueType]]]
     openingPassedPawnTable: array[8, ValueType]
     endgamePassedPawnTable: array[8, ValueType]
-    penaltyIsolatedPawn: ValueType
+    bonusIsolatedPawn: ValueType
     bonusBothBishops: ValueType
     bonusRookOnOpenFile: ValueType
     mobilityMultiplierKnight: float32
     mobilityMultiplierBishop: float32
     mobilityMultiplierRook: float32
     mobilityMultiplierQueen: float32
-    penaltyRookSecondRankFromKing: ValueType
+    bonusRookSecondRankFromKing: ValueType
     kingSafetyMultiplier: float32
 
 type EvalProperties = EvalPropertiesTemplate[Value]
-type EvalPropertiesGradient = EvalPropertiesTemplate[float32]
+type EvalPropertiesFloat32 = EvalPropertiesTemplate[float32]
 
-const defaultEvalProperties = EvalProperties(
-    openingPst: [
-        pawn:
-        [
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value,
-            45.Value, 45.Value, 45.Value, 45.Value, 45.Value, 45.Value, 45.Value, 45.Value,
-            10.Value, 10.Value, 20.Value, 30.Value, 30.Value, 20.Value, 10.Value, 10.Value,
-            5.Value, 5.Value, 10.Value, 25.Value, 25.Value, 10.Value, 5.Value, 5.Value,
-            0.Value, 0.Value, 0.Value, 20.Value, 20.Value, 0.Value, 0.Value, 0.Value,
-            5.Value, -5.Value, -10.Value, 0.Value, 0.Value, -10.Value, -5.Value, 5.Value,
-            5.Value, 10.Value, 10.Value, -20.Value, -20.Value, 10.Value, 10.Value, 5.Value,
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value
-        ],
-        knight:
-        [
-            -50.Value, -40.Value, -30.Value, -30.Value, -30.Value, -30.Value, -40.Value, -50,
-            -40.Value, -20.Value, 0.Value, 0.Value, 0.Value, 0.Value, -20.Value, -40,
-            -30.Value, 0.Value, 10.Value, 15.Value, 15.Value, 10.Value, 0.Value, -30,
-            -30.Value, 5.Value, 15.Value, 20.Value, 20.Value, 15.Value, 5.Value, -30,
-            -30.Value, 0.Value, 15.Value, 20.Value, 20.Value, 15.Value, 0.Value, -30,
-            -30.Value, 5.Value, 10.Value, 15.Value, 15.Value, 10.Value, 5.Value, -30,
-            -40.Value, -20.Value, 0.Value, 5.Value, 5.Value, 0.Value, -20.Value, -40,
-            -50.Value, -40.Value, -30.Value, -30.Value, -30.Value, -30.Value, -40.Value, -50.Value
-        ],
-        bishop:
-        [
-            -20.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -20.Value,
-            -10.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 5.Value, 10.Value, 10.Value, 5.Value, 0.Value, -10.Value,
-            -10.Value, 5.Value, 5.Value, 10.Value, 10.Value, 5.Value, 5.Value, -10.Value,
-            -10.Value, 0.Value, 10.Value, 10.Value, 10.Value, 10.Value, 0.Value, -10.Value,
-            -10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, -10.Value,
-            -10.Value, 5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 5.Value, -10.Value,
-            -20.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -20.Value
-        ],
-        rook:
-        [
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value,
-            5.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            0.Value, 0.Value, 0.Value, 5.Value, 5.Value, 0.Value, 0.Value, 0.Value
-        ],
-        queen:
-        [
-            -20.Value, -10.Value, -10.Value, -5.Value, -5.Value, -10.Value, -10.Value, -20.Value,
-            -10.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -10.Value,
-            -5.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -5.Value,
-            0.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -5.Value,
-            -10.Value, 5.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 5.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -20.Value, -10.Value, -10.Value, -5.Value, -5.Value, -10.Value, -10.Value, -20.Value
-        ],
-        king:
-        [
-            -30.Value, -40.Value, -40.Value, -50.Value, -50.Value, -40.Value, -40.Value, -30.Value,
-            -30.Value, -40.Value, -40.Value, -50.Value, -50.Value, -40.Value, -40.Value, -30.Value,
-            -30.Value, -40.Value, -40.Value, -50.Value, -50.Value, -40.Value, -40.Value, -30.Value,
-            -30.Value, -40.Value, -40.Value, -50.Value, -50.Value, -40.Value, -40.Value, -30.Value,
-            -20.Value, -30.Value, -30.Value, -40.Value, -40.Value, -30.Value, -30.Value, -20.Value,
-            -10.Value, -20.Value, -20.Value, -20.Value, -20.Value, -20.Value, -20.Value, -10.Value,
-            20.Value, 20.Value, 0.Value, 0.Value, 0.Value, 0.Value, 20.Value, 20.Value,
-            20.Value, 30.Value, 10.Value, 0.Value, 0.Value, 10.Value, 30.Value, 20.Value
-        ],
-    ],
-    endgamePst: [
-        pawn:
-        [
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value,
-            90.Value, 90.Value, 90.Value, 90.Value, 90.Value, 90.Value, 90.Value, 90.Value,
-            30.Value, 30.Value, 40.Value, 45.Value, 45.Value, 40.Value, 40.Value, 30.Value,
-            20.Value, 20.Value, 20.Value, 25.Value, 25.Value, 20.Value, 20.Value, 20.Value,
-            0.Value, 0.Value, 0.Value, 20.Value, 20.Value, 0.Value, 0.Value, 0.Value,
-            -5.Value, -5.Value, -10.Value, -10.Value, -10.Value, -10.Value, -5.Value, -5.Value,
-            -15.Value, -15.Value, -15.Value, -20.Value, -20.Value, -15.Value, -15.Value, -15.Value,
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value
-        ],
-        knight:
-        [
-            -50.Value, -40.Value, -30.Value, -30.Value, -30.Value, -30.Value, -40.Value, -50.Value,
-            -40.Value, -20.Value, 0.Value, 0.Value, 0.Value, 0.Value, -20.Value, -40.Value,
-            -30.Value, 0.Value, 10.Value, 15.Value, 15.Value, 10.Value, 0.Value, -30.Value,
-            -30.Value, 5.Value, 15.Value, 20.Value, 20.Value, 15.Value, 5.Value, -30.Value,
-            -30.Value, 0.Value, 15.Value, 20.Value, 20.Value, 15.Value, 0.Value, -30.Value,
-            -30.Value, 5.Value, 10.Value, 15.Value, 15.Value, 10.Value, 5.Value, -30.Value,
-            -40.Value, -20.Value, 0.Value, 5.Value, 5.Value, 0.Value, -20.Value, -40.Value,
-            -50.Value, -40.Value, -30.Value, -30.Value, -30.Value, -30.Value, -40.Value, -50.Value
-        ],
-        bishop:
-        [
-            -20.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -20.Value,
-            -10.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 5.Value, 10.Value, 10.Value, 5.Value, 0.Value, -10.Value,
-            -10.Value, 5.Value, 5.Value, 10.Value, 10.Value, 5.Value, 5.Value, -10.Value,
-            -10.Value, 0.Value, 10.Value, 10.Value, 10.Value, 10.Value, 0.Value, -10.Value,
-            -10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, 10.Value, -10.Value,
-            -10.Value, 5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 5.Value, -10.Value,
-            -20.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -10.Value, -20.Value
-        ],
-        rook:
-        [
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value,
-            0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            -5.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -5.Value,
-            0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value
-        ],
-        queen:
-        [
-            -20.Value, -10.Value, -10.Value, -5.Value, -5.Value, -10.Value, -10.Value, -20.Value,
-            -10.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -10.Value,
-            -5.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -5.Value,
-            0.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -5.Value,
-            -10.Value, 0.Value, 5.Value, 5.Value, 5.Value, 5.Value, 0.Value, -10.Value,
-            -10.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, 0.Value, -10.Value,
-            -20.Value, -10.Value, -10.Value, -5.Value, -5.Value, -10.Value, -10.Value, -20.Value
-        ],
-        king:
-        [
-            -50.Value, -40.Value, -30.Value, -20.Value, -20.Value, -30.Value, -40.Value, -50.Value,
-            -30.Value, -20.Value, -10.Value, 0.Value, 0.Value, -10.Value, -20.Value, -30.Value,
-            -30.Value, -10.Value, 20.Value, 30.Value, 30.Value, 20.Value, -10.Value, -30.Value,
-            -30.Value, -10.Value, 30.Value, 40.Value, 40.Value, 30.Value, -10.Value, -30.Value,
-            -30.Value, -10.Value, 30.Value, 40.Value, 40.Value, 30.Value, -10.Value, -30.Value,
-            -30.Value, -10.Value, 20.Value, 30.Value, 30.Value, 20.Value, -10.Value, -30.Value,
-            -30.Value, -30.Value, 0.Value, 0.Value, 0.Value, 0.Value, -30.Value, -30.Value,
-            -50.Value, -30.Value, -30.Value, -30.Value, -30.Value, -30.Value, -30.Value, -50.Value
-        ],
-    ],
-    openingPassedPawnTable: [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value],
-    endgamePassedPawnTable: [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value],
-    penaltyIsolatedPawn: 10.Value,
-    bonusBothBishops: 10.Value,
-    bonusRookOnOpenFile: 5.Value,
-    mobilityMultiplierKnight: 2.0,
-    mobilityMultiplierBishop: 3.0,
-    mobilityMultiplierRook: 4.0,
-    mobilityMultiplierQueen: 2.0,
-    penaltyRookSecondRankFromKing: 10.Value,
-    kingSafetyMultiplier: 2.5
-)
+func convertEvalProperties[InValueType, OutValueType](
+    evalProperties: EvalPropertiesTemplate[InValueType]
+): EvalPropertiesTemplate[OutValueType] =
+    for piece in pawn..king:
+        for square in a1..h8:
+            for gamePhase in GamePhase.low..GamePhase.high:
+                result.pst[gamePhase][piece][square] = evalProperties.pst[gamePhase][piece][square].OutValueType
+    for i in 0..7:
+        result.openingPassedPawnTable[i] = evalProperties.openingPassedPawnTable[i].OutValueType
+        result.endgamePassedPawnTable[i] = evalProperties.endgamePassedPawnTable[i].OutValueType
+    result.bonusIsolatedPawn = evalProperties.bonusIsolatedPawn.OutValueType
+    result.bonusBothBishops = evalProperties.bonusBothBishops.OutValueType
+    result.bonusRookOnOpenFile = evalProperties.bonusRookOnOpenFile.OutValueType
+    result.mobilityMultiplierKnight = evalProperties.mobilityMultiplierKnight
+    result.mobilityMultiplierBishop = evalProperties.mobilityMultiplierBishop
+    result.mobilityMultiplierRook = evalProperties.mobilityMultiplierRook
+    result.mobilityMultiplierQueen = evalProperties.mobilityMultiplierQueen
+    result.bonusRookSecondRankFromKing = evalProperties.bonusRookSecondRankFromKing.OutValueType
+    result.kingSafetyMultiplier = evalProperties.kingSafetyMultiplier
 
-func getPstValue(evalProperties: EvalProperties, gamePhase: GamePhase, square: Square, piece: Piece, us: Color): Value =
-    let square = if us == black: square else: square.mirror
-    gamePhase.interpolate(
-        forOpening = evalProperties.openingPst[piece][square],
-        forEndgame = evalProperties.endgamePst[piece][square]
+
+const defaultEvalProperties = block:
+    var defaultEvalProperties = EvalProperties(
+        openingPassedPawnTable: [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value],
+        endgamePassedPawnTable: [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value],
+        bonusIsolatedPawn: -10.Value,
+        bonusBothBishops: 10.Value,
+        bonusRookOnOpenFile: 5.Value,
+        mobilityMultiplierKnight: 2.0,
+        mobilityMultiplierBishop: 3.0,
+        mobilityMultiplierRook: 4.0,
+        mobilityMultiplierQueen: 2.0,
+        bonusRookSecondRankFromKing: -10.Value,
+        kingSafetyMultiplier: 2.5
     )
+    for piece in pawn..king:
+        for square in a1..h8:
+            for gamePhase in GamePhase.low..GamePhase.high:
+                defaultEvalProperties.pst[gamePhase][piece][square] =
+                    gamePhase.interpolate(openingPst[piece][square].Value, endgamePst[piece][square].Value)
+    defaultEvalProperties
 
-func bonusPassedPawn(evalProperties: EvalProperties, gamePhase: GamePhase, square: Square, us: Color): Value =
+type Nothing = enum nothing
+type GradientOrNothing = EvalPropertiesFloat32 or Nothing
+
+func getPstValue(
+    evalProperties: EvalProperties,
+    gamePhase: GamePhase,
+    square: Square,
+    piece: Piece,
+    us: Color,
+    gradient: var GradientOrNothing
+): Value =
+    let square = if us == black: square else: square.mirror
+
+    when not (gradient is Nothing):
+        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        let endgameGradient = 1.0 - openingGradient
+        for phase in GamePhase.low..GamePhase.high:
+            gradient.pst[phase][piece][square] = 
+                phase.interpolate(forOpening: openingGradient, forEndgame: endgameGradient)
+            if us == black:
+                gradient.pst[phase][piece][square] *= -1.0
+
+    evalProperties.pst[gamePhase][piece][square]
+
+func bonusPassedPawn(
+    evalProperties: EvalProperties,
+    gamePhase: GamePhase,
+    square: Square,
+    us: Color,
+    gradient: var GradientOrNothing
+): Value =
     var index = square.int8 div 8
     if us == black:
         index = 7 - index
+
+    when not (gradient is Nothing):
+        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        let endgameGradient = 1.0 - openingGradient
+        gradient.openingPassedPawnTable[index] = if us == black: -openingGradient else: openingGradient
+        gradient.endgamePassedPawnTable[index] = if us == black: -endgameGradient else: endgameGradient
+
     gamePhase.interpolate(evalProperties.openingPassedPawnTable[index], evalProperties.endgamePassedPawnTable[index])
 
 func evaluatePawn(
@@ -204,66 +125,95 @@ func evaluatePawn(
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
     result = 0
     
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
-        result += evalProperties.bonusPassedPawn(gamePhase, square, us)
+        result += evalProperties.bonusPassedPawn(gamePhase, square, us, gradient)
 
     # isolated pawn
     if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
     (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
-        result -= evalProperties.penaltyIsolatedPawn
+        result += evalProperties.bonusIsolatedPawn
+
+        when not (gradient is Nothing):
+            gradient.bonusIsolatedPawn = if us == black: -1.0 else: 1.0
 
 func evaluateKnight(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
-    (position.numReachableSquares(knight, square, us).float32 * evalProperties.mobilityMultiplierKnight).Value
+    let reachableSquares = position.numReachableSquares(knight, square, us).float32
+    when not (gradient is Nothing):
+        gradient.mobilityMultiplierKnight = if us == black: -reachableSquares else: reachableSquares
+    (reachableSquares * evalProperties.mobilityMultiplierKnight).Value
 
 func evaluateBishop(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
-    result = (position.numReachableSquares(bishop, square, us).float32 * evalProperties.mobilityMultiplierBishop).Value
+    let reachableSquares = position.numReachableSquares(bishop, square, us).float32
+    when not (gradient is Nothing):
+        gradient.mobilityMultiplierBishop = if us == black: -reachableSquares else: reachableSquares
+    result = (reachableSquares * evalProperties.mobilityMultiplierBishop).Value
+    
     if (position[us] and position[bishop] and (not bitAt[square])) != 0:
         result += evalProperties.bonusBothBishops
+
+        when not (gradient is Nothing):
+            gradient.bonusBothBishops = if us == black: -1.0 else: 1.0
 
 func evaluateRook(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
-    result = (position.numReachableSquares(rook, square, us).float32 * evalProperties.mobilityMultiplierRook).Value
+    let reachableSquares = position.numReachableSquares(rook, square, us).float32
+    when not (gradient is Nothing):
+        gradient.mobilityMultiplierRook = if us == black: -reachableSquares else: reachableSquares
+    result = (reachableSquares * evalProperties.mobilityMultiplierRook).Value
+    
     # rook on open file
     if (files[square] and position[pawn]) == 0:
         result += evalProperties.bonusRookOnOpenFile
+
+        when not (gradient is Nothing):
+            gradient.bonusRookOnOpenFile = if us == black: -1.0 else: 1.0
 
 func evaluateQueen(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
-    (position.numReachableSquares(queen, square, us).float32 * evalProperties.mobilityMultiplierQueen).Value
+    let reachableSquares = position.numReachableSquares(queen, square, us).float32
+    when not (gradient is Nothing):
+        gradient.mobilityMultiplierQueen = if us == black: -reachableSquares else: reachableSquares
+    (reachableSquares * evalProperties.mobilityMultiplierQueen).Value
 
 func evaluateKing(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
     result = 0
     
@@ -271,7 +221,11 @@ func evaluateKing(
     let enemyRooks = position[rook] and position[enemy];
     for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
         if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
-            result -= evalProperties.penaltyRookSecondRankFromKing
+            result += evalProperties.bonusRookSecondRankFromKing
+
+            when not (gradient is Nothing):
+                gradient.bonusRookSecondRankFromKing = if us == black: -1.0 else: 1.0            
+
             break
 
     # kingsafety by pawn shielding
@@ -281,30 +235,52 @@ func evaluateKing(
         forEndgame = 0.Value
     )
 
+    when not (gradient is Nothing):
+        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        gradient.kingSafetyMultiplier = -openingGradient*numPossibleQueenAttack.float32
+        gradient.kingSafetyMultiplier *= (if us == black: -1.0 else: 1.0)
+
 func evaluatePiece(
     position: Position,
     piece: Piece,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value =
-    const evaluationFunctions = [
-        pawn: evaluatePawn,
-        knight: evaluateKnight,
-        bishop: evaluateBishop,
-        rook: evaluateRook,
-        queen: evaluateQueen,
-        king: evaluateKing
-    ]
-    assert piece != noPiece
-    evaluationFunctions[piece](position, square, us, enemy, gamePhase, evalProperties)
+    case piece:
+    of pawn:
+        return evaluatePawn(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    of knight:
+        return evaluateKnight(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    of bishop:
+        return evaluateBishop(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    of rook:
+        return evaluateRook(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    of queen:
+        return evaluateQueen(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    of king:
+        return evaluateKing(position, square, us, enemy, gamePhase, evalProperties, gradient)
+    else:
+        assert false
+    # const evaluationFunctions = [
+    #     pawn: evaluatePawn,
+    #     knight: evaluateKnight,
+    #     bishop: evaluateBishop,
+    #     rook: evaluateRook,
+    #     queen: evaluateQueen,
+    #     king: evaluateKing
+    # ]
+    # assert piece != noPiece
+    # evaluationFunctions[piece](position, square, us, enemy, gamePhase, evalProperties, gradient)
     
 func evaluatePieceType(
     position: Position,
     piece: Piece,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties
+    evalProperties: EvalProperties,
+    gradient: var GradientOrNothing
 ): Value  =
     let
         us = position.us
@@ -320,23 +296,26 @@ func evaluatePieceType(
 
         let currentResult = 
             values[piece] +
-            evalProperties.getPstValue(gamePhase, square, piece, currentUs) + #TODO improve NPS
+            evalProperties.getPstValue(gamePhase, square, piece, currentUs, gradient) + #TODO improve NPS
             # defaultPieceSquareTable[gamePhase][currentUs][piece][square] +
-            position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalProperties)
+            position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalProperties, gradient)
         
         if currentUs == us:
             result += currentResult
         else:
             result -= currentResult
 
-func evaluate*(position: Position, evalProperties: EvalProperties): Value =
+func evaluate*(position: Position, evalProperties: EvalProperties, gradient: var GradientOrNothing): Value =
     if position.halfmoveClock >= 100:
         return 0
 
     result = 0
     let gamePhase = position.gamePhase
     for piece in pawn..king:
-        result += position.evaluatePieceType(piece, gamePhase, evalProperties)
+        result += position.evaluatePieceType(piece, gamePhase, evalProperties, gradient)
+
+
 
 func evaluate*(position: Position): Value =
-    position.evaluate(defaultEvalProperties)
+    var gradient: Nothing = nothing
+    position.evaluate(defaultEvalProperties, gradient)
