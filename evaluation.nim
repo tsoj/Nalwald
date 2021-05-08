@@ -8,16 +8,6 @@ import utils
 template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
-# const bonusIsolatedPawn = 10.Value
-# const bonusBothBishops = 10.Value
-# const bonusRookOnOpenFile = 5.Value
-# const mobilityMultiplierKnight: float32 = 2.0
-# const mobilityMultiplierBishop: float32 = 3.0
-# const mobilityMultiplierRook: float32 = 4.0
-# const mobilityMultiplierQueen: float32 = 2.0
-# const bonusRookSecondRankFromKing = 10.Value
-# const kingSafetyMultiplier: float32 = 2.5
-
 type EvalPropertiesTemplate[ValueType] = object
     pst: array[GamePhase, array[pawn..king, array[a1..h8, ValueType]]]
     openingPassedPawnTable: array[8, ValueType]
@@ -264,16 +254,6 @@ func evaluatePiece(
         return evaluateKing(position, square, us, enemy, gamePhase, evalProperties, gradient)
     else:
         assert false
-    # const evaluationFunctions = [
-    #     pawn: evaluatePawn,
-    #     knight: evaluateKnight,
-    #     bishop: evaluateBishop,
-    #     rook: evaluateRook,
-    #     queen: evaluateQueen,
-    #     king: evaluateKing
-    # ]
-    # assert piece != noPiece
-    # evaluationFunctions[piece](position, square, us, enemy, gamePhase, evalProperties, gradient)
     
 func evaluatePieceType(
     position: Position,
