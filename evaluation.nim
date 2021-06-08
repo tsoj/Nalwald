@@ -2,76 +2,17 @@ import position
 import types
 import bitboard
 import bitops
-import pieceSquareTable
+import evalParameters
 import utils
 
 template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
-type EvalPropertiesTemplate[ValueType] = object
-    pst: array[GamePhase, array[pawn..king, array[a1..h8, ValueType]]]
-    openingPassedPawnTable: array[8, ValueType]
-    endgamePassedPawnTable: array[8, ValueType]
-    bonusIsolatedPawn: ValueType
-    bonusBothBishops: ValueType
-    bonusRookOnOpenFile: ValueType
-    mobilityMultiplierKnight: float32
-    mobilityMultiplierBishop: float32
-    mobilityMultiplierRook: float32
-    mobilityMultiplierQueen: float32
-    bonusRookSecondRankFromKing: ValueType
-    kingSafetyMultiplier: float32
-
-type EvalProperties = EvalPropertiesTemplate[Value]
-type EvalPropertiesFloat32 = EvalPropertiesTemplate[float32]
-
-func convertEvalProperties[InValueType, OutValueType](
-    evalProperties: EvalPropertiesTemplate[InValueType]
-): EvalPropertiesTemplate[OutValueType] =
-    for piece in pawn..king:
-        for square in a1..h8:
-            for gamePhase in GamePhase.low..GamePhase.high:
-                result.pst[gamePhase][piece][square] = evalProperties.pst[gamePhase][piece][square].OutValueType
-    for i in 0..7:
-        result.openingPassedPawnTable[i] = evalProperties.openingPassedPawnTable[i].OutValueType
-        result.endgamePassedPawnTable[i] = evalProperties.endgamePassedPawnTable[i].OutValueType
-    result.bonusIsolatedPawn = evalProperties.bonusIsolatedPawn.OutValueType
-    result.bonusBothBishops = evalProperties.bonusBothBishops.OutValueType
-    result.bonusRookOnOpenFile = evalProperties.bonusRookOnOpenFile.OutValueType
-    result.mobilityMultiplierKnight = evalProperties.mobilityMultiplierKnight
-    result.mobilityMultiplierBishop = evalProperties.mobilityMultiplierBishop
-    result.mobilityMultiplierRook = evalProperties.mobilityMultiplierRook
-    result.mobilityMultiplierQueen = evalProperties.mobilityMultiplierQueen
-    result.bonusRookSecondRankFromKing = evalProperties.bonusRookSecondRankFromKing.OutValueType
-    result.kingSafetyMultiplier = evalProperties.kingSafetyMultiplier
-
-
-const defaultEvalProperties = block:
-    var defaultEvalProperties = EvalProperties(
-        openingPassedPawnTable: [0.Value, 0.Value, 0.Value, 10.Value, 15.Value, 20.Value, 45.Value, 0.Value],
-        endgamePassedPawnTable: [0.Value, 20.Value, 30.Value, 40.Value, 60.Value, 100.Value, 120.Value, 0.Value],
-        bonusIsolatedPawn: -10.Value,
-        bonusBothBishops: 10.Value,
-        bonusRookOnOpenFile: 5.Value,
-        mobilityMultiplierKnight: 2.0,
-        mobilityMultiplierBishop: 3.0,
-        mobilityMultiplierRook: 4.0,
-        mobilityMultiplierQueen: 2.0,
-        bonusRookSecondRankFromKing: -10.Value,
-        kingSafetyMultiplier: 2.5
-    )
-    for piece in pawn..king:
-        for square in a1..h8:
-            for gamePhase in GamePhase.low..GamePhase.high:
-                defaultEvalProperties.pst[gamePhase][piece][square] =
-                    gamePhase.interpolate(openingPst[piece][square].Value, endgamePst[piece][square].Value)
-    defaultEvalProperties
-
 type Nothing = enum nothing
-type GradientOrNothing = EvalPropertiesFloat32 or Nothing
+type GradientOrNothing = EvalParametersFloat32 or Nothing
 
 func getPstValue(
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gamePhase: GamePhase,
     square: Square,
     piece: Piece,
@@ -89,10 +30,10 @@ func getPstValue(
             if us == black:
                 gradient.pst[phase][piece][square] *= -1.0
 
-    evalProperties.pst[gamePhase][piece][square]
+    evalParameters.pst[gamePhase][piece][square]
 
 func bonusPassedPawn(
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gamePhase: GamePhase,
     square: Square,
     us: Color,
@@ -108,26 +49,26 @@ func bonusPassedPawn(
         gradient.openingPassedPawnTable[index] = if us == black: -openingGradient else: openingGradient
         gradient.endgamePassedPawnTable[index] = if us == black: -endgameGradient else: endgameGradient
 
-    gamePhase.interpolate(evalProperties.openingPassedPawnTable[index], evalProperties.endgamePassedPawnTable[index])
+    gamePhase.interpolate(evalParameters.openingPassedPawnTable[index], evalParameters.endgamePassedPawnTable[index])
 
 func evaluatePawn(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     result = 0
     
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
-        result += evalProperties.bonusPassedPawn(gamePhase, square, us, gradient)
+        result += evalParameters.bonusPassedPawn(gamePhase, square, us, gradient)
 
     # isolated pawn
     if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
     (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
-        result += evalProperties.bonusIsolatedPawn
+        result += evalParameters.bonusIsolatedPawn
 
         when not (gradient is Nothing):
             gradient.bonusIsolatedPawn = if us == black: -1.0 else: 1.0
@@ -137,29 +78,29 @@ func evaluateKnight(
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     let reachableSquares = position.numReachableSquares(knight, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierKnight = if us == black: -reachableSquares else: reachableSquares
-    (reachableSquares * evalProperties.mobilityMultiplierKnight).Value
+    (reachableSquares * evalParameters.mobilityMultiplierKnight).Value
 
 func evaluateBishop(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     let reachableSquares = position.numReachableSquares(bishop, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierBishop = if us == black: -reachableSquares else: reachableSquares
-    result = (reachableSquares * evalProperties.mobilityMultiplierBishop).Value
+    result = (reachableSquares * evalParameters.mobilityMultiplierBishop).Value
     
     if (position[us] and position[bishop] and (not bitAt[square])) != 0:
-        result += evalProperties.bonusBothBishops
+        result += evalParameters.bonusBothBishops
 
         when not (gradient is Nothing):
             gradient.bonusBothBishops = if us == black: -1.0 else: 1.0
@@ -169,17 +110,17 @@ func evaluateRook(
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     let reachableSquares = position.numReachableSquares(rook, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierRook = if us == black: -reachableSquares else: reachableSquares
-    result = (reachableSquares * evalProperties.mobilityMultiplierRook).Value
+    result = (reachableSquares * evalParameters.mobilityMultiplierRook).Value
     
     # rook on open file
     if (files[square] and position[pawn]) == 0:
-        result += evalProperties.bonusRookOnOpenFile
+        result += evalParameters.bonusRookOnOpenFile
 
         when not (gradient is Nothing):
             gradient.bonusRookOnOpenFile = if us == black: -1.0 else: 1.0
@@ -189,20 +130,20 @@ func evaluateQueen(
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     let reachableSquares = position.numReachableSquares(queen, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierQueen = if us == black: -reachableSquares else: reachableSquares
-    (reachableSquares * evalProperties.mobilityMultiplierQueen).Value
+    (reachableSquares * evalParameters.mobilityMultiplierQueen).Value
 
 func evaluateKing(
     position: Position,
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     result = 0
@@ -211,7 +152,7 @@ func evaluateKing(
     let enemyRooks = position[rook] and position[enemy];
     for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
         if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
-            result += evalProperties.bonusRookSecondRankFromKing
+            result += evalParameters.bonusRookSecondRankFromKing
 
             when not (gradient is Nothing):
                 gradient.bonusRookSecondRankFromKing = if us == black: -1.0 else: 1.0            
@@ -221,7 +162,7 @@ func evaluateKing(
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     result -= gamePhase.interpolate(
-        forOpening = (evalProperties.kingSafetyMultiplier*numPossibleQueenAttack.float32).Value,
+        forOpening = (evalParameters.kingSafetyMultiplier*numPossibleQueenAttack.float32).Value,
         forEndgame = 0.Value
     )
 
@@ -236,22 +177,22 @@ func evaluatePiece(
     square: Square,
     us, enemy: Color,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
     case piece:
     of pawn:
-        return evaluatePawn(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluatePawn(position, square, us, enemy, gamePhase, evalParameters, gradient)
     of knight:
-        return evaluateKnight(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluateKnight(position, square, us, enemy, gamePhase, evalParameters, gradient)
     of bishop:
-        return evaluateBishop(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluateBishop(position, square, us, enemy, gamePhase, evalParameters, gradient)
     of rook:
-        return evaluateRook(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluateRook(position, square, us, enemy, gamePhase, evalParameters, gradient)
     of queen:
-        return evaluateQueen(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluateQueen(position, square, us, enemy, gamePhase, evalParameters, gradient)
     of king:
-        return evaluateKing(position, square, us, enemy, gamePhase, evalProperties, gradient)
+        return evaluateKing(position, square, us, enemy, gamePhase, evalParameters, gradient)
     else:
         assert false
     
@@ -259,7 +200,7 @@ func evaluatePieceType(
     position: Position,
     piece: Piece,
     gamePhase: GamePhase,
-    evalProperties: EvalProperties,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value  =
     let
@@ -276,26 +217,26 @@ func evaluatePieceType(
 
         let currentResult = 
             values[piece] +
-            evalProperties.getPstValue(gamePhase, square, piece, currentUs, gradient) + #TODO improve NPS
+            evalParameters.getPstValue(gamePhase, square, piece, currentUs, gradient) + #TODO improve NPS
             # defaultPieceSquareTable[gamePhase][currentUs][piece][square] +
-            position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalProperties, gradient)
+            position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)
         
         if currentUs == us:
             result += currentResult
         else:
             result -= currentResult
 
-func evaluate*(position: Position, evalProperties: EvalProperties, gradient: var GradientOrNothing): Value =
+func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
     if position.halfmoveClock >= 100:
         return 0
 
     result = 0
     let gamePhase = position.gamePhase
     for piece in pawn..king:
-        result += position.evaluatePieceType(piece, gamePhase, evalProperties, gradient)
+        result += position.evaluatePieceType(piece, gamePhase, evalParameters, gradient)
 
 
 
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
-    position.evaluate(defaultEvalProperties, gradient)
+    position.evaluate(defaultEvalParameters, gradient)
