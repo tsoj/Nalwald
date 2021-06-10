@@ -40,7 +40,7 @@ const defaultEvalParameters* = block:
                     gamePhase.interpolate(openingPst[piece][square].Value, endgamePst[piece][square].Value)
     defaultEvalParameters
 
-func convertEvalParameters*[InValueType, OutValueType](
+func convert*[InValueType, OutValueType](
     evalParameters: EvalParametersTemplate[InValueType]
 ): EvalParametersTemplate[OutValueType] =
     for piece in pawn..king:

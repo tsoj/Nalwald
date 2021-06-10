@@ -240,3 +240,12 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.evaluate(defaultEvalParameters, gradient)
+
+func absoluteEvaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
+    result = position.evaluate(evalParameters, gradient)
+    if position.us == black:
+        result = -result
+
+func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Value =
+    var gradient: Nothing = nothing
+    position.absoluteEvaluate(evalParameters, gradient)

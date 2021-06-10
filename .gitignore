@@ -8,3 +8,4 @@ massif.out
 *.profraw
 *.profdata
 *.log
+*.epd
