@@ -5,7 +5,7 @@ import bitops
 import evalParameters
 import utils
 
-template numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
+func numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
 type Nothing = enum nothing
@@ -22,11 +22,11 @@ func getPstValue(
     let square = if us == black: square else: square.mirror
 
     when not (gradient is Nothing):
-        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        let openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         let endgameGradient = 1.0 - openingGradient
         for phase in GamePhase.low..GamePhase.high:
             gradient.pst[phase][piece][square] = 
-                phase.interpolate(forOpening: openingGradient, forEndgame: endgameGradient)
+                phase.interpolate(forOpening = openingGradient, forEndgame = endgameGradient)
             if us == black:
                 gradient.pst[phase][piece][square] *= -1.0
 
@@ -44,7 +44,7 @@ func bonusPassedPawn(
         index = 7 - index
 
     when not (gradient is Nothing):
-        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        let openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         let endgameGradient = 1.0 - openingGradient
         gradient.openingPassedPawnTable[index] = if us == black: -openingGradient else: openingGradient
         gradient.endgamePassedPawnTable[index] = if us == black: -endgameGradient else: endgameGradient
@@ -167,7 +167,7 @@ func evaluateKing(
     )
 
     when not (gradient is Nothing):
-        let openingGradient = gamePhase.interpolate(forOpening: 1.0, forEndgame: 0.0)
+        let openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient.kingSafetyMultiplier = -openingGradient*numPossibleQueenAttack.float32
         gradient.kingSafetyMultiplier *= (if us == black: -1.0 else: 1.0)
 

@@ -25,8 +25,6 @@ proc loadData(filename: string): seq[Entry] =
 
     debugEcho result.len
 
-var data = "quiet-set.epd".loadData
-echo data.len
 
 func error(evalParameters: EvalParameters, data: openArray[Entry]): float =
     result = 0.0
@@ -47,6 +45,7 @@ func optimize(
     var lr = lr
     var bestSolution: EvalParametersFloat32 = start.convert[:Value, float32]
     var bestError = bestSolution.convert[:float32, Value].error(data) # TODO: need .error(data)
+    debugEcho "starting error: ", bestError, ", starting lr: ", lr
 
     for i in 0..maxIterations:
         var gradient: EvalParametersFloat32
@@ -70,3 +69,11 @@ func optimize(
             break;
     
     return bestSolution.convert[:float32, Value]
+
+
+var data = "quiet-set.epd".loadData
+echo data.len
+
+#echo defaultEvalParameters
+
+echo defaultEvalParameters.optimize(data, lr = 1000.0, minLearningRate = 10.0)
