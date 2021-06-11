@@ -42,7 +42,7 @@ template occupancy*(position: Position): Bitboard =
 func `$`*(position: Position): string =
     boardString(proc (square: Square): Option[string] =
         if (bitAt[square] and position.occupancy) != 0:
-            return some(position.coloredPiece(square).unicode)
+            return some($position.coloredPiece(square))
         none(string)
     )
 

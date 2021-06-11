@@ -73,7 +73,7 @@ func mvvLva*(move: Move): Value =
 func `$`*(move: Move): string =
     result = $move.source & $move.target
     if move.promoted != noPiece:
-        result &= $move.promoted
+        result &= move.promoted.notation
 
 func `$`*(pv: seq[Move]): string =
     for move in pv:

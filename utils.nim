@@ -19,16 +19,16 @@ func boardString*(f: proc(square: Square): Option[string]): string =
         result &= "|" & intToStr(rank + 1) & "\n"
     result &= " A B C D E F G H"
 
-func `$`*(piece: Piece): string =
+func notation*(piece: Piece): string =
     const t = [pawn: "p", knight: "n", bishop: "b", rook: "r", queen: "q", king: "k", noPiece: "-"]
     t[piece]
 
-func `$`*(coloredPiece: ColoredPiece): string =
+func notation*(coloredPiece: ColoredPiece): string =
     result = $coloredPiece.piece
     if coloredPiece.color == white:
         result = result.toUpperAscii
 
-func unicode*(coloredPiece: ColoredPiece): string =
+func `$`*(coloredPiece: ColoredPiece): string =
     const t = [
         white: [pawn: "♟︎", knight: "♞", bishop: "♝", rook: "♜", queen: "♛", king: "♚"],
         black: [pawn: "♙", knight: "♘", bishop: "♗", rook: "♖", queen: "♕", king: "♔"]
@@ -80,10 +80,10 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         if now() - start >= duration:
             flag[].store(true)
 
-func winningProbability*(centipawn: Value): float32 =
-    1.0/(1.0 + pow(10.0, -(centipawn.float32/400.0)))
+func winningProbability*(centipawn: Value): float =
+    1.0/(1.0 + pow(10.0, -(centipawn.float/400.0)))
 
-func winningProbabilityDerivative*(centipawn: Value): float32 =
-    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float32/400.0)) * pow(5.0, -(centipawn.float32/400.0))) /
-    pow(1.0 + pow(10.0, -(centipawn.float32/400.0)) , 2.0)
+func winningProbabilityDerivative*(centipawn: Value): float =
+    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float/400.0)) * pow(5.0, -(centipawn.float/400.0))) /
+    pow(1.0 + pow(10.0, -(centipawn.float/400.0)) , 2.0)
 

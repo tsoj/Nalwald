@@ -8,7 +8,7 @@ import gradient
 
 type Entry = object
     position: Position
-    outcome: float32
+    outcome: float
 
 proc loadData(filename: string): seq[Entry] =
     let f = open(filename)
@@ -43,19 +43,19 @@ func optimize(
 ): EvalParameters =
 
     var lr = lr
-    var bestSolution: EvalParametersFloat32 = start.convert[:Value, float32]
-    var bestError = bestSolution.convert[:float32, Value].error(data) # TODO: need .error(data)
+    var bestSolution: EvalParameters = start
+    var bestError = bestSolution.error(data) # TODO: need .error(data)
     debugEcho "starting error: ", bestError, ", starting lr: ", lr
 
     for i in 0..maxIterations:
-        var gradient: EvalParametersFloat32
+        var gradient: EvalParameters
         var currentSolution = bestSolution
         for entry in data:
             gradient.addGradient(bestSolution, entry.position, entry.outcome) # TODO: need .addGradient(currentSolution, entry)
         gradient *= (lr/data.len.float)
         currentSolution += gradient
 
-        let error = currentSolution.convert[:float32, Value].error(data)
+        let error = currentSolution.error(data)
         
         debugEcho "i: ", i, ", error: ", error, ", lr: ", lr
 
@@ -68,7 +68,7 @@ func optimize(
         if lr < minLearningRate:
             break;
     
-    return bestSolution.convert[:float32, Value]
+    return bestSolution
 
 
 var data = "quiet-set.epd".loadData
@@ -76,4 +76,4 @@ echo data.len
 
 #echo defaultEvalParameters
 
-echo defaultEvalParameters.optimize(data, lr = 1000.0, minLearningRate = 10.0)
+echo randomEvalParameters().optimize(data, lr = 1000.0, minLearningRate = 1.0)
