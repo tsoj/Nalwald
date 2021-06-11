@@ -9,3 +9,4 @@ massif.out
 *.profdata
 *.log
 *.epd
+optimization
