@@ -17,9 +17,12 @@ func getPstValue(
     square: Square,
     piece: Piece,
     us: Color,
+    kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
 ): Value =
     let square = if us == black: square else: square.mirror
+    let enemyKingSquare = if us == white: kingSquare[black] else: kingSquare[white].mirror
+    let ourKingSquare = if us == black: kingSquare[black] else: kingSquare[white].mirror
 
     when not (gradient is Nothing):
         var openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
@@ -27,13 +30,19 @@ func getPstValue(
         if us == black:
             openingGradient *= -1.0
             endgameGradient *= -1.0
-        gradient.pstOpening[piece][square] += openingGradient
-        gradient.pstEndgame[piece][square] += endgameGradient
+        gradient.pstOpeningOwnKing[ourKingSquare][piece][square] += openingGradient
+        gradient.pstOpeningEnemeyKing[enemyKingSquare][piece][square] += openingGradient
 
-    gamePhase.interpolate(
-        forOpening = evalParameters.pstOpening[piece][square].Value,
-        forEndgame = evalParameters.pstEndgame[piece][square].Value
-    )
+        gradient.pstpstEndgameOwnKing[ourKingSquare][piece][square] += endgameGradient
+        gradient.pstpstEndgameEnemeyKing[enemyKingSquare][piece][square] += endgameGradient
+
+    (gamePhase.interpolate(
+        forOpening = evalParameters.pstOpeningOwnKing[ourKingSquare][piece][square].Value,
+        forEndgame = evalParameters.pstEndgameOwnKing[ourKingSquare][piece][square].Value
+    ) + gamePhase.interpolate(
+        forOpening = evalParameters.pstOpeningEnemyKing[enemyKingSquare][piece][square].Value,
+        forEndgame = evalParameters.pstEndgameEnemyKing[enemyKingSquare][piece][square].Value
+    )) div 2 #TODO remove 2 for gradient descent
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,
@@ -206,6 +215,7 @@ func evaluatePieceType(
     piece: Piece,
     gamePhase: GamePhase,
     evalParameters: EvalParameters,
+    kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
 ): Value  =
     let
@@ -222,7 +232,7 @@ func evaluatePieceType(
 
         let currentResult = 
             values[piece] +
-            evalParameters.getPstValue(gamePhase, square, piece, currentUs, gradient) + #TODO improve NPS
+            evalParameters.getPstValue(gamePhase, square, piece, currentUs, kingSquare, gradient) + #TODO improve NPS
             # defaultPieceSquareTable[gamePhase][currentUs][piece][square] +
             position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)
         
@@ -237,8 +247,10 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     result = 0
     let gamePhase = position.gamePhase
+
+    let kingSquare = [white: position.kingSquare(white), black: position.kingSquare(black)]
     for piece in pawn..king:
-        result += position.evaluatePieceType(piece, gamePhase, evalParameters, gradient)
+        result += position.evaluatePieceType(piece, gamePhase, evalParameters, kingSquare, gradient)
 
 
 
