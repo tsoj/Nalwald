@@ -30,19 +30,25 @@ func getPstValue(
         if us == black:
             openingGradient *= -1.0
             endgameGradient *= -1.0
-        gradient.pstOpeningOwnKing[ourKingSquare][piece][square] += openingGradient
-        gradient.pstOpeningEnemeyKing[enemyKingSquare][piece][square] += openingGradient
+        for s in a1..h8:
+            let oO = if s == ourKingSquare: openingGradient*5.0 else: openingGradient*0.2
+            let eO = if s == ourKingSquare: endgameGradient*5.0 else: endgameGradient*0.2
+            let oE = if s == enemyKingSquare: openingGradient*5.0 else: openingGradient*0.2
+            let eE = if s == enemyKingSquare: endgameGradient*5.0 else: endgameGradient*0.2
+            
+            gradient.pstOpeningOwnKing[s][piece][square] += oO
+            gradient.pstOpeningEnemyKing[s][piece][square] += oE
 
-        gradient.pstpstEndgameOwnKing[ourKingSquare][piece][square] += endgameGradient
-        gradient.pstpstEndgameEnemeyKing[enemyKingSquare][piece][square] += endgameGradient
+            gradient.pstEndgameOwnKing[s][piece][square] += eO
+            gradient.pstEndgameEnemyKing[s][piece][square] += eE
 
-    (gamePhase.interpolate(
+    gamePhase.interpolate(
         forOpening = evalParameters.pstOpeningOwnKing[ourKingSquare][piece][square].Value,
         forEndgame = evalParameters.pstEndgameOwnKing[ourKingSquare][piece][square].Value
     ) + gamePhase.interpolate(
         forOpening = evalParameters.pstOpeningEnemyKing[enemyKingSquare][piece][square].Value,
         forEndgame = evalParameters.pstEndgameEnemyKing[enemyKingSquare][piece][square].Value
-    )) div 2 #TODO remove 2 for gradient descent
+    )
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,

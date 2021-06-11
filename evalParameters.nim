@@ -151,10 +151,10 @@ const defaultEvalParameters* = block:
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                defaultEvalParameters.pstOpeningOwnKing[kingSquare][piece][square] = openingPst[piece][square].float
-                defaultEvalParameters.pstOpeningEnemyKing[kingSquare][piece][square] = openingPst[piece][square].float
-                defaultEvalParameters.pstEndgameOwnKing[kingSquare][piece][square] = endgamePst[piece][square].float
-                defaultEvalParameters.pstEndgameEnemyKing[kingSquare][piece][square] = endgamePst[piece][square].float
+                defaultEvalParameters.pstOpeningOwnKing[kingSquare][piece][square] = openingPst[piece][square].float/2.0
+                defaultEvalParameters.pstOpeningEnemyKing[kingSquare][piece][square] = openingPst[piece][square].float/2.0
+                defaultEvalParameters.pstEndgameOwnKing[kingSquare][piece][square] = endgamePst[piece][square].float/2.0
+                defaultEvalParameters.pstEndgameEnemyKing[kingSquare][piece][square] = endgamePst[piece][square].float/2.0
     defaultEvalParameters
 
 proc randomEvalParameters*(max = 10.0): EvalParameters =
