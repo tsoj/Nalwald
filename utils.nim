@@ -83,10 +83,10 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         if now() - start >= duration:
             flag[].store(true)
 
-func winningProbability*(centipawn: Value): float =
-    1.0/(1.0 + pow(10.0, -(centipawn.float/400.0)))
+func winningProbability*(centipawn: Value): float32 =
+    1.0/(1.0 + pow(10.0, -(centipawn.float32/400.0)))
 
-func winningProbabilityDerivative*(centipawn: Value): float =
-    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float/400.0)) * pow(5.0, -(centipawn.float/400.0))) /
-    pow(1.0 + pow(10.0, -(centipawn.float/400.0)) , 2.0)
+func winningProbabilityDerivative*(centipawn: Value): float32 =
+    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float32/400.0)) * pow(5.0, -(centipawn.float32/400.0))) /
+    pow(1.0 + pow(10.0, -(centipawn.float32/400.0)) , 2.0)
 

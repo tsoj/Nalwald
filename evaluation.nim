@@ -18,12 +18,10 @@ func getPstValue(
     square: Square,
     piece: Piece,
     us: Color,
-    kingSquare: array[white..black, Square],
+    ourKingSquare, enemyKingSquare: Square, #kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
 ): Value =
     let square = if us == black: square else: square.mirror
-    let enemyKingSquare = if us == white: kingSquare[black] else: kingSquare[white].mirror
-    let ourKingSquare = if us == black: kingSquare[black] else: kingSquare[white].mirror
 
     when not (gradient is Nothing):
         var openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
@@ -35,10 +33,10 @@ func getPstValue(
         for s in a1..h8:
             let verticalMirroredS = s.mirrorVertically
 
-            let oO = if s == ourKingSquare: openingGradient*5.0 else: openingGradient*0.1
-            let eO = if s == ourKingSquare: endgameGradient*5.0 else: endgameGradient*0.1
-            let oE = if s == enemyKingSquare: openingGradient*5.0 else: openingGradient*0.1
-            let eE = if s == enemyKingSquare: endgameGradient*5.0 else: endgameGradient*0.1
+            let oO = if s == ourKingSquare: openingGradient*10.0 else: openingGradient*0.1
+            let eO = if s == ourKingSquare: endgameGradient*10.0 else: endgameGradient*0.1
+            let oE = if s == enemyKingSquare: openingGradient*10.0 else: openingGradient*0.1
+            let eE = if s == enemyKingSquare: endgameGradient*10.0 else: endgameGradient*0.1
             
             gradient.openingKpst.ownKing[s][piece][square] += oO
             gradient.openingKpst.enemyKing[s][piece][square] += oE
@@ -51,7 +49,6 @@ func getPstValue(
 
             gradient.endgameKpst.ownKing[verticalMirroredS][piece][verticalMirroredSquare] += eO
             gradient.endgameKpst.enemyKing[verticalMirroredS][piece][verticalMirroredSquare] += eE
-
 
     evalParameters.kpst[gamePhase].ownKing[ourKingSquare][piece][square] +
     evalParameters.kpst[gamePhase].enemyKing[enemyKingSquare][piece][square]
@@ -108,7 +105,7 @@ func evaluateKnight(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
-    let reachableSquares = position.numReachableSquares(knight, square, us).float
+    let reachableSquares = position.numReachableSquares(knight, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierKnight += (if us == black: -reachableSquares else: reachableSquares)/8.0
     (reachableSquares * evalParameters.mobilityMultiplierKnight).Value
@@ -121,7 +118,7 @@ func evaluateBishop(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
-    let reachableSquares = position.numReachableSquares(bishop, square, us).float
+    let reachableSquares = position.numReachableSquares(bishop, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierBishop += (if us == black: -reachableSquares else: reachableSquares)/8.0
     result = (reachableSquares * evalParameters.mobilityMultiplierBishop).Value
@@ -140,7 +137,7 @@ func evaluateRook(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
-    let reachableSquares = position.numReachableSquares(rook, square, us).float
+    let reachableSquares = position.numReachableSquares(rook, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierRook += (if us == black: -reachableSquares else: reachableSquares)/8.0
     result = (reachableSquares * evalParameters.mobilityMultiplierRook).Value
@@ -160,7 +157,7 @@ func evaluateQueen(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
-    let reachableSquares = position.numReachableSquares(queen, square, us).float
+    let reachableSquares = position.numReachableSquares(queen, square, us).float32
     when not (gradient is Nothing):
         gradient.mobilityMultiplierQueen += (if us == black: -reachableSquares else: reachableSquares)/8.0
     (reachableSquares * evalParameters.mobilityMultiplierQueen).Value
@@ -189,13 +186,13 @@ func evaluateKing(
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     result -= gamePhase.interpolate(
-        forOpening = (evalParameters.kingSafetyMultiplier*numPossibleQueenAttack.float).Value,
+        forOpening = (evalParameters.kingSafetyMultiplier*numPossibleQueenAttack.float32).Value,
         forEndgame = 0.Value
     )
 
     when not (gradient is Nothing):
         let openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
-        gradient.kingSafetyMultiplier += -openingGradient*numPossibleQueenAttack.float * (if us == black: -1.0 else: 1.0)
+        gradient.kingSafetyMultiplier += -openingGradient*numPossibleQueenAttack.float32 * (if us == black: -1.0 else: 1.0)
 
 func evaluatePiece(
     position: Position,
@@ -236,6 +233,15 @@ func evaluatePieceType(
     
     result = 0
 
+    let enemyKingSquare = [
+        white: kingSquare[black],
+        black: kingSquare[white].mirror
+    ]
+    let ourKingSquare = [
+        white: kingSquare[white].mirror,
+        black: kingSquare[black]
+    ]
+
     var tmpOccupancy = position[piece]
     while tmpOccupancy != 0:
         let square = tmpOccupancy.removeTrailingOneBit.Square
@@ -244,7 +250,12 @@ func evaluatePieceType(
 
         let currentResult = 
             values[piece] +
-            evalParameters.getPstValue(gamePhase, square, piece, currentUs, kingSquare, gradient) + #TODO improve NPS
+            evalParameters.getPstValue(
+                gamePhase, square, piece, currentUs,
+                ourKingSquare = ourKingSquare[currentUs],
+                enemyKingSquare = enemyKingSquare[currentEnemy],
+                gradient
+            ) +
             position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)
         
         if currentUs == us:

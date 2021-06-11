@@ -10,7 +10,7 @@ import pieceSquareTable
 
 type Entry = object
     position: Position
-    outcome: float
+    outcome: float32
 
 proc loadData(filename: string): seq[Entry] =
     let f = open(filename)
@@ -28,21 +28,21 @@ proc loadData(filename: string): seq[Entry] =
     debugEcho result.len
 
 
-func error(evalParameters: EvalParameters, data: openArray[Entry]): float =
+func error(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
     result = 0.0
     
     for entry in data:
         let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
         result += (entry.outcome - estimate)*(entry.outcome - estimate)
-    result /= data.len.float
+    result /= data.len.float32
 
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 10000.0,
-    minLearningRate = 100.0,
+    lr = 1000.0,
+    minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = 100000
+    batchSize = int.high
 ): ref EvalParameters =
 
     var lr = lr
@@ -53,15 +53,15 @@ proc optimize(
     for j in 0..maxIterations:
         var shuffledData = data
         shuffledData.shuffle()
-        let numBatches = shuffledData.len div batchSize
+        let numBatches = shuffledData.len div batchSize + 1
 
-        for i in 0..numBatches:
+        for i in 0..<numBatches:
             var gradient: EvalParametersFloat
             var currentSolution = bestSolution
             let bestSolutionConverted = bestSolution.convert
             for entry in shuffledData.toOpenArray(first = i*batchSize, last = min((i+1)*batchSize - 1, shuffledData.len - 1)):
                 gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
-            gradient *= (lr/batchSize.float)
+            gradient *= (lr/batchSize.float32)
             currentSolution += gradient
 
             let error = currentSolution.convert[].error(data)
@@ -88,4 +88,5 @@ echo data.len
 
 
 #echo randomEvalParametersFloat().optimize(data, lr = 1000.0, minLearningRate = 1.0)
-writeFile("optimizationResult.txt", $defaultEvalParametersFloat.optimize(data, lr = 1000.0, minLearningRate = 10.0)[])
+writeFile("optimizationResultLONG.txt", $defaultEvalParametersFloat.optimize(data)[])
+#writeFile("optimizationResult.txt", $randomEvalParametersFloat().optimize(data)[])

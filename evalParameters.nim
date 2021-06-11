@@ -8,19 +8,19 @@ type KingPieceSquareTable*[T] = object
     enemyKing*: array[a1..h8, array[pawn..king, array[a1..h8, T]]]
 
 type EvalParametersFloat* = object
-    openingKpst*: KingPieceSquareTable[float]
-    endgameKpst*: KingPieceSquareTable[float]
-    openingPassedPawnTable*: array[8, float]
-    endgamePassedPawnTable*: array[8, float]
-    bonusIsolatedPawn*: float
-    bonusBothBishops*: float
-    bonusRookOnOpenFile*: float
-    mobilityMultiplierKnight*: float
-    mobilityMultiplierBishop*: float
-    mobilityMultiplierRook*: float
-    mobilityMultiplierQueen*: float
-    bonusRookSecondRankFromKing*: float
-    kingSafetyMultiplier*: float
+    openingKpst*: KingPieceSquareTable[float32]
+    endgameKpst*: KingPieceSquareTable[float32]
+    openingPassedPawnTable*: array[8, float32]
+    endgamePassedPawnTable*: array[8, float32]
+    bonusIsolatedPawn*: float32
+    bonusBothBishops*: float32
+    bonusRookOnOpenFile*: float32
+    mobilityMultiplierKnight*: float32
+    mobilityMultiplierBishop*: float32
+    mobilityMultiplierRook*: float32
+    mobilityMultiplierQueen*: float32
+    bonusRookSecondRankFromKing*: float32
+    kingSafetyMultiplier*: float32
 
 type EvalParameters* = object
     kpst*: array[GamePhase, KingPieceSquareTable[Value]]
@@ -29,12 +29,12 @@ type EvalParameters* = object
     bonusIsolatedPawn*: Value
     bonusBothBishops*: Value
     bonusRookOnOpenFile*: Value
-    mobilityMultiplierKnight*: float
-    mobilityMultiplierBishop*: float
-    mobilityMultiplierRook*: float
-    mobilityMultiplierQueen*: float
+    mobilityMultiplierKnight*: float32
+    mobilityMultiplierBishop*: float32
+    mobilityMultiplierRook*: float32
+    mobilityMultiplierQueen*: float32
     bonusRookSecondRankFromKing*: Value
-    kingSafetyMultiplier*: float
+    kingSafetyMultiplier*: float32
     
 
 func convert*(a: EvalParametersFloat): ref EvalParameters =
@@ -149,7 +149,7 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     a.bonusRookSecondRankFromKing += b.bonusRookSecondRankFromKing
     a.kingSafetyMultiplier += b.kingSafetyMultiplier
 
-func `*=`*(a: var EvalParametersFloat, b: float) =
+func `*=`*(a: var EvalParametersFloat, b: float32) =
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
@@ -193,7 +193,7 @@ func `-`*(a: EvalParametersFloat): EvalParametersFloat =
 
 proc randomEvalParametersFloat*(max = 10.0): EvalParametersFloat =
 
-    template r: float = rand(max) - max/2.0
+    template r: float32 = rand(max) - max/2.0
     for i in 0..7:
         result.openingPassedPawnTable[i] = r
         result.endgamePassedPawnTable[i] = r
