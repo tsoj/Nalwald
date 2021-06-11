@@ -82,9 +82,10 @@ proc optimize(
     return bestSolution
 
 
-var data = "quiet-set.epd".loadData
+let data = "quiet-set.epd".loadData
+#let data = "texel-set-clean.epd".loadData
 echo data.len
 
 
 #echo randomEvalParameters().optimize(data, lr = 1000.0, minLearningRate = 1.0)
-echo defaultEvalParameters.optimize(data, lr = 1000.0, minLearningRate = 1.0)
+echo defaultEvalParameters.optimize(data, lr = 1000.0, minLearningRate = 10.0)

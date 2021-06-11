@@ -27,20 +27,29 @@ func getPstValue(
     when not (gradient is Nothing):
         var openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         var endgameGradient = 1.0 - openingGradient
+        let verticalMirroredSquare = square.mirrorVertically
         if us == black:
             openingGradient *= -1.0
             endgameGradient *= -1.0
         for s in a1..h8:
-            let oO = if s == ourKingSquare: openingGradient*5.0 else: openingGradient*0.2
-            let eO = if s == ourKingSquare: endgameGradient*5.0 else: endgameGradient*0.2
-            let oE = if s == enemyKingSquare: openingGradient*5.0 else: openingGradient*0.2
-            let eE = if s == enemyKingSquare: endgameGradient*5.0 else: endgameGradient*0.2
+            let verticalMirroredS = s.mirrorVertically
+
+            let oO = if s == ourKingSquare: openingGradient*5.0 else: openingGradient*0.1
+            let eO = if s == ourKingSquare: endgameGradient*5.0 else: endgameGradient*0.1
+            let oE = if s == enemyKingSquare: openingGradient*5.0 else: openingGradient*0.1
+            let eE = if s == enemyKingSquare: endgameGradient*5.0 else: endgameGradient*0.1
             
             gradient.pstOpeningOwnKing[s][piece][square] += oO
             gradient.pstOpeningEnemyKing[s][piece][square] += oE
 
+            gradient.pstOpeningOwnKing[verticalMirroredS][piece][verticalMirroredSquare] += oO
+            gradient.pstOpeningEnemyKing[verticalMirroredS][piece][verticalMirroredSquare] += oE
+
             gradient.pstEndgameOwnKing[s][piece][square] += eO
             gradient.pstEndgameEnemyKing[s][piece][square] += eE
+
+            gradient.pstEndgameOwnKing[verticalMirroredS][piece][verticalMirroredSquare] += eO
+            gradient.pstEndgameEnemyKing[verticalMirroredS][piece][verticalMirroredSquare] += eE
 
     gamePhase.interpolate(
         forOpening = evalParameters.pstOpeningOwnKing[ourKingSquare][piece][square].Value,

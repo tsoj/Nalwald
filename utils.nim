@@ -66,6 +66,9 @@ const mirrorTable = block:
 func mirror*(square: Square): Square =
     mirrorTable[square]
 
+func mirrorVertically*(square: Square): Square =
+    ((square.int8 div 8)*8 + (7 - square.int8 mod 8)).Square
+
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T
     when T is SomeInteger:
