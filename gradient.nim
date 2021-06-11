@@ -5,11 +5,11 @@ import position
 import types
 
 func addGradient*(
-    gradient: var EvalParameters,
+    gradient: var EvalParametersFloat,
     currentSolution: EvalParameters,
     position: Position, outcome: float
 ) =
-    var currentGradient: EvalParameters
+    var currentGradient: EvalParametersFloat
     let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
     # debugEcho "-----------------"
     # debugEcho "outcome: ", outcome

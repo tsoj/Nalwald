@@ -4,12 +4,13 @@ import bitboard
 import bitops
 import evalParameters
 import utils
+import pieceSquareTable
 
 func numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
 
 type Nothing = enum nothing
-type GradientOrNothing = EvalParameters or Nothing
+type GradientOrNothing = EvalParametersFloat or Nothing
 
 func getPstValue(
     evalParameters: EvalParameters,
@@ -39,25 +40,21 @@ func getPstValue(
             let oE = if s == enemyKingSquare: openingGradient*5.0 else: openingGradient*0.1
             let eE = if s == enemyKingSquare: endgameGradient*5.0 else: endgameGradient*0.1
             
-            gradient.pstOpeningOwnKing[s][piece][square] += oO
-            gradient.pstOpeningEnemyKing[s][piece][square] += oE
+            gradient.openingKpst.ownKing[s][piece][square] += oO
+            gradient.openingKpst.enemyKing[s][piece][square] += oE
 
-            gradient.pstOpeningOwnKing[verticalMirroredS][piece][verticalMirroredSquare] += oO
-            gradient.pstOpeningEnemyKing[verticalMirroredS][piece][verticalMirroredSquare] += oE
+            gradient.openingKpst.ownKing[verticalMirroredS][piece][verticalMirroredSquare] += oO
+            gradient.openingKpst.enemyKing[verticalMirroredS][piece][verticalMirroredSquare] += oE
 
-            gradient.pstEndgameOwnKing[s][piece][square] += eO
-            gradient.pstEndgameEnemyKing[s][piece][square] += eE
+            gradient.endgameKpst.ownKing[s][piece][square] += eO
+            gradient.endgameKpst.enemyKing[s][piece][square] += eE
 
-            gradient.pstEndgameOwnKing[verticalMirroredS][piece][verticalMirroredSquare] += eO
-            gradient.pstEndgameEnemyKing[verticalMirroredS][piece][verticalMirroredSquare] += eE
+            gradient.endgameKpst.ownKing[verticalMirroredS][piece][verticalMirroredSquare] += eO
+            gradient.endgameKpst.enemyKing[verticalMirroredS][piece][verticalMirroredSquare] += eE
 
-    gamePhase.interpolate(
-        forOpening = evalParameters.pstOpeningOwnKing[ourKingSquare][piece][square].Value,
-        forEndgame = evalParameters.pstEndgameOwnKing[ourKingSquare][piece][square].Value
-    ) + gamePhase.interpolate(
-        forOpening = evalParameters.pstOpeningEnemyKing[enemyKingSquare][piece][square].Value,
-        forEndgame = evalParameters.pstEndgameEnemyKing[enemyKingSquare][piece][square].Value
-    )
+
+    evalParameters.kpst[gamePhase].ownKing[ourKingSquare][piece][square] +
+    evalParameters.kpst[gamePhase].enemyKing[enemyKingSquare][piece][square]
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,
@@ -77,8 +74,8 @@ func bonusPassedPawn(
         gradient.endgamePassedPawnTable[index] += (if us == black: -endgameGradient else: endgameGradient)
 
     gamePhase.interpolate(
-        forOpening = evalParameters.openingPassedPawnTable[index].Value,
-        forEndgame = evalParameters.endgamePassedPawnTable[index].Value
+        forOpening = evalParameters.openingPassedPawnTable[index],
+        forEndgame = evalParameters.endgamePassedPawnTable[index]
     )
 
 func evaluatePawn(
@@ -98,7 +95,7 @@ func evaluatePawn(
     # isolated pawn
     if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
     (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
-        result += evalParameters.bonusIsolatedPawn.Value
+        result += evalParameters.bonusIsolatedPawn
 
         when not (gradient is Nothing):
             gradient.bonusIsolatedPawn += (if us == black: -1.0 else: 1.0)
@@ -130,7 +127,7 @@ func evaluateBishop(
     result = (reachableSquares * evalParameters.mobilityMultiplierBishop).Value
     
     if (position[us] and position[bishop] and (not bitAt[square])) != 0:
-        result += evalParameters.bonusBothBishops.Value
+        result += evalParameters.bonusBothBishops
 
         when not (gradient is Nothing):
             gradient.bonusBothBishops += (if us == black: -1.0 else: 1.0)
@@ -150,7 +147,7 @@ func evaluateRook(
     
     # rook on open file
     if (files[square] and position[pawn]) == 0:
-        result += evalParameters.bonusRookOnOpenFile.Value
+        result += evalParameters.bonusRookOnOpenFile
 
         when not (gradient is Nothing):
             gradient.bonusRookOnOpenFile += (if us == black: -1.0 else: 1.0)
@@ -182,7 +179,7 @@ func evaluateKing(
     let enemyRooks = position[rook] and position[enemy];
     for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
         if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
-            result += evalParameters.bonusRookSecondRankFromKing.Value
+            result += evalParameters.bonusRookSecondRankFromKing
 
             when not (gradient is Nothing):
                 gradient.bonusRookSecondRankFromKing += (if us == black: -1.0 else: 1.0)
@@ -248,7 +245,6 @@ func evaluatePieceType(
         let currentResult = 
             values[piece] +
             evalParameters.getPstValue(gamePhase, square, piece, currentUs, kingSquare, gradient) + #TODO improve NPS
-            # defaultPieceSquareTable[gamePhase][currentUs][piece][square] +
             position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)
         
         if currentUs == us:

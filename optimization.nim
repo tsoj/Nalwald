@@ -6,6 +6,7 @@ import evaluation
 import utils
 import gradient
 import random
+import pieceSquareTable
 
 type Entry = object
     position: Position
@@ -14,9 +15,7 @@ type Entry = object
 proc loadData(filename: string): seq[Entry] =
     let f = open(filename)
     var line: string
-    var i = 0
     while f.readLine(line):
-        i += 1
         line = line.replace('"', ' ')
         line = line.replace(';', ' ')
         let words = line.splitWhitespace()
@@ -38,17 +37,17 @@ func error(evalParameters: EvalParameters, data: openArray[Entry]): float =
     result /= data.len.float
 
 proc optimize(
-    start: EvalParameters,
+    start: EvalParametersFloat,
     data: seq[Entry],
     lr = 10000.0,
     minLearningRate = 100.0,
     maxIterations = int.high,
     batchSize = 100000
-): EvalParameters =
+): ref EvalParameters =
 
     var lr = lr
-    var bestSolution: EvalParameters = start
-    var bestError = bestSolution.error(data) # TODO: need .error(data)
+    var bestSolution: EvalParametersFloat = start
+    var bestError = bestSolution.convert[].error(data) # TODO: need .error(data)
     debugEcho "starting error: ", bestError, ", starting lr: ", lr
 
     for j in 0..maxIterations:
@@ -57,14 +56,15 @@ proc optimize(
         let numBatches = shuffledData.len div batchSize
 
         for i in 0..numBatches:
-            var gradient: EvalParameters
+            var gradient: EvalParametersFloat
             var currentSolution = bestSolution
+            let bestSolutionConverted = bestSolution.convert
             for entry in shuffledData.toOpenArray(first = i*batchSize, last = min((i+1)*batchSize - 1, shuffledData.len - 1)):
-                gradient.addGradient(bestSolution, entry.position, entry.outcome)
+                gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
             gradient *= (lr/batchSize.float)
             currentSolution += gradient
 
-            let error = currentSolution.error(data)
+            let error = currentSolution.convert[].error(data)
             
             debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
 
@@ -79,7 +79,7 @@ proc optimize(
         if lr < minLearningRate:
             break;
     
-    return bestSolution
+    return bestSolution.convert
 
 
 let data = "quiet-set.epd".loadData
@@ -87,5 +87,5 @@ let data = "quiet-set.epd".loadData
 echo data.len
 
 
-#echo randomEvalParameters().optimize(data, lr = 1000.0, minLearningRate = 1.0)
-echo defaultEvalParameters.optimize(data, lr = 1000.0, minLearningRate = 10.0)
+#echo randomEvalParametersFloat().optimize(data, lr = 1000.0, minLearningRate = 1.0)
+writeFile("optimizationResult.txt", $defaultEvalParametersFloat.optimize(data, lr = 1000.0, minLearningRate = 10.0)[])

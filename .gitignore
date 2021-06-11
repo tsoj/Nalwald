@@ -10,3 +10,5 @@ massif.out
 *.log
 *.epd
 optimization
+txt.txt
+vgcore.*
