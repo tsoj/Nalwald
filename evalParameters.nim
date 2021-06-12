@@ -4,7 +4,6 @@ import random
 import strformat
 
 type KingPieceSquareTable*[T] = object
-    ownKing*: array[a1..h8, array[pawn..king, array[a1..h8, T]]]
     enemyKing*: array[a1..h8, array[pawn..king, array[a1..h8, T]]]
 
 type EvalParametersFloat* = object
@@ -42,12 +41,7 @@ func convert*(a: EvalParametersFloat): ref EvalParameters =
     for gamePhase in GamePhase.low..GamePhase.high:
         for kingSquare in a1..h8:
             for piece in pawn..king:
-                for square in a1..h8:
-                    result.kpst[gamePhase].ownKing[kingSquare][piece][square] =
-                        gamePhase.interpolate(
-                            forOpening = a.openingKpst.ownKing[kingSquare][piece][square],
-                            forEndgame = a.endgameKpst.ownKing[kingSquare][piece][square]
-                        ).Value                    
+                for square in a1..h8:                  
                     result.kpst[gamePhase].enemyKing[kingSquare][piece][square] =
                         gamePhase.interpolate(
                             forOpening = a.openingKpst.enemyKing[kingSquare][piece][square],
@@ -75,7 +69,6 @@ func `$`*(evalParameters: EvalParameters): string =
         result &= "    " & $gamePhase & ": KingPieceSquareTable[Value](\n"
 
         for c in [
-            (evalParameters.kpst[gamePhase].ownKing, "ownKing"),
             (evalParameters.kpst[gamePhase].enemyKing, "enemyKing"),
         ]:
             result &= "      " & c[1] & ": [\n"
@@ -132,9 +125,7 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                a.openingKpst.ownKing[kingSquare][piece][square] += b.openingKpst.ownKing[kingSquare][piece][square]
                 a.openingKpst.enemyKing[kingSquare][piece][square] += b.openingKpst.enemyKing[kingSquare][piece][square]
-                a.endgameKpst.ownKing[kingSquare][piece][square] += b.endgameKpst.ownKing[kingSquare][piece][square]
                 a.endgameKpst.enemyKing[kingSquare][piece][square] += b.endgameKpst.enemyKing[kingSquare][piece][square]
     for i in 0..7:
         a.openingPassedPawnTable[i] += b.openingPassedPawnTable[i]
@@ -153,9 +144,7 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                a.openingKpst.ownKing[kingSquare][piece][square] *= b
                 a.openingKpst.enemyKing[kingSquare][piece][square] *= b
-                a.endgameKpst.ownKing[kingSquare][piece][square] *= b
                 a.endgameKpst.enemyKing[kingSquare][piece][square] *= b
     for i in 0..7:
         a.openingPassedPawnTable[i] *= b
@@ -174,9 +163,7 @@ func `-`*(a: EvalParametersFloat): EvalParametersFloat =
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                result.openingKpst.ownKing[kingSquare][piece][square] = -a.openingKpst.ownKing[kingSquare][piece][square]
                 result.openingKpst.enemyKing[kingSquare][piece][square] = -a.openingKpst.enemyKing[kingSquare][piece][square]
-                result.endgameKpst.ownKing[kingSquare][piece][square] = -a.endgameKpst.ownKing[kingSquare][piece][square]
                 result.endgameKpst.enemyKing[kingSquare][piece][square] = -a.endgameKpst.enemyKing[kingSquare][piece][square]
     for i in 0..7:
         result.openingPassedPawnTable[i] = -a.openingPassedPawnTable[i]
@@ -210,8 +197,6 @@ proc randomEvalParametersFloat*(evalParameters: var EvalParametersFloat, max = 5
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                evalParameters.openingKpst.ownKing[kingSquare][piece][square] += r
                 evalParameters.openingKpst.enemyKing[kingSquare][piece][square] += r
-                evalParameters.endgameKpst.ownKing[kingSquare][piece][square] += r
                 evalParameters.endgameKpst.enemyKing[kingSquare][piece][square] += r
 
