@@ -170,6 +170,7 @@ func evaluateKing(
     
     # rook on second rank/file is bad
     let enemyRooks = position[rook] and position[enemy];
+    #TODO figure out, why/if this bug(?) works
     for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
         if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
             result += evalParameters.bonusRookSecondRankFromKing
