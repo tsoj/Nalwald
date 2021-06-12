@@ -13,6 +13,7 @@ type EvalParametersFloat* = object
     openingPassedPawnTable*: array[8, float32]
     endgamePassedPawnTable*: array[8, float32]
     bonusIsolatedPawn*: float32
+    bonusBackwardPawn*: float32
     bonusBothBishops*: float32
     bonusRookOnOpenFile*: float32
     mobilityMultiplierKnight*: float32
@@ -27,6 +28,7 @@ type EvalParameters* = object
     openingPassedPawnTable*: array[8, Value]
     endgamePassedPawnTable*: array[8, Value]
     bonusIsolatedPawn*: Value
+    bonusBackwardPawn*: Value
     bonusBothBishops*: Value
     bonusRookOnOpenFile*: Value
     mobilityMultiplierKnight*: float32
@@ -57,6 +59,7 @@ func convert*(a: EvalParametersFloat): ref EvalParameters =
         result.openingPassedPawnTable[i] = a.openingPassedPawnTable[i].Value
         result.endgamePassedPawnTable[i] = a.endgamePassedPawnTable[i].Value
     result.bonusIsolatedPawn = a.bonusIsolatedPawn.Value
+    result.bonusBackwardPawn = a.bonusBackwardPawn.Value
     result.bonusBothBishops = a.bonusBothBishops.Value
     result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.Value
     result.mobilityMultiplierKnight = a.mobilityMultiplierKnight
@@ -116,6 +119,7 @@ func `$`*(evalParameters: EvalParameters): string =
         result &= "],\n"
     
     result &= "bonusIsolatedPawn: " & fmt"{evalParameters.bonusIsolatedPawn:>3}" & ".Value"
+    result &= ",\nbonusBackwardPawn: " & fmt"{evalParameters.bonusBackwardPawn:>3}" & ".Value"
     result &= ",\nbonusBothBishops: " & fmt"{evalParameters.bonusBothBishops:>3}" & ".Value"
     result &= ",\nbonusRookOnOpenFile: " & fmt"{evalParameters.bonusRookOnOpenFile:>3}" & ".Value"
     result &= ",\nmobilityMultiplierKnight: " & fmt"{evalParameters.mobilityMultiplierKnight:>5.2f}"
@@ -140,6 +144,7 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
         a.openingPassedPawnTable[i] += b.openingPassedPawnTable[i]
         a.endgamePassedPawnTable[i] += b.endgamePassedPawnTable[i]
     a.bonusIsolatedPawn += b.bonusIsolatedPawn
+    a.bonusBackwardPawn += b.bonusBackwardPawn
     a.bonusBothBishops += b.bonusBothBishops
     a.bonusRookOnOpenFile += b.bonusRookOnOpenFile
     a.mobilityMultiplierKnight += b.mobilityMultiplierKnight
@@ -161,6 +166,7 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
         a.openingPassedPawnTable[i] *= b
         a.endgamePassedPawnTable[i] *= b
     a.bonusIsolatedPawn *= b
+    a.bonusBackwardPawn *= b
     a.bonusBothBishops *= b
     a.bonusRookOnOpenFile *= b
     a.mobilityMultiplierKnight *= b
@@ -182,6 +188,7 @@ func `-`*(a: EvalParametersFloat): EvalParametersFloat =
         result.openingPassedPawnTable[i] = -a.openingPassedPawnTable[i]
         result.endgamePassedPawnTable[i] = -a.endgamePassedPawnTable[i]
     result.bonusIsolatedPawn = -a.bonusIsolatedPawn
+    result.bonusBackwardPawn = -a.bonusBackwardPawn
     result.bonusBothBishops = -a.bonusBothBishops
     result.bonusRookOnOpenFile = -a.bonusRookOnOpenFile
     result.mobilityMultiplierKnight = -a.mobilityMultiplierKnight
@@ -191,27 +198,28 @@ func `-`*(a: EvalParametersFloat): EvalParametersFloat =
     result.bonusRookSecondRankFromKing = -a.bonusRookSecondRankFromKing
     result.kingSafetyMultiplier = -a.kingSafetyMultiplier
 
-proc randomEvalParametersFloat*(max = 10.0): EvalParametersFloat =
+proc randomEvalParametersFloat*(evalParameters: var EvalParametersFloat, max = 5.0) =
 
     template r: float32 = rand(max) - max/2.0
     for i in 0..7:
-        result.openingPassedPawnTable[i] = r
-        result.endgamePassedPawnTable[i] = r
-    result.bonusIsolatedPawn = r
-    result.bonusBothBishops = r
-    result.bonusRookOnOpenFile = r
-    result.mobilityMultiplierKnight = r
-    result.mobilityMultiplierBishop = r
-    result.mobilityMultiplierRook = r
-    result.mobilityMultiplierQueen = r
-    result.bonusRookSecondRankFromKing = r
-    result.kingSafetyMultiplier = r
+        evalParameters.openingPassedPawnTable[i] += r
+        evalParameters.endgamePassedPawnTable[i] += r
+    evalParameters.bonusIsolatedPawn += r
+    evalParameters.bonusBackwardPawn += r
+    evalParameters.bonusBothBishops += r
+    evalParameters.bonusRookOnOpenFile += r
+    evalParameters.mobilityMultiplierKnight += r
+    evalParameters.mobilityMultiplierBishop += r
+    evalParameters.mobilityMultiplierRook += r
+    evalParameters.mobilityMultiplierQueen += r
+    evalParameters.bonusRookSecondRankFromKing += r
+    evalParameters.kingSafetyMultiplier += r
 
     for kingSquare in a1..h8:
         for piece in pawn..king:
             for square in a1..h8:
-                result.openingKpst.ownKing[kingSquare][piece][square] = r
-                result.openingKpst.enemyKing[kingSquare][piece][square] = r
-                result.endgameKpst.ownKing[kingSquare][piece][square] = r
-                result.endgameKpst.enemyKing[kingSquare][piece][square] = r
+                evalParameters.openingKpst.ownKing[kingSquare][piece][square] += r
+                evalParameters.openingKpst.enemyKing[kingSquare][piece][square] += r
+                evalParameters.endgameKpst.ownKing[kingSquare][piece][square] += r
+                evalParameters.endgameKpst.enemyKing[kingSquare][piece][square] += r
 

@@ -4,7 +4,7 @@ import bitboard
 import bitops
 import evalParameters
 import utils
-import pieceSquareTable
+import defaultParameters
 
 func numReachableSquares(position: Position, piece: Piece, square: Square, us: Color): int8 =
     (piece.attackMask(square, position.occupancy) and not position[us]).countSetBits.int8
@@ -96,6 +96,23 @@ func evaluatePawn(
 
         when not (gradient is Nothing):
             gradient.bonusIsolatedPawn += (if us == black: -1.0 else: 1.0)
+    
+    # # backward pawn
+    # else:
+    #     let stopSquareBB = pawnQuietAttackTable[us][square]
+    #     let stopSquare = stopSquareBB.countTrailingZeroBits.Square
+    #     let enemyPawns = position[pawn] and position[enemy]
+    #     let ourPawns = position[pawn] and position[us]
+        
+    #     # is the stop square attacked or not free? and
+    #     # is our pawn here and on the stop square not defendable by a pawn?
+    #     if ((stopSquareBB and enemyPawns) != 0 or (pawnCaptureAttackTable[us][stopSquare] and enemyPawns) != 0) and
+    #     (ourPawns and isPassedMask[enemy][stopSquare] and not files[square]) == 0:
+    #         result += evalParameters.bonusBackwardPawn
+
+    #         when not (gradient is Nothing):
+    #             gradient.bonusBackwardPawn += (if us == black: -1.0 else: 1.0)
+
 
 func evaluateKnight(
     position: Position,

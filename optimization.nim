@@ -6,7 +6,8 @@ import evaluation
 import utils
 import gradient
 import random
-import pieceSquareTable
+import defaultParameters
+import times
 
 type Entry = object
     position: Position
@@ -42,44 +43,74 @@ proc optimize(
     lr = 1000.0,
     minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = int.high
+    batchSize = int.high,
+    numReIterations = 100,
+    randomAdditions = 20.0
 ): ref EvalParameters =
 
-    var lr = lr
+    let batchSize = min(batchSize, data.len)
+
+    var finalSolution: EvalParametersFloat
+    var finalError = float32.high
+
     var bestSolution: EvalParametersFloat = start
-    var bestError = bestSolution.convert[].error(data) # TODO: need .error(data)
-    debugEcho "starting error: ", bestError, ", starting lr: ", lr
+    for reIteration in 0..<numReIterations:
 
-    for j in 0..maxIterations:
-        var shuffledData = data
-        shuffledData.shuffle()
-        let numBatches = shuffledData.len div batchSize + 1
+        debugEcho "-------------------"
 
-        for i in 0..<numBatches:
-            var gradient: EvalParametersFloat
-            var currentSolution = bestSolution
-            let bestSolutionConverted = bestSolution.convert
-            for entry in shuffledData.toOpenArray(first = i*batchSize, last = min((i+1)*batchSize - 1, shuffledData.len - 1)):
-                gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
-            gradient *= (lr/batchSize.float32)
-            currentSolution += gradient
+        var lr = lr
+        var bestError = bestSolution.convert[].error(data) # TODO: need .error(data)
+        debugEcho "starting error: ", bestError, ", starting lr: ", lr
 
-            let error = currentSolution.convert[].error(data)
-            
-            debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
+        for j in 0..maxIterations:
+            var shuffledData = data
+            shuffledData.shuffle()
+            var numBatches = shuffledData.len div batchSize
+            if shuffledData.len mod batchSize != 0:
+                numBatches += 1
 
-            if error <= bestError:
-                bestError = error
-                bestSolution = currentSolution
-                if lr < minLearningRate:
-                    lr = minLearningRate*2.0
-            elif lr >= minLearningRate:
-                lr /= 2.0
+            for i in 0..<numBatches:
+                var gradient: EvalParametersFloat
+                var currentSolution = bestSolution
+                let bestSolutionConverted = bestSolution.convert
+                for entry in shuffledData.toOpenArray(first = i*batchSize, last = min((i+1)*batchSize - 1, shuffledData.len - 1)):
+                    gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
+                gradient *= (lr/batchSize.float32)
+                currentSolution += gradient
 
-        if lr < minLearningRate:
-            break;
-    
-    return bestSolution.convert
+                var error = currentSolution.convert[].error(data)
+                
+                debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
+
+
+                if error >= bestError and lr >= minLearningRate:
+                    lr /= 2.0
+
+                while error < bestError:
+                    bestError = error
+                    bestSolution = currentSolution
+
+                    currentSolution += gradient
+                    error = currentSolution.convert[].error(data)
+
+                    if error < bestError:
+                        debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
+
+
+            if lr < minLearningRate:
+                break;
+        
+        if bestError <= finalError:
+            finalSolution = bestSolution
+            finalError = bestError
+            let filename = now().format("yyyy-MM-dd-HH-mm-ss") & "_optimizationResult.txt"
+            debugEcho "filename: ", filename
+            writeFile(filename, $finalSolution.convert[])
+
+        bestSolution = finalSolution
+        bestSolution.randomEvalParametersFloat(randomAdditions)
+        
+    return finalSolution.convert
 
 
 let data = "quiet-set.epd".loadData
@@ -88,5 +119,5 @@ echo data.len
 
 
 #echo randomEvalParametersFloat().optimize(data, lr = 1000.0, minLearningRate = 1.0)
-writeFile("optimizationResultLONG.txt", $defaultEvalParametersFloat.optimize(data)[])
+discard defaultEvalParametersFloat.optimize(data)
 #writeFile("optimizationResult.txt", $randomEvalParametersFloat().optimize(data)[])
