@@ -12,8 +12,7 @@ iterator moveIterator*(
     tryFirstMove = noMove,
     historyTable: ptr HistoryTable = nil,
     killers = [noMove, noMove],
-    doQuiets = true,
-    doQuietChecks = false
+    doQuiets = true
 ): Move =
 
     var
@@ -68,11 +67,4 @@ iterator moveIterator*(
                 (if historyTable != nil: historyTable[].get(moves[i], position.us) else: 0.Value)
                 
         findBestMoves()
-
-    #quiet checks
-    if doQuietChecks and not doQuiets:
-        numMoves = position.generateQuietCheckingMoves(moves)
-        for i in 0..<numMoves:
-            yield moves[i]
-
         

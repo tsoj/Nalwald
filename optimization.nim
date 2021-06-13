@@ -18,13 +18,9 @@ proc loadData(filename: string): seq[Entry] =
     let f = open(filename)
     var line: string
     while f.readLine(line):
-        line = line.replace('"', ' ')
-        line = line.replace(';', ' ')
         let words = line.splitWhitespace()
-        doAssert words.len == 6
-        doAssert words[4] == "c2"
-        let fen = words[0] & " " & words[1] & " " & words[2] & " " & words[3] & " 0 0"
-        result.add(Entry(position: fen.toPosition, outcome: words[5].parseFloat))
+        doAssert words.len == 8
+        result.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
     f.close()
 
     debugEcho "data.len: ", result.len
@@ -42,10 +38,10 @@ proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
     lr = 1000.0,
-    minLearningRate = 100.0,
+    minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = int.high,
-    numReIterations = 1,
+    batchSize = 750000,
+    numReIterations = 100,
     randomAdditions = 15.0
 ): EvalParameters =
     let batchSize = min(batchSize, data.len)
@@ -124,7 +120,7 @@ proc optimize(
     return finalSolution.convert
 
 
-let data = "quiet-set.epd".loadData
+let data = "combined_quiet_3000000.epd".loadData
 
 discard defaultEvalParametersFloat.optimize(data)
 

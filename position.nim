@@ -349,7 +349,7 @@ func fen*(position: Position): string =
                 if emptySquareCounter > 0:
                     result &= $emptySquareCounter
                     emptySquareCounter = 0
-                result &= $coloredPiece
+                result &= coloredPiece.notation
             else:
                 emptySquareCounter += 1
         if emptySquareCounter > 0:
@@ -414,3 +414,14 @@ func gamePhase*(position: Position): GamePhase =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+
+func material*(position: Position): Value =
+    result = 0
+    for piece in pawn..king:
+        result += (position[piece] and position[position.us]).countSetBits.Value * values[piece]
+        result -= (position[piece] and position[position.enemy]).countSetBits.Value * values[piece]
+
+func absoluteMaterial*(position: Position): Value =
+    result = position.material
+    if position.us == black:
+        result = -result

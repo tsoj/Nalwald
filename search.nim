@@ -52,7 +52,7 @@ func quiesce(
     state: var SearchState,
     alpha, beta: Value, 
     height: Ply,
-    doQuietChecks: static bool
+    doPruning: static bool = true
 ): Value =
     assert alpha < beta
 
@@ -80,7 +80,7 @@ func quiesce(
     if not inCheck and standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = inCheck, doQuietChecks = doQuietChecks):
+    for move in position.moveIterator(doQuiets = inCheck):
         var newPosition = position
         newPosition.doMove(move)
 
@@ -89,11 +89,11 @@ func quiesce(
         moveCounter += 1
 
         # delta pruning
-        if standPat + position.see(move) + deltaMargin < alpha and
+        if standPat + position.see(move) + deltaMargin < alpha and doPruning and
         not newPosition.inCheck(newPosition.us, newPosition.enemy):
             continue
 
-        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doQuietChecks)
+        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
         if value >= beta:
             return beta
@@ -104,6 +104,19 @@ func quiesce(
         alpha = -(height.checkmateValue)
 
     alpha
+
+
+func absoluteQuiesce*(position: Position): Value =
+    var state = SearchState(
+        stop: nil,
+        hashTable: nil,
+        gameHistory: newGameHistory(@[]),
+        evaluation: material
+    )
+    result = position.quiesce(state, alpha = -valueInfinity, beta = valueInfinity, height = 0, doPruning = false)
+    if position.us == black:
+        result = -result
+
 
 func search(position: Position, state: var SearchState, alpha, beta: Value, depth: Ply, height = 0.Ply): Value =
     assert alpha < beta
@@ -151,7 +164,7 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
     if depth <= 0:
         state.measuredSelectiveDepth = max(state.measuredSelectiveDepth, height)
         state.measuredMinDepth = min(state.measuredMinDepth, height)
-        return position.quiesce(state, alpha = alpha, beta = beta, height, doQuietChecks = false)
+        return position.quiesce(state, alpha = alpha, beta = beta, height)
 
     # null move reduction
     if height > 0 and (not inCheck) and alpha > -valueInfinity and beta < valueInfinity and

@@ -24,7 +24,7 @@ func notation*(piece: Piece): string =
     t[piece]
 
 func notation*(coloredPiece: ColoredPiece): string =
-    result = $coloredPiece.piece
+    result = coloredPiece.piece.notation
     if coloredPiece.color == white:
         result = result.toUpperAscii
 
