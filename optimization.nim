@@ -8,6 +8,7 @@ import gradient
 import random
 import defaultParameters
 import times
+import strformat
 
 type Entry = object
     position: Position
@@ -26,7 +27,7 @@ proc loadData(filename: string): seq[Entry] =
         result.add(Entry(position: fen.toPosition, outcome: words[5].parseFloat))
     f.close()
 
-    debugEcho result.len
+    debugEcho "data.len: ", result.len
 
 
 func error(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
@@ -41,14 +42,14 @@ proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
     lr = 1000.0,
-    minLearningRate = 10.0,
+    minLearningRate = 200.0,
     maxIterations = int.high,
     batchSize = int.high,
-    numReIterations = 100,
-    randomAdditions = 20.0
+    numReIterations = 1,
+    randomAdditions = 10.0
 ): ref EvalParameters =
-
     let batchSize = min(batchSize, data.len)
+
 
     var finalSolution: EvalParametersFloat
     var finalError = float32.high
@@ -57,10 +58,11 @@ proc optimize(
     for reIteration in 0..<numReIterations:
 
         debugEcho "-------------------"
+        debugEcho "batchsize: ", batchSize
 
         var lr = lr
-        var bestError = bestSolution.convert[].error(data) # TODO: need .error(data)
-        debugEcho "starting error: ", bestError, ", starting lr: ", lr
+        var bestError = bestSolution.convert[].error(data)
+        debugEcho "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
         for j in 0..maxIterations:
             var shuffledData = data
@@ -73,19 +75,25 @@ proc optimize(
                 var gradient: EvalParametersFloat
                 var currentSolution = bestSolution
                 let bestSolutionConverted = bestSolution.convert
-                for entry in shuffledData.toOpenArray(first = i*batchSize, last = min((i+1)*batchSize - 1, shuffledData.len - 1)):
+                for entry in shuffledData.toOpenArray(
+                    first = i*batchSize,
+                    last = min((i+1)*batchSize - 1, shuffledData.len - 1)
+                ):
                     gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
                 gradient *= (lr/batchSize.float32)
                 currentSolution += gradient
 
                 var error = currentSolution.convert[].error(data)
                 
-                debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
-
+                debugEcho(
+                    "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
+                    ", error: ", fmt"{error:>9.7f}", ", lr: ", lr
+                )
 
                 if error >= bestError and lr >= minLearningRate:
                     lr /= 2.0
 
+                gradient *= 0.5
                 while error < bestError:
                     bestError = error
                     bestSolution = currentSolution
@@ -94,7 +102,10 @@ proc optimize(
                     error = currentSolution.convert[].error(data)
 
                     if error < bestError:
-                        debugEcho "iteration: ", j, ", batch: ", i, ", error: ", error, ", lr: ", lr
+                        debugEcho(
+                            "iteration:   ↺, batch: ", i, "/", numBatches - 1,
+                            ", error: ", fmt"{error:>9.7f}", ", lr: ", lr*0.5
+                        )
 
 
             if lr < minLearningRate:
@@ -114,10 +125,6 @@ proc optimize(
 
 
 let data = "quiet-set.epd".loadData
-#let data = "texel-set-clean.epd".loadData
-echo data.len
 
-
-#echo randomEvalParametersFloat().optimize(data, lr = 1000.0, minLearningRate = 1.0)
 discard defaultEvalParametersFloat.optimize(data)
-#writeFile("optimizationResult.txt", $randomEvalParametersFloat().optimize(data)[])
+

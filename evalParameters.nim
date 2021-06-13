@@ -194,6 +194,14 @@ func `-`*(a: EvalParametersFloat): EvalParametersFloat =
 proc randomEvalParametersFloat*(evalParameters: var EvalParametersFloat, max = 5.0) =
 
     template r: float32 = rand(max) - max/2.0
+
+    for kingSquare in a1..h8:
+        for piece in pawn..king:
+            for square in a1..h8:
+                evalParameters.openingKpst.ownKing[kingSquare][piece][square] += r
+                evalParameters.openingKpst.enemyKing[kingSquare][piece][square] += r
+                evalParameters.endgameKpst.ownKing[kingSquare][piece][square] += r
+                evalParameters.endgameKpst.enemyKing[kingSquare][piece][square] += r
     for i in 0..7:
         evalParameters.openingPassedPawnTable[i] += r
         evalParameters.endgamePassedPawnTable[i] += r
@@ -206,12 +214,3 @@ proc randomEvalParametersFloat*(evalParameters: var EvalParametersFloat, max = 5
     evalParameters.mobilityMultiplierQueen += r
     evalParameters.bonusRookSecondRankFromKing += r
     evalParameters.kingSafetyMultiplier += r
-
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                evalParameters.openingKpst.ownKing[kingSquare][piece][square] += r
-                evalParameters.openingKpst.enemyKing[kingSquare][piece][square] += r
-                evalParameters.endgameKpst.ownKing[kingSquare][piece][square] += r
-                evalParameters.endgameKpst.enemyKing[kingSquare][piece][square] += r
-

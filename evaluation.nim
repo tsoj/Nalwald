@@ -18,7 +18,7 @@ func getPstValue(
     square: Square,
     piece: Piece,
     us: Color,
-    ourKingSquare, enemyKingSquare: Square, #kingSquare: array[white..black, Square],
+    ourKingSquare, enemyKingSquare: Square,
     gradient: var GradientOrNothing
 ): Value =
     let square = if us == black: square else: square.mirror
@@ -26,30 +26,25 @@ func getPstValue(
     when not (gradient is Nothing):
         var openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         var endgameGradient = 1.0 - openingGradient
-        let verticalMirroredSquare = square.mirrorVertically
+        
         if us == black:
             openingGradient *= -1.0
             endgameGradient *= -1.0
         for s in a1..h8:
-            let verticalMirroredS = s.mirrorVertically
+            const hitMultiplier = 10.0
+            const nonHitMultiplier = 0.2
+                
+            let oO = if s == ourKingSquare: openingGradient*hitMultiplier else: openingGradient*nonHitMultiplier
+            let eO = if s == ourKingSquare: endgameGradient*hitMultiplier else: endgameGradient*nonHitMultiplier
+            let oE = if s == enemyKingSquare: openingGradient*hitMultiplier else: openingGradient*nonHitMultiplier
+            let eE = if s == enemyKingSquare: endgameGradient*hitMultiplier else: endgameGradient*nonHitMultiplier
 
-            let oO = if s == ourKingSquare: openingGradient*10.0 else: openingGradient*0.1
-            let eO = if s == ourKingSquare: endgameGradient*10.0 else: endgameGradient*0.1
-            let oE = if s == enemyKingSquare: openingGradient*10.0 else: openingGradient*0.1
-            let eE = if s == enemyKingSquare: endgameGradient*10.0 else: endgameGradient*0.1
-            
-            gradient.openingKpst.ownKing[s][piece][square] += oO
-            gradient.openingKpst.enemyKing[s][piece][square] += oE
-
-            gradient.openingKpst.ownKing[verticalMirroredS][piece][verticalMirroredSquare] += oO
-            gradient.openingKpst.enemyKing[verticalMirroredS][piece][verticalMirroredSquare] += oE
-
-            gradient.endgameKpst.ownKing[s][piece][square] += eO
-            gradient.endgameKpst.enemyKing[s][piece][square] += eE
-
-            gradient.endgameKpst.ownKing[verticalMirroredS][piece][verticalMirroredSquare] += eO
-            gradient.endgameKpst.enemyKing[verticalMirroredS][piece][verticalMirroredSquare] += eE
-
+            for (kingSquare, pieceSquare) in [(s, square), (s.mirrorVertically, square.mirrorVertically)]:
+                gradient.openingKpst.ownKing[kingSquare][piece][pieceSquare] += oO
+                gradient.openingKpst.enemyKing[kingSquare][piece][pieceSquare] += oE
+                gradient.endgameKpst.ownKing[kingSquare][piece][pieceSquare] += eO                    
+                gradient.endgameKpst.enemyKing[kingSquare][piece][pieceSquare] += eE
+                
     evalParameters.kpst[gamePhase].ownKing[ourKingSquare][piece][square] +
     evalParameters.kpst[gamePhase].enemyKing[enemyKingSquare][piece][square]
 
@@ -173,10 +168,10 @@ func evaluateKing(
 ): Value =
     result = 0
     
-    # rook on second rank/file is bad
+    # rook on second rank is bad
     let enemyRooks = position[rook] and position[enemy];
-    for (kingFile, rookFile) in [(a1,a2), (a8, a7), (a1, b1), (h1, g1)]:
-        if (ranks[square] and ranks[kingFile]) != 0 and (enemyRooks and ranks[rookFile]) != 0:
+    for (kingRank, rookRank) in [(a1,a2), (a8, a7)]:
+        if (ranks[square] and ranks[kingRank]) != 0 and (enemyRooks and ranks[rookRank]) != 0:
             result += evalParameters.bonusRookSecondRankFromKing
 
             when not (gradient is Nothing):
@@ -204,21 +199,16 @@ func evaluatePiece(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): Value =
-    case piece:
-    of pawn:
-        return evaluatePawn(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    of knight:
-        return evaluateKnight(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    of bishop:
-        return evaluateBishop(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    of rook:
-        return evaluateRook(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    of queen:
-        return evaluateQueen(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    of king:
-        return evaluateKing(position, square, us, enemy, gamePhase, evalParameters, gradient)
-    else:
-        assert false
+    const evaluationFunctions = [
+        pawn: evaluatePawn[GradientOrNothing],
+        knight: evaluateKnight[GradientOrNothing],
+        bishop: evaluateBishop[GradientOrNothing],
+        rook: evaluateRook[GradientOrNothing],
+        queen: evaluateQueen[GradientOrNothing],
+        king: evaluateKing[GradientOrNothing]
+    ]
+    assert piece != noPiece
+    evaluationFunctions[piece](position, square, us, enemy, gamePhase, evalParameters, gradient)
     
 func evaluatePieceType(
     position: Position,
