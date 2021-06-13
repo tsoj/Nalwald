@@ -13,11 +13,16 @@ while f.readLine(line):
         continue
     try:
         let words = line.splitWhitespace
-        if words[7].parseInt < 2900:
+        if words[7].parseInt < 3000:
             continue
+
         let position = line.toPosition(suppressWarnings = true)
+        
+        if position.inCheck(us = position.us, enemy = position.enemy):
+            continue
+        
         let quiesce = position.absoluteQuiesce
-        if quiesce != position.material or abs(quiesce) >= values[king]:
+        if quiesce != position.absoluteMaterial or abs(quiesce) >= values[king]:
             continue
 
         let outcome = if words[6] == "1/2-1/2":
