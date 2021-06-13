@@ -410,7 +410,7 @@ func toMove*(s: string, position: Position): Move =
     doAssert position.isLegal(result)
     
 func gamePhase*(position: Position): GamePhase =
-    (position.occupancy.countSetBits div 2).GamePhase
+    position.occupancy.countSetBits.GamePhase
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1

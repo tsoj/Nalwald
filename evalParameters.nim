@@ -1,5 +1,4 @@
 import types
-import utils
 import random
 import strformat
 
@@ -7,52 +6,39 @@ type KingPieceSquareTable*[T] = object
     ownKing*: array[a1..h8, array[pawn..king, array[a1..h8, T]]]
     enemyKing*: array[a1..h8, array[pawn..king, array[a1..h8, T]]]
 
-type EvalParametersFloat* = object
-    openingKpst*: KingPieceSquareTable[float32]
-    endgameKpst*: KingPieceSquareTable[float32]
-    openingPassedPawnTable*: array[8, float32]
-    endgamePassedPawnTable*: array[8, float32]
-    bonusIsolatedPawn*: float32
-    bonusBothBishops*: float32
-    bonusRookOnOpenFile*: float32
+
+type EvalParametersTemplate[ValueType] = object
+    openingKpst*: KingPieceSquareTable[ValueType]
+    endgameKpst*: KingPieceSquareTable[ValueType]
+    openingPassedPawnTable*: array[8, ValueType]
+    endgamePassedPawnTable*: array[8, ValueType]
+    bonusIsolatedPawn*: ValueType
+    bonusBothBishops*: ValueType
+    bonusRookOnOpenFile*: ValueType
     mobilityMultiplierKnight*: float32
     mobilityMultiplierBishop*: float32
     mobilityMultiplierRook*: float32
     mobilityMultiplierQueen*: float32
-    bonusRookSecondRankFromKing*: float32
+    bonusRookSecondRankFromKing*: ValueType
     kingSafetyMultiplier*: float32
 
-type EvalParameters* = object
-    kpst*: array[GamePhase, KingPieceSquareTable[Value]]
-    openingPassedPawnTable*: array[8, Value]
-    endgamePassedPawnTable*: array[8, Value]
-    bonusIsolatedPawn*: Value
-    bonusBothBishops*: Value
-    bonusRookOnOpenFile*: Value
-    mobilityMultiplierKnight*: float32
-    mobilityMultiplierBishop*: float32
-    mobilityMultiplierRook*: float32
-    mobilityMultiplierQueen*: float32
-    bonusRookSecondRankFromKing*: Value
-    kingSafetyMultiplier*: float32
+type EvalParametersFloat* = EvalParametersTemplate[float32]
+
+type EvalParameters* = EvalParametersTemplate[Value]
     
 
-func convert*(a: EvalParametersFloat): ref EvalParameters =
-    result = new EvalParameters
-    for gamePhase in GamePhase.low..GamePhase.high:
-        for kingSquare in a1..h8:
-            for piece in pawn..king:
-                for square in a1..h8:
-                    result.kpst[gamePhase].ownKing[kingSquare][piece][square] =
-                        gamePhase.interpolate(
-                            forOpening = a.openingKpst.ownKing[kingSquare][piece][square],
-                            forEndgame = a.endgameKpst.ownKing[kingSquare][piece][square]
-                        ).Value                    
-                    result.kpst[gamePhase].enemyKing[kingSquare][piece][square] =
-                        gamePhase.interpolate(
-                            forOpening = a.openingKpst.enemyKing[kingSquare][piece][square],
-                            forEndgame = a.endgameKpst.enemyKing[kingSquare][piece][square]
-                        ).Value
+func convert*(a: EvalParametersFloat): EvalParameters =
+    for kingSquare in a1..h8:
+        for piece in pawn..king:
+            for square in a1..h8:
+                result.openingKpst.ownKing[kingSquare][piece][square] =
+                    a.openingKpst.ownKing[kingSquare][piece][square].Value
+                result.openingKpst.enemyKing[kingSquare][piece][square] =
+                    a.openingKpst.enemyKing[kingSquare][piece][square].Value
+                result.endgameKpst.ownKing[kingSquare][piece][square] =
+                    a.endgameKpst.ownKing[kingSquare][piece][square].Value
+                result.endgameKpst.enemyKing[kingSquare][piece][square] =
+                    a.endgameKpst.enemyKing[kingSquare][piece][square].Value
     for i in 0..7:
         result.openingPassedPawnTable[i] = a.openingPassedPawnTable[i].Value
         result.endgamePassedPawnTable[i] = a.endgamePassedPawnTable[i].Value
@@ -69,63 +55,57 @@ func convert*(a: EvalParametersFloat): ref EvalParameters =
 
 func `$`*(evalParameters: EvalParameters): string =
     result = "(\n"
-    result &= "  kpst: [\n"
-    
-    for gamePhase in GamePhase.low..GamePhase.high:
-        result &= "    " & $gamePhase & ": KingPieceSquareTable[Value](\n"
 
-        for c in [
-            (evalParameters.kpst[gamePhase].ownKing, "ownKing"),
-            (evalParameters.kpst[gamePhase].enemyKing, "enemyKing"),
-        ]:
-            result &= "      " & c[1] & ": [\n"
-            
+    for (kpstName, kpst) in [("openingKpst", evalParameters.openingKpst), ("endgameKpst", evalParameters.endgameKpst)]:
+        result &= "  " & kpstName & ": KingPieceSquareTable[Value](\n"
+        
+        for (kingName, pst) in [("ownKing", kpst.ownKing), ("enemyKing", kpst.enemyKing)]:
+            result &= "    " & kingName & ": [\n"
+
             for kingSquare in a1..h8:
-                result &= "        " & $kingSquare & ": [\n"
+                result &= "      " & $kingSquare & ": [\n"
 
                 for piece in pawn..king:
-                    result &= "          " & $piece & ": ["
+                    result &= "        " & $piece & ": ["
 
                     for square in a1..h8:
                         if square.int8 mod 8 == 0:
-                            result &= "\n            "
-                        result &= fmt"{c[0][kingSquare][piece][square]:>3}" & ".Value"
+                            result &= "\n          "
+                        result &= fmt"{pst[kingSquare][piece][square]:>3}" & ".Value"
                         if square != h8:
                             result &= ", "
 
-                    result &= "\n          ],\n"
+                    result &= "\n        ],\n"
 
-                result &= "        ],\n"
+                result &= "      ],\n"
 
-            result &= "      ],\n"
-
-        result &= "    ),\n"
-    
-    result &= "  ],\n"
+            result &= "    ],\n"
+        
+        result &= "  ),\n"
 
 
-    for c in [
+    for (passedPawnTable, name) in [
         (evalParameters.openingPassedPawnTable, "openingPassedPawnTable"),
         (evalParameters.endgamePassedPawnTable, "endgamePassedPawnTable")
     ]:
-        result &= c[1] & ": ["
+        result &= "  " & name & ": ["
         for i in 0..7:
-            result &= fmt"{c[0][i]:>3}" & ".Value"
+            result &= fmt"{passedPawnTable[i]:>3}" & ".Value"
             if i != 7:
                 result &= ", "
         result &= "],\n"
     
-    result &= "bonusIsolatedPawn: " & fmt"{evalParameters.bonusIsolatedPawn:>3}" & ".Value"
-    result &= ",\nbonusBothBishops: " & fmt"{evalParameters.bonusBothBishops:>3}" & ".Value"
-    result &= ",\nbonusRookOnOpenFile: " & fmt"{evalParameters.bonusRookOnOpenFile:>3}" & ".Value"
-    result &= ",\nmobilityMultiplierKnight: " & fmt"{evalParameters.mobilityMultiplierKnight:>5.2f}"
-    result &= ",\nmobilityMultiplierBishop: " & fmt"{evalParameters.mobilityMultiplierBishop:>5.2f}"
-    result &= ",\nmobilityMultiplierRook: " & fmt"{evalParameters.mobilityMultiplierRook:>5.2f}"
-    result &= ",\nmobilityMultiplierQueen: " & fmt"{evalParameters.mobilityMultiplierQueen:>5.2f}"
-    result &= ",\nbonusRookSecondRankFromKing: " & fmt"{evalParameters.bonusRookSecondRankFromKing:>3}" & ".Value"
-    result &= ",\nkingSafetyMultiplier: " & fmt"{evalParameters.kingSafetyMultiplier:>5.2f}"
+    result &= "  bonusIsolatedPawn: " & fmt"{evalParameters.bonusIsolatedPawn:>3}" & ".Value"
+    result &= ",\n  bonusBothBishops: " & fmt"{evalParameters.bonusBothBishops:>3}" & ".Value"
+    result &= ",\n  bonusRookOnOpenFile: " & fmt"{evalParameters.bonusRookOnOpenFile:>3}" & ".Value"
+    result &= ",\n  mobilityMultiplierKnight: " & fmt"{evalParameters.mobilityMultiplierKnight:>5.2f}"
+    result &= ",\n  mobilityMultiplierBishop: " & fmt"{evalParameters.mobilityMultiplierBishop:>5.2f}"
+    result &= ",\n  mobilityMultiplierRook: " & fmt"{evalParameters.mobilityMultiplierRook:>5.2f}"
+    result &= ",\n  mobilityMultiplierQueen: " & fmt"{evalParameters.mobilityMultiplierQueen:>5.2f}"
+    result &= ",\n  bonusRookSecondRankFromKing: " & fmt"{evalParameters.bonusRookSecondRankFromKing:>3}" & ".Value"
+    result &= ",\n  kingSafetyMultiplier: " & fmt"{evalParameters.kingSafetyMultiplier:>5.2f}"
 
-    result &= ")"
+    result &= "\n)"
 
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =

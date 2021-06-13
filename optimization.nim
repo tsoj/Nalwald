@@ -42,12 +42,12 @@ proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
     lr = 1000.0,
-    minLearningRate = 200.0,
+    minLearningRate = 100.0,
     maxIterations = int.high,
     batchSize = int.high,
     numReIterations = 1,
-    randomAdditions = 10.0
-): ref EvalParameters =
+    randomAdditions = 15.0
+): EvalParameters =
     let batchSize = min(batchSize, data.len)
 
 
@@ -61,7 +61,7 @@ proc optimize(
         debugEcho "batchsize: ", batchSize
 
         var lr = lr
-        var bestError = bestSolution.convert[].error(data)
+        var bestError = bestSolution.convert.error(data)
         debugEcho "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
         for j in 0..maxIterations:
@@ -79,11 +79,11 @@ proc optimize(
                     first = i*batchSize,
                     last = min((i+1)*batchSize - 1, shuffledData.len - 1)
                 ):
-                    gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
+                    gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome)
                 gradient *= (lr/batchSize.float32)
                 currentSolution += gradient
 
-                var error = currentSolution.convert[].error(data)
+                var error = currentSolution.convert.error(data)
                 
                 debugEcho(
                     "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
@@ -99,7 +99,7 @@ proc optimize(
                     bestSolution = currentSolution
 
                     currentSolution += gradient
-                    error = currentSolution.convert[].error(data)
+                    error = currentSolution.convert.error(data)
 
                     if error < bestError:
                         debugEcho(
@@ -116,7 +116,7 @@ proc optimize(
             finalError = bestError
             let filename = now().format("yyyy-MM-dd-HH-mm-ss") & "_optimizationResult.txt"
             debugEcho "filename: ", filename
-            writeFile(filename, $finalSolution.convert[])
+            writeFile(filename, $finalSolution.convert)
 
         bestSolution = finalSolution
         bestSolution.randomEvalParametersFloat(randomAdditions)

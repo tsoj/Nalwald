@@ -44,9 +44,15 @@ func getPstValue(
                 gradient.openingKpst.enemyKing[kingSquare][piece][pieceSquare] += oE
                 gradient.endgameKpst.ownKing[kingSquare][piece][pieceSquare] += eO                    
                 gradient.endgameKpst.enemyKing[kingSquare][piece][pieceSquare] += eE
-                
-    evalParameters.kpst[gamePhase].ownKing[ourKingSquare][piece][square] +
-    evalParameters.kpst[gamePhase].enemyKing[enemyKingSquare][piece][square]
+
+    gamePhase.interpolate(
+        forOpening =
+            evalParameters.openingKpst.ownKing[ourKingSquare][piece][square] +
+            evalParameters.openingKpst.enemyKing[enemyKingSquare][piece][square],
+        forEndgame =
+            evalParameters.endgameKpst.ownKing[ourKingSquare][piece][square] +
+            evalParameters.endgameKpst.enemyKing[enemyKingSquare][piece][square]
+    )
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,
