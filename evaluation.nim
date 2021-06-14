@@ -245,10 +245,7 @@ func evaluatePieceType(
             values[piece] +
             evalParameters.getPstValue(
                 gamePhase, square, piece, currentUs,
-                [
-                    ourKing: kingSquare[currentUs],
-                    enemyKing: kingSquare[currentEnemy]
-                ],
+                [ourKing: kingSquare[currentUs], enemyKing: kingSquare[currentEnemy]],
                 gradient
             ) +
             position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)
