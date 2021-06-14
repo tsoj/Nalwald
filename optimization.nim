@@ -19,7 +19,7 @@ proc loadData(filename: string): seq[Entry] =
     var line: string
     while f.readLine(line):
         let words = line.splitWhitespace()
-        doAssert words.len == 8
+        doAssert words.len >= 7
         result.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
     f.close()
 
@@ -120,7 +120,7 @@ proc optimize(
     return finalSolution.convert
 
 
-let data = "combined_quiet_3000000.epd".loadData
+let data = "zuri_quiet.epd".loadData
 
 discard defaultEvalParametersFloat.optimize(data)
 
