@@ -18,32 +18,40 @@ func getPstValue(
     square: Square,
     piece: Piece,
     us: Color,
-    ourKingSquare, enemyKingSquare: Square, # these are already mirrored accordingly
+    kingSquare: array[ourKing..enemyKing, Square], # these are already mirrored accordingly
     gradient: var GradientOrNothing
 ): Value =
     let square = if us == black: square else: square.mirror
 
     when not (gradient is Nothing):
-        var openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
-        var endgameGradient = 1.0 - openingGradient
+
+        var phaseGradient = [
+            opening: gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
+            endgame:  gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
+        ]
         
         if us == black:
-            openingGradient *= -1.0
-            endgameGradient *= -1.0
+            phaseGradient[opening] *= -1.0
+            phaseGradient[endgame]  *= -1.0
 
-        for currentEnemyKingSquare in a1..h8:
-            let multiplier = if currentEnemyKingSquare == enemyKingSquare: 10.0 else: 0.2
+        for whoseKing in ourKing..enemyKing:
+            for currentKingSquare in a1..h8:
+                let multiplier = if currentKingSquare == kingSquare[whoseKing]: 10.0 else: 0.2
 
-            for (kingSquare, pieceSquare) in [
-                (currentEnemyKingSquare, square),
-                (currentEnemyKingSquare.mirrorVertically, square.mirrorVertically)
-            ]:
-                gradient.openingPst[kingSquare][piece][pieceSquare] += openingGradient*multiplier
-                gradient.endgamePst[kingSquare][piece][pieceSquare] += endgameGradient*multiplier
+                for (kingSquare, pieceSquare) in [
+                    (currentKingSquare, square),
+                    (currentKingSquare.mirrorVertically, square.mirrorVertically)
+                ]:
+                    for phase in opening..endgame:
+                        gradient.pst[phase][whoseKing][kingSquare][piece][pieceSquare] += phaseGradient[phase]*multiplier
 
     gamePhase.interpolate(
-        forOpening = evalParameters.openingPst[enemyKingSquare][piece][square],
-        forEndgame = evalParameters.endgamePst[enemyKingSquare][piece][square]
+        forOpening =
+            evalParameters.pst[opening][enemyKing][kingSquare[enemyKing]][piece][square] +
+            evalParameters.pst[opening][ourKing][kingSquare[ourKing]][piece][square],
+        forEndgame =
+            evalParameters.pst[endgame][enemyKing][kingSquare[enemyKing]][piece][square] +
+            evalParameters.pst[endgame][ourKing][kingSquare[ourKing]][piece][square]
     )
 
 func bonusPassedPawn(
@@ -222,11 +230,7 @@ func evaluatePieceType(
     
     result = 0
 
-    let enemyKingSquare = [
-        white: kingSquare[black],
-        black: kingSquare[white].mirror
-    ]
-    let ourKingSquare = [
+    let kingSquare = [
         white: kingSquare[white].mirror,
         black: kingSquare[black]
     ]
@@ -241,8 +245,10 @@ func evaluatePieceType(
             values[piece] +
             evalParameters.getPstValue(
                 gamePhase, square, piece, currentUs,
-                ourKingSquare = ourKingSquare[currentUs],
-                enemyKingSquare = enemyKingSquare[currentEnemy],
+                [
+                    ourKing: kingSquare[currentUs],
+                    enemyKing: kingSquare[currentEnemy]
+                ],
                 gradient
             ) +
             position.evaluatePiece(piece, square, currentUs, currentEnemy, gamePhase, evalParameters, gradient)

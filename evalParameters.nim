@@ -2,9 +2,14 @@ import types
 import random
 import strformat
 
+type OpeningOrEndGame* = enum
+    opening, endgame
+
+type OurKingOrEnemyKing* = enum
+    ourKing, enemyKing
+
 type EvalParametersTemplate[ValueType] = object
-    openingPst*: array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]
-    endgamePst*: array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]
+    pst*: array[opening..endgame, array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]
     openingPassedPawnTable*: array[8, ValueType]
     endgamePassedPawnTable*: array[8, ValueType]
     bonusIsolatedPawn*: ValueType
@@ -22,13 +27,13 @@ type EvalParametersFloat* = EvalParametersTemplate[float32]
 type EvalParameters* = EvalParametersTemplate[Value]
     
 func convert*(a: EvalParametersFloat): EvalParameters =
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                result.openingPst[kingSquare][piece][square] =
-                    a.openingPst[kingSquare][piece][square].Value
-                result.endgamePst[kingSquare][piece][square] =
-                    a.endgamePst[kingSquare][piece][square].Value
+    for phase in opening..endgame:
+        for whoseKing in ourKing..enemyKing:
+            for kingSquare in a1..h8:
+                for piece in pawn..king:
+                    for square in a1..h8:
+                        result.pst[phase][whoseKing][kingSquare][piece][square] =
+                            a.pst[phase][whoseKing][kingSquare][piece][square].Value
     for i in 0..7:
         result.openingPassedPawnTable[i] = a.openingPassedPawnTable[i].Value
         result.endgamePassedPawnTable[i] = a.endgamePassedPawnTable[i].Value
@@ -46,28 +51,36 @@ func convert*(a: EvalParametersFloat): EvalParameters =
 func `$`*(evalParameters: EvalParameters): string =
     result = "(\n"
 
-    for (pstName, pst) in [("openingPst", evalParameters.openingPst), ("endgamePst", evalParameters.endgamePst)]:
-        result &= "    " & pstName & ": [\n"
+    result &= "    pst: [\n"
+    
+    for phase in opening..endgame:
+        result &= "        " & $phase & ": [\n"
 
-        for kingSquare in a1..h8:
-            result &= "        " & $kingSquare & ": [\n"
+        for whoseKing in ourKing..enemyKing: 
+            result &= "            " & $whoseKing & ": [\n"
 
-            for piece in pawn..king:
-                result &= "            " & $piece & ": ["
+            for kingSquare in a1..h8:
+                result &= "                " & $kingSquare & ": [\n"
 
-                for square in a1..h8:
-                    if square.int8 mod 8 == 0:
-                        result &= "\n                "
-                    result &= fmt"{pst[kingSquare][piece][square]:>3}" & ".Value"
-                    if square != h8:
-                        result &= ", "
+                for piece in pawn..king:
+                    result &= "                    " & $piece & ": ["
 
-                result &= "\n            ],\n"
+                    for square in a1..h8:
+                        if square.int8 mod 8 == 0:
+                            result &= "\n                        "
+                        result &= fmt"{evalParameters.pst[phase][whoseKing][kingSquare][piece][square]:>3}" & ".Value"
+                        if square != h8:
+                            result &= ", "
 
-            result &= "        ],\n"
+                    result &= "\n                    ],\n"
+
+                result &= "                ],\n"
         
-        result &= "    ],\n"
+            result &= "            ],\n"
 
+        result &= "        ],\n"
+
+    result &= "    ],\n"
 
     for (passedPawnTable, name) in [
         (evalParameters.openingPassedPawnTable, "openingPassedPawnTable"),
@@ -94,11 +107,13 @@ func `$`*(evalParameters: EvalParameters): string =
 
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                a.openingPst[kingSquare][piece][square] += b.openingPst[kingSquare][piece][square]
-                a.endgamePst[kingSquare][piece][square] += b.endgamePst[kingSquare][piece][square]
+    for phase in opening..endgame:
+        for whoseKing in ourKing..enemyKing:
+            for kingSquare in a1..h8:
+                for piece in pawn..king:
+                    for square in a1..h8:
+                        a.pst[phase][whoseKing][kingSquare][piece][square] +=
+                            b.pst[phase][whoseKing][kingSquare][piece][square]
     for i in 0..7:
         a.openingPassedPawnTable[i] += b.openingPassedPawnTable[i]
         a.endgamePassedPawnTable[i] += b.endgamePassedPawnTable[i]
@@ -113,11 +128,12 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     a.kingSafetyMultiplier += b.kingSafetyMultiplier
 
 func `*=`*(a: var EvalParametersFloat, b: float32) =
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                a.openingPst[kingSquare][piece][square] *= b
-                a.endgamePst[kingSquare][piece][square] *= b
+    for phase in opening..endgame:
+        for whoseKing in ourKing..enemyKing:
+            for kingSquare in a1..h8:
+                for piece in pawn..king:
+                    for square in a1..h8:
+                        a.pst[phase][whoseKing][kingSquare][piece][square] *= b
     for i in 0..7:
         a.openingPassedPawnTable[i] *= b
         a.endgamePassedPawnTable[i] *= b
@@ -132,11 +148,13 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
     a.kingSafetyMultiplier *= b
 
 func `-`*(a: EvalParametersFloat): EvalParametersFloat =
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                result.openingPst[kingSquare][piece][square] = -a.openingPst[kingSquare][piece][square]
-                result.endgamePst[kingSquare][piece][square] = -a.endgamePst[kingSquare][piece][square]
+    for phase in opening..endgame:
+        for whoseKing in ourKing..enemyKing:
+            for kingSquare in a1..h8:
+                for piece in pawn..king:
+                    for square in a1..h8:
+                        result.pst[phase][whoseKing][kingSquare][piece][square] =
+                            -a.pst[phase][whoseKing][kingSquare][piece][square]
     for i in 0..7:
         result.openingPassedPawnTable[i] = -a.openingPassedPawnTable[i]
         result.endgamePassedPawnTable[i] = -a.endgamePassedPawnTable[i]
@@ -154,11 +172,12 @@ proc randomEvalParametersFloat*(evalParameters: var EvalParametersFloat, max = 5
 
     template r: float32 = rand(max) - max/2.0
 
-    for kingSquare in a1..h8:
-        for piece in pawn..king:
-            for square in a1..h8:
-                evalParameters.openingPst[kingSquare][piece][square] += r
-                evalParameters.endgamePst[kingSquare][piece][square] += r
+    for phase in opening..endgame:
+        for whoseKing in ourKing..enemyKing:
+            for kingSquare in a1..h8:
+                for piece in pawn..king:
+                    for square in a1..h8:
+                        evalParameters.pst[phase][whoseKing][kingSquare][piece][square] += r
     for i in 0..7:
         evalParameters.openingPassedPawnTable[i] += r
         evalParameters.endgamePassedPawnTable[i] += r

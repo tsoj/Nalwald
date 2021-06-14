@@ -119,6 +119,7 @@ proc optimize(
         
     return finalSolution.convert
 
+#echo defaultEvalParametersFloat.convert
 
 let data = "zuri_quiet.epd".loadData
 
