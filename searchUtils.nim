@@ -29,6 +29,8 @@ type KillerTable* = array[Ply, array[2, Move]]
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
+    if move == killerTable[height][0]:
+        return
     
     killerTable[height][1] = killerTable[height][0]
     killerTable[height][0] = move
