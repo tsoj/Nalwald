@@ -29,7 +29,7 @@ type
         allNode,
         cutNode,
         noNode
-    GamePhase* = 1..16
+    GamePhase* = 0..32
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0

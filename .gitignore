@@ -9,6 +9,7 @@ massif.out
 *.profdata
 *.log
 *.epd
+!parameterOptimization/zuriQuietSet.epd
 optimization
 txt.txt
 vgcore.*

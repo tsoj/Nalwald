@@ -1,12 +1,11 @@
-import position
-import evalParameters
+import ../position
+import ../evalParameters
+import evalParametersUtils
 import strutils
-import types
-import evaluation
-import utils
+import ../evaluation
+import ../utils
 import gradient
 import random
-import defaultParameters
 import times
 import strformat
 
@@ -18,13 +17,11 @@ proc loadData(filename: string): seq[Entry] =
     let f = open(filename)
     var line: string
     while f.readLine(line):
-        line = line.replace('"', ' ')
-        line = line.replace(';', ' ')
         let words = line.splitWhitespace()
-        doAssert words.len == 6
-        doAssert words[4] == "c2"
-        let fen = words[0] & " " & words[1] & " " & words[2] & " " & words[3] & " 0 0"
-        result.add(Entry(position: fen.toPosition, outcome: words[5].parseFloat))
+        if words.len == 0 or words[0] == "LICENSE:":
+            continue
+        doAssert words.len >= 7
+        result.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
     f.close()
 
     debugEcho "data.len: ", result.len
@@ -45,9 +42,10 @@ proc optimize(
     minLearningRate = 10.0,
     maxIterations = int.high,
     batchSize = int.high,
-    numReIterations = 100,
-    randomAdditions = 10.0
-): ref EvalParameters =
+    # Only one optimization run to omit over specialization. More runs may be feasible using a larger data set.
+    numReIterations = 1,
+    randomAdditions = 15.0
+): EvalParameters =
     let batchSize = min(batchSize, data.len)
 
 
@@ -61,7 +59,7 @@ proc optimize(
         debugEcho "batchsize: ", batchSize
 
         var lr = lr
-        var bestError = bestSolution.convert[].error(data)
+        var bestError = bestSolution.convert.error(data)
         debugEcho "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
         for j in 0..maxIterations:
@@ -79,11 +77,11 @@ proc optimize(
                     first = i*batchSize,
                     last = min((i+1)*batchSize - 1, shuffledData.len - 1)
                 ):
-                    gradient.addGradient(bestSolutionConverted[], entry.position, entry.outcome)
+                    gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome)
                 gradient *= (lr/batchSize.float32)
                 currentSolution += gradient
 
-                var error = currentSolution.convert[].error(data)
+                var error = currentSolution.convert.error(data)
                 
                 debugEcho(
                     "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
@@ -99,7 +97,7 @@ proc optimize(
                     bestSolution = currentSolution
 
                     currentSolution += gradient
-                    error = currentSolution.convert[].error(data)
+                    error = currentSolution.convert.error(data)
 
                     if error < bestError:
                         debugEcho(
@@ -114,18 +112,18 @@ proc optimize(
         if bestError <= finalError:
             finalSolution = bestSolution
             finalError = bestError
-            let filename = now().format("yyyy-MM-dd-HH-mm-ss") & "_optimizationResult.txt"
+            let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
             debugEcho "filename: ", filename
-            writeFile(filename, $finalSolution.convert[])
+            writeFile(filename, $finalSolution.convert)
 
         bestSolution = finalSolution
         bestSolution.randomEvalParametersFloat(randomAdditions)
         
     return finalSolution.convert
 
+echo startingEvalParametersFloat.convert
 
-let data = "quiet-set.epd".loadData
-#echo defaultEvalParametersFloat.convert[]
-#echo randomEvalParametersFloat().optimize(data, lr = 1000.0, minLearningRate = 1.0)
-discard defaultEvalParametersFloat.optimize(data)
-#writeFile("optimizationResult.txt", $randomEvalParametersFloat().optimize(data)[])
+#let data = "zuriQuietSet.epd".loadData
+
+#discard startingEvalParametersFloat.optimize(data)
+

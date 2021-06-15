@@ -11,8 +11,6 @@ import bitops
 import times
 import threadpool
 import utils
-import math
-import strutils
 
 const nullMoveDepthReduction = 4.Ply
 const futilityMargin = [
@@ -52,7 +50,7 @@ func quiesce(
     state: var SearchState,
     alpha, beta: Value, 
     height: Ply,
-    doQuietChecks: static bool
+    doPruning: static bool = true
 ): Value =
     assert alpha < beta
 
@@ -80,7 +78,7 @@ func quiesce(
     if not inCheck and standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = inCheck, doQuietChecks = doQuietChecks):
+    for move in position.moveIterator(doQuiets = inCheck):
         var newPosition = position
         newPosition.doMove(move)
 
@@ -89,11 +87,11 @@ func quiesce(
         moveCounter += 1
 
         # delta pruning
-        if standPat + position.see(move) + deltaMargin < alpha and
+        if standPat + position.see(move) + deltaMargin < alpha and doPruning and
         not newPosition.inCheck(newPosition.us, newPosition.enemy):
             continue
 
-        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doQuietChecks)
+        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
         if value >= beta:
             return beta
@@ -104,6 +102,19 @@ func quiesce(
         alpha = -(height.checkmateValue)
 
     alpha
+
+
+func absoluteQuiesce*(position: Position): Value =
+    var state = SearchState(
+        stop: nil,
+        hashTable: nil,
+        gameHistory: newGameHistory(@[]),
+        evaluation: material
+    )
+    result = position.quiesce(state, alpha = -valueInfinity, beta = valueInfinity, height = 0, doPruning = false)
+    if position.us == black:
+        result = -result
+
 
 func search(position: Position, state: var SearchState, alpha, beta: Value, depth: Ply, height = 0.Ply): Value =
     assert alpha < beta
@@ -151,7 +162,7 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
     if depth <= 0:
         state.measuredSelectiveDepth = max(state.measuredSelectiveDepth, height)
         state.measuredMinDepth = min(state.measuredMinDepth, height)
-        return position.quiesce(state, alpha = alpha, beta = beta, height, doQuietChecks = false)
+        return position.quiesce(state, alpha = alpha, beta = beta, height)
 
     # null move reduction
     if height > 0 and (not inCheck) and alpha > -valueInfinity and beta < valueInfinity and
@@ -302,7 +313,6 @@ iterator iterativeDeepeningSearch*(
         if abs(value) >= valueCheckmate:
             break
 
-
 type MoveTime = object
     maxTime, approxTime: Duration
 func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
@@ -324,7 +334,7 @@ func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, half
         if movesToGo > 2:
             result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 4), movetime)
 
-iterator timeManagedSearch(
+iterator timeManagedSearch*(
     position: Position,
     hashTable: var HashTable,
     positionHistory: seq[Position] = newSeq[Position](0),
@@ -382,52 +392,4 @@ iterator timeManagedSearch(
     stop[].store(true)
     discard ^stopwatchResult
 
-proc uciSearch*(
-    position: Position,
-    hashTable: ptr HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
-    stop: ptr Atomic[bool],
-    movesToGo: int16,
-    increment, timeLeft: array[white..black, Duration],
-    movetime: Duration
-): bool =
-    try:
-        var bestMove = noMove    
-        var iteration = 0
-        for (value, pv, nodes, minDepth, selDepth, passedTime) in timeManagedSearch(
-            position,
-            hashTable[],
-            positionHistory,
-            targetDepth,
-            stop,
-            movesToGo,
-            increment, timeLeft,
-            movetime
-        ):
-            doAssert pv.len >= 1
-            bestMove = pv[0]
 
-            # uci info
-            var scoreString = " score cp " & $((100*value.int) div values[pawn].int)
-            if abs(value) >= valueCheckmate:
-                if value < 0:
-                    scoreString = " score mate -"
-                else:
-                    scoreString = " score mate "
-                scoreString &= $(value.plysUntilCheckmate.float32 / 2.0).ceil.int
-
-            let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-            echo "info depth ", iteration+1, " seldepth ", selDepth, " nodes ", nodes,
-                " nps ", nps, " time ", passedTime.inMilliseconds, " hashfull ", hashTable[].hashFull, scoreString, " pv ", pv
-
-            iteration += 1
-
-        echo "bestmove ", bestMove
-    except:
-        var errorMessage = "info string " & getCurrentExceptionMsg() & "\n" & getCurrentException().getStackTrace()
-        if errorMessage[^1] == '\n':
-            errorMessage.delete(errorMessage.len - 1, errorMessage.len - 1)
-        errorMessage = errorMessage.replace("\n", "\ninfo string ")
-        echo errorMessage
-        echo "bestmove ", noMove

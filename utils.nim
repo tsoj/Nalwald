@@ -24,7 +24,7 @@ func notation*(piece: Piece): string =
     t[piece]
 
 func notation*(coloredPiece: ColoredPiece): string =
-    result = $coloredPiece.piece
+    result = coloredPiece.piece.notation
     if coloredPiece.color == white:
         result = result.toUpperAscii
 
@@ -73,6 +73,9 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T
     when T is SomeInteger:
         result = result div (GamePhase.high - GamePhase.low).T
+        static: doAssert(
+            GamePhase.high - GamePhase.low == 32,
+            "This makes sure that this division can be done using bitshifts")
     else:
         result = result / (GamePhase.high - GamePhase.low).T
 

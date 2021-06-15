@@ -4,7 +4,7 @@ import threadpool
 import types
 import hashTable
 import strutils
-import search
+import uciSearch
 import times
 import perft
 import see
@@ -24,7 +24,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.8.1"
+    echo "id name Nalwald 1.9"
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -178,18 +178,18 @@ proc uciLoop*() =
             else:
                 echo "Unknown command: ", params[0]
                 echo "Possible commands:"
-                echo "  uci"
-                echo "  setoption"
-                echo "  isready"
-                echo "  position"
-                echo "  go"
-                echo "  stop"
-                echo "  quit"
-                echo "  ucinewgame"
-                echo "  print"
-                echo "  printdebug"
-                echo "  getfen"
-                echo "  test"
+                echo "* uci"
+                echo "* setoption"
+                echo "* isready"
+                echo "* position"
+                echo "* go"
+                echo "* stop"
+                echo "* quit"
+                echo "* ucinewgame"
+                echo "* print"
+                echo "* printdebug"
+                echo "* getfen"
+                echo "* test"
         except:
             echo "info string ", getCurrentExceptionMsg()
 

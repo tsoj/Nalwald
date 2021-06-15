@@ -1,5 +1,5 @@
 # Nalwald
-#### Chess engine written in Nim
+### Chess engine written in Nim
 ```
        __,      o     n_n_n   ooooo    + 
  o    /  o\    ( )    \   /    \ /    \ /
@@ -7,31 +7,45 @@
 |_|   /__\    /___\   /___\   /___\   /_\
 ```
 You can play against Nalwald [here](https://lichess.org/@/squared-chess).
-##### Download:
+#### Download:
 ```
 git clone https://gitlab.com/tsoj/Nalwald.git
 ```
-##### Compile
-You need the [Nim](https://nim-lang.org/) compiler (version 1.2.0 or higher) and the Clang compiler
+#### Compile
+
+##### Compiling for native CPU
+You need the [Nim](https://nim-lang.org/) compiler (version 1.4.0 or higher) and the Clang compiler
 ```
 nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
 If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower executable.
 
-##### Run:
+##### Compiling for generic 64-bit CPUs
+```
+nim c -d:danger -d:lto --passL:"-static" --cc:clang --threads:on Nalwald.nim
+```
+
+##### Compiling for modern 64-bit CPUs (BMI2 and POPCNT)
+```
+nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --threads:on Nalwald.nim
+```
+
+#### Run:
 ```
 ./Nalwald
 ```
 
-##### Features
+#### Features
 
 - evaluation:
-  - piece square tables
+  - king square contextual piece square tables
   - isolated pawns
+  - pawn with two neighbors
   - passed pawns
   - mobility
+  - sliding pieces attacking area around king
   - rook on open file
-  - rook on second rank/file of king
+  - optimized using gradient descent
 - search:
   - principle variation search
   - quiescence search
@@ -47,6 +61,6 @@ If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it m
   - delta pruning
   - futility pruning
 
-##### License
+#### License
 
 Copyright (c) 2021 Jost Triller
