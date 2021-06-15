@@ -40,7 +40,7 @@ proc optimize(
     lr = 1000.0,
     minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = 750000,
+    batchSize = int.high,
     numReIterations = 100,
     randomAdditions = 15.0
 ): EvalParameters =
