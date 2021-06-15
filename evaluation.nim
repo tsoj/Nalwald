@@ -68,12 +68,12 @@ func bonusPassedPawn(
     when not (gradient is Nothing):
         let openingGradient = gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         let endgameGradient = 1.0 - openingGradient
-        gradient.openingPassedPawnTable[index] += (if us == black: -openingGradient else: openingGradient)
-        gradient.endgamePassedPawnTable[index] += (if us == black: -endgameGradient else: endgameGradient)
+        gradient.passedPawnTable[opening][index] += (if us == black: -openingGradient else: openingGradient)
+        gradient.passedPawnTable[endgame][index] += (if us == black: -endgameGradient else: endgameGradient)
 
     gamePhase.interpolate(
-        forOpening = evalParameters.openingPassedPawnTable[index],
-        forEndgame = evalParameters.endgamePassedPawnTable[index]
+        forOpening = evalParameters.passedPawnTable[opening][index],
+        forEndgame = evalParameters.passedPawnTable[endgame][index]
     )
 
 #-------------- pawn evaluation --------------#

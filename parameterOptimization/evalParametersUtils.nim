@@ -12,8 +12,8 @@ func convert*(a: EvalParametersFloat): EvalParameters =
                         result.pst[phase][whoseKing][kingSquare][piece][square] =
                             a.pst[phase][whoseKing][kingSquare][piece][square].Value
     for i in 0..7:
-        result.openingPassedPawnTable[i] = a.openingPassedPawnTable[i].Value
-        result.endgamePassedPawnTable[i] = a.endgamePassedPawnTable[i].Value
+        result.passedPawnTable[opening][i] = a.passedPawnTable[opening][i].Value
+        result.passedPawnTable[endgame][i] = a.passedPawnTable[endgame][i].Value
     result.bonusIsolatedPawn = a.bonusIsolatedPawn.Value
     result.bonusPawnHasTwoNeighbors = a.bonusPawnHasTwoNeighbors.Value
     result.bonusBothBishops = a.bonusBothBishops.Value
@@ -61,16 +61,14 @@ func `$`*(a: EvalParameters): string =
 
     result &= "    ],\n"
 
-    for (passedPawnTable, name) in [
-        (a.openingPassedPawnTable, "openingPassedPawnTable"),
-        (a.endgamePassedPawnTable, "endgamePassedPawnTable")
-    ]:
-        result &= "    " & name & ": ["
+
+    result &= "    " & "passedPawnTable: [\n"
+    for phase in opening..endgame:
+        result &= "        " & $phase & ": ["
         for i in 0..7:
-            result &= fmt"{passedPawnTable[i]:>3}" & ".Value"
-            if i != 7:
-                result &= ", "
+            result &= fmt"{a.passedPawnTable[phase][i]:>3}" & ".Value, "
         result &= "],\n"
+    result &= "    ],\n"
     
     result &= "    bonusIsolatedPawn: " & fmt"{a.bonusIsolatedPawn:>3}" & ".Value"
     result &= ",\n    bonusPawnHasTwoNeighbors: " & fmt"{a.bonusPawnHasTwoNeighbors:>3}" & ".Value"
@@ -96,8 +94,8 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
                         a.pst[phase][whoseKing][kingSquare][piece][square] +=
                             b.pst[phase][whoseKing][kingSquare][piece][square]
     for i in 0..7:
-        a.openingPassedPawnTable[i] += b.openingPassedPawnTable[i]
-        a.endgamePassedPawnTable[i] += b.endgamePassedPawnTable[i]
+        a.passedPawnTable[opening][i] += b.passedPawnTable[opening][i]
+        a.passedPawnTable[endgame][i] += b.passedPawnTable[endgame][i]
     a.bonusIsolatedPawn += b.bonusIsolatedPawn
     a.bonusPawnHasTwoNeighbors += b.bonusPawnHasTwoNeighbors
     a.bonusBothBishops += b.bonusBothBishops
@@ -119,8 +117,8 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
                     for square in a1..h8:
                         a.pst[phase][whoseKing][kingSquare][piece][square] *= b
     for i in 0..7:
-        a.openingPassedPawnTable[i] *= b
-        a.endgamePassedPawnTable[i] *= b
+        a.passedPawnTable[opening][i] *= b
+        a.passedPawnTable[endgame][i] *= b
     a.bonusIsolatedPawn *= b
     a.bonusPawnHasTwoNeighbors *= b
     a.bonusBothBishops *= b
@@ -145,8 +143,8 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
                     for square in a1..h8:
                         a.pst[phase][whoseKing][kingSquare][piece][square] += r
     for i in 0..7:
-        a.openingPassedPawnTable[i] += r
-        a.endgamePassedPawnTable[i] += r
+        a.passedPawnTable[opening][i] += r
+        a.passedPawnTable[endgame][i] += r
     a.bonusIsolatedPawn += r
     a.bonusPawnHasTwoNeighbors += r
     a.bonusBothBishops += r
@@ -162,8 +160,10 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
 
 const startingEvalParametersFloat* = block:
     var startingEvalParametersFloat = EvalParametersFloat(
-        openingPassedPawnTable: [0.0'f32, 0.0'f32, 0.0'f32, 10.0'f32, 15.0'f32, 20.0'f32, 45.0'f32, 0.0'f32],
-        endgamePassedPawnTable: [0.0'f32, 20.0'f32, 30.0'f32, 40.0'f32, 60.0'f32, 100.0'f32, 120.0'f32, 0.0'f32],
+        passedPawnTable: [
+            opening: [0.0'f32, 0.0'f32, 0.0'f32, 10.0'f32, 15.0'f32, 20.0'f32, 45.0'f32, 0.0'f32],
+            endgame: [0.0'f32, 20.0'f32, 30.0'f32, 40.0'f32, 60.0'f32, 100.0'f32, 120.0'f32, 0.0'f32]
+        ],
         bonusIsolatedPawn: -10.0,
         bonusPawnHasTwoNeighbors: 1.0,
         bonusBothBishops: 10.0,

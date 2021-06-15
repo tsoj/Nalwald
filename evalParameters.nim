@@ -8,8 +8,7 @@ type OurKingOrEnemyKing* = enum
 
 type EvalParametersTemplate[ValueType] = object
     pst*: array[opening..endgame, array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]
-    openingPassedPawnTable*: array[8, ValueType]
-    endgamePassedPawnTable*: array[8, ValueType]
+    passedPawnTable*: array[opening..endgame, array[8, ValueType]]
     bonusIsolatedPawn*: ValueType
     bonusPawnHasTwoNeighbors*: ValueType
     bonusBothBishops*: ValueType
