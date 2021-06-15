@@ -223,6 +223,9 @@ func evaluateQueen(
     # mobility
     let reachableSquares = position.numReachableSquares(us, attackMask).float32
     result += (reachableSquares * evalParameters.mobilityMultiplierQueen).Value
+
+    when not (gradient is Nothing):
+        gradient.mobilityMultiplierQueen += (if us == black: -reachableSquares else: reachableSquares)/8.0
     
     # targeting enemy king area
     if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
@@ -230,9 +233,6 @@ func evaluateQueen(
 
         when not (gradient is Nothing):
             gradient.bonusQueenTargetingKingArea += (if us == black: -1.0 else: 1.0)
-
-    when not (gradient is Nothing):
-        gradient.mobilityMultiplierQueen += (if us == black: -reachableSquares else: reachableSquares)/8.0
 
 #-------------- king evaluation --------------#
 
@@ -328,8 +328,6 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     let kingSquare = [white: position.kingSquare(white), black: position.kingSquare(black)]
     for piece in pawn..king:
         result += position.evaluatePieceType(piece, gamePhase, evalParameters, kingSquare, gradient)
-
-
 
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
