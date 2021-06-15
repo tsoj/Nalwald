@@ -25,7 +25,6 @@ func convert*(a: EvalParametersFloat): EvalParameters =
     result.bonusBishopTargetingKingArea = a.bonusBishopTargetingKingArea.Value
     result.bonusRookTargetingKingArea = a.bonusRookTargetingKingArea.Value
     result.bonusQueenTargetingKingArea = a.bonusQueenTargetingKingArea.Value
-    result.bonusRookSecondRankFromKing = a.bonusRookSecondRankFromKing.Value
     result.kingSafetyMultiplier = a.kingSafetyMultiplier
 
 func `$`*(a: EvalParameters): string =
@@ -84,7 +83,6 @@ func `$`*(a: EvalParameters): string =
     result &= ",\n    bonusBishopTargetingKingArea: " & fmt"{a.bonusBishopTargetingKingArea:>3}" & ".Value"
     result &= ",\n    bonusRookTargetingKingArea: " & fmt"{a.bonusRookTargetingKingArea:>3}" & ".Value"
     result &= ",\n    bonusQueenTargetingKingArea: " & fmt"{a.bonusQueenTargetingKingArea:>3}" & ".Value"
-    result &= ",\n    bonusRookSecondRankFromKing: " & fmt"{a.bonusRookSecondRankFromKing:>3}" & ".Value"
     result &= ",\n    kingSafetyMultiplier: " & fmt"{a.kingSafetyMultiplier:>5.2f}"
 
     result &= "\n)"
@@ -111,7 +109,6 @@ func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     a.bonusBishopTargetingKingArea += b.bonusBishopTargetingKingArea
     a.bonusRookTargetingKingArea += b.bonusRookTargetingKingArea
     a.bonusQueenTargetingKingArea += b.bonusQueenTargetingKingArea
-    a.bonusRookSecondRankFromKing += b.bonusRookSecondRankFromKing
     a.kingSafetyMultiplier += b.kingSafetyMultiplier
 
 func `*=`*(a: var EvalParametersFloat, b: float32) =
@@ -135,7 +132,6 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
     a.bonusBishopTargetingKingArea *= b
     a.bonusRookTargetingKingArea *= b
     a.bonusQueenTargetingKingArea *= b
-    a.bonusRookSecondRankFromKing *= b
     a.kingSafetyMultiplier *= b
 
 proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
@@ -162,11 +158,10 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
     a.bonusBishopTargetingKingArea += r
     a.bonusRookTargetingKingArea += r
     a.bonusQueenTargetingKingArea += r
-    a.bonusRookSecondRankFromKing += r
     a.kingSafetyMultiplier += r
 
-const defaultEvalParametersFloat* = block:
-    var defaultEvalParametersFloat = EvalParametersFloat(
+const startingEvalParametersFloat* = block:
+    var startingEvalParametersFloat = EvalParametersFloat(
         openingPassedPawnTable: [0.0'f32, 0.0'f32, 0.0'f32, 10.0'f32, 15.0'f32, 20.0'f32, 45.0'f32, 0.0'f32],
         endgamePassedPawnTable: [0.0'f32, 20.0'f32, 30.0'f32, 40.0'f32, 60.0'f32, 100.0'f32, 120.0'f32, 0.0'f32],
         bonusIsolatedPawn: -10.0,
@@ -180,7 +175,6 @@ const defaultEvalParametersFloat* = block:
         bonusBishopTargetingKingArea: 1.0,
         bonusRookTargetingKingArea: 1.0,
         bonusQueenTargetingKingArea: 1.0,
-        bonusRookSecondRankFromKing: -10.0,
         kingSafetyMultiplier: 2.5
     )
 
@@ -327,8 +321,8 @@ const defaultEvalParametersFloat* = block:
         for kingSquare in a1..h8:
             for piece in pawn..king:
                 for square in a1..h8:
-                    defaultEvalParametersFloat.pst[opening][whoseKing][kingSquare][piece][square] =
+                    startingEvalParametersFloat.pst[opening][whoseKing][kingSquare][piece][square] =
                         openingPst[piece][square].float32 / 2.0
-                    defaultEvalParametersFloat.pst[endgame][whoseKing][kingSquare][piece][square] =
+                    startingEvalParametersFloat.pst[endgame][whoseKing][kingSquare][piece][square] =
                         endgamePst[piece][square].float32 / 2.0
-    defaultEvalParametersFloat
+    startingEvalParametersFloat

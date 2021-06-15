@@ -2,7 +2,6 @@ import ../position
 import ../evalParameters
 import evalParametersUtils
 import strutils
-import ../types
 import ../evaluation
 import ../utils
 import gradient
@@ -19,6 +18,8 @@ proc loadData(filename: string): seq[Entry] =
     var line: string
     while f.readLine(line):
         let words = line.splitWhitespace()
+        if words.len == 0 or words[0] == "LICENSE:":
+            continue
         doAssert words.len >= 7
         result.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
     f.close()
@@ -41,7 +42,8 @@ proc optimize(
     minLearningRate = 10.0,
     maxIterations = int.high,
     batchSize = int.high,
-    numReIterations = 100,
+    # Only one optimization run to omit over specification. More runs may be feasible using a larger data set.
+    numReIterations = 1,
     randomAdditions = 15.0
 ): EvalParameters =
     let batchSize = min(batchSize, data.len)
@@ -110,7 +112,7 @@ proc optimize(
         if bestError <= finalError:
             finalSolution = bestSolution
             finalError = bestError
-            let filename = now().format("yyyy-MM-dd-HH-mm-ss") & "_optimizationResult.txt"
+            let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
             debugEcho "filename: ", filename
             writeFile(filename, $finalSolution.convert)
 
@@ -119,9 +121,7 @@ proc optimize(
         
     return finalSolution.convert
 
-#echo defaultEvalParametersFloat.convert
-
 let data = "zuriQuietSet.epd".loadData
 
-discard defaultEvalParametersFloat.optimize(data)
+discard startingEvalParametersFloat.optimize(data)
 

@@ -246,17 +246,6 @@ func evaluateKing(
     gradient: var GradientOrNothing
 ): Value =
     result = 0
-    
-    # rook on second rank is bad
-    let enemyRooks = position[rook] and position[enemy];
-    for (kingRank, rookRank) in [(a1,a2), (a8, a7)]:
-        if (ranks[square] and ranks[kingRank]) != 0 and (enemyRooks and ranks[rookRank]) != 0:
-            result += evalParameters.bonusRookSecondRankFromKing
-
-            when not (gradient is Nothing):
-                gradient.bonusRookSecondRankFromKing += (if us == black: -1.0 else: 1.0)
-
-            break
 
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
