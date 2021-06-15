@@ -11,6 +11,7 @@ You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 ```
 git clone https://gitlab.com/tsoj/Nalwald.git
 ```
+Pre-compiled executables for Windows and Linux can be found [here](https://gitlab.com/tsoj/Nalwald/-/releases).
 #### Compile
 
 ##### Compiling for native CPU
