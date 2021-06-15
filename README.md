@@ -12,7 +12,7 @@ You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 git clone https://gitlab.com/tsoj/Nalwald.git
 ```
 ##### Compile
-You need the [Nim](https://nim-lang.org/) compiler (version 1.2.0 or higher) and the Clang compiler
+You need the [Nim](https://nim-lang.org/) compiler (version 1.4.0 or higher) and the Clang compiler
 ```
 nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
@@ -26,12 +26,14 @@ If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it m
 ##### Features
 
 - evaluation:
-  - piece square tables
+  - king square contextual piece square tables
   - isolated pawns
+  - pawn with two neighbors
   - passed pawns
   - mobility
+  - sliding pieces attacking area around king
   - rook on open file
-  - rook on second rank/file of king
+  - optimized using gradient descent
 - search:
   - principle variation search
   - quiescence search

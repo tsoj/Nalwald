@@ -24,8 +24,6 @@ type EvalParametersTemplate[ValueType] = object
     bonusRookSecondRankFromKing*: ValueType
     kingSafetyMultiplier*: float32
 
-# TODO: seperate between files needed for optimization only and files needed also for the engine
-
 type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]

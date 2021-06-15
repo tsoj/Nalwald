@@ -29,7 +29,7 @@ type KillerTable* = array[Ply, array[2, Move]]
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
-    # TODO: don't create duplicate entries. If second killermove is the same as the new one, just swap 1 and 2
+    
     killerTable[height][1] = killerTable[height][0]
     killerTable[height][0] = move
 
