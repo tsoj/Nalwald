@@ -11,8 +11,6 @@ import bitops
 import times
 import threadpool
 import utils
-import math
-import strutils
 
 const nullMoveDepthReduction = 4.Ply
 const futilityMargin = [
@@ -315,7 +313,6 @@ iterator iterativeDeepeningSearch*(
         if abs(value) >= valueCheckmate:
             break
 
-
 type MoveTime = object
     maxTime, approxTime: Duration
 func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
@@ -337,7 +334,7 @@ func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, half
         if movesToGo > 2:
             result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 4), movetime)
 
-iterator timeManagedSearch(
+iterator timeManagedSearch*(
     position: Position,
     hashTable: var HashTable,
     positionHistory: seq[Position] = newSeq[Position](0),
@@ -395,52 +392,4 @@ iterator timeManagedSearch(
     stop[].store(true)
     discard ^stopwatchResult
 
-proc uciSearch*(
-    position: Position,
-    hashTable: ptr HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
-    stop: ptr Atomic[bool],
-    movesToGo: int16,
-    increment, timeLeft: array[white..black, Duration],
-    movetime: Duration
-): bool =
-    try:
-        var bestMove = noMove    
-        var iteration = 0
-        for (value, pv, nodes, minDepth, selDepth, passedTime) in timeManagedSearch(
-            position,
-            hashTable[],
-            positionHistory,
-            targetDepth,
-            stop,
-            movesToGo,
-            increment, timeLeft,
-            movetime
-        ):
-            doAssert pv.len >= 1
-            bestMove = pv[0]
 
-            # uci info
-            var scoreString = " score cp " & $((100*value.int) div values[pawn].int)
-            if abs(value) >= valueCheckmate:
-                if value < 0:
-                    scoreString = " score mate -"
-                else:
-                    scoreString = " score mate "
-                scoreString &= $(value.plysUntilCheckmate.float32 / 2.0).ceil.int
-
-            let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-            echo "info depth ", iteration+1, " seldepth ", selDepth, " nodes ", nodes,
-                " nps ", nps, " time ", passedTime.inMilliseconds, " hashfull ", hashTable[].hashFull, scoreString, " pv ", pv
-
-            iteration += 1
-
-        echo "bestmove ", bestMove
-    except:
-        var errorMessage = "info string " & getCurrentExceptionMsg() & "\n" & getCurrentException().getStackTrace()
-        if errorMessage[^1] == '\n':
-            errorMessage.delete(errorMessage.len - 1, errorMessage.len - 1)
-        errorMessage = errorMessage.replace("\n", "\ninfo string ")
-        echo errorMessage
-        echo "bestmove ", noMove

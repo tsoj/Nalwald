@@ -1,12 +1,12 @@
-import position
-import evalParameters
+import ../position
+import ../evalParameters
+import evalParametersUtils
 import strutils
-import types
-import evaluation
-import utils
+import ../types
+import ../evaluation
+import ../utils
 import gradient
 import random
-import defaultParameters
 import times
 import strformat
 
@@ -121,7 +121,7 @@ proc optimize(
 
 #echo defaultEvalParametersFloat.convert
 
-let data = "zuri_quiet.epd".loadData
+let data = "zuriQuietSet.epd".loadData
 
 discard defaultEvalParametersFloat.optimize(data)
 
