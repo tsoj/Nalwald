@@ -121,9 +121,7 @@ proc optimize(
         
     return finalSolution.convert
 
-echo startingEvalParametersFloat.convert
+let data = "zuriQuietSet.epd".loadData
 
-#let data = "zuriQuietSet.epd".loadData
-
-#discard startingEvalParametersFloat.optimize(data)
+discard startingEvalParametersFloat.optimize(data)
 
