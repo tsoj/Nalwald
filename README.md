@@ -1,11 +1,7 @@
 # Nalwald
 ### Chess engine written in Nim
-```
-       __,      o     n_n_n   ooooo    + 
- o    /  o\    ( )    \   /    \ /    \ /
-( )   \  \_>   / \    |   |    / \    ( )
-|_|   /__\    /___\   /___\   /___\   /_\
-```
+![](https://gitlab.com/tsoj/Nalwald/-/raw/master/logo.png)
+
 You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 #### Download:
 ```
@@ -65,3 +61,10 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
 #### License
 
 Copyright (c) 2021 Jost Triller
+
+```
+       __,      o     n_n_n   ooooo    + 
+ o    /  o\    ( )    \   /    \ /    \ /
+( )   \  \_>   / \    |   |    / \    ( )
+|_|   /__\    /___\   /___\   /___\   /_\
+```
