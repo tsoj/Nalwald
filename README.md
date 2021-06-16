@@ -11,7 +11,7 @@ Pre-compiled executables for Windows and Linux can be found [here](https://gitla
 #### Compile
 
 ##### Compiling for native CPU
-You need the [Nim](https://nim-lang.org/) compiler (version 1.4.0 or higher) and the Clang compiler
+You need the [Nim](https://nim-lang.org/) compiler (version 1.4.0 or higher) and the Clang compiler.
 ```
 nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
