@@ -61,10 +61,3 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
 #### License
 
 Copyright (c) 2021 Jost Triller
-
-```
-       __,      o     n_n_n   ooooo    + 
- o    /  o\    ( )    \   /    \ /    \ /
-( )   \  \_>   / \    |   |    / \    ( )
-|_|   /__\    /___\   /___\   /___\   /_\
-```
