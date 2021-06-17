@@ -43,14 +43,12 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
-template isInNullWindow(): bool = beta == alpha + 1
 
 func quiesce(
     position: Position,
     state: var SearchState,
     alpha, beta: Value, 
-    height: Ply,
-    doPruning: static bool = true
+    height: Ply
 ): Value =
     assert alpha < beta
 
@@ -87,7 +85,7 @@ func quiesce(
         moveCounter += 1
 
         # delta pruning
-        if standPat + position.see(move) + deltaMargin < alpha and doPruning and
+        if standPat + position.see(move) + deltaMargin < alpha and
         not newPosition.inCheck(newPosition.us, newPosition.enemy):
             continue
 
@@ -103,21 +101,10 @@ func quiesce(
 
     alpha
 
-
-func absoluteQuiesce*(position: Position): Value =
-    var state = SearchState(
-        stop: nil,
-        hashTable: nil,
-        gameHistory: newGameHistory(@[]),
-        evaluation: material
-    )
-    result = position.quiesce(state, alpha = -valueInfinity, beta = valueInfinity, height = 0, doPruning = false)
-    if position.us == black:
-        result = -result
-
-
 func search(position: Position, state: var SearchState, alpha, beta: Value, depth: Ply, height = 0.Ply): Value =
     assert alpha < beta
+
+    template isInNullWindow(): bool = beta == alpha + 1
 
     state.countedNodes += 1
 
