@@ -22,7 +22,7 @@ proc uciSearch*(
     try:
         var bestMove = noMove    
         var iteration = 0
-        for (value, pv, nodes, minDepth, selDepth, passedTime) in timeManagedSearch(
+        for (value, pv, nodes, selDepth, passedTime) in timeManagedSearch(
             position,
             hashTable[],
             positionHistory,

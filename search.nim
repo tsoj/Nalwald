@@ -30,7 +30,7 @@ type SearchState = object
     historyTable: HistoryTable
     gameHistory: GameHistory
     countedNodes: uint64
-    measuredSelectiveDepth, measuredMinDepth: Ply
+    measuredSelectiveDepth: Ply
     numMovesAtRoot: int
     evaluation: proc(position: Position): Value {.noSideEffect.}
 
@@ -147,8 +147,8 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
             return beta
 
     if depth <= 0:
-        state.measuredSelectiveDepth = max(state.measuredSelectiveDepth, height)
-        state.measuredMinDepth = min(state.measuredMinDepth, height)
+        if height > state.measuredSelectiveDepth:
+            state.measuredSelectiveDepth = height
         return position.quiesce(state, alpha = alpha, beta = beta, height)
 
     # null move reduction
@@ -259,7 +259,7 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply,
     stop: ptr Atomic[bool],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
-): (Value, seq[Move], uint64, Ply, Ply) {.noSideEffect.} =
+): (Value, seq[Move], uint64, Ply) {.noSideEffect.} =
 
     var state = SearchState(
         stop: stop,
@@ -273,7 +273,6 @@ iterator iterativeDeepeningSearch*(
     for depth in 1.Ply..targetDepth:
         state.countedNodes = 0
         state.measuredSelectiveDepth = 0.Ply
-        state.measuredMinDepth = Ply.high
         let value = position.search(
             state,
             alpha = -valueInfinity, beta = valueInfinity,
@@ -285,14 +284,11 @@ iterator iterativeDeepeningSearch*(
 
         let hashResult = hashTable.get(position.zobristKey)
 
-        if state.measuredMinDepth == Ply.high:
-            state.measuredMinDepth = 0
-
         doAssert not hashResult.isEmpty
         let pv = if state.numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
         doAssert pv.len >= 1
 
-        yield (value, pv, state.countedNodes, state.measuredMinDepth, state.measuredSelectiveDepth)
+        yield (value, pv, state.countedNodes, state.measuredSelectiveDepth)
 
         if state.numMovesAtRoot == 1:
             break
@@ -332,7 +328,7 @@ iterator timeManagedSearch*(
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     movetime = initDuration(milliseconds = int64.high),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
-): (Value, seq[Move], uint64, Ply, Ply, Duration) =
+): (Value, seq[Move], uint64, Ply, Duration) =
 
     var stopFlag: Atomic[bool]
     var stop = if stop == nil: addr stopFlag else: stop
@@ -350,7 +346,7 @@ iterator timeManagedSearch*(
         lastNumNodes = uint64.high
 
     var iteration = -1
-    for (value, pv, nodes, minDepth, selDepth) in iterativeDeepeningSearch(
+    for (value, pv, nodes, selDepth) in iterativeDeepeningSearch(
         position, hashtable, positionHistory, targetDepth, stop, evaluation
     ):
         iteration += 1
@@ -358,7 +354,7 @@ iterator timeManagedSearch*(
         let iterationPassedTime = (now() - startLastIteration)
         startLastIteration = now()
 
-        yield (value, pv, nodes, minDepth, selDepth, iterationPassedTime)
+        yield (value, pv, nodes, selDepth, iterationPassedTime)
 
         assert calculatedMoveTime.approxTime >= DurationZero
         branchingFactors[iteration] = nodes.float32 / lastNumNodes.float32;
