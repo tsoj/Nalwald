@@ -52,6 +52,10 @@ func update*(gameHistory: var GameHistory, position: Position, height: Ply) =
     gameHistory.dynamicHistory[height] = position.zobristKey
 
 func checkForRepetition*(gameHistory: GameHistory, position: Position, height: Ply): bool =
+
+    if position.halfmoveClock >= 100:
+        return true
+
     var count: int16 = position.halfmoveClock
     for i in countdown(height-1.Ply, 0.Ply):
         if count < 0:
