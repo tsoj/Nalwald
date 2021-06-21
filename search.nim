@@ -184,8 +184,6 @@ func search(
         addr state.historyTable,
         killers = state.killerTable.get(height)
     ):
-        if move == skipMove:
-            continue
         var newPosition = position
         newPosition.doMove(move)
         if newPosition.inCheck(position.us, position.enemy):

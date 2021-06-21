@@ -20,18 +20,18 @@ iterator moveIterator*(
         movePriorities {.noInit.}: array[maxNumMoves, Value]
         numMoves: int
 
-    template findBestMoves(minValue = -valueInfinity) =
+    template findBestMoves(minValue = -valueInfinity, m = moves, mp = movePriorities, nm = numMoves) =
         while true:
-            var bestIndex = numMoves
+            var bestIndex = nm
             var bestValue = minValue
-            for i in 0..<numMoves:
-                if movePriorities[i] > bestValue:
-                    bestValue = movePriorities[i]
+            for i in 0..<nm:
+                if mp[i] > bestValue:
+                    bestValue = mp[i]
                     bestIndex = i
-            if bestIndex != numMoves:
-                movePriorities[bestIndex] = -valueInfinity
-                if moves[bestIndex] != tryFirstMove and moves[bestIndex] != killers[0] and moves[bestIndex] != killers[1]:
-                    yield moves[bestIndex]
+            if bestIndex != nm:
+                mp[bestIndex] = -valueInfinity
+                if m[bestIndex] != tryFirstMove and m[bestIndex] != killers[0] and m[bestIndex] != killers[1]:
+                    yield m[bestIndex]
             else:
                 break
 
@@ -56,15 +56,24 @@ iterator moveIterator*(
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
 
-    # losing captures
-    findBestMoves()   
+
+    var
+        movesQ {.noInit.}: array[maxNumMoves, Move]
+        movePrioritiesQ {.noInit.}: array[maxNumMoves, Value]
+        numMovesQ: int
 
     # quiet moves
     if doQuiets:
-        numMoves = position.generateQuiets(moves)
-        for i in 0..<numMoves:
-            movePriorities[i] =
-                (if historyTable != nil: historyTable[].get(moves[i], position.us) else: 0.Value)
+        numMovesQ = position.generateQuiets(movesQ)
+        for i in 0..<numMovesQ:
+            movePrioritiesQ[i] =
+                (if historyTable != nil: historyTable[].get(movesQ[i], position.us) else: 0.Value)
                 
-        findBestMoves()
+        findBestMoves(m = movesQ, mp = movePrioritiesQ, nm = numMovesQ)
+    
+
+    # losing captures
+    findBestMoves()
+
+    #TODO make this all cleaner
         
