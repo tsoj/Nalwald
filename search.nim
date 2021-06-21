@@ -22,8 +22,6 @@ const futilityMargin = [
     5.Ply: 10*values[pawn]
 ]
 const deltaMargin = (15*values[pawn]) div 10
-const singularMargin = values[pawn] * 4
-const singularReduction = 2.Ply
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -112,8 +110,7 @@ func search(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    depth: Ply, height = 0.Ply,
-    skipMove = noMove
+    depth: Ply, height = 0.Ply
 ): Value =
     assert alpha < beta
 
@@ -241,21 +238,6 @@ func search(
                 alpha = -beta, beta = -alpha,
                 depth = depth - 1.Ply, height = height + 1.Ply
             )
-
-        # singular extensions
-        if value >= beta and moveCounter == 1 and (not isInNullWindow) and value - beta <= 2*values[pawn]:
-            let testValue = position.search(
-                state,
-                alpha = beta - singularMargin, beta = beta - singularMargin + 1.Value,
-                depth = depth - singularReduction, height = height,
-                skipMove = move
-            )
-            if testValue <= beta - singularMargin:
-                value = -newPosition.search(
-                    state,
-                    alpha = -beta, beta = -alpha,
-                    depth = depth, height = height + 1.Ply
-                )
 
         if value > bestValue:
             bestValue = value
