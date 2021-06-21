@@ -1,8 +1,9 @@
 import position
 import strutils
 import moveIterator
+import times
 
-func perft*(position: Position, depth: int, height: int = 0): uint64 =
+func perft*(position: Position, depth: int, height: int = 0, testZobristKeys: static bool = true): uint64 =
     if depth == 0:
         return 1
 
@@ -11,22 +12,21 @@ func perft*(position: Position, depth: int, height: int = 0): uint64 =
     for move in position.moveIterator:
         var newPosition = position
         newPosition.doMove(move)
-        doAssert newPosition.zobristKey == newPosition.calculateZobristKey
+        when testZobristKeys:
+            doAssert newPosition.zobristKey == newPosition.calculateZobristKey
         if not newPosition.inCheck(position.us, position.enemy):
-            let n = newPosition.perft(depth - 1, height + 1)
+            let n = newPosition.perft(depth - 1, height + 1, testZobristKeys)
             nodes += n
     nodes
 
 
-proc perftTest*(maxNodes = uint64.high) =
+type PerftData = object
+    position: Position
+    nodes: seq[uint64]
 
-    type PerftData = object
-        position: Position
-        nodes: seq[uint64]
-    var data: seq[PerftData]
+proc getPerftTestData(): seq[PerftData] =
 
     var lines: seq[string]
-
     var file: File
     if file.open("./perft_test.txt"):
         lines = newSeq[string](0)
@@ -49,16 +49,36 @@ proc perftTest*(maxNodes = uint64.high) =
     for line in lines:
         var words = line.split(',')
         doAssert words.len >= 1
-        data.add(PerftData(position: words[0].toPosition, nodes: newSeq[uint64](0)))
+        result.add(PerftData(position: words[0].toPosition, nodes: newSeq[uint64](0)))
         for i in 1..<words.len:
-            data[^1].nodes.add(words[i].parseBiggestUInt)
+            result[^1].nodes.add(words[i].parseBiggestUInt)
+
+
+proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true) =
+
+    let data = getPerftTestData()
+    
+    var totalPassedMilliseconds: int64 = 0
+    var totalNumNodes: uint64 = 0
         
     for perftData in data:
         echo "---------------\nTesting ", perftData.position.fen
         for depth in 0..<perftData.nodes.len:
             if perftData.nodes[depth] > maxNodes:
                 break
-            let perftResult = perftData.position.perft(depth + 1)
+
+            let start = now()
+            let perftResult = perftData.position.perft(depth + 1, testZobristKeys = testZobristKeys)
+            let passedTime = now() - start
+            totalPassedMilliseconds += passedTime.inMilliseconds
+            totalNumNodes += perftResult
+
             echo perftResult, (if perftResult == perftData.nodes[depth]: " == " else: " != "), perftData.nodes[depth]
             doAssert perftResult == perftData.nodes[depth], "Failed perft test"
+
+    echo "Passed time: ", totalPassedMilliseconds, " ms"
+    echo "Counted nodes: ", totalNumNodes
+    echo "Nodes per second: ", (1000 * totalNumNodes) div totalPassedMilliseconds.uint64, " nps"
+    
     echo "Finished perft test successfully"
+

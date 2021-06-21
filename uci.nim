@@ -174,6 +174,11 @@ proc uciLoop*() =
                     perftTest(params[1].parseInt.uint64)
                 else:
                     perftTest()
+            of "perftperformance":
+                if params.len >= 2:
+                    perftTest(params[1].parseInt.uint64, testZobristKeys = false)
+                else:
+                    perftTest(testZobristKeys = false)
 
             else:
                 echo "Unknown command: ", params[0]
@@ -190,6 +195,7 @@ proc uciLoop*() =
                 echo "* printdebug"
                 echo "* getfen"
                 echo "* test"
+                echo "* perftperformance"
         except:
             echo "info string ", getCurrentExceptionMsg()
 
