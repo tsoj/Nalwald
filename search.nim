@@ -64,13 +64,16 @@ func quiesce(
         return 0.Value
     state.gameHistory.update(position, height)
 
-    let inCheck = position.inCheck(position.us, position.enemy)
+    let
+        inCheck = position.inCheck(position.us, position.enemy)
+        standPat = state.evaluation(position)
 
     var
         alpha = alpha
         moveCounter = 0
+        bestValue = standPat
 
-    let standPat = state.evaluation(position)
+
     if standPat >= beta:
         return standPat
     if not inCheck and standPat > alpha:
@@ -91,15 +94,17 @@ func quiesce(
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
+        if value > bestValue:
+            bestValue = value
         if value >= beta:
-            return beta
+            return bestValue
         if value > alpha:
             alpha = value
 
     if moveCounter == 0 and inCheck:
-        alpha = -(height.checkmateValue)
+        bestValue = -(height.checkmateValue)
 
-    alpha
+    bestValue
 
 func search(position: Position, state: var SearchState, alpha, beta: Value, depth: Ply, height = 0.Ply): Value =
     assert alpha < beta
@@ -144,7 +149,7 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
         else:
             assert false
         if alpha >= beta:
-            return beta
+            return alpha
 
     if depth <= 0:
         if height > state.measuredSelectiveDepth:
@@ -233,7 +238,7 @@ func search(position: Position, state: var SearchState, alpha, beta: Value, dept
 
         if value >= beta:
             state.update(position, bestMove, depth = depth, height = height, cutNode, value)
-            return value
+            return bestValue
 
         if value > alpha:
             nodeType = pvNode
