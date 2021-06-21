@@ -14,24 +14,26 @@ iterator moveIterator*(
     killers = [noMove, noMove],
     doQuiets = true
 ): Move =
-
-    var
-        moves {.noInit.}: array[maxNumMoves, Move]
-        movePriorities {.noInit.}: array[maxNumMoves, Value]
+    type OrderedMoveList = object
+        moves: array[maxNumMoves, Move]
+        movePriorities: array[maxNumMoves, Value]
         numMoves: int
 
-    template findBestMoves(minValue = -valueInfinity, m = moves, mp = movePriorities, nm = numMoves) =
+    template findBestMoves(moveList: var OrderedMoveList, minValue = -valueInfinity) =
         while true:
-            var bestIndex = nm
+            var bestIndex = moveList.numMoves
             var bestValue = minValue
-            for i in 0..<nm:
-                if mp[i] > bestValue:
-                    bestValue = mp[i]
+            for i in 0..<moveList.numMoves:
+                if moveList.movePriorities[i] > bestValue:
+                    bestValue = moveList.movePriorities[i]
                     bestIndex = i
-            if bestIndex != nm:
-                mp[bestIndex] = -valueInfinity
-                if m[bestIndex] != tryFirstMove and m[bestIndex] != killers[0] and m[bestIndex] != killers[1]:
-                    yield m[bestIndex]
+            if bestIndex != moveList.numMoves:
+                moveList.movePriorities[bestIndex] = -valueInfinity
+                
+                if moveList.moves[bestIndex] != tryFirstMove and
+                moveList.moves[bestIndex] != killers[0] and
+                moveList.moves[bestIndex] != killers[1]:
+                    yield moveList.moves[bestIndex]
             else:
                 break
 
@@ -40,13 +42,13 @@ iterator moveIterator*(
         yield tryFirstMove
 
     # init capture moves
-    numMoves = position.generateCaptures(moves)
-    for i in 0..<numMoves:
-        movePriorities[i] = position.see(moves[i])    
+    var captureList {.noInit.}: OrderedMoveList
+    captureList.numMoves = position.generateCaptures(captureList.moves)
+    for i in 0..<captureList.numMoves:
+        captureList.movePriorities[i] = position.see(captureList.moves[i])
 
     # winning captures
-    const minWinningValue = -2*values[pawn]
-    findBestMoves(minWinningValue)
+    captureList.findBestMoves(minValue = -2*values[pawn])
 
     # killers
     if doQuiets:
@@ -56,24 +58,16 @@ iterator moveIterator*(
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
 
-
-    var
-        movesQ {.noInit.}: array[maxNumMoves, Move]
-        movePrioritiesQ {.noInit.}: array[maxNumMoves, Value]
-        numMovesQ: int
-
     # quiet moves
     if doQuiets:
-        numMovesQ = position.generateQuiets(movesQ)
-        for i in 0..<numMovesQ:
-            movePrioritiesQ[i] =
-                (if historyTable != nil: historyTable[].get(movesQ[i], position.us) else: 0.Value)
+        var quietList {.noInit.}: OrderedMoveList
+        quietList.numMoves = position.generateQuiets(quietList.moves)
+        for i in 0..<quietList.numMoves:
+            quietList.movePriorities[i] =
+                (if historyTable != nil: historyTable[].get(quietList.moves[i], position.us) else: 0.Value)
                 
-        findBestMoves(m = movesQ, mp = movePrioritiesQ, nm = numMovesQ)
+        quietList.findBestMoves()
     
-
     # losing captures
-    findBestMoves()
-
-    #TODO make this all cleaner
+    captureList.findBestMoves()
         
