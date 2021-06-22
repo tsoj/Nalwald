@@ -208,7 +208,7 @@ func search(
         (not (move.isTactical or inCheck or givingCheck)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             const depthDivider =
-                [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+                [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4]
             newDepth -= 1.Ply + newDepth div depthDivider[min(lmrMoveCounter, depthDivider.len - 1)].Ply
             lmrMoveCounter += 1
 
