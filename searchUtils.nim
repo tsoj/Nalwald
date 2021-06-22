@@ -11,14 +11,22 @@ func halve(historyTable: var HistoryTable) =
             for square in a1..h8:
                 historyTable[color][piece][square] = historyTable[color][piece][square] div 2
 
-func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply) =
+func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply, nodeType: NodeType) =
     if move.isTactical:
         return
-    
-    historyTable[color][move.moved][move.target] = 
-        min(historyTable[color][move.moved][move.target] + depth.int32 * depth.int32, maxHistoryTableValue.int32).Value
-    if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
-        historyTable.halve
+    if nodeType != allNode:
+        historyTable[color][move.moved][move.target] = 
+            min(
+                historyTable[color][move.moved][move.target].int32 + depth.int32 * depth.int32,
+                maxHistoryTableValue.int32
+            ).Value
+        if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
+            historyTable.halve
+    else:
+        historyTable[color][move.moved][move.target] = max(
+            0,
+            historyTable[color][move.moved][move.target].int32 - depth.int32,
+        ).Value
 
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
     historyTable[color][move.moved][move.target]

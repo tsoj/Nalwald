@@ -38,8 +38,7 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
     if not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
-            if nodeType != allNode:
-                state.historyTable.update(bestMove, position.us, depth)
+            state.historyTable.update(bestMove, position.us, depth, nodeType)
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
