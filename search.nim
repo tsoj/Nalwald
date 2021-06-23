@@ -123,6 +123,10 @@ func search(
     if position.insufficientMaterial and height > 0:
         return 0.Value
 
+
+    if position.halfmoveClock >= 100:
+        return 0.Value
+
     if state.gameHistory.checkForRepetition(position, height) and height > 0:
         return 0.Value
     state.gameHistory.update(position, height)
