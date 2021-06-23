@@ -31,19 +31,21 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
     historyTable[color][move.moved][move.target]
 
+const numKillers* = 2
 
-type KillerTable* = array[Ply, array[2, Move]]
+type KillerTable* = array[Ply, array[numKillers, Move]]
 
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
     if move == killerTable[height][0]:
         return
-    
-    killerTable[height][1] = killerTable[height][0]
+
+    for i in countdown(numKillers - 1, 1):
+        killerTable[height][i] = killerTable[height][i-1]
     killerTable[height][0] = move
 
-func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
+func get*(killerTable: KillerTable, height: Ply): array[numKillers, Move] =
     killerTable[height]
 
 

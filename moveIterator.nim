@@ -11,7 +11,7 @@ iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: ptr HistoryTable = nil,
-    killers = [noMove, noMove],
+    killers: array[numKillers, Move] = [noMove, noMove],
     doQuiets = true
 ): Move =
     type OrderedMoveList = object
@@ -30,9 +30,13 @@ iterator moveIterator*(
             if bestIndex != moveList.numMoves:
                 moveList.movePriorities[bestIndex] = -valueInfinity
                 
-                if moveList.moves[bestIndex] != tryFirstMove and
-                moveList.moves[bestIndex] != killers[0] and
-                moveList.moves[bestIndex] != killers[1]:
+                var isDuplicate = false
+                for j in 0..<numKillers:
+                    if moveList.moves[bestIndex] == killers[j]:
+                        isDuplicate = true
+                        break
+
+                if moveList.moves[bestIndex] != tryFirstMove and not isDuplicate:
                     yield moveList.moves[bestIndex]
             else:
                 break
@@ -52,7 +56,7 @@ iterator moveIterator*(
 
     # killers
     if doQuiets:
-        for i in 0..1:
+        for i in 0..<numKillers:
             var isDuplicate = false
             for j in 0..<i:
                 if killers[j] == killers[i]:
