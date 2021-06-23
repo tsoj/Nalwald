@@ -166,7 +166,7 @@ func search(
 
     # null move reduction
     if height > 0 and (not inCheck) and alpha > -valueInfinity and beta < valueInfinity and
-    ((position[knight] or position[bishop] or position[rook] or position[queen]) and position[position.us]).countSetBits >= 2:
+    ((position[knight] or position[bishop] or position[rook] or position[queen]) and position[position.us]).countSetBits >= 1:
         var newPosition = position
         newPosition.doNullMove
         let value = -newPosition.search(
