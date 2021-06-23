@@ -53,9 +53,12 @@ iterator moveIterator*(
     # killers
     if doQuiets:
         for i in 0..1:
-            if i != 0 and killers[i-1] == killers[i]:
-                break
-            if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
+            var isDuplicate = false
+            for j in 0..<i:
+                if killers[j] == killers[i]:
+                    isDuplicate = true
+                    break
+            if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove and not isDuplicate:
                 yield killers[i]
 
     # quiet moves
