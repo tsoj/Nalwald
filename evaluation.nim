@@ -102,7 +102,7 @@ func evaluatePawn(
             gradient.bonusIsolatedPawn += (if us == black: -1.0 else: 1.0)
 
     # has two neighbors
-    if (not square.isLeftEdge) and (not square.isRightEdge) and
+    elif (not square.isLeftEdge) and (not square.isRightEdge) and
     (position[us] and position[pawn] and files[square.left]) != 0 and
     (position[us] and position[pawn] and files[square.right]) != 0:
         result += evalParameters.bonusPawnHasTwoNeighbors
