@@ -14,19 +14,18 @@ func halve(historyTable: var HistoryTable) =
 func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply, nodeType: NodeType) =
     if move.isTactical:
         return
-    if nodeType != allNode:
-        historyTable[color][move.moved][move.target] = 
-            min(
-                historyTable[color][move.moved][move.target].int32 + depth.int32 * depth.int32,
-                maxHistoryTableValue.int32
-            ).Value
-        if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
-            historyTable.halve
-    else:
-        historyTable[color][move.moved][move.target] = max(
-            0,
-            historyTable[color][move.moved][move.target].int32 - depth.int32,
+
+    proc op(a, b: int32): int32 =
+        if nodeType == allNode: a - b else: a + b
+
+    historyTable[color][move.moved][move.target] = 
+        clamp(
+            op(historyTable[color][move.moved][move.target].int32, depth.int32 * depth.int32),
+            0, maxHistoryTableValue.int32
         ).Value
+    
+    if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
+        historyTable.halve
 
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
     historyTable[color][move.moved][move.target]
