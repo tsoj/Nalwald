@@ -5,12 +5,14 @@ import movegen
 import see
 import searchUtils
 
-
+const zeroHistoryTable = block:
+    var h: HistoryTable
+    h
 
 iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
-    historyTable: ptr HistoryTable = nil,
+    historyTable: HistoryTable = zeroHistoryTable,
     killers: array[numKillers, Move] = [noMove, noMove],
     doQuiets = true
 ): Move =
@@ -70,8 +72,7 @@ iterator moveIterator*(
         var quietList {.noInit.}: OrderedMoveList
         quietList.numMoves = position.generateQuiets(quietList.moves)
         for i in 0..<quietList.numMoves:
-            quietList.movePriorities[i] =
-                (if historyTable != nil: historyTable[].get(quietList.moves[i], position.us) else: 0.Value)
+            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], position.us)
                 
         quietList.findBestMoves()
     

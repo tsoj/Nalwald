@@ -180,7 +180,7 @@ func search(
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
-        addr state.historyTable,
+        state.historyTable,
         killers = state.killerTable.get(height)
     ):
         var newPosition = position
