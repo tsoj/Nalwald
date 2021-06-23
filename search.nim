@@ -85,11 +85,19 @@ func quiesce(
         if newPosition.inCheck(position.us, position.enemy):
             continue
         moveCounter += 1
-
+        
+        let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
+        let seeValue = position.see(move)
+        
         # delta pruning
-        if standPat + position.see(move) + deltaMargin < alpha and
-        not newPosition.inCheck(newPosition.us, newPosition.enemy):
+        if standPat + seeValue + deltaMargin < alpha and
+        not givingCheck:
             continue
+        
+        # fail high delta pruning
+        if standPat + seeValue - deltaMargin >= beta and not inCheck:
+            return standPat + seeValue - deltaMargin
+
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
@@ -181,6 +189,13 @@ func search(
     # check if futility pruning is applicable
     let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and depth < futilityMargin.len and
     (not inCheck) and abs(alpha) < values[king] and state.evaluation(position) + futilityMargin[depth] < alpha
+    # TODO: test if (not inCheck) is necessary
+    # TODO: test if abs(alpha) < values[king] is necessary
+
+    # fail high futility pruning: TODO test
+    # if isInNullWindow() and beta < valueInfinity and depth + 1.Ply < futilityMargin.len and (not inCheck) and
+    # abs(alpha) < values[king] and state.evaluation(position) - futilityMargin[depth + 1.Ply] >= beta:
+    #     return beta
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
