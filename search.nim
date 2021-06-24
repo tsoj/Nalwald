@@ -204,14 +204,7 @@ func search(
 
         # futility pruning
         if doFutilityPruning and bestValue > -valueInfinity and (not move.isTactical) and (not givingCheck):
-            # TODO: test if bestValue > -valueInfinity is necessary
             continue
-
-        # fail high futility pruning
-        # if move.isTactical and depth < futilityMargin.len and (not inCheck) and beta < valueInfinity:
-        #     let value = staticEval + position.see(move) - futilityMargin[depth]
-        #     if value >= beta:
-        #         return value # TODO test
 
         var
             newDepth = depth
