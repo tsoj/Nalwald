@@ -12,16 +12,18 @@ import times
 import threadpool
 import utils
 
+static: doAssert values[pawn] == 100
+
 const nullMoveDepthReduction = 4.Ply
 const futilityMargin = [
     0.Ply: 0.Value,
-    1.Ply: (15*values[pawn]) div 10,
-    2.Ply: 3*values[pawn],
-    3.Ply: 5*values[pawn],
-    4.Ply: 7*values[pawn],
-    5.Ply: 10*values[pawn]
+    1.Ply: 150.Value,
+    2.Ply: 300.Value,
+    3.Ply: 500.Value,
+    4.Ply: 700.Value,
+    5.Ply: 1000.Value
 ]
-const deltaMargin = (15*values[pawn]) div 10
+const deltaMargin = 150
 
 type SearchState = object
     stop: ptr Atomic[bool]

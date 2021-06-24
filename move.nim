@@ -63,13 +63,6 @@ template isPromotion*(move: Move): bool =
 template isTactical*(move: Move): bool =
     move.isCapture or move.isPromotion
 
-func mvvLva*(move: Move): Value =
-    result = 0
-    result += values[move.captured]
-    if move.isPromotion:
-        result += values[move.promoted] - values[pawn]
-    result -= values[move.moved] div values[pawn]
-
 func `$`*(move: Move): string =
     result = $move.source & $move.target
     if move.promoted != noPiece:
