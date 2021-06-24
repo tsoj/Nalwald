@@ -87,17 +87,15 @@ func quiesce(
         moveCounter += 1
         
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
-        let seeValue = position.see(move)
+        let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if standPat + seeValue + deltaMargin < alpha and
-        not givingCheck:
+        if seeEval + deltaMargin < alpha and not givingCheck:
             continue
         
         # fail high delta pruning
-        if standPat + seeValue - deltaMargin >= beta and not inCheck:
-            return standPat + seeValue - deltaMargin
-
+        if seeEval - deltaMargin >= beta and not inCheck:
+            return seeEval - deltaMargin
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
 
@@ -130,7 +128,6 @@ func search(
 
     if position.insufficientMaterial and height > 0:
         return 0.Value
-
 
     if position.halfmoveClock >= 100:
         return 0.Value
@@ -186,16 +183,11 @@ func search(
         if value >= beta:
             return value
 
+    let staticEval = state.evaluation(position)
+
     # check if futility pruning is applicable
     let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and depth < futilityMargin.len and
-    (not inCheck) and abs(alpha) < values[king] and state.evaluation(position) + futilityMargin[depth] < alpha
-    # TODO: test if (not inCheck) is necessary
-    # TODO: test if abs(alpha) < values[king] is necessary
-
-    # fail high futility pruning: TODO test
-    # if isInNullWindow() and beta < valueInfinity and depth + 1.Ply < futilityMargin.len and (not inCheck) and
-    # abs(alpha) < values[king] and state.evaluation(position) - futilityMargin[depth + 1.Ply] >= beta:
-    #     return beta
+    (not inCheck) and staticEval + futilityMargin[depth] < alpha
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
@@ -210,8 +202,16 @@ func search(
 
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
 
+        # futility pruning
         if doFutilityPruning and bestValue > -valueInfinity and (not move.isTactical) and (not givingCheck):
+            # TODO: test if bestValue > -valueInfinity is necessary
             continue
+
+        # fail high futility pruning
+        # if move.isTactical and depth < futilityMargin.len and (not inCheck) and beta < valueInfinity:
+        #     let value = staticEval + position.see(move) - futilityMargin[depth]
+        #     if value >= beta:
+        #         return value # TODO test
 
         var
             newDepth = depth
