@@ -52,6 +52,7 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
   - late move reductions
   - check extensions
   - delta pruning
+  - fail high delta pruning
   - futility pruning
 
 #### License

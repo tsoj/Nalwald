@@ -20,8 +20,8 @@ const futilityMargin = [
     1.Ply: 150.Value,
     2.Ply: 300.Value,
     3.Ply: 500.Value,
-    4.Ply: 700.Value,
-    5.Ply: 1000.Value
+    4.Ply: 750.Value,
+    5.Ply: 1100.Value
 ]
 const deltaMargin = 150
 
