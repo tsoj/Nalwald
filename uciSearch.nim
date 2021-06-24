@@ -22,7 +22,7 @@ proc uciSearch*(
     try:
         var bestMove = noMove    
         var iteration = 0
-        for (value, pv, nodes, selDepth, passedTime) in timeManagedSearch(
+        for (value, pv, nodes, passedTime) in timeManagedSearch(
             position,
             hashTable[],
             positionHistory,
@@ -45,8 +45,7 @@ proc uciSearch*(
                 scoreString &= $(value.plysUntilCheckmate.float32 / 2.0).ceil.int
 
             let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-            echo "info depth ", fmt"{iteration+1:>2}", " seldepth ", fmt"{selDepth:>2}",
-                " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
+            echo "info depth ", fmt"{iteration+1:>2}", " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
                 " nps ", fmt"{nps:>7}", " hashfull ", fmt"{hashTable[].hashFull:>5}", scoreString, " pv ", pv
 
             iteration += 1
