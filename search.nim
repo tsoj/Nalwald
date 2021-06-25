@@ -80,11 +80,10 @@ func quiesce(
             continue
         moveCounter += 1
         
-        let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + deltaMargin < alpha and not givingCheck: # TODO: test if not givingCheck is necessary
+        if seeEval + deltaMargin < alpha:
             continue
         
         # fail high delta pruning
@@ -192,8 +191,7 @@ func search(
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
 
         # futility pruning
-        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and
-        bestValue > -valueInfinity: # TODO: replace with move != hashResult.bestMove:
+        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
             continue
 
         var
