@@ -21,7 +21,7 @@ const futilityMargin = [
     2.Ply: 300.Value,
     3.Ply: 500.Value,
     4.Ply: 750.Value,
-    5.Ply: 1100.Value
+    5.Ply: 1100.Value,
 ]
 const deltaMargin = 150
 
@@ -60,9 +60,9 @@ func quiesce(
     if position.insufficientMaterial and height > 0:
         return 0.Value
 
-    if state.gameHistory.checkForRepetition(position, height) and height > 0:
-        return 0.Value
-    state.gameHistory.update(position, height)
+    # if state.gameHistory.checkForRepetition(position, height) and height > 0:
+    #     return 0.Value
+    # state.gameHistory.update(position, height)
 
     let
         inCheck = position.inCheck(position.us, position.enemy)
@@ -73,13 +73,12 @@ func quiesce(
         moveCounter = 0
         bestValue = standPat
 
-
     if standPat >= beta:
         return standPat
-    if not inCheck and standPat > alpha:
+    if standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = inCheck):
+    for move in position.moveIterator(doQuiets = false):
         var newPosition = position
         newPosition.doMove(move)
 
@@ -95,7 +94,7 @@ func quiesce(
             continue
         
         # fail high delta pruning
-        if seeEval - deltaMargin >= beta and not inCheck:
+        if seeEval - deltaMargin >= beta and not inCheck: # TODO: test if not inCheck is necessary
             return seeEval - deltaMargin
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
@@ -182,11 +181,9 @@ func search(
         if value >= beta:
             return value
 
-    let staticEval = state.evaluation(position)
-
     # check if futility pruning is applicable
     let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and depth < futilityMargin.len and
-    (not inCheck) and staticEval + futilityMargin[depth] < alpha
+    (not inCheck) and state.evaluation(position) + futilityMargin[depth] < alpha
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
