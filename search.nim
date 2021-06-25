@@ -21,7 +21,7 @@ const futilityMargin = [
     2.Ply: 300.Value,
     3.Ply: 500.Value,
     4.Ply: 750.Value,
-    5.Ply: 1100.Value,
+    5.Ply: 1100.Value
 ]
 const deltaMargin = 150
 
@@ -60,13 +60,7 @@ func quiesce(
     if position.insufficientMaterial and height > 0:
         return 0.Value
 
-    # if state.gameHistory.checkForRepetition(position, height) and height > 0:
-    #     return 0.Value
-    # state.gameHistory.update(position, height)
-
-    let
-        inCheck = position.inCheck(position.us, position.enemy)
-        standPat = state.evaluation(position)
+    let standPat = state.evaluation(position)
 
     var
         alpha = alpha
@@ -90,11 +84,11 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + deltaMargin < alpha and not givingCheck:
+        if seeEval + deltaMargin < alpha and not givingCheck: # TODO: test if not givingCheck is necessary
             continue
         
         # fail high delta pruning
-        if seeEval - deltaMargin >= beta and not inCheck: # TODO: test if not inCheck is necessary
+        if seeEval - deltaMargin >= beta:
             return seeEval - deltaMargin
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
@@ -106,9 +100,8 @@ func quiesce(
         if value > alpha:
             alpha = value
 
-    if moveCounter == 0 and inCheck:
-        bestValue = -(height.checkmateValue)
-
+    if moveCounter == 0 and position.inCheck(position.us, position.enemy):
+        bestValue = -values[king]
     bestValue
 
 func search(
@@ -199,14 +192,15 @@ func search(
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
 
         # futility pruning
-        if doFutilityPruning and bestValue > -valueInfinity and (not move.isTactical) and (not givingCheck):
+        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and
+        bestValue > -valueInfinity: # TODO: replace with move != hashResult.bestMove:
             continue
 
         var
             newDepth = depth
             newBeta = beta
 
-        # first search/explore with null window
+        # first explore with null window
         if alpha > -valueInfinity:
             newBeta = alpha + 1.Value
 
