@@ -27,7 +27,7 @@ func clear*(ht: var HashTable) =
     for entry in ht.nonPvNodes.mitems:
         entry = noEntry
 
-func setLen*(ht: var HashTable, sizeInBytes: int) =
+func setSize*(ht: var HashTable, sizeInBytes: int) =
     let numEntries = sizeInBytes div sizeof(HashTableEntry)
     ht.nonPvNodes.setLen(numEntries)
     ht.clear

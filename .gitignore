@@ -12,7 +12,10 @@ massif.out
 *.log
 *.epd
 !parameterOptimization/zuriQuietSet.epd
+!parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 txt.txt
 vgcore.*
 *ptimizationResult*
+game
+genFenList.py

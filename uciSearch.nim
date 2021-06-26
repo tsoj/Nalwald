@@ -17,12 +17,12 @@ proc uciSearch*(
     stop: ptr Atomic[bool],
     movesToGo: int16,
     increment, timeLeft: array[white..black, Duration],
-    movetime: Duration
+    moveTime: Duration
 ): bool =
     try:
         var bestMove = noMove    
         var iteration = 0
-        for (value, pv, nodes, passedTime) in timeManagedSearch(
+        for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
             position,
             hashTable[],
             positionHistory,
@@ -30,7 +30,7 @@ proc uciSearch*(
             stop,
             movesToGo,
             increment, timeLeft,
-            movetime
+            moveTime
         ):
             doAssert pv.len >= 1
             bestMove = pv[0]

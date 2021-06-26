@@ -24,7 +24,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.9"
+    echo "id name Nalwald 1.TODO" # TODO
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -44,7 +44,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 # TODO: fix memory leak
                 echo "WARNING: changing size of hash table more than once may lead to memory leaks"
             uciState.changedHashTableSize = true
-            uciState.hashTable.setLen(sizeInBytes = newHashSizeMB * mega)
+            uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * mega)
     else:
         echo "Unknown parameters"
     
@@ -88,7 +88,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
     var movesToGo: int16 = int16.high
     var increment = [white: DurationZero, black: DurationZero]
     var timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
-    var movetime = initDuration(milliseconds = int64.high)
+    var moveTime = initDuration(milliseconds = int64.high)
 
     for i in countup(1, params.len - 2, 2):
         case params[i]:
@@ -105,7 +105,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         of "btime":
             timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
         of "movetime":
-            movetime = initDuration(milliseconds = params[i+1].parseInt)
+            moveTime = initDuration(milliseconds = params[i+1].parseInt)
         else:
             echo "Unknown parameter: ", params[i]
             return
@@ -121,7 +121,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             movesToGo = movesToGo,
             increment = increment,
             timeLeft = timeLeft,
-            movetime = movetime
+            moveTime = moveTime
         )
     
 
@@ -136,7 +136,7 @@ proc uciLoop*() =
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "---- Copyright (c) 2021 Jost Triller ----"
     var uciState = UciState(position: startposFen.toPosition, changedHashTableSize: false)
-    uciState.hashTable.setLen(sizeInBytes = defaultHashSizeMB * mega)
+    uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * mega)
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:

@@ -306,14 +306,14 @@ iterator iterativeDeepeningSearch*(
 
 type MoveTime = object
     maxTime, approxTime: Duration
-func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
+func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
 
     doAssert movesToGo >= 0
     let estimatedGameLength = 70
     let estimatedMovesToGo = max(10, estimatedGameLength - halfmovesPlayed div 2)
     var newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
-    result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), movetime)
+    result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), moveTime)
     result.approxTime = initDuration(milliseconds = clamp(
         timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
         clamp(incPerMove.inMilliseconds, 0, int.high div 2))
@@ -323,9 +323,9 @@ func calculateMoveTime(movetime, timeLeft, incPerMove: Duration, movesToGo, half
     elif incPerMove.inMilliseconds < 200 and timeLeft < initDuration(seconds = 30):
         result.approxTime = (8 * result.approxTime) div 10
         if movesToGo > 2:
-            result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 4), movetime)
+            result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 4), moveTime)
 
-iterator timeManagedSearch*(
+iterator iterativeTimeManagedSearch*(
     position: Position,
     hashTable: var HashTable,
     positionHistory: seq[Position] = newSeq[Position](0),
@@ -334,7 +334,7 @@ iterator timeManagedSearch*(
     movesToGo: int16 = int16.high,
     increment = [white: DurationZero, black: DurationZero],
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
-    movetime = initDuration(milliseconds = int64.high),
+    moveTime = initDuration(milliseconds = int64.high),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): (Value, seq[Move], uint64, Duration) =
 
@@ -344,7 +344,7 @@ iterator timeManagedSearch*(
     stop[].store(false)
 
     let calculatedMoveTime = calculateMoveTime(
-        movetime, timeLeft[position.us], increment[position.us], movesToGo, position.halfmovesPlayed)
+        moveTime, timeLeft[position.us], increment[position.us], movesToGo, position.halfmovesPlayed)
     var stopwatchResult = spawn stopwatch(stop, calculatedMoveTime.maxTime)
 
     let start = now()
@@ -383,4 +383,29 @@ iterator timeManagedSearch*(
     stop[].store(true)
     discard ^stopwatchResult
 
-
+proc timeManagedSearch*(
+    position: Position,
+    hashTable: var HashTable,
+    positionHistory: seq[Position] = newSeq[Position](0),
+    targetDepth: Ply = Ply.high,
+    stop: ptr Atomic[bool] = nil,
+    movesToGo: int16 = int16.high,
+    increment = [white: DurationZero, black: DurationZero],
+    timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
+    moveTime = initDuration(milliseconds = int64.high),
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+): (Value, seq[Move]) =
+    var depth = 0.Ply
+    for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
+        position,
+        hashTable,
+        positionHistory,
+        targetDepth,
+        stop,
+        movesToGo,
+        increment, timeLeft,
+        moveTime
+    ):
+        depth += 1.Ply
+        result = (value, pv)
+    debugEcho depth

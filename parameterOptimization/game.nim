@@ -1,0 +1,110 @@
+import ../position
+import ../types
+import ../search
+import ../hashTable
+import times
+import ../movegen
+import ../move
+import random
+import ../evaluation
+
+type
+    Game = object
+        hashTable: array[white..black, HashTable]
+        evaluation: array[white..black, proc(position: Position): Value {.noSideEffect.}]
+        positionHistory: seq[Position]
+        moveTime: Duration
+        earlyResignMargin: Value
+        earlyDrawPlyMargin: Ply
+    GameStatus = enum
+        running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
+
+func gameStatus(positionHistory: openArray[Position]): GameStatus =
+    doAssert positionHistory.len >= 1
+    let position = positionHistory[^1]
+    if position.legalMoves.len == 0:
+        if position.inCheck(position.us, position.enemy):
+            return (if position.enemy == black: checkmateBlack else: checkmateWhite)
+        else:
+            return stalemate
+    if position.halfmoveClock >= 100:
+            return fiftyMoveRule
+    var repetitions = 0
+    for p in positionHistory:
+        if p.zobristKey == position.zobristKey:
+            repetitions += 1
+    doAssert repetitions >= 1
+    doAssert repetitions <= 3
+    if repetitions == 3:
+        return threefoldRepetition
+    running
+
+proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
+    doAssert game.positionHistory.len >= 1
+    let position = game.positionHistory[^1]
+    let us = position.us
+    let (value, pv) = position.timeManagedSearch(
+        hashTable = game.hashTable[us],
+        positionHistory = game.positionHistory,
+        evaluation = game.evaluation[us],
+        moveTime = game.moveTime
+    )
+    doAssert pv.len >= 1 and pv[0] != noMove
+    game.positionHistory.add(position)
+    game.positionHistory[^1].doMove(pv[0])
+    (game.positionHistory.gameStatus, value, pv[0])
+
+func evaluationWriteToFile(position: Position): Value =
+    result = position.evaluate
+    {.cast(noSideEffect).}:
+        if rand(100_000) == 1:
+            debugEcho "hi"
+
+
+func newGame(
+    startingPosition: Position,
+    moveTime = initDuration(milliseconds = 10),
+    earlyResignMargin = 500.Value,
+    earlyDrawPlyMargin = 8.Ply,
+    hashSize = 4_000_000
+): Game =
+    result = Game(
+        positionHistory: @[startingPosition],
+        moveTime: moveTime,
+        earlyResignMargin: earlyResignMargin,
+        earlyDrawPlyMargin: earlyDrawPlyMargin
+    )
+    result.hashTable[white].setSize(hashSize)
+    result.hashTable[black].setSize(hashSize)
+
+proc playGame(game: var Game, suppressOutput = false) =
+    doAssert game.positionHistory.len >= 1
+    if not suppressOutput:
+        echo "-----------------------------"
+        echo "starting position:"
+        echo game.positionHistory[0]
+
+    while true:
+        let (gameStatus, value, move) = game.makeNextMove()
+        if not suppressOutput:
+            echo "Move: ", move
+            echo game.positionHistory[^1]
+            echo "Value: ", value
+            if gameStatus != running:
+                echo gameStatus
+
+        if gameStatus != running:
+            break
+        # TODO: stop game, if both engines report +-500cp for two moves, or 0cp for 8 plies
+    
+            
+    discard 1
+
+    
+
+var game = newGame(
+    startingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition,
+    moveTime = initDuration(milliseconds = 20)
+)
+
+game.playGame

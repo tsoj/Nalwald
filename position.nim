@@ -40,11 +40,13 @@ template occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
 func `$`*(position: Position): string =
-    boardString(proc (square: Square): Option[string] =
+    result = boardString(proc (square: Square): Option[string] =
         if (bitAt[square] and position.occupancy) != 0:
             return some($position.coloredPiece(square))
         none(string)
-    )
+    ) & "\n"
+
+    result &= (if position.us == white: "White" else: "Black") & " to move"
 
 func debugString*(position: Position): string =    
     for piece in pawn..king:
