@@ -19,3 +19,4 @@ vgcore.*
 *ptimizationResult*
 game
 genFenList.py
+removeNonQuietPositions

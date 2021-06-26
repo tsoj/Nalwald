@@ -48,7 +48,8 @@ func quiesce(
     position: Position,
     state: var SearchState,
     alpha, beta: Value, 
-    height: Ply
+    height: Ply,
+    doPruning: static bool = true
 ): Value =
     assert alpha < beta
 
@@ -83,14 +84,14 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + deltaMargin < alpha:
+        if seeEval + deltaMargin < alpha and doPruning:
             continue
         
         # fail high delta pruning
-        if seeEval - deltaMargin >= beta:
+        if seeEval - deltaMargin >= beta and doPruning:
             return seeEval - deltaMargin
 
-        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply)
+        let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
         if value > bestValue:
             bestValue = value
@@ -102,6 +103,16 @@ func quiesce(
     if moveCounter == 0 and position.inCheck(position.us, position.enemy):
         bestValue = -values[king]
     bestValue
+
+func materialQuiesce*(position: Position): Value =
+    var state = SearchState(
+        stop: nil,
+        hashTable: nil,
+        gameHistory: newGameHistory(@[]),
+        evaluation: material
+    )
+    position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
+
 
 func search(
     position: Position,
@@ -395,7 +406,6 @@ proc timeManagedSearch*(
     moveTime = initDuration(milliseconds = int64.high),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): (Value, seq[Move]) =
-    var depth = 0.Ply
     for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
         position,
         hashTable,
@@ -404,8 +414,7 @@ proc timeManagedSearch*(
         stop,
         movesToGo,
         increment, timeLeft,
-        moveTime
+        moveTime,
+        evaluation
     ):
-        depth += 1.Ply
         result = (value, pv)
-    debugEcho depth

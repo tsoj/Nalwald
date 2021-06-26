@@ -7,11 +7,12 @@ import ../movegen
 import ../move
 import random
 import ../evaluation
+import atomics
+import os
 
 type
     Game = object
         hashTable: array[white..black, HashTable]
-        evaluation: array[white..black, proc(position: Position): Value {.noSideEffect.}]
         positionHistory: seq[Position]
         moveTime: Duration
         earlyResignMargin: Value
@@ -39,6 +40,14 @@ func gameStatus(positionHistory: openArray[Position]): GameStatus =
         return threefoldRepetition
     running
 
+var numEvaluatedPositions: uint64 = 0
+func evaluationWriteToFile(position: Position): Value =
+    result = position.evaluate
+    {.cast(noSideEffect).}:
+        if rand(3_000_000) <= 140:
+            numEvaluatedPositions += 1
+            debugEcho position.fen
+
 proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
     let position = game.positionHistory[^1]
@@ -46,20 +55,13 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     let (value, pv) = position.timeManagedSearch(
         hashTable = game.hashTable[us],
         positionHistory = game.positionHistory,
-        evaluation = game.evaluation[us],
+        evaluation = evaluationWriteToFile,
         moveTime = game.moveTime
     )
     doAssert pv.len >= 1 and pv[0] != noMove
     game.positionHistory.add(position)
     game.positionHistory[^1].doMove(pv[0])
     (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
-
-func evaluationWriteToFile(position: Position): Value =
-    result = position.evaluate
-    {.cast(noSideEffect).}:
-        if rand(100_000) == 1:
-            debugEcho "hi"
-
 
 func newGame(
     startingPosition: Position,
@@ -133,9 +135,15 @@ proc playGame(game: var Game, suppressOutput = false): float =
 
     
 
-var game = newGame(
-    startingPosition = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition,
-    moveTime = initDuration(milliseconds = 20)
-)
-
-echo game.playGame
+let f = open("blitzTesting-4moves-openings.epd")
+var line: string
+var i = 0
+while f.readLine(line):
+    var game = newGame(startingPosition = line.toPosition, moveTime = initDuration(milliseconds = 20))
+    discard game.playGame(suppressOutput = true)
+    i += 1
+    # if i mod 100 == 0: TODO: remove this from setPositions.epd
+    #     echo i, " games, ", numEvaluatedPositions, " positions"
+f.close()
+echo "Played ", i, " games"
+echo "Generated ", numEvaluatedPositions, " positions"
