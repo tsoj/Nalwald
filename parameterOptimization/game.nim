@@ -15,7 +15,7 @@ type
         positionHistory: seq[Position]
         moveTime: Duration
         earlyResignMargin: Value
-        earlyDrawPlyMargin: Ply
+        earlyAdjudicationPly: Ply
     GameStatus = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
 
@@ -52,7 +52,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert pv.len >= 1 and pv[0] != noMove
     game.positionHistory.add(position)
     game.positionHistory[^1].doMove(pv[0])
-    (game.positionHistory.gameStatus, value, pv[0])
+    (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
 
 func evaluationWriteToFile(position: Position): Value =
     result = position.evaluate
@@ -65,27 +65,45 @@ func newGame(
     startingPosition: Position,
     moveTime = initDuration(milliseconds = 10),
     earlyResignMargin = 500.Value,
-    earlyDrawPlyMargin = 8.Ply,
+    earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000
 ): Game =
     result = Game(
         positionHistory: @[startingPosition],
         moveTime: moveTime,
         earlyResignMargin: earlyResignMargin,
-        earlyDrawPlyMargin: earlyDrawPlyMargin
+        earlyAdjudicationPly: earlyAdjudicationPly
     )
     result.hashTable[white].setSize(hashSize)
     result.hashTable[black].setSize(hashSize)
 
-proc playGame(game: var Game, suppressOutput = false) =
+proc playGame(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
     if not suppressOutput:
         echo "-----------------------------"
         echo "starting position:"
         echo game.positionHistory[0]
 
+    var drawPlies = 0.Ply
+    var whiteResignPlies = 0.Ply
+    var blackResignPlies = 0.Ply
+
     while true:
-        let (gameStatus, value, move) = game.makeNextMove()
+        var (gameStatus, value, move) = game.makeNextMove()
+        if value == 0.Value:
+            drawPlies += 1.Ply
+        else:
+            drawPlies = 0.Ply
+
+        if value >= game.earlyResignMargin:
+            blackResignPlies += 1.Ply
+        else:
+            blackResignPlies = 0.Ply
+        if -value >= game.earlyResignMargin:
+            whiteResignPlies += 1.Ply
+        else:
+            whiteResignPlies = 0.Ply
+
         if not suppressOutput:
             echo "Move: ", move
             echo game.positionHistory[^1]
@@ -94,11 +112,24 @@ proc playGame(game: var Game, suppressOutput = false) =
                 echo gameStatus
 
         if gameStatus != running:
-            break
+            case gameStatus:
+            of stalemate, fiftyMoveRule, threefoldRepetition:
+                return 0.5
+            of checkmateWhite:
+                return 1.0
+            of checkmateBlack:
+                return 0.0
+            else:
+                doAssert false
+
+        if drawPlies >= game.earlyAdjudicationPly:
+            return 0.5
+        if whiteResignPlies >= game.earlyAdjudicationPly:
+            return 0.0
+        if blackResignPlies >= game.earlyAdjudicationPly:
+            return 1.0
         # TODO: stop game, if both engines report +-500cp for two moves, or 0cp for 8 plies
-    
-            
-    discard 1
+
 
     
 
@@ -107,4 +138,4 @@ var game = newGame(
     moveTime = initDuration(milliseconds = 20)
 )
 
-game.playGame
+echo game.playGame
