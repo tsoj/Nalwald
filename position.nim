@@ -416,6 +416,7 @@ func gamePhase*(position: Position): GamePhase =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+    # TODO: maybe exand this
 
 func material*(position: Position): Value =
     result = 0
