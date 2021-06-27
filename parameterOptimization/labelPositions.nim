@@ -32,17 +32,15 @@ proc labelPositions() =
         threadResults = newThreadResults
         
     while f.readLine(line):
-        echo playGame(line)
-        # writeResults()
-        # while cpu_percent() >= 50.0:
-        #     sleep(10)
-        # threadResults.add(spawn playGame(line))        
+        writeResults()
+        while cpu_percent() >= 50.0:
+            sleep(10)
+        threadResults.add(spawn playGame(line))        
         i += 1
-        echo i
-        if i >= 10:
-            break
-        sleep(40)
-    #writeResults()
+        if i mod 1000 == 0:
+            echo i
+        sleep(10)
+    writeResults()
 
     f.close
     g.close
