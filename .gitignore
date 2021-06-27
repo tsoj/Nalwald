@@ -11,7 +11,8 @@ massif.out
 *.profdata
 *.log
 *.epd
-!parameterOptimization/zuriQuietSet.epd
+!parameterOptimization/quietSetZuri.epd
+!parameterOptimization/quietSetNalwald.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 txt.txt
