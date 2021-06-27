@@ -13,6 +13,7 @@ massif.out
 *.epd
 !parameterOptimization/quietSetZuri.epd
 !parameterOptimization/quietSetNalwald.epd
+!parameterOptimization/unlabeledQuietSetNalwald.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 txt.txt
@@ -21,3 +22,5 @@ vgcore.*
 game
 genFenList.py
 removeNonQuietPositions
+generatePositions
+labelPositions

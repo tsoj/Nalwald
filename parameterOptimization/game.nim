@@ -5,18 +5,16 @@ import ../hashTable
 import times
 import ../movegen
 import ../move
-import random
 import ../evaluation
-import atomics
-import os
 
 type
-    Game = object
+    Game* = object
         hashTable: array[white..black, HashTable]
         positionHistory: seq[Position]
         moveTime: Duration
         earlyResignMargin: Value
         earlyAdjudicationPly: Ply
+        evaluation: proc(position: Position): Value {.noSideEffect.}
     GameStatus = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
 
@@ -40,14 +38,6 @@ func gameStatus(positionHistory: openArray[Position]): GameStatus =
         return threefoldRepetition
     running
 
-var numEvaluatedPositions: uint64 = 0
-func evaluationWriteToFile(position: Position): Value =
-    result = position.evaluate
-    {.cast(noSideEffect).}:
-        if rand(3_000_000) <= 140:
-            numEvaluatedPositions += 1
-            debugEcho position.fen
-
 proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
     let position = game.positionHistory[^1]
@@ -55,7 +45,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     let (value, pv) = position.timeManagedSearch(
         hashTable = game.hashTable[us],
         positionHistory = game.positionHistory,
-        evaluation = evaluationWriteToFile,
+        evaluation = game.evaluation,
         moveTime = game.moveTime
     )
     doAssert pv.len >= 1 and pv[0] != noMove
@@ -63,23 +53,25 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     game.positionHistory[^1].doMove(pv[0])
     (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
 
-func newGame(
+func newGame*(
     startingPosition: Position,
     moveTime = initDuration(milliseconds = 10),
     earlyResignMargin = 500.Value,
     earlyAdjudicationPly = 8.Ply,
-    hashSize = 4_000_000
+    hashSize = 4_000_000,
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
     result = Game(
         positionHistory: @[startingPosition],
         moveTime: moveTime,
         earlyResignMargin: earlyResignMargin,
-        earlyAdjudicationPly: earlyAdjudicationPly
+        earlyAdjudicationPly: earlyAdjudicationPly,
+        evaluation: evaluation
     )
     result.hashTable[white].setSize(hashSize)
     result.hashTable[black].setSize(hashSize)
 
-proc playGame(game: var Game, suppressOutput = false): float =
+proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
     if not suppressOutput:
         echo "-----------------------------"
@@ -130,20 +122,6 @@ proc playGame(game: var Game, suppressOutput = false): float =
             return 0.0
         if blackResignPlies >= game.earlyAdjudicationPly:
             return 1.0
-        # TODO: stop game, if both engines report +-500cp for two moves, or 0cp for 8 plies
 
 
-    
 
-let f = open("blitzTesting-4moves-openings.epd")
-var line: string
-var i = 0
-while f.readLine(line):
-    var game = newGame(startingPosition = line.toPosition, moveTime = initDuration(milliseconds = 20))
-    discard game.playGame(suppressOutput = true)
-    i += 1
-    # if i mod 100 == 0: TODO: remove this from setPositions.epd
-    #     echo i, " games, ", numEvaluatedPositions, " positions"
-f.close()
-echo "Played ", i, " games"
-echo "Generated ", numEvaluatedPositions, " positions"
