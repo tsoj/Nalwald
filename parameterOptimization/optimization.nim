@@ -8,13 +8,14 @@ import gradient
 import random
 import times
 import strformat
-import startingParameters
+import ../defaultParameters
 
 type Entry = object
     position: Position
     outcome: float32
+    weight: float32
 
-proc loadData(data: var seq[Entry], filename: string) =
+proc loadData(data: var seq[Entry], filename: string, weight: float32) =
     let f = open(filename)
     var line: string
     var numEntries = 0
@@ -24,7 +25,7 @@ proc loadData(data: var seq[Entry], filename: string) =
             continue
         doAssert words.len >= 7
         numEntries += 1
-        data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
+        data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat, weight: weight))
     f.close()
 
     debugEcho filename & ": ", numEntries, " entries"
@@ -33,10 +34,12 @@ proc loadData(data: var seq[Entry], filename: string) =
 func error(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
     result = 0.0
     
+    var summedWeight: float32 = 0.0
     for entry in data:
         let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
-        result += (entry.outcome - estimate)*(entry.outcome - estimate)
-    result /= data.len.float32
+        result += (entry.outcome - estimate)*(entry.outcome - estimate)*entry.weight
+        summedWeight += entry.weight
+    result /= summedWeight
 
 proc optimize(
     start: EvalParametersFloat,
@@ -76,12 +79,14 @@ proc optimize(
                 var gradient: EvalParametersFloat
                 var currentSolution = bestSolution
                 let bestSolutionConverted = bestSolution.convert
+                var batchWeight: float32 = 0.0
                 for entry in shuffledData.toOpenArray(
                     first = i*batchSize,
                     last = min((i+1)*batchSize - 1, shuffledData.len - 1)
                 ):
-                    gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome)
-                gradient *= (lr/batchSize.float32)
+                    batchWeight += entry.weight
+                    gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
+                gradient *= (lr/batchWeight)
                 currentSolution += gradient
 
                 var error = currentSolution.convert.error(data)
@@ -125,8 +130,8 @@ proc optimize(
     return finalSolution.convert
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd")
-data.loadData("quietSetNalwald.epd")
+data.loadData("quietSetZuri.epd", weight = 1.0)
+data.loadData("quietSetNalwald.epd", weight = 0.2)
 
-discard startingEvalParameters.convert.optimize(data)
+discard defaultEvalParameters.convert.optimize(data)
 
