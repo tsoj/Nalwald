@@ -55,7 +55,7 @@ proc labelPositions() =
             alreadyLabeled[line] = 0
             continue
         writeResults()
-        while cpu_percent() >= 50.0:
+        while cpu_percent() >= 70.0:
             sleep(10)
         threadResults.add(spawn playGame(line))
         sleep(10)
