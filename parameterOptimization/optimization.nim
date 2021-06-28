@@ -8,23 +8,26 @@ import gradient
 import random
 import times
 import strformat
+import startingParameters
 
 type Entry = object
     position: Position
     outcome: float32
 
-proc loadData(filename: string): seq[Entry] =
+proc loadData(data: var seq[Entry], filename: string) =
     let f = open(filename)
     var line: string
+    var numEntries = 0
     while f.readLine(line):
         let words = line.splitWhitespace()
         if words.len == 0 or words[0] == "LICENSE:":
             continue
         doAssert words.len >= 7
-        result.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
+        numEntries += 1
+        data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
     f.close()
 
-    debugEcho "data.len: ", result.len
+    debugEcho filename & ": ", numEntries, " entries"
 
 
 func error(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
@@ -121,8 +124,9 @@ proc optimize(
         
     return finalSolution.convert
 
-#let data = "quietSetZuri.epd".loadData
-let data = "quietSetCombined.epd".loadData
+var data: seq[Entry]
+data.loadData("quietSetZuri.epd")
+data.loadData("quietSetNalwald.epd")
 
-discard startingEvalParametersFloat.optimize(data)
+discard startingEvalParameters.convert.optimize(data)
 

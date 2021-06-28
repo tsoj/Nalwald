@@ -6,7 +6,7 @@ type OpeningOrEndGame* = enum
 type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
-type EvalParametersTemplate[ValueType] = object
+type EvalParametersTemplate*[ValueType] = object
     pst*: array[opening..endgame, array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]
     passedPawnTable*: array[opening..endgame, array[8, ValueType]]
     bonusIsolatedPawn*: ValueType

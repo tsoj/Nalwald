@@ -3,29 +3,35 @@ import ../types
 import random
 import strformat
 
-func convert*(a: EvalParametersFloat): EvalParameters =
+func convertTemplate[InValueType, OutValueType](a: EvalParametersTemplate[InValueType]): EvalParametersTemplate[OutValueType] =
     for phase in opening..endgame:
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for piece in pawn..king:
                     for square in a1..h8:
                         result.pst[phase][whoseKing][kingSquare][piece][square] =
-                            a.pst[phase][whoseKing][kingSquare][piece][square].Value
+                            a.pst[phase][whoseKing][kingSquare][piece][square].OutValueType
     for i in 0..7:
-        result.passedPawnTable[opening][i] = a.passedPawnTable[opening][i].Value
-        result.passedPawnTable[endgame][i] = a.passedPawnTable[endgame][i].Value
-    result.bonusIsolatedPawn = a.bonusIsolatedPawn.Value
-    result.bonusPawnHasTwoNeighbors = a.bonusPawnHasTwoNeighbors.Value
-    result.bonusBothBishops = a.bonusBothBishops.Value
-    result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.Value
+        result.passedPawnTable[opening][i] = a.passedPawnTable[opening][i].OutValueType
+        result.passedPawnTable[endgame][i] = a.passedPawnTable[endgame][i].OutValueType
+    result.bonusIsolatedPawn = a.bonusIsolatedPawn.OutValueType
+    result.bonusPawnHasTwoNeighbors = a.bonusPawnHasTwoNeighbors.OutValueType
+    result.bonusBothBishops = a.bonusBothBishops.OutValueType
+    result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.OutValueType
     result.mobilityMultiplierKnight = a.mobilityMultiplierKnight
     result.mobilityMultiplierBishop = a.mobilityMultiplierBishop
     result.mobilityMultiplierRook = a.mobilityMultiplierRook
     result.mobilityMultiplierQueen = a.mobilityMultiplierQueen
-    result.bonusBishopTargetingKingArea = a.bonusBishopTargetingKingArea.Value
-    result.bonusRookTargetingKingArea = a.bonusRookTargetingKingArea.Value
-    result.bonusQueenTargetingKingArea = a.bonusQueenTargetingKingArea.Value
+    result.bonusBishopTargetingKingArea = a.bonusBishopTargetingKingArea.OutValueType
+    result.bonusRookTargetingKingArea = a.bonusRookTargetingKingArea.OutValueType
+    result.bonusQueenTargetingKingArea = a.bonusQueenTargetingKingArea.OutValueType
     result.kingSafetyMultiplier = a.kingSafetyMultiplier
+
+func convert*(a: EvalParameters): EvalParametersFloat =
+    a.convertTemplate[:Value, float32]
+
+func convert*(a: EvalParametersFloat): EvalParameters =
+    a.convertTemplate[:float32, Value]
 
 func `$`*(a: EvalParameters): string =
     result = "(\n"
@@ -157,172 +163,3 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
     a.bonusRookTargetingKingArea += r
     a.bonusQueenTargetingKingArea += r
     a.kingSafetyMultiplier += r
-
-const startingEvalParametersFloat* = block:
-    var startingEvalParametersFloat = EvalParametersFloat(
-        passedPawnTable: [
-            opening: [0.0'f32, 0.0'f32, 0.0'f32, 10.0'f32, 15.0'f32, 20.0'f32, 45.0'f32, 0.0'f32],
-            endgame: [0.0'f32, 20.0'f32, 30.0'f32, 40.0'f32, 60.0'f32, 100.0'f32, 120.0'f32, 0.0'f32]
-        ],
-        bonusIsolatedPawn: -10.0,
-        bonusPawnHasTwoNeighbors: 1.0,
-        bonusBothBishops: 10.0,
-        bonusRookOnOpenFile: 5.0,
-        mobilityMultiplierKnight: 2.0,
-        mobilityMultiplierBishop: 3.0,
-        mobilityMultiplierRook: 4.0,
-        mobilityMultiplierQueen: 2.0,
-        bonusBishopTargetingKingArea: 1.0,
-        bonusRookTargetingKingArea: 1.0,
-        bonusQueenTargetingKingArea: 1.0,
-        kingSafetyMultiplier: 2.5
-    )
-
-    const openingPst: array[pawn..king, array[a1..h8, int]] =
-        [
-            pawn:
-            [
-                0, 0, 0, 0, 0, 0, 0, 0,
-                45, 45, 45, 45, 45, 45, 45, 45,
-                10, 10, 20, 30, 30, 20, 10, 10,
-                5, 5, 10, 25, 25, 10, 5, 5,
-                0, 0, 0, 20, 20, 0, 0, 0,
-                5, -5, -10, 0, 0, -10, -5, 5,
-                5, 10, 10, -20, -20, 10, 10, 5,
-                0, 0, 0, 0, 0, 0, 0, 0
-            ],
-            knight:
-            [
-                -50, -40, -30, -30, -30, -30, -40, -50,
-                -40, -20, 0, 0, 0, 0, -20, -40,
-                -30, 0, 10, 15, 15, 10, 0, -30,
-                -30, 5, 15, 20, 20, 15, 5, -30,
-                -30, 0, 15, 20, 20, 15, 0, -30,
-                -30, 5, 10, 15, 15, 10, 5, -30,
-                -40, -20, 0, 5, 5, 0, -20, -40,
-                -50, -40, -30, -30, -30, -30, -40, -50
-            ],
-            bishop:
-            [
-                -20, -10, -10, -10, -10, -10, -10, -20,
-                -10, 0, 0, 0, 0, 0, 0, -10,
-                -10, 0, 5, 10, 10, 5, 0, -10,
-                -10, 5, 5, 10, 10, 5, 5, -10,
-                -10, 0, 10, 10, 10, 10, 0, -10,
-                -10, 10, 10, 10, 10, 10, 10, -10,
-                -10, 5, 0, 0, 0, 0, 5, -10,
-                -20, -10, -10, -10, -10, -10, -10, -20
-            ],
-            rook:
-            [
-                0, 0, 0, 0, 0, 0, 0, 0,
-                5, 10, 10, 10, 10, 10, 10, 5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                0, 0, 0, 5, 5, 0, 0, 0
-            ],
-            queen:
-            [
-                -20, -10, -10, -5, -5, -10, -10, -20,
-                -10, 0, 0, 0, 0, 0, 0, -10,
-                -10, 0, 5, 5, 5, 5, 0, -10,
-                -5, 0, 5, 5, 5, 5, 0, -5,
-                0, 0, 5, 5, 5, 5, 0, -5,
-                -10, 5, 5, 5, 5, 5, 0, -10,
-                -10, 0, 5, 0, 0, 0, 0, -10,
-                -20, -10, -10, -5, -5, -10, -10, -20
-            ],
-            king:
-            [
-                -30, -40, -40, -50, -50, -40, -40, -30,
-                -30, -40, -40, -50, -50, -40, -40, -30,
-                -30, -40, -40, -50, -50, -40, -40, -30,
-                -30, -40, -40, -50, -50, -40, -40, -30,
-                -20, -30, -30, -40, -40, -30, -30, -20,
-                -10, -20, -20, -20, -20, -20, -20, -10,
-                20, 20, 0, 0, 0, 0, 20, 20,
-                20, 30, 10, 0, 0, 10, 30, 20
-            ],
-        ]
-    const endgamePst: array[pawn..king, array[a1..h8, int]] =
-        [
-            pawn:
-            [
-                0, 0, 0, 0, 0, 0, 0, 0,
-                90, 90, 90, 90, 90, 90, 90, 90,
-                30, 30, 40, 45, 45, 40, 40, 30,
-                20, 20, 20, 25, 25, 20, 20, 20,
-                0, 0, 0, 20, 20, 0, 0, 0,
-                -5, -5, -10, -10, -10, -10, -5, -5,
-                -15, -15, -15, -20, -20, -15, -15, -15,
-                0, 0, 0, 0, 0, 0, 0, 0
-            ],
-            knight:
-            [
-                -50, -40, -30, -30, -30, -30, -40, -50,
-                -40, -20, 0, 0, 0, 0, -20, -40,
-                -30, 0, 10, 15, 15, 10, 0, -30,
-                -30, 5, 15, 20, 20, 15, 5, -30,
-                -30, 0, 15, 20, 20, 15, 0, -30,
-                -30, 5, 10, 15, 15, 10, 5, -30,
-                -40, -20, 0, 5, 5, 0, -20, -40,
-                -50, -40, -30, -30, -30, -30, -40, -50
-            ],
-            bishop:
-            [
-                -20, -10, -10, -10, -10, -10, -10, -20,
-                -10, 0, 0, 0, 0, 0, 0, -10,
-                -10, 0, 5, 10, 10, 5, 0, -10,
-                -10, 5, 5, 10, 10, 5, 5, -10,
-                -10, 0, 10, 10, 10, 10, 0, -10,
-                -10, 10, 10, 10, 10, 10, 10, -10,
-                -10, 5, 0, 0, 0, 0, 5, -10,
-                -20, -10, -10, -10, -10, -10, -10, -20
-            ],
-            rook:
-            [
-                0, 0, 0, 0, 0, 0, 0, 0,
-                0, 5, 5, 5, 5, 5, 5, 0,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                -5, 0, 0, 0, 0, 0, 0, -5,
-                0, 0, 0, 0, 0, 0, 0, 0
-            ],
-            queen:
-            [
-                -20, -10, -10, -5, -5, -10, -10, -20,
-                -10, 0, 0, 0, 0, 0, 0, -10,
-                -10, 0, 5, 5, 5, 5, 0, -10,
-                -5, 0, 5, 5, 5, 5, 0, -5,
-                0, 0, 5, 5, 5, 5, 0, -5,
-                -10, 0, 5, 5, 5, 5, 0, -10,
-                -10, 0, 0, 0, 0, 0, 0, -10,
-                -20, -10, -10, -5, -5, -10, -10, -20
-            ],
-            king:
-            [
-                -50, -40, -30, -20, -20, -30, -40, -50,
-                -30, -20, -10, 0, 0, -10, -20, -30,
-                -30, -10, 20, 30, 30, 20, -10, -30,
-                -30, -10, 30, 40, 40, 30, -10, -30,
-                -30, -10, 30, 40, 40, 30, -10, -30,
-                -30, -10, 20, 30, 30, 20, -10, -30,
-                -30, -30, 0, 0, 0, 0, -30, -30,
-                -50, -30, -30, -30, -30, -30, -30, -50
-            ],
-        ]
-
-    for whoseKing in ourKing..enemyKing:
-        for kingSquare in a1..h8:
-            for piece in pawn..king:
-                for square in a1..h8:
-                    startingEvalParametersFloat.pst[opening][whoseKing][kingSquare][piece][square] =
-                        openingPst[piece][square].float32 / 2.0
-                    startingEvalParametersFloat.pst[endgame][whoseKing][kingSquare][piece][square] =
-                        endgamePst[piece][square].float32 / 2.0
-    startingEvalParametersFloat
