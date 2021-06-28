@@ -5,6 +5,8 @@ import ../types
 import threadpool
 import os
 import psutil
+import tables
+import strutils
 
 proc playGame(fen: string): (string, float) =
     var game = newGame(
@@ -14,8 +16,22 @@ proc playGame(fen: string): (string, float) =
     (fen, game.playGame(suppressOutput = true))
 
 proc labelPositions() =
+    var alreadyLabeled = block:
+        var r: Table[string, int8]
+        let g = open("quietSetNalwald.epd")
+        var line: string
+        while g.readLine(line):
+            if line == "":
+                continue
+            let words = line.splitWhitespace
+            doAssert words.len == 7
+            let fen = words[0] & " " & words[1] & " " & words[2] & " " & words[3] & " " & words[4] & " " & words[5]
+            r[fen] = 1
+        g.close
+        r
+
     let f = open("unlabeledQuietSetNalwald.epd")
-    let g = open("quietSetNalwald.epd", fmWrite)
+    let g = open("quietSetNalwald.epd", fmAppend)
     var line: string
     var i = 0
 
@@ -32,13 +48,16 @@ proc labelPositions() =
         threadResults = newThreadResults
         
     while f.readLine(line):
-        writeResults()
-        while cpu_percent() >= 50.0:
-            sleep(10)
-        threadResults.add(spawn playGame(line))        
         i += 1
         if i mod 1000 == 0:
             echo i
+        if line in alreadyLabeled and alreadyLabeled[line] == 1:
+            alreadyLabeled[line] = 0
+            continue
+        writeResults()
+        while cpu_percent() >= 50.0:
+            sleep(10)
+        threadResults.add(spawn playGame(line))
         sleep(10)
     writeResults()
 

@@ -45,7 +45,7 @@ proc optimize(
     minLearningRate = 10.0,
     maxIterations = int.high,
     batchSize = int.high,
-    # Only one optimization run to omit over specialization. More runs may be feasible using a larger data set.
+    # Only one optimization run to omit over specialization. More runs may be feasible using a larger data set. TODO
     numReIterations = 1,
     randomAdditions = 15.0
 ): EvalParameters =
