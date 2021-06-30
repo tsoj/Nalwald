@@ -8,6 +8,7 @@ import uciSearch
 import times
 import perft
 import see
+import evaluation
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -179,6 +180,8 @@ proc uciLoop*() =
                     perftTest(params[1].parseInt.uint64, testZobristKeys = false)
                 else:
                     perftTest(testZobristKeys = false)
+            of "eval":
+                echo uciState.position.absoluteEvaluate
 
             else:
                 echo "Unknown command: ", params[0]
@@ -196,6 +199,7 @@ proc uciLoop*() =
                 echo "* getfen"
                 echo "* test"
                 echo "* perftperformance"
+                echo "* eval"
         except:
             echo "info string ", getCurrentExceptionMsg()
 

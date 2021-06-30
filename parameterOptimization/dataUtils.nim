@@ -14,10 +14,10 @@ import ../defaultParameters
 
 type Entry* = object
     position*: Position
-    outcome*: float32
-    weight*: float32
+    outcome*: float
+    weight*: float
 
-proc loadData*(data: var seq[Entry], filename: string, weight: float32, suppressOutput = false) =
+proc loadData*(data: var seq[Entry], filename: string, weight: float, suppressOutput = false) =
     let f = open(filename)
     var line: string
     var numEntries = 0
@@ -30,17 +30,17 @@ proc loadData*(data: var seq[Entry], filename: string, weight: float32, suppress
         data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat, weight: weight))
     f.close()
     if not suppressOutput:
-        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float32 * weight
+        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float * weight
 
 
-func error*(evalParameters: EvalParameters, entry: Entry): float32 =
+func error*(evalParameters: EvalParameters, entry: Entry): float =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
     (entry.outcome - estimate)*(entry.outcome - estimate)*entry.weight
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
+func error*(evalParameters: EvalParameters, data: openArray[Entry]): float =
     result = 0.0
     
-    var summedWeight: float32 = 0.0
+    var summedWeight: float = 0.0
     for entry in data:
         result += evalParameters.error(entry)
         summedWeight += entry.weight

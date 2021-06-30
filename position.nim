@@ -427,32 +427,3 @@ func absoluteMaterial*(position: Position): Value =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
-    # if position[queen] == 0:
-    #     let material = position.material
-    #     let winningColor = if material > 0.Value: position.us elif material < 0.Value: position.enemy else: noColor
-
-    #     if position[pawn] == 0 or (winningColor != noColor and (position[pawn] and position[winningColor]) == 0):
-
-    #         # king + rook/minor piece vs king + rook/minor piece
-    #         let relevantPieces = (position[rook] or position[knight] or position[bishop])
-    #         if (position[white] and relevantPieces).countSetBits == 1 and (position[black] and relevantPieces).countSetBits == 1:            
-    #             return true
-
-    #         if position[rook] == 0:
-
-    #             # king vs king + minor piece
-    #             if (position[bishop] or position[knight]).countSetBits <= 1:
-    #                 return true
-
-    #             # king + knight + bishop/knight vs king + bishop/knight but not king + bishop + bishop vs king + knight
-    #             if winningColor != noColor and
-    #             (position[winningColor] and relevantPieces).countSetBits <= 2 and
-    #             (position[winningColor.opposite] and relevantPieces).countSetBits >= 1 and
-    #             (
-    #                 (position[winningColor] and position[bishop]).countSetBits <= 1 or
-    #                 (position[winningColor.opposite] and position[bishop]) != 0
-    #             ):
-    #                 return true
-    # false
-    
-    # TODO: maybe exand this
