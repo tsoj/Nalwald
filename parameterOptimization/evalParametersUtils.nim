@@ -163,3 +163,6 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
     a.bonusRookTargetingKingArea += r
     a.bonusQueenTargetingKingArea += r
     a.kingSafetyMultiplier += r
+
+proc randomEvalParametersFloat*(max = 5.0): EvalParametersFloat =
+    result.randomEvalParametersFloat(max)

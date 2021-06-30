@@ -9,37 +9,8 @@ import random
 import times
 import strformat
 import ../defaultParameters
-
-type Entry = object
-    position: Position
-    outcome: float32
-    weight: float32
-
-proc loadData(data: var seq[Entry], filename: string, weight: float32) =
-    let f = open(filename)
-    var line: string
-    var numEntries = 0
-    while f.readLine(line):
-        let words = line.splitWhitespace()
-        if words.len == 0 or words[0] == "LICENSE:":
-            continue
-        doAssert words.len >= 7
-        numEntries += 1
-        data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat, weight: weight))
-    f.close()
-
-    debugEcho filename & ": ", numEntries, " entries"
-
-
-func error(evalParameters: EvalParameters, data: openArray[Entry]): float32 =
-    result = 0.0
-    
-    var summedWeight: float32 = 0.0
-    for entry in data:
-        let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
-        result += (entry.outcome - estimate)*(entry.outcome - estimate)*entry.weight
-        summedWeight += entry.weight
-    result /= summedWeight
+import startingParameters
+import dataUtils
 
 proc optimize(
     start: EvalParametersFloat,
@@ -48,8 +19,8 @@ proc optimize(
     minLearningRate = 10.0,
     maxIterations = int.high,
     batchSize = int.high,
-    # Only one optimization run to omit over specialization. More runs may be feasible using a larger data set. TODO
-    numReIterations = 100,
+    # Only one optimization run to omit over specialization.
+    numReIterations = 1,
     randomAdditions = 15.0
 ): EvalParameters =
     let batchSize = min(batchSize, data.len)
@@ -109,13 +80,15 @@ proc optimize(
 
                     if error < bestError:
                         debugEcho(
-                            "iteration:   ↺, batch: ", i, "/", numBatches - 1,
+                            "             ↺, batch: ", i, "/", numBatches - 1,
                             ", error: ", fmt"{error:>9.7f}", ", lr: ", lr*0.5
                         )
 
+                if lr < minLearningRate:
+                    break
 
             if lr < minLearningRate:
-                break;
+                break
         
         if bestError <= finalError:
             finalSolution = bestSolution
@@ -129,9 +102,17 @@ proc optimize(
         
     return finalSolution.convert
 
+
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
-data.loadData("quietSetNalwald.epd", weight = 0.2)
+data.loadData("quietSetNalwald.epd", weight = 0.6)
 
-discard defaultEvalParameters.convert.optimize(data)
+#let startingEvalParametersFloat = defaultEvalParameters.convert
+let startingEvalParametersFloat = startingEvalParameters.convert
+#let startingEvalParametersFloat = randomEvalParametersFloat(50.0)
+
+discard startingEvalParametersFloat.optimize(data)
+
+    
+
 
