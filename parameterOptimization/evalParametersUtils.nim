@@ -8,7 +8,7 @@ func `$`*(a: EvalParameters): string =
 
     for phase in Phase:
 
-        result &= "    " & $phase & "SinglePhaseEvalParametersTemplate[Value](\n"
+        result &= "    " & $phase & ": SinglePhaseEvalParametersTemplate[Value](\n"
 
         result &= "    pst: [\n"
 

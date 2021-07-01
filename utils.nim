@@ -70,14 +70,24 @@ func mirrorVertically*(square: Square): Square =
     ((square.int8 div 8)*8 + (7 - square.int8 mod 8)).Square
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
-    result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T
+
+    type I = (when T is SomeInteger: BiggestInt else: float32)
+
+    var tmp: I
+    tmp = forOpening.I*(gamePhase - GamePhase.low).I + forEndgame.I*(GamePhase.high - gamePhase).I
     when T is SomeInteger:
-        result = result div (GamePhase.high - GamePhase.low).T
+        tmp = tmp div (GamePhase.high - GamePhase.low).I
         static: doAssert(
             GamePhase.high - GamePhase.low == 32,
             "This makes sure that this division can be done using bitshifts")
     else:
-        result = result / (GamePhase.high - GamePhase.low).T
+        tmp = tmp / (GamePhase.high - GamePhase.low).T
+
+    result = tmp.T    
+    if not((result >= forOpening and result <= forEndgame and forOpening <= forEndgame) or
+    (result <= forOpening and result >= forEndgame and forOpening >= forEndgame)):
+        debugEcho gamePhase, ", ", forOpening, ", ", forEndgame, ", ", result
+        doAssert false
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
     let start = now()

@@ -20,7 +20,6 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     bonusBishopTargetingKingArea*: ValueType
     bonusRookTargetingKingArea*: ValueType
     bonusQueenTargetingKingArea*: ValueType
-    bonusRookSecondRankFromKing*: ValueType
     kingSafetyMultiplier*: float
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]

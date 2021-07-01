@@ -18,7 +18,7 @@ proc optimize(
     lr = 1000.0,
     minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = 50000,
+    batchSize = int.high,
     # Only one optimization run to omit over specialization.
     numReIterations = 1,
     randomAdditions = 15.0
