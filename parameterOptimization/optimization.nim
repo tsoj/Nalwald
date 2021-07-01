@@ -22,7 +22,8 @@ proc optimize(
     batchSize = int.high,
     # Only one optimization run to omit over specialization.
     numReIterations = int.high,
-    randomAdditions = 20.0
+    randomAdditions = 15.0,
+    discount = 0.9
 ): EvalParameters =
     var batchSize = batchSize
 
@@ -41,6 +42,7 @@ proc optimize(
         var bestError = bestSolution.convert.error(data)
         debugEcho "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
+        var previousGradient: EvalParametersFloat 
         for j in 0..maxIterations:
             var shuffledData = data
             shuffledData.shuffle()
@@ -59,7 +61,13 @@ proc optimize(
                 ):
                     batchWeight += entry.weight
                     gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
-                gradient *= (lr/batchWeight)
+                gradient *= (1.0/batchWeight)
+                gradient *= 1.0 - discount
+                previousGradient *= discount
+                gradient += previousGradient
+                previousGradient = gradient
+
+                gradient *= lr
                 currentSolution += gradient
 
                 var error = currentSolution.convert.error(data)

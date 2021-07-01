@@ -57,32 +57,41 @@ func `$`*(a: EvalParameters): string =
 
     result &= "\n]"
 
-func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
+func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: var float, b: float)) =
     for phase in Phase:
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for piece in pawn..king:
                     for square in a1..h8:
-                        a[phase].pst[whoseKing][kingSquare][piece][square] +=
+                        op(
+                            a[phase].pst[whoseKing][kingSquare][piece][square],
                             b[phase].pst[whoseKing][kingSquare][piece][square]
+                        )
         for i in 0..7:
-            a[phase].passedPawnTable[i] += b[phase].passedPawnTable[i]
-        a[phase].bonusIsolatedPawn += b[phase].bonusIsolatedPawn
-        a[phase].bonusPawnHasTwoNeighbors += b[phase].bonusPawnHasTwoNeighbors
-        a[phase].bonusBothBishops += b[phase].bonusBothBishops
-        a[phase].bonusRookOnOpenFile += b[phase].bonusRookOnOpenFile
-        a[phase].mobilityMultiplierKnight += b[phase].mobilityMultiplierKnight
-        a[phase].mobilityMultiplierBishop += b[phase].mobilityMultiplierBishop
-        a[phase].mobilityMultiplierRook += b[phase].mobilityMultiplierRook
-        a[phase].mobilityMultiplierQueen += b[phase].mobilityMultiplierQueen
-        a[phase].bonusBishopTargetingKingArea += b[phase].bonusBishopTargetingKingArea
-        a[phase].bonusRookTargetingKingArea += b[phase].bonusRookTargetingKingArea
-        a[phase].bonusQueenTargetingKingArea += b[phase].bonusQueenTargetingKingArea
-        a[phase].kingSafetyMultiplier += b[phase].kingSafetyMultiplier
+            op(a[phase].passedPawnTable[i], b[phase].passedPawnTable[i])
+        op(a[phase].bonusIsolatedPawn, b[phase].bonusIsolatedPawn)
+        op(a[phase].bonusPawnHasTwoNeighbors, b[phase].bonusPawnHasTwoNeighbors)
+        op(a[phase].bonusBothBishops, b[phase].bonusBothBishops)
+        op(a[phase].bonusRookOnOpenFile, b[phase].bonusRookOnOpenFile)
+        op(a[phase].mobilityMultiplierKnight, b[phase].mobilityMultiplierKnight)
+        op(a[phase].mobilityMultiplierBishop, b[phase].mobilityMultiplierBishop)
+        op(a[phase].mobilityMultiplierRook, b[phase].mobilityMultiplierRook)
+        op(a[phase].mobilityMultiplierQueen, b[phase].mobilityMultiplierQueen)
+        op(a[phase].bonusBishopTargetingKingArea, b[phase].bonusBishopTargetingKingArea)
+        op(a[phase].bonusRookTargetingKingArea, b[phase].bonusRookTargetingKingArea)
+        op(a[phase].bonusQueenTargetingKingArea, b[phase].bonusQueenTargetingKingArea)
+        op(a[phase].kingSafetyMultiplier, b[phase].kingSafetyMultiplier)
+
+func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
+    opTemplate(a, b, proc(a: var float, b: float) = a += b)
+
+func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
+    opTemplate(a, b, proc(a: var float, b: float) = a *= b)
 
 func `*=`*(a: var EvalParametersFloat, b: float) =
     for phase in Phase:
         a[phase] *= b
+
 
 proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
 
