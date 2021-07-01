@@ -9,8 +9,9 @@ import random
 import times
 import strformat
 import ../defaultParameters
-#import startingParameters
+import startingParameters
 import dataUtils
+import math
 
 proc optimize(
     start: EvalParametersFloat,
@@ -20,10 +21,10 @@ proc optimize(
     maxIterations = int.high,
     batchSize = int.high,
     # Only one optimization run to omit over specialization.
-    numReIterations = 1,
-    randomAdditions = 15.0
+    numReIterations = int.high,
+    randomAdditions = 20.0
 ): EvalParameters =
-    let batchSize = min(batchSize, data.len)
+    var batchSize = batchSize
 
 
     var finalSolution: EvalParametersFloat
@@ -31,6 +32,7 @@ proc optimize(
 
     var bestSolution: EvalParametersFloat = start
     for reIteration in 0..<numReIterations:
+        batchSize = min(batchSize, data.len)
 
         debugEcho "-------------------"
         debugEcho "batchsize: ", batchSize
@@ -99,6 +101,8 @@ proc optimize(
 
         bestSolution = finalSolution
         bestSolution.randomEvalParametersFloat(randomAdditions)
+
+        batchSize = (15*batchSize) div 10
         
     return finalSolution.convert
 
@@ -107,9 +111,9 @@ var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
 data.loadData("quietSetNalwald.epd", weight = 0.6)
 
-let startingEvalParametersFloat = defaultEvalParameters.convert
-#let startingEvalParametersFloat = startingEvalParameters.convert
-#let startingEvalParametersFloat = randomEvalParametersFloat(50.0)
+#let startingEvalParametersFloat = defaultEvalParameters.convert
+let startingEvalParametersFloat = startingEvalParameters
+#let startingEvalParametersFloat = randomEvalParametersFloat(100.0)
 
 discard startingEvalParametersFloat.optimize(data)
 

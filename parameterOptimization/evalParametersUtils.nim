@@ -36,7 +36,7 @@ func `$`*(a: EvalParameters): string =
 
         result &= "    ],\n"
         
-        result &= "    " & "passedPawnTable: [\n"
+        result &= "    " & "passedPawnTable: ["
         for i in 0..7:
             result &= fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
         result &= "],\n"

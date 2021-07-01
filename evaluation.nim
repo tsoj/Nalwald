@@ -13,10 +13,6 @@ func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] += b[phase]
 
-func `-=`[T](a: var array[Phase, T], b: array[Phase, T]) =
-    for phase in Phase:
-        a[phase] -= b[phase]
-
 
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
@@ -45,14 +41,10 @@ func getPstValue(
                         gradient[phase].pst[whoseKing][kingSquare][piece][pieceSquare] +=
                             (if us == black: -1.0 else: 1.0)*multiplier
 
-    [
-        opening:
-            evalParameters[opening].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
-            evalParameters[opening].pst[ourKing][kingSquare[ourKing]][piece][square],
-        endgame:
-            evalParameters[endgame].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
-            evalParameters[endgame].pst[ourKing][kingSquare[ourKing]][piece][square]
-    ]
+    for phase in Phase:
+        result[phase] =
+            evalParameters[phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
+            evalParameters[phase].pst[ourKing][kingSquare[ourKing]][piece][square]
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,
@@ -302,10 +294,9 @@ func evaluatePieceType(
         )
         currentResult += position.evaluatePiece(piece, square, currentUs, currentEnemy, kingSquare, evalParameters, gradient)
         
-        if currentUs == us:
-            result += currentResult
-        else:
-            result -= currentResult
+        if currentUs == enemy:
+            for phase in Phase: currentResult[phase] = -currentResult[phase]
+        result += currentResult
 
 func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
     if position.halfmoveClock >= 100:
