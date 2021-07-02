@@ -241,8 +241,6 @@ func evaluateKing(
         for phase in Phase:
             gradient[phase].kingSafetyMultiplier += numPossibleQueenAttack.float * (if us == black: -1.0 else: 1.0)
 
-# TODO: convert floats to float32 again
-
 func evaluatePiece(
     position: Position,
     piece: Piece,

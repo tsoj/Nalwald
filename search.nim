@@ -61,8 +61,6 @@ func quiesce(
     if position.insufficientMaterial and height > 0:
         return 0.Value
 
-    # TODO: get hash result
-
     let standPat = state.evaluation(position)
 
     var
@@ -75,7 +73,6 @@ func quiesce(
     if standPat > alpha:
         alpha = standPat
 
-    # TODO: add hash result best move
     for move in position.moveIterator(doQuiets = false):
         var newPosition = position
         newPosition.doMove(move)
@@ -364,7 +361,7 @@ iterator iterativeTimeManagedSearch*(
     let start = now()
     var
         startLastIteration = now()
-        branchingFactors = newSeq[float32](targetDepth.int)
+        branchingFactors = newSeq[float](targetDepth.int)
         lastNumNodes = uint64.high
 
     var iteration = -1
@@ -379,7 +376,7 @@ iterator iterativeTimeManagedSearch*(
         yield (value, pv, nodes, iterationPassedTime)
 
         assert calculatedMoveTime.approxTime >= DurationZero
-        branchingFactors[iteration] = nodes.float32 / lastNumNodes.float32;
+        branchingFactors[iteration] = nodes.float / lastNumNodes.float;
         lastNumNodes = if nodes <= 100_000: uint64.high else: nodes
         var averageBranchingFactor = branchingFactors[iteration]
         if iteration >= 4:
@@ -390,7 +387,7 @@ iterator iterativeTimeManagedSearch*(
                 branchingFactors[iteration - 3])/4.0
 
         let estimatedTimeNextIteration =
-            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float32 * averageBranchingFactor).int64)
+            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float * averageBranchingFactor).int64)
         if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
             break;
 

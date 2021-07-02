@@ -71,7 +71,7 @@ func mirrorVertically*(square: Square): Square =
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 
-    type I = (when T is SomeInteger: BiggestInt else: float32)
+    type I = (when T is SomeInteger: BiggestInt else: float)
 
     var tmp: I
     tmp = forOpening.I*(gamePhase - GamePhase.low).I + forEndgame.I*(GamePhase.high - gamePhase).I
