@@ -20,8 +20,7 @@ const futilityMargin = [
     1.Ply: 150.Value,
     2.Ply: 300.Value,
     3.Ply: 500.Value,
-    4.Ply: 750.Value,
-    5.Ply: 1100.Value
+    4.Ply: 750.Value
 ]
 const deltaMargin = 150
 
@@ -186,8 +185,8 @@ func search(
             return value
 
     # check if futility pruning is applicable
-    let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and depth < futilityMargin.len and
-    (not inCheck) and state.evaluation(position) + futilityMargin[depth] < alpha
+    let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and
+    (not inCheck) and state.evaluation(position) + futilityMargin[min(depth, (futilityMargin.len - 1).Ply)] < alpha
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
@@ -202,13 +201,15 @@ func search(
 
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
 
-        # futility pruning
-        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
-            continue
-
         var
             newDepth = depth
             newBeta = beta
+
+        # futility pruning
+        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
+            if depth < futilityMargin.len:
+                continue
+            newDepth -= 1
 
         # first explore with null window
         if alpha > -valueInfinity:
@@ -217,6 +218,7 @@ func search(
         # late move reduction
         if newDepth >= 2.Ply and moveCounter >= 4 and alpha > -valueInfinity and
         (not (move.isTactical or inCheck or givingCheck)) and
+        #TODO: test: (not move.isKillerMove(state.killerTable, height)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             const depthDivider =
                 [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4]
@@ -259,11 +261,6 @@ func search(
         if value > alpha:
             nodeType = pvNode
             alpha = value
-        # TODO
-        #[
-        else:
-            state.historyTable.update(move, position.us, depth, multiplier = -0.5)#TODO: multiplier = -1.0/lmrMoveCounter.float
-        ]#
 
     if moveCounter == 0:
         # checkmate
