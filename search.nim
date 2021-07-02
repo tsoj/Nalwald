@@ -218,7 +218,7 @@ func search(
         # late move reduction
         if newDepth >= 2.Ply and moveCounter >= 4 and alpha > -valueInfinity and
         (not (move.isTactical or inCheck or givingCheck)) and
-        #TODO: test: (not move.isKillerMove(state.killerTable, height)) and
+        #TODO:test: (not move.isKillerMove(state.killerTable, height)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             const depthDivider =
                 [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4]
