@@ -61,6 +61,8 @@ proc optimize(
                 ):
                     batchWeight += entry.weight
                     gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
+                # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
+                # result is better
                 gradient *= (1.0/batchWeight)
                 gradient *= 1.0 - discount
                 previousGradient *= discount
@@ -117,6 +119,8 @@ proc optimize(
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
+# Elements in quietSetNalwald are weighed less, because it brings better results.
+# quietSetZuri is probably of higher quality
 data.loadData("quietSetNalwald.epd", weight = 0.6)
 
 #let startingEvalParametersFloat = defaultEvalParameters.convert
