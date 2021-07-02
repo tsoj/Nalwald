@@ -39,7 +39,8 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
     if not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
-            state.historyTable.update(bestMove, position.us, depth, nodeType)
+            if nodeType != allNode:
+                state.historyTable.update(bestMove, position.us, depth)
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
@@ -258,6 +259,11 @@ func search(
         if value > alpha:
             nodeType = pvNode
             alpha = value
+        # TODO
+        #[
+        else:
+            state.historyTable.update(move, position.us, depth, multiplier = -0.5)#TODO: multiplier = -1.0/lmrMoveCounter.float
+        ]#
 
     if moveCounter == 0:
         # checkmate
