@@ -11,6 +11,7 @@ import bitops
 import times
 import threadpool
 import utils
+import math
 
 static: doAssert values[pawn] == 100
 
@@ -22,6 +23,15 @@ const futilityMargin = [
     3.Ply: 500.Value,
     4.Ply: 750.Value
 ]
+func futilityReduction(value: Value): Ply =
+    if value < 150: return 0.Ply
+    if value < 300: return 1.Ply
+    if value < 500: return 2.Ply
+    if value < 750: return 3.Ply
+    if value < 1050: return 4.Ply
+    if value < 1400: return 5.Ply
+    6.Ply
+
 const deltaMargin = 150
 
 type SearchState = object
@@ -184,9 +194,17 @@ func search(
         if value >= beta:
             return value
 
+    let staticEval = state.evaluation(position)
+
     # check if futility pruning is applicable
-    let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and
-    (not inCheck) and state.evaluation(position) + futilityMargin[min(depth, (futilityMargin.len - 1).Ply)] < alpha
+    # let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and
+    # (not inCheck) and state.evaluation(position) + futilityMargin[min(depth, (futilityMargin.len - 1).Ply)] < alpha
+    
+    # determine amount of futility reduction
+    let futilityReduction = if alpha == -valueInfinity or (not isInNullWindow) or inCheck:
+        0.Ply
+    else:
+        futilityReduction(alpha - staticEval)
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
@@ -206,10 +224,19 @@ func search(
             newBeta = beta
 
         # futility pruning
-        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
-            if depth < futilityMargin.len:
+        # if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
+        #     if depth < futilityMargin.len:
+        #         continue
+        #     newDepth -= 1
+
+        # futility reduction
+        if (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
+            newDepth -= futilityReduction
+            if newDepth <= 1:
                 continue
-            newDepth -= 1
+
+        # if staticEval + 10.Value >= beta and height < depth:# TODO: test
+        #     newDepth += 1.Ply
 
         # first explore with null window
         if alpha > -valueInfinity:
@@ -218,7 +245,6 @@ func search(
         # late move reduction
         if newDepth >= 2.Ply and moveCounter >= 4 and alpha > -valueInfinity and
         (not (move.isTactical or inCheck or givingCheck)) and
-        #TODO:test: (not move.isKillerMove(state.killerTable, height)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             const depthDivider =
                 [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4]
