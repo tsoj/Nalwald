@@ -1,17 +1,12 @@
-import ../position
 import ../evalParameters
 import evalParametersUtils
 import strutils
-import ../evaluation
-import ../utils
 import gradient
 import random
 import times
 import strformat
-import ../defaultParameters
 import startingParameters
 import dataUtils
-import math
 
 proc optimize(
     start: EvalParametersFloat,

@@ -1,16 +1,8 @@
 import ../position
 import ../evalParameters
-import evalParametersUtils
 import strutils
 import ../evaluation
 import ../utils
-import gradient
-import random
-import times
-import strformat
-import ../defaultParameters
-
-# TODO find better names for these files and clean stuff up
 
 type Entry* = object
     position*: Position

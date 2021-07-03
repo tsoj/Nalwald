@@ -314,6 +314,8 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
 
+#-------------- sugar functions --------------#
+
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.evaluate(defaultEvalParameters, gradient)

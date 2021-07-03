@@ -1,7 +1,6 @@
 import ../position
 import times
 import game
-import ../types
 import threadpool
 import os
 import psutil
