@@ -8,6 +8,7 @@ import uciSearch
 import times
 import perft
 import see
+import evaluation
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -24,7 +25,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.TODO" # TODO
+    echo "id name Nalwald 1.10"
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -166,7 +167,7 @@ proc uciLoop*() =
                 echo uciState.position
             of "printdebug":
                 echo uciState.position.debugString
-            of "getfen":
+            of "fen":
                 echo uciState.position.fen
             of "test":
                 seeTest()
@@ -174,14 +175,13 @@ proc uciLoop*() =
                     perftTest(params[1].parseInt.uint64)
                 else:
                     perftTest()
-            of "perftperformance":
-                if params.len >= 2:
-                    perftTest(params[1].parseInt.uint64, testZobristKeys = false)
-                else:
-                    perftTest(testZobristKeys = false)
+            of "benchmark":
+                perftTest(100_000_000, testZobristKeys = false)
+            of "eval":
+                echo uciState.position.absoluteEvaluate, " centipawns"
 
             else:
-                echo "Unknown command: ", params[0]
+                if params[0] != "help": echo "Unknown command: ", params[0]
                 echo "Possible commands:"
                 echo "* uci"
                 echo "* setoption"
@@ -193,9 +193,10 @@ proc uciLoop*() =
                 echo "* ucinewgame"
                 echo "* print"
                 echo "* printdebug"
-                echo "* getfen"
+                echo "* fen"
                 echo "* test"
-                echo "* perftperformance"
+                echo "* benchmark"
+                echo "* eval"
         except:
             echo "info string ", getCurrentExceptionMsg()
 

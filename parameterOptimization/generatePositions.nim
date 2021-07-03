@@ -26,7 +26,5 @@ proc generatePositions() =
         discard game.playGame(suppressOutput = true)
         i += 1
     f.close()
-    echo "Played ", i, " games"
-    echo "Generated ", numEvaluatedPositions, " positions"
 
 generatePositions()

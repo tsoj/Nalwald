@@ -15,15 +15,16 @@ import utils
 static: doAssert values[pawn] == 100
 
 const nullMoveDepthReduction = 4.Ply
-const futilityMargin = [
-    0.Ply: 0.Value,
-    1.Ply: 150.Value,
-    2.Ply: 300.Value,
-    3.Ply: 500.Value,
-    4.Ply: 750.Value,
-    5.Ply: 1100.Value
-]
+func futilityReduction(value: Value): Ply =
+    if value < 150: return 0.Ply
+    if value < 300: return 1.Ply
+    if value < 500: return 2.Ply
+    if value < 750: return 3.Ply
+    if value < 1050: return 4.Ply
+    if value < 1400: return 5.Ply
+    6.Ply
 const deltaMargin = 150
+const failHighDeltaMargin = 100
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -39,7 +40,8 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
     if not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
-            state.historyTable.update(bestMove, position.us, depth, nodeType)
+            if nodeType != allNode:
+                state.historyTable.update(bestMove, position.us, depth)
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
@@ -87,9 +89,9 @@ func quiesce(
         if seeEval + deltaMargin < alpha and doPruning:
             continue
         
-        # fail high delta pruning
-        if seeEval - deltaMargin >= beta and doPruning:
-            return seeEval - deltaMargin
+        # fail-high delta pruning
+        if seeEval - failHighDeltaMargin >= beta and doPruning:
+            return seeEval - failHighDeltaMargin
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -184,9 +186,11 @@ func search(
         if value >= beta:
             return value
 
-    # check if futility pruning is applicable
-    let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and depth < futilityMargin.len and
-    (not inCheck) and state.evaluation(position) + futilityMargin[depth] < alpha
+    # determine amount of futility reduction
+    let futilityReduction = if alpha == -valueInfinity or (not isInNullWindow) or inCheck:
+        0.Ply
+    else:
+        futilityReduction(alpha - state.evaluation(position))
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
@@ -201,13 +205,15 @@ func search(
 
         let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
 
-        # futility pruning
-        if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
-            continue
-
         var
             newDepth = depth
             newBeta = beta
+
+        # futility reduction
+        if (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
+            newDepth -= futilityReduction
+            if newDepth <= 1:
+                continue
 
         # first explore with null window
         if alpha > -valueInfinity:
@@ -361,7 +367,7 @@ iterator iterativeTimeManagedSearch*(
     let start = now()
     var
         startLastIteration = now()
-        branchingFactors = newSeq[float32](targetDepth.int)
+        branchingFactors = newSeq[float](targetDepth.int)
         lastNumNodes = uint64.high
 
     var iteration = -1
@@ -376,7 +382,7 @@ iterator iterativeTimeManagedSearch*(
         yield (value, pv, nodes, iterationPassedTime)
 
         assert calculatedMoveTime.approxTime >= DurationZero
-        branchingFactors[iteration] = nodes.float32 / lastNumNodes.float32;
+        branchingFactors[iteration] = nodes.float / lastNumNodes.float;
         lastNumNodes = if nodes <= 100_000: uint64.high else: nodes
         var averageBranchingFactor = branchingFactors[iteration]
         if iteration >= 4:
@@ -387,7 +393,7 @@ iterator iterativeTimeManagedSearch*(
                 branchingFactors[iteration - 3])/4.0
 
         let estimatedTimeNextIteration =
-            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float32 * averageBranchingFactor).int64)
+            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float * averageBranchingFactor).int64)
         if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
             break;
 

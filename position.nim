@@ -39,28 +39,6 @@ func coloredPiece*(position: Position, square: Square): ColoredPiece =
 template occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
-func `$`*(position: Position): string =
-    result = boardString(proc (square: Square): Option[string] =
-        if (bitAt[square] and position.occupancy) != 0:
-            return some($position.coloredPiece(square))
-        none(string)
-    ) & "\n"
-
-    result &= (if position.us == white: "White" else: "Black") & " to move"
-
-func debugString*(position: Position): string =    
-    for piece in pawn..king:
-        result &= $piece & ":\n"
-        result &= position[piece].bitboardString & "\n"
-    for color in white..black:
-        result &= $color & ":\n"
-        result &= position[color].bitboardString & "\n"
-    result &= "enPassantCastling:\n"
-    result &= position.enPassantCastling.bitboardString & "\n"
-    result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
-    result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
-    result &= "zobristKey: " & $position.zobristKey
-
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) =
     position[piece] = position[piece] or target
     position[color] = position[color] or target
@@ -381,6 +359,29 @@ func fen*(position: Position): string =
 
     result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2)
 
+func `$`*(position: Position): string =
+    result = boardString(proc (square: Square): Option[string] =
+        if (bitAt[square] and position.occupancy) != 0:
+            return some($position.coloredPiece(square))
+        none(string)
+    ) & "\n"
+    let fenWords = position.fen.splitWhitespace
+    for i in 1..<fenWords.len:
+        result &= fenWords[i] & " "
+
+func debugString*(position: Position): string =    
+    for piece in pawn..king:
+        result &= $piece & ":\n"
+        result &= position[piece].bitboardString & "\n"
+    for color in white..black:
+        result &= $color & ":\n"
+        result &= position[color].bitboardString & "\n"
+    result &= "enPassantCastling:\n"
+    result &= position.enPassantCastling.bitboardString & "\n"
+    result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
+    result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
+    result &= "zobristKey: " & $position.zobristKey
+
 func toMove*(s: string, position: Position): Move =
     let us = position.us
 
@@ -427,32 +428,3 @@ func absoluteMaterial*(position: Position): Value =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
-    # if position[queen] == 0:
-    #     let material = position.material
-    #     let winningColor = if material > 0.Value: position.us elif material < 0.Value: position.enemy else: noColor
-
-    #     if position[pawn] == 0 or (winningColor != noColor and (position[pawn] and position[winningColor]) == 0):
-
-    #         # king + rook/minor piece vs king + rook/minor piece
-    #         let relevantPieces = (position[rook] or position[knight] or position[bishop])
-    #         if (position[white] and relevantPieces).countSetBits == 1 and (position[black] and relevantPieces).countSetBits == 1:            
-    #             return true
-
-    #         if position[rook] == 0:
-
-    #             # king vs king + minor piece
-    #             if (position[bishop] or position[knight]).countSetBits <= 1:
-    #                 return true
-
-    #             # king + knight + bishop/knight vs king + bishop/knight but not king + bishop + bishop vs king + knight
-    #             if winningColor != noColor and
-    #             (position[winningColor] and relevantPieces).countSetBits <= 2 and
-    #             (position[winningColor.opposite] and relevantPieces).countSetBits >= 1 and
-    #             (
-    #                 (position[winningColor] and position[bishop]).countSetBits <= 1 or
-    #                 (position[winningColor.opposite] and position[bishop]) != 0
-    #             ):
-    #                 return true
-    # false
-    
-    # TODO: maybe exand this

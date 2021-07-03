@@ -11,17 +11,14 @@ func halve(historyTable: var HistoryTable) =
             for square in a1..h8:
                 historyTable[color][piece][square] = historyTable[color][piece][square] div 2
 
-func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply, nodeType: NodeType) =
+func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply) =
     if move.isTactical:
         return
 
-    proc op(a, b: int32): int32 =
-        if nodeType == allNode: a - b else: a + b
-
     historyTable[color][move.moved][move.target] = 
-        clamp(
-            op(historyTable[color][move.moved][move.target].int32, depth.int32 * depth.int32),
-            0, maxHistoryTableValue.int32
+        min(
+            historyTable[color][move.moved][move.target].int32 + depth.int32 * depth.int32,
+            maxHistoryTableValue.int32
         ).Value
     
     if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
@@ -46,6 +43,12 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
 
 func get*(killerTable: KillerTable, height: Ply): array[numKillers, Move] =
     killerTable[height]
+
+func isKillerMove*(move: Move, killerTable: KillerTable, height: Ply): bool =
+    for i in 0..<numKillers:
+        if killerTable[height][i] == move:
+            return true
+    false
 
 
 type GameHistory* = object

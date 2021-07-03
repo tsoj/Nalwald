@@ -70,14 +70,24 @@ func mirrorVertically*(square: Square): Square =
     ((square.int8 div 8)*8 + (7 - square.int8 mod 8)).Square
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
-    result = forOpening*(gamePhase - GamePhase.low).T + forEndgame*(GamePhase.high - gamePhase).T
+
+    type I = (when T is SomeInteger: BiggestInt else: float)
+
+    var tmp: I
+    tmp = forOpening.I*(gamePhase - GamePhase.low).I + forEndgame.I*(GamePhase.high - gamePhase).I
     when T is SomeInteger:
-        result = result div (GamePhase.high - GamePhase.low).T
+        tmp = tmp div (GamePhase.high - GamePhase.low).I
         static: doAssert(
             GamePhase.high - GamePhase.low == 32,
             "This makes sure that this division can be done using bitshifts")
     else:
-        result = result / (GamePhase.high - GamePhase.low).T
+        tmp = tmp / (GamePhase.high - GamePhase.low).T
+
+    result = tmp.T    
+    if not((result >= forOpening and result <= forEndgame and forOpening <= forEndgame) or
+    (result <= forOpening and result >= forEndgame and forOpening >= forEndgame)):
+        debugEcho gamePhase, ", ", forOpening, ", ", forEndgame, ", ", result
+        doAssert false
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
     let start = now()
@@ -86,10 +96,10 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         if now() - start >= duration:
             flag[].store(true)
 
-func winningProbability*(centipawn: Value): float32 =
-    1.0/(1.0 + pow(10.0, -(centipawn.float32/400.0)))
+func winningProbability*(centipawn: Value): float =
+    1.0/(1.0 + pow(10.0, -(centipawn.float/400.0)))
 
-func winningProbabilityDerivative*(centipawn: Value): float32 =
-    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float32/400.0)) * pow(5.0, -(centipawn.float32/400.0))) /
-    pow(1.0 + pow(10.0, -(centipawn.float32/400.0)) , 2.0)
+func winningProbabilityDerivative*(centipawn: Value): float =
+    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float/400.0)) * pow(5.0, -(centipawn.float/400.0))) /
+    pow(1.0 + pow(10.0, -(centipawn.float/400.0)) , 2.0)
 

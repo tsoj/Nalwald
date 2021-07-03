@@ -42,7 +42,7 @@ proc uciSearch*(
                     scoreString = " score mate -"
                 else:
                     scoreString = " score mate "
-                scoreString &= $(value.plysUntilCheckmate.float32 / 2.0).ceil.int
+                scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
 
             let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
             echo "info depth ", fmt"{iteration+1:>2}", " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
