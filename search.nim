@@ -186,13 +186,11 @@ func search(
         if value >= beta:
             return value
 
-    let staticEval = state.evaluation(position)
-
     # determine amount of futility reduction
     let futilityReduction = if alpha == -valueInfinity or (not isInNullWindow) or inCheck:
         0.Ply
     else:
-        futilityReduction(alpha - staticEval)
+        futilityReduction(alpha - state.evaluation(position))
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
