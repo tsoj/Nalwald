@@ -89,7 +89,7 @@ func quiesce(
         if seeEval + deltaMargin < alpha and doPruning:
             continue
         
-        # fail high delta pruning
+        # fail-high delta pruning
         if seeEval - failHighDeltaMargin >= beta and doPruning:
             return seeEval - failHighDeltaMargin
 

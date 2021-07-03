@@ -38,6 +38,7 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
   - mobility
   - sliding pieces attacking area around king
   - rook on open file
+  - tapered parameters
   - optimized using gradient descent
 - search:
   - principle variation search
@@ -52,8 +53,8 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
   - late move reductions
   - check extensions
   - delta pruning
-  - fail high delta pruning
-  - futility pruning
+  - fail-high delta pruning
+  - futility reductions
 
 #### License
 
