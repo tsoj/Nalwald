@@ -196,10 +196,6 @@ func search(
 
     let staticEval = state.evaluation(position)
 
-    # check if futility pruning is applicable
-    # let doFutilityPruning = alpha > -valueInfinity and isInNullWindow() and
-    # (not inCheck) and state.evaluation(position) + futilityMargin[min(depth, (futilityMargin.len - 1).Ply)] < alpha
-    
     # determine amount of futility reduction
     let futilityReduction = if alpha == -valueInfinity or (not isInNullWindow) or inCheck:
         0.Ply
@@ -223,19 +219,13 @@ func search(
             newDepth = depth
             newBeta = beta
 
-        # futility pruning
-        # if doFutilityPruning and (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
-        #     if depth < futilityMargin.len:
-        #         continue
-        #     newDepth -= 1
-
         # futility reduction
         if (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
             newDepth -= futilityReduction
             if newDepth <= 1:
                 continue
 
-        # if staticEval + 10.Value >= beta and height < depth:# TODO: test
+        # if staticEval + 10.Value >= beta and height < depth div 2:# TODO: test
         #     newDepth += 1.Ply
 
         # first explore with null window
