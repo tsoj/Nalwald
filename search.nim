@@ -11,18 +11,10 @@ import bitops
 import times
 import threadpool
 import utils
-import math
 
 static: doAssert values[pawn] == 100
 
 const nullMoveDepthReduction = 4.Ply
-const futilityMargin = [
-    0.Ply: 0.Value,
-    1.Ply: 150.Value,
-    2.Ply: 300.Value,
-    3.Ply: 500.Value,
-    4.Ply: 750.Value
-]
 func futilityReduction(value: Value): Ply =
     if value < 150: return 0.Ply
     if value < 300: return 1.Ply
@@ -31,8 +23,8 @@ func futilityReduction(value: Value): Ply =
     if value < 1050: return 4.Ply
     if value < 1400: return 5.Ply
     6.Ply
-
 const deltaMargin = 150
+const failHighDeltaMargin = 100
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -98,8 +90,8 @@ func quiesce(
             continue
         
         # fail high delta pruning
-        if seeEval - deltaMargin >= beta and doPruning:
-            return seeEval - deltaMargin
+        if seeEval - failHighDeltaMargin >= beta and doPruning:
+            return seeEval - failHighDeltaMargin
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -224,9 +216,6 @@ func search(
             newDepth -= futilityReduction
             if newDepth <= 1:
                 continue
-
-        # if staticEval + 10.Value >= beta and height < depth div 2:# TODO: test
-        #     newDepth += 1.Ply
 
         # first explore with null window
         if alpha > -valueInfinity:
