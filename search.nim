@@ -17,12 +17,13 @@ static: doAssert values[pawn] == 100
 const nullMoveDepthReduction = 4.Ply
 func futilityReduction(value: Value): Ply =
     if value < 150: return 0.Ply
-    if value < 300: return 1.Ply
-    if value < 500: return 2.Ply
-    if value < 750: return 3.Ply
-    if value < 1050: return 4.Ply
-    if value < 1400: return 5.Ply
-    6.Ply
+    if value < 200: return 1.Ply
+    if value < 300: return 2.Ply
+    if value < 500: return 3.Ply
+    if value < 750: return 4.Ply
+    if value < 1050: return 5.Ply
+    if value < 1400: return 6.Ply
+    7.Ply
 const deltaMargin = 150
 const failHighDeltaMargin = 100
 
@@ -212,7 +213,7 @@ func search(
         # futility reduction
         if (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
             newDepth -= futilityReduction
-            if newDepth <= 1:
+            if newDepth <= 0:
                 continue
 
         # first explore with null window
