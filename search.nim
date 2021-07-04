@@ -210,7 +210,7 @@ func search(
 
         # futility reduction
         if doFutilityReduction and (not givingCheck) and bestValue > -valueInfinity:
-            newDepth -= futilityReduction(futilityMargin - values[move.captured] - values[move.promoted])
+            newDepth -= futilityReduction(futilityMargin - position.see(move))
             if newDepth <= 0:
                 continue
 
