@@ -188,10 +188,8 @@ func search(
             return value
 
     # determine amount of futility reduction
-    let futilityReduction = if alpha == -valueInfinity or (not isInNullWindow) or inCheck:
-        0.Ply
-    else:
-        futilityReduction(alpha - state.evaluation(position))
+    let doFutilityReduction = not ( alpha == -valueInfinity or (not isInNullWindow) or inCheck)
+    let futilityMargin = alpha - state.evaluation(position)
 
     for move in position.moveIterator(
         tryFirstMove = hashResult.bestMove,
@@ -211,8 +209,8 @@ func search(
             newBeta = beta
 
         # futility reduction
-        if (not move.isTactical) and (not givingCheck) and bestValue > -valueInfinity:
-            newDepth -= futilityReduction
+        if doFutilityReduction and (not givingCheck) and bestValue > -valueInfinity:
+            newDepth -= futilityReduction(futilityMargin - values[move.captured] - values[move.promoted])
             if newDepth <= 0:
                 continue
 
