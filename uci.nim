@@ -25,7 +25,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.10"
+    echo "id name Nalwald 1.TODO"
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
