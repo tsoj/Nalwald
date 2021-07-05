@@ -14,7 +14,6 @@ import utils
 
 static: doAssert values[pawn] == 100
 
-const nullMoveDepthReduction = 4.Ply
 func futilityReduction(value: Value): Ply =
     if value < 150: return 0.Ply
     if value < 200: return 1.Ply
