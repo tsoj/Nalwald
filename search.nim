@@ -187,7 +187,7 @@ func search(
             return value
 
     # determine amount of futility reduction
-    let doFutilityReduction = not ( alpha == -valueInfinity or (not isInNullWindow) or inCheck)
+    let doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.Value and not inCheck
     let futilityMargin = alpha - state.evaluation(position)
 
     for move in position.moveIterator(
