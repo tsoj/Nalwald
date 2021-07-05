@@ -181,7 +181,7 @@ func search(
         let value = -newPosition.search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
-            depth = depth - nullMoveDepthReduction, height = height + 3.Ply
+            depth = depth - 2.Ply - depth div 3.Ply, height = height + 3.Ply
             # height + 3 is not a bug, it somehow improves the performance by ~20 Elo
         )
         if value >= beta:

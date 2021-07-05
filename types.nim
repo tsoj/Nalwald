@@ -75,6 +75,10 @@ func `-`*(a: Ply, b: Ply): Ply =
     max(a.int16 - b.int16, Ply.low.int16).Ply
 func `+`*(a: Ply, b: Ply): Ply =
     min(a.int16 + b.int16, Ply.high.int16).Ply
+func `-=`*(a: var Ply, b: Ply) =
+    a = a - b
+func `+=`*(a: var Ply, b: Ply) =
+    a = a + b
 
 const values*: array[Piece, Value] = [
     pawn: 100.Value,
