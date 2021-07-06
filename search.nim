@@ -23,11 +23,6 @@ func futilityReduction(value: Value): Ply =
     if value < 1050: return 5.Ply
     if value < 1400: return 6.Ply
     7.Ply
-func hashResultMargin(depthDifference: Ply): Value =
-    if depthDifference >= 5.Ply: return values[king]
-    depthDifference.Value * 200.Value
-
-
 const deltaMargin = 150
 const failHighDeltaMargin = 100
 
@@ -159,15 +154,14 @@ func search(
         lmrMoveCounter = 0
 
     # update alpha, beta or value based on hash table result
-    if (not hashResult.isEmpty) and height > 0 and alpha > -valueInfinity:
-        let margin = hashResultMargin(depth - hashResult.depth)
+    if (not hashResult.isEmpty) and hashResult.depth >= depth and height > 0 and alpha > -valueInfinity:
         case hashResult.nodeType:
         of exact:
-            if hashResult.depth >= depth: return hashResult.value
+            return hashResult.value
         of lowerBound:
-            alpha = max(alpha, hashResult.value - margin)
+            alpha = max(alpha, hashResult.value)
         of upperBound:
-            beta = min(beta, hashResult.value + margin)
+            beta = min(beta, hashResult.value)
         else:
             assert false
         if alpha >= beta:
