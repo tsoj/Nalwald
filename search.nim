@@ -25,6 +25,10 @@ func futilityReduction(value: Value): Ply =
     7.Ply
 const deltaMargin = 150
 const failHighDeltaMargin = 100
+func hashResultMargin(depthDifference: Ply): Value =
+    if depthDifference >= 5.Ply: return values[king]
+    depthDifference.Value * 200.Value
+
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -164,6 +168,19 @@ func search(
             assert false
         if alpha >= beta:
             return alpha
+
+    let margin = hashResultMargin(depth - hashResult.depth)
+    let errorAlpha = if hashResult.isEmpty or hashResult.nodeType == upperBound:
+        alpha
+    else:
+        max(alpha, hashResult.value - margin)
+    let errorBeta = if hashResult.isEmpty or hashResult.nodeType != upperBound:
+        beta
+    else:
+        min(beta, hashResult.value + margin)
+
+    if errorAlpha >= errorBeta:
+        return errorAlpha
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
