@@ -156,31 +156,30 @@ func search(
         lmrMoveCounter = 0
 
     # update alpha, beta or value based on hash table result
-    if (not hashResult.isEmpty) and hashResult.depth >= depth and height > 0 and alpha > -valueInfinity:
-        case hashResult.nodeType:
-        of exact:
-            return hashResult.value
-        of lowerBound:
-            alpha = max(alpha, hashResult.value)
-        of upperBound:
-            beta = min(beta, hashResult.value)
-        else:
-            assert false
-        if alpha >= beta:
-            return alpha
-
-    let margin = hashResultMargin(depth - hashResult.depth)
-    let errorAlpha = if hashResult.isEmpty or hashResult.nodeType == upperBound:
-        alpha
-    else:
-        max(alpha, hashResult.value - margin)
-    let errorBeta = if hashResult.isEmpty or hashResult.nodeType != upperBound:
-        beta
-    else:
-        min(beta, hashResult.value + margin)
-
-    if errorAlpha >= errorBeta:
-        return errorAlpha
+    if (not hashResult.isEmpty) and height > 0 and (alpha > -valueInfinity or beta < valueInfinity):
+        if hashResult.depth >= depth:
+            case hashResult.nodeType:
+            of exact:
+                return hashResult.value
+            of lowerBound:
+                alpha = max(alpha, hashResult.value)
+            of upperBound:
+                beta = min(beta, hashResult.value)
+            else:
+                assert false
+            if alpha >= beta:
+                return alpha
+        elif false:    
+            let margin = hashResultMargin(depth - hashResult.depth)
+            var
+                noisyAlpha = alpha
+                noisyBeta = beta
+            if hashResult.nodeType != upperBound:
+                noisyAlpha = max(noisyAlpha, hashResult.value - margin)
+            if hashResult.nodeType == upperBound:
+                noisyBeta = min(noisyBeta, hashResult.value + margin)
+            if noisyAlpha >= noisyBeta:
+                return noisyAlpha    
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
