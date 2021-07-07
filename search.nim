@@ -45,7 +45,6 @@ func update(state: var SearchState, position: Position, bestMove: Move, depth, h
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
-
 func quiesce(
     position: Position,
     state: var SearchState,
@@ -114,7 +113,6 @@ func materialQuiesce*(position: Position): Value =
         evaluation: material
     )
     position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
-
 
 func search(
     position: Position,
