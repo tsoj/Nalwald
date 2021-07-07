@@ -169,7 +169,7 @@ func search(
                 assert false
             if alpha >= beta:
                 return alpha
-        elif false:    
+        else:    
             let margin = hashResultMargin(depth - hashResult.depth)
             var
                 noisyAlpha = alpha
