@@ -4,7 +4,6 @@ import strutils
 import atomics
 import times
 import os
-import math
 
 func boardString*(f: proc(square: Square): Option[string]): string =
     result = " _ _ _ _ _ _ _ _\n"
@@ -95,11 +94,3 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         sleep(5)
         if now() - start >= duration:
             flag[].store(true)
-
-func winningProbability*(centipawn: Value): float =
-    1.0/(1.0 + pow(10.0, -(centipawn.float/400.0)))
-
-func winningProbabilityDerivative*(centipawn: Value): float =
-    (ln(10.0) * pow(2.0, -2.0 - (centipawn.float/400.0)) * pow(5.0, -(centipawn.float/400.0))) /
-    pow(1.0 + pow(10.0, -(centipawn.float/400.0)) , 2.0)
-

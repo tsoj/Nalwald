@@ -2,7 +2,7 @@ import ../position
 import ../evalParameters
 import strutils
 import ../evaluation
-import ../utils
+import winningProbability
 
 type Entry* = object
     position*: Position

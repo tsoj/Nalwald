@@ -1,7 +1,7 @@
 import ../evalParameters
 import evalParametersUtils
 import ../evaluation
-import ../utils
+import winningProbability
 import ../position
 import ../types
 

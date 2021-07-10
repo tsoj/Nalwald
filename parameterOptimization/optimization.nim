@@ -7,6 +7,7 @@ import times
 import strformat
 import startingParameters
 import dataUtils
+import winningProbability
 
 proc optimize(
     start: EvalParametersFloat,
@@ -16,15 +17,18 @@ proc optimize(
     maxIterations = int.high,
     batchSize = int.high,
     # Only one optimization run to omit over specialization.
-    numReIterations = int.high,
+    numReIterations = 1,
     randomAdditions = 15.0,
     discount = 0.9
 ): EvalParameters =
     var batchSize = batchSize
 
-
     var finalSolution: EvalParametersFloat
     var finalError = float.high
+
+
+    proc getError(): float = start.convert.error(data)
+    optimizeK(getError = getError)
 
     var bestSolution: EvalParametersFloat = start
     for reIteration in 0..<numReIterations:
@@ -39,6 +43,8 @@ proc optimize(
 
         var previousGradient: EvalParametersFloat 
         for j in 0..maxIterations:
+            optimizeK(getError = getError, suppressOutput = true)
+
             var shuffledData = data
             shuffledData.shuffle()
             var numBatches = shuffledData.len div batchSize
@@ -71,7 +77,7 @@ proc optimize(
                 
                 debugEcho(
                     "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
-                    ", error: ", fmt"{error:>9.7f}", ", lr: ", lr
+                    ", error: ", fmt"{error:>9.7f}", ", lr: ", lr, ", k: ", fmt"{getK():.7f}"
                 )
 
                 if error >= bestError and lr >= minLearningRate:
