@@ -256,6 +256,7 @@ func search(
 
         # re-search with full window and full depth
         if value > alpha and newDepth < depth:
+            newDepth = depth
             value = -newPosition.search(
                 state,
                 alpha = -beta, beta = -alpha,
@@ -273,6 +274,8 @@ func search(
         if value > alpha:
             nodeType = pvNode
             alpha = value
+        else:
+            state.historyTable.update(move, position.us, newDepth, weakMove = true)
 
     if moveCounter == 0:
         # checkmate

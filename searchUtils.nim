@@ -1,31 +1,35 @@
 import move
 import types
 import position
+import math
 
-type HistoryTable* = array[white..black, array[pawn..king, array[a1..h8, Value]]]
-const maxHistoryTableValue = 20000.Value
+type HistoryTable* = array[white..black, array[pawn..king, array[a1..h8, float]]]
+const maxHistoryTableValue = 20000.0
+static: doAssert maxHistoryTableValue < valueInfinity.float
 
 func halve(historyTable: var HistoryTable) =
     for color in white..black:
         for piece in pawn..king:
             for square in a1..h8:
-                historyTable[color][piece][square] = historyTable[color][piece][square] div 2
+                historyTable[color][piece][square] = historyTable[color][piece][square] / 2.0
 
-func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply) =
+func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Ply, weakMove = false) =
     if move.isTactical:
         return
 
+    let addition: float = if weakMove: -(depth.float^2)/25.0 else: depth.float^2
+
     historyTable[color][move.moved][move.target] = 
-        min(
-            historyTable[color][move.moved][move.target].int32 + depth.int32 * depth.int32,
-            maxHistoryTableValue.int32
-        ).Value
+        clamp(
+            historyTable[color][move.moved][move.target] + addition,
+            -maxHistoryTableValue, maxHistoryTableValue
+        )
     
     if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
         historyTable.halve
 
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
-    historyTable[color][move.moved][move.target]
+    historyTable[color][move.moved][move.target].Value
 
 const numKillers* = 2
 
