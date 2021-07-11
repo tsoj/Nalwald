@@ -19,13 +19,12 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
 
     let addition: float = if weakMove: -(depth.float^2)/25.0 else: depth.float^2
 
-    historyTable[color][move.moved][move.target] = 
-        clamp(
-            historyTable[color][move.moved][move.target] + addition,
-            -maxHistoryTableValue, maxHistoryTableValue
-        )
+    historyTable[color][move.moved][move.target] =  clamp(
+        historyTable[color][move.moved][move.target] + addition,
+        -maxHistoryTableValue, maxHistoryTableValue
+    )
     
-    if historyTable[color][move.moved][move.target] >= maxHistoryTableValue:
+    if historyTable[color][move.moved][move.target].abs >= maxHistoryTableValue:
         historyTable.halve
 
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
