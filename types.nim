@@ -23,7 +23,7 @@ type
         piece*: Piece
         color*: Color
     Ply* = 0.int8..(int8.high)
-    Value* = int16
+    Value* = int32
     NodeType* = enum
         pvNode,
         allNode,
@@ -90,8 +90,8 @@ const values*: array[Piece, Value] = [
     noPiece: 0.Value
 ]
 static: doAssert values[king] > 8*values[pawn] + 2*values[knight] + 2*values[bishop] + 2*values[rook] + values[queen]
-const valueInfinity* = Value.high
-static: doAssert -Value.high >= Value.low
+const valueInfinity* = 1_000_000.Value
+static: doAssert -valueInfinity <= valueInfinity
 const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Ply
 static: doAssert valueCheckmate > values[king]*2
 
@@ -101,7 +101,7 @@ static: doAssert Ply.low.checkmateValue < valueInfinity
 static: doAssert Ply.high.checkmateValue > values[king]
 
 func plysUntilCheckmate*(value: Value): Ply =
-    (-(((abs(value.int16) - (valueCheckmate.int16 + Ply.high.int16))))).Ply
+    (-(((abs(value.int32) - (valueCheckmate.int32 + Ply.high.int32))))).Ply
 
 static: doAssert 0.Ply.checkmateValue.plysUntilCheckmate == 0.Ply and
     1.Ply.checkmateValue.plysUntilCheckmate == 1.Ply and
