@@ -36,26 +36,29 @@ func `$`*(a: EvalParameters): string =
 
         result &= "    ],\n"
         
-        result &= "    " & "passedPawnTable: ["
+        result &= "    passedPawnTable: ["
         for i in 0..7:
             result &= fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
         result &= "],\n"
-        
+
+        result &= "    mobilityMultiplier: ["
+        for piece in knight..queen:
+            result &= $piece & ": " & fmt"{a[phase].mobilityMultiplier[piece]:>5.2f}" & ", "
+        result &= "],\n"
+
+        result &= "    bonusTargetingKingArea: ["
+        for piece in bishop..queen:
+            result &= $piece & ": " & fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
+        result &= "],\n"
+
         result &= "    bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value"
         result &= ",\n    bonusPawnHasTwoNeighbors: " & fmt"{a[phase].bonusPawnHasTwoNeighbors:>3}" & ".Value"
         result &= ",\n    bonusBothBishops: " & fmt"{a[phase].bonusBothBishops:>3}" & ".Value"
         result &= ",\n    bonusRookOnOpenFile: " & fmt"{a[phase].bonusRookOnOpenFile:>3}" & ".Value"
-        result &= ",\n    mobilityMultiplierKnight: " & fmt"{a[phase].mobilityMultiplierKnight:>5.2f}"
-        result &= ",\n    mobilityMultiplierBishop: " & fmt"{a[phase].mobilityMultiplierBishop:>5.2f}"
-        result &= ",\n    mobilityMultiplierRook: " & fmt"{a[phase].mobilityMultiplierRook:>5.2f}"
-        result &= ",\n    mobilityMultiplierQueen: " & fmt"{a[phase].mobilityMultiplierQueen:>5.2f}"
-        result &= ",\n    bonusBishopTargetingKingArea: " & fmt"{a[phase].bonusBishopTargetingKingArea:>3}" & ".Value"
-        result &= ",\n    bonusRookTargetingKingArea: " & fmt"{a[phase].bonusRookTargetingKingArea:>3}" & ".Value"
-        result &= ",\n    bonusQueenTargetingKingArea: " & fmt"{a[phase].bonusQueenTargetingKingArea:>3}" & ".Value"
         result &= ",\n    kingSafetyMultiplier: " & fmt"{a[phase].kingSafetyMultiplier:>5.2f}"
         result &= "\n    ),\n"
 
-    result &= "\n]"
+    result &= "]\n"
 
 func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: var float, b: float)) =
     for phase in Phase:
@@ -73,13 +76,10 @@ func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: 
         op(a[phase].bonusPawnHasTwoNeighbors, b[phase].bonusPawnHasTwoNeighbors)
         op(a[phase].bonusBothBishops, b[phase].bonusBothBishops)
         op(a[phase].bonusRookOnOpenFile, b[phase].bonusRookOnOpenFile)
-        op(a[phase].mobilityMultiplierKnight, b[phase].mobilityMultiplierKnight)
-        op(a[phase].mobilityMultiplierBishop, b[phase].mobilityMultiplierBishop)
-        op(a[phase].mobilityMultiplierRook, b[phase].mobilityMultiplierRook)
-        op(a[phase].mobilityMultiplierQueen, b[phase].mobilityMultiplierQueen)
-        op(a[phase].bonusBishopTargetingKingArea, b[phase].bonusBishopTargetingKingArea)
-        op(a[phase].bonusRookTargetingKingArea, b[phase].bonusRookTargetingKingArea)
-        op(a[phase].bonusQueenTargetingKingArea, b[phase].bonusQueenTargetingKingArea)
+        for piece in knight..queen:
+            op(a[phase].mobilityMultiplier[piece], b[phase].mobilityMultiplier[piece])        
+        for piece in bishop..queen:
+            op(a[phase].bonusTargetingKingArea[piece], b[phase].bonusTargetingKingArea[piece])
         op(a[phase].kingSafetyMultiplier, b[phase].kingSafetyMultiplier)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
@@ -109,13 +109,10 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
         a[phase].bonusPawnHasTwoNeighbors += r
         a[phase].bonusBothBishops += r
         a[phase].bonusRookOnOpenFile += r
-        a[phase].mobilityMultiplierKnight += r
-        a[phase].mobilityMultiplierBishop += r
-        a[phase].mobilityMultiplierRook += r
-        a[phase].mobilityMultiplierQueen += r
-        a[phase].bonusBishopTargetingKingArea += r
-        a[phase].bonusRookTargetingKingArea += r
-        a[phase].bonusQueenTargetingKingArea += r
+        for piece in knight..queen:
+            a[phase].mobilityMultiplier[piece] += r
+        for piece in bishop..queen:
+            a.bonusTargetingKingArea[piece] += r
         a[phase].kingSafetyMultiplier += r
 
 proc randomEvalParametersFloat*(max = 5.0): EvalParametersFloat =

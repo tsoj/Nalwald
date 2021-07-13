@@ -12,7 +12,7 @@ func winningProbabilityDerivative*(centipawn: Value): float =
         (ln(10.0) * pow(2.0, -2.0 - ((k*centipawn.float)/400.0)) * pow(5.0, -((k*centipawn.float)/400.0))) /
         pow(1.0 + pow(10.0, -((k*centipawn.float)/400.0)) , 2.0)
 
-
+#TODO
 # func winningProbability*(centipawn: Value): float =
 #     {.cast(noSideEffect).}: 1.0/(1.0 + pow(2.0, -k * centipawn.float))
 

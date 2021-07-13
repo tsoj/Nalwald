@@ -153,14 +153,9 @@ const startingEvalParameters* = block:
             bonusPawnHasTwoNeighbors: 5.0,
             bonusBothBishops: 10.0,
             bonusRookOnOpenFile: 5.0,
-            mobilityMultiplierKnight: 2.0,
-            mobilityMultiplierBishop: 3.0,
-            mobilityMultiplierRook: 4.0,
-            mobilityMultiplierQueen: 2.0,
+            mobilityMultiplier: [knight: 2.0, bishop: 3.0, rook: 4.0, queen: 2.0],
+            bonusTargetingKingArea: [bishop: 5.0, rook: 5.0, queen: 8.0],
             kingSafetyMultiplier: -2.5,
-            bonusBishopTargetingKingArea: 5.0,
-            bonusRookTargetingKingArea: 5.0,
-            bonusQueenTargetingKingArea: 8.0
         )
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:

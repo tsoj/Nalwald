@@ -13,13 +13,8 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     bonusPawnHasTwoNeighbors*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType
-    mobilityMultiplierKnight*: float
-    mobilityMultiplierBishop*: float
-    mobilityMultiplierRook*: float
-    mobilityMultiplierQueen*: float
-    bonusBishopTargetingKingArea*: ValueType
-    bonusRookTargetingKingArea*: ValueType
-    bonusQueenTargetingKingArea*: ValueType
+    mobilityMultiplier*: array[knight..queen, float]
+    bonusTargetingKingArea*: array[bishop..queen, ValueType]
     kingSafetyMultiplier*: float
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
@@ -43,13 +38,9 @@ func convertTemplate[InValueType, OutValueType](
     result.bonusPawnHasTwoNeighbors = a.bonusPawnHasTwoNeighbors.OutValueType
     result.bonusBothBishops = a.bonusBothBishops.OutValueType
     result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.OutValueType
-    result.mobilityMultiplierKnight = a.mobilityMultiplierKnight
-    result.mobilityMultiplierBishop = a.mobilityMultiplierBishop
-    result.mobilityMultiplierRook = a.mobilityMultiplierRook
-    result.mobilityMultiplierQueen = a.mobilityMultiplierQueen
-    result.bonusBishopTargetingKingArea = a.bonusBishopTargetingKingArea.OutValueType
-    result.bonusRookTargetingKingArea = a.bonusRookTargetingKingArea.OutValueType
-    result.bonusQueenTargetingKingArea = a.bonusQueenTargetingKingArea.OutValueType
+    result.mobilityMultiplier = a.mobilityMultiplier
+    for piece in bishop..queen:
+        result.bonusTargetingKingArea[piece] = a.bonusTargetingKingArea[piece].OutValueType
     result.kingSafetyMultiplier = a.kingSafetyMultiplier
 
 func convertTemplate[InValueType, OutValueType](a: EvalParametersTemplate[InValueType]): EvalParametersTemplate[OutValueType] =
@@ -74,11 +65,8 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float], b: float) =
     a.bonusPawnHasTwoNeighbors *= b
     a.bonusBothBishops *= b
     a.bonusRookOnOpenFile *= b
-    a.mobilityMultiplierKnight *= b
-    a.mobilityMultiplierBishop *= b
-    a.mobilityMultiplierRook *= b
-    a.mobilityMultiplierQueen *= b
-    a.bonusBishopTargetingKingArea *= b
-    a.bonusRookTargetingKingArea *= b
-    a.bonusQueenTargetingKingArea *= b
+    for piece in knight..queen:
+        a.mobilityMultiplier[piece] *= b
+    for piece in bishop..queen:
+        a.bonusTargetingKingArea[piece] *= b
     a.kingSafetyMultiplier *= b
