@@ -1,6 +1,5 @@
 import ../evalParameters
 import evalParametersUtils
-import strutils
 import gradient
 import random
 import times
@@ -8,6 +7,7 @@ import strformat
 import startingParameters
 import dataUtils
 import winningProbability
+import terminal
 
 proc optimize(
     start: EvalParametersFloat,
@@ -16,7 +16,7 @@ proc optimize(
     minLearningRate = 10.0,
     maxIterations = int.high,
     batchSize = int.high,
-    # Only one optimization run to omit over specialization.
+    # Only one optimization run to omit over specialization and because more don't work anyway
     numReIterations = 1,
     randomAdditions = 15.0,
     discount = 0.9
@@ -34,12 +34,12 @@ proc optimize(
     for reIteration in 0..<numReIterations:
         batchSize = min(batchSize, data.len)
 
-        debugEcho "-------------------"
-        debugEcho "batchsize: ", batchSize
+        echo "-------------------"
+        echo "batchsize: ", batchSize
 
         var lr = lr
         var bestError = bestSolution.convert.error(data)
-        debugEcho "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
+        echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
         var previousGradient: EvalParametersFloat 
         for j in 0..maxIterations:
@@ -56,10 +56,27 @@ proc optimize(
                 var currentSolution = bestSolution
                 let bestSolutionConverted = bestSolution.convert
                 var batchWeight: float = 0.0
+                
+                let currentBatchSize = min((i+1)*batchSize - 1, shuffledData.len - 1) - (i*batchSize)
+
+                eraseLine()
+                stdout.write("[")
+                for p in 1..20:
+                    stdout.write("-")
+                stdout.write("]")
+                setCursorXPos(1)
+                stdout.flushFile
+
+                var p = 0
                 for entry in shuffledData.toOpenArray(
                     first = i*batchSize,
-                    last = min((i+1)*batchSize - 1, shuffledData.len - 1)
+                    last = i*batchSize + currentBatchSize
                 ):
+                    p += 1
+                    if p mod (currentBatchSize div 20) == 0:
+                        stdout.write("#")
+                        stdout.flushFile
+                    
                     batchWeight += entry.weight
                     gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
                 # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
@@ -75,7 +92,9 @@ proc optimize(
 
                 var error = currentSolution.convert.error(data)
                 
-                debugEcho(
+                #setCursorXPos(0)
+                eraseLine()
+                echo(
                     "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
                     ", error: ", fmt"{error:>9.7f}", ", lr: ", lr, ", k: ", fmt"{getK():.7f}"
                 )
@@ -92,7 +111,7 @@ proc optimize(
                     error = currentSolution.convert.error(data)
 
                     if error < bestError:
-                        debugEcho(
+                        echo(
                             "             ↺, batch: ", i, "/", numBatches - 1,
                             ", error: ", fmt"{error:>9.7f}", ", lr: ", lr*0.5
                         )
@@ -107,7 +126,7 @@ proc optimize(
             finalSolution = bestSolution
             finalError = bestError
             let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-            debugEcho "filename: ", filename
+            echo "filename: ", filename
             writeFile(filename, $finalSolution.convert)
 
         bestSolution = finalSolution
