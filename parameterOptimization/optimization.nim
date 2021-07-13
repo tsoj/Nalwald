@@ -92,7 +92,6 @@ proc optimize(
 
                 var error = currentSolution.convert.error(data)
                 
-                #setCursorXPos(0)
                 eraseLine()
                 echo(
                     "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,

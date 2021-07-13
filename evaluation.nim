@@ -300,21 +300,6 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     var value = [opening: 0.Value, endgame: 0.Value]
 
-    # let pawnAttacks: array[white..black, Bitboard] = block:
-    #     var pawnAttacks: array[white..black, Bitboard]
-    #     for color in white..black:
-    #         var tmpOccupancy = position[pawn] and position[color]
-    #         while tmpOccupancy != 0:
-    #             let square = tmpOccupancy.removeTrailingOneBit.Square
-    #             pawnAttacks[color] = pawnAttacks[color] or pawnCaptureAttackTable[color][square]
-    #     pawnAttacks
-        
-    # value[opening] += pawnAttacks[white].countSetBits.Value
-    # value[endgame] += pawnAttacks[black].countSetBits.Value
-
-    #TODO: eval parameter number of pawnattacks
-    #TODO: mobility but not on attacked by pawn squares
-
     let kingSquare = [white: position.kingSquare(white), black: position.kingSquare(black)]
     for piece in pawn..king:
         value += position.evaluatePieceType(piece, evalParameters, kingSquare, gradient)
