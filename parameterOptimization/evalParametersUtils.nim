@@ -48,7 +48,7 @@ func `$`*(a: EvalParameters): string =
 
         result &= "    bonusTargetingKingArea: ["
         for piece in bishop..queen:
-            result &= $piece & ": " & fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
+            result &= $piece & ": " & fmt"{a[phase].bonusTargetingKingArea[piece]:>3}" & ".Value, "
         result &= "],\n"
 
         result &= "    bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value"
@@ -112,7 +112,7 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
         for piece in knight..queen:
             a[phase].mobilityMultiplier[piece] += r
         for piece in bishop..queen:
-            a.bonusTargetingKingArea[piece] += r
+            a[phase].bonusTargetingKingArea[piece] += r
         a[phase].kingSafetyMultiplier += r
 
 proc randomEvalParametersFloat*(max = 5.0): EvalParametersFloat =

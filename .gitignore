@@ -1,7 +1,5 @@
-Nalwald
-Nalwald-modern
-Nalwald.exe
-Nalwald-modern.exe
+Nalwald*
+!Nalwald.nim
 perf.data
 callgrind.out.*
 profile_results.txt
