@@ -23,11 +23,19 @@ func futilityReduction(value: Value): Ply =
     if value < 1050: return 5.Ply
     if value < 1400: return 6.Ply
     7.Ply
-const deltaMargin = 150
-const failHighDeltaMargin = 100
+
+
 func hashResultMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return values[king]
     depthDifference.Value * 200.Value
+
+func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
+    const halfLife = 35
+    ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
+
+const
+    deltaMargin = 150
+    failHighDeltaMargin = 100
 
 
 type SearchState = object
@@ -234,7 +242,8 @@ func search(
         (not (move.isTactical or inCheck or givingCheck)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             const depthDivider = [60, 30, 25, 20, 15, 10, 9, 8, 7, 6, 6, 5, 5, 5, 4]
-            newDepth -= 1.Ply + newDepth div depthDivider[min(lmrMoveCounter, depthDivider.high)].Ply
+            newDepth = lmrDepth(newDepth, lmrMoveCounter)
+            #1.Ply + newDepth div depthDivider[min(lmrMoveCounter, depthDivider.high)].Ply
             lmrMoveCounter += 1
 
         if state.stop[].load:
