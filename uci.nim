@@ -179,6 +179,8 @@ proc uciLoop*() =
                 perftTest(100_000_000, testZobristKeys = false)
             of "eval":
                 echo uciState.position.absoluteEvaluate, " centipawns"
+            of "flip":
+                uciState.position = uciState.position.flipColors()
 
             else:
                 if params[0] != "help": echo "Unknown command: ", params[0]
@@ -197,6 +199,7 @@ proc uciLoop*() =
                 echo "* test"
                 echo "* benchmark"
                 echo "* eval"
+                echo "* flip"
         except:
             echo "info string ", getCurrentExceptionMsg()
 

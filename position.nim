@@ -428,3 +428,15 @@ func absoluteMaterial*(position: Position): Value =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+
+func flipColors*(position: Position): Position =
+    result = Position(
+        colors: [white: position[black].mirror, black: position[white].mirror],
+        enPassantCastling: position.enPassantCastling.mirror,
+        us: position.enemy, enemy: position.us,
+        halfmovesPlayed: position.halfmovesPlayed,
+        halfmoveClock: position.halfmoveClock
+    )
+    for piece in pawn..king:
+        result[piece] = position[piece].mirror
+    result.zobristKey = result.calculateZobristKey

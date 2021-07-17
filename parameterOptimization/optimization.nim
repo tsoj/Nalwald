@@ -59,9 +59,11 @@ proc optimize(
                 
                 let currentBatchSize = min((i+1)*batchSize - 1, shuffledData.len - 1) - (i*batchSize)
 
+                const numProgressBarPoints = 100
+
                 eraseLine()
                 stdout.write("[")
-                for p in 1..20:
+                for p in 1..numProgressBarPoints:
                     stdout.write("-")
                 stdout.write("]")
                 setCursorXPos(1)
@@ -73,7 +75,7 @@ proc optimize(
                     last = i*batchSize + currentBatchSize
                 ):
                     p += 1
-                    if p mod (currentBatchSize div 20) == 0:
+                    if p mod (currentBatchSize div numProgressBarPoints) == 0:
                         stdout.write("#")
                         stdout.flushFile
                     

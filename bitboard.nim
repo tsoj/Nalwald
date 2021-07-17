@@ -22,6 +22,12 @@ func bitboardString*(bitboard: Bitboard): string =
         none(string)
     )
 
+func mirror*(bitboard: Bitboard): Bitboard =
+    result = 0
+    for square in a1..h8:
+        if (bitAt[square] and bitboard) != 0:
+            result = result or bitAt[square.mirror]
+
 const ranks*: array[a1..h8, Bitboard] = block:
     var ranks: array[a1..h8, Bitboard]
     for square in a1..h8:

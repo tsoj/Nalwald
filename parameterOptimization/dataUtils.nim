@@ -3,6 +3,7 @@ import ../evalParameters
 import strutils
 import ../evaluation
 import winningProbability
+import error
 
 type Entry* = object
     position*: Position
@@ -27,7 +28,7 @@ proc loadData*(data: var seq[Entry], filename: string, weight: float, suppressOu
 
 func error*(evalParameters: EvalParameters, entry: Entry): float =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
-    (entry.outcome - estimate)*(entry.outcome - estimate)*entry.weight
+    error(entry.outcome, estimate)*entry.weight
 
 func error*(evalParameters: EvalParameters, data: openArray[Entry]): float =
     result = 0.0

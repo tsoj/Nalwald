@@ -4,6 +4,7 @@ import ../evaluation
 import winningProbability
 import ../position
 import ../types
+import error
 
 func addGradient*(
     gradient: var EvalParametersFloat,
@@ -13,7 +14,7 @@ func addGradient*(
 ) =
     var currentGradient: EvalParametersFloat
     let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
-    let g: float = weight*2.0*(outcome - currentValue.winningProbability) * currentValue.winningProbabilityDerivative
+    var g: float = weight * errorDerivative(outcome, currentValue.winningProbability) * currentValue.winningProbabilityDerivative
     currentGradient *= g
     gradient += currentGradient
 
