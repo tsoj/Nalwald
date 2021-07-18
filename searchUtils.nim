@@ -48,13 +48,6 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
 func get*(killerTable: KillerTable, height: Ply): array[numKillers, Move] =
     killerTable[height]
 
-func isKillerMove*(move: Move, killerTable: KillerTable, height: Ply): bool =
-    for i in 0..<numKillers:
-        if killerTable[height][i] == move:
-            return true
-    false
-
-
 type GameHistory* = object
     staticHistory: seq[uint64]
     dynamicHistory: array[Ply, uint64]
