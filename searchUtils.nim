@@ -18,7 +18,7 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
         return
 
     var addition: float = depth.float^2
-    addition = if weakMove: -(addition)/25.0 else: addition
+    addition *= (if weakMove: -1.0/25.0 else: 1.0)
 
     historyTable[color][move.moved][move.target] =  clamp(
         historyTable[color][move.moved][move.target] + addition,
