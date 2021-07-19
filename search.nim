@@ -35,7 +35,7 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
 
 const
     deltaMargin = 150
-    failHighDeltaMargin = 100
+    failHighDeltaMargin = 50
 
 
 type SearchState = object
