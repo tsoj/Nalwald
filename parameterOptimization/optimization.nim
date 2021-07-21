@@ -43,7 +43,6 @@ proc optimize(
 
         var previousGradient: EvalParametersFloat 
         for j in 0..maxIterations:
-            optimizeK(getError = getError, suppressOutput = true)
 
             var shuffledData = data
             shuffledData.shuffle()

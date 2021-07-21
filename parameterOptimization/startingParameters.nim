@@ -151,6 +151,7 @@ const startingEvalParameters* = block:
         startingEvalParameters[phase] = SinglePhaseEvalParametersTemplate[float](
             bonusIsolatedPawn: -10.0,
             bonusPawnHasTwoNeighbors: 5.0,
+            bonusKnightAttackingPiece: 5.0,
             bonusBothBishops: 10.0,
             bonusRookOnOpenFile: 5.0,
             mobilityMultiplier: [knight: 2.0, bishop: 3.0, rook: 4.0, queen: 2.0],

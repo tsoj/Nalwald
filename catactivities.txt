@@ -1,0 +1,362 @@
+> help
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> position startpos
+> go infinite
+> stop
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> position startpos
+> go infinite
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen r1bqk2r/pp3ppp/2n2n2/3p4/1b6/P1N3P1/1P2PPBP/R1BQK1NR b KQkq - 0 9
+> go infinite
+> stop
+> ucinewgame
+> position fen r1bq1rk1/pp3ppp/2n5/3p4/4n3/P1P2NP1/4PPBP/R1BQK2R w KQ - 3 12
+> go infinite
+> stop
+> ucinewgame
+> position fen r1b1r1k1/pp3ppp/2n5/q2p4/4n3/P1P1BNP1/2Q1PPBP/R3K2R w KQ - 7 14
+> go infinite
+> stop
+> position fen r1b1r1k1/pp3ppp/2n5/q2p4/4n3/P1P1BNP1/2Q1PPBP/R3K2R w KQ - 7 14 moves f3d4
+> go infinite
+> stop
+> ucinewgame
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2 b7b6
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2 b7b6 f1e1
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2 b7b6 f1e1 a8d8
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2 b7b6 f1e1 a8d8 b2a3
+> go infinite
+> stop
+> position fen r3r1k1/pp3ppp/8/3p1b2/3Bn3/q1P3P1/2Q1PPBP/2R2RK1 w - - 1 18 moves c1a1 a3e7 c2b2 b7b6 f1e1 a8d8 b2a3 d8d7
+> go infinite
+> stop
+> ucinewgame
+> position fen 4r1k1/p1r3pp/1p2bp2/3p4/3Bn1P1/R1P4P/4PPB1/2R3K1 w - - 2 27
+> go infinite
+> stop
+> help
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> position startpos
+> go infinite
+> quit
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen 8/4R3/8/6k1/4bpp1/5n2/5P2/5K2 b - - 9 68
+> go infinite
+> stop
+> position fen 8/4R3/8/6k1/4bpp1/5n2/5P2/5K2 b - - 9 68 moves g5h4
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen rqb1k2r/p3n1pp/Q1pn1p2/1p2p3/4P3/NBP1BN2/P4PPP/3R1RK1 w kq - 3 20
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen 8/8/2r5/1p3p1p/3P2rP/p1P1PKP1/P3R3/1k2B3 w - - 60 95
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> position startpos
+> go nodes 10000000
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen 8/8/4r3/1p3p1p/3Pr2P/p1P1PKP1/P2BR3/1k6 w - - 92 111
+> go infinite
+> stop
+> position fen 8/8/4r3/1p3p1p/3Pr2P/p1P1PKP1/P2BR3/1k6 w - - 92 111 moves d2e1 e4e3 e2e3 e6e3 f3e3 b1a2 d4d5 a2b3 d5d6 a3a2 d6d7 a2a1q d7d8q a1e1 e3f4 e1f2 f4g5 f2g3 g5h5 g3g4 h5h6 b3c3 h4h5 b5b4 d8c7 c3b3 c7e5 b3c2 e5c5 c2d1 c5d5 d1e1 d5c5 g4e4 c5c1 e1f2 c1c5 f2g3 h6g7
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> position startpos
+> go infinite
+> stop
+> ucinewgame
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114
+> go infinite
+> stop
+> ucinewgame
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2 c2d1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4 e1e2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4 e4g4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2 c3b4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114 moves b5b4
+> go infinite
+> stop
+> position fen 4r3/8/8/1p3p1p/3Pr2P/p1P1PKP1/P3RB2/3k4 b - - 99 114
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8 e2e1 d1d2
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8 e2e1
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8 e2e1 d1c2
+> go infinite
+> stop
+> position fen 4r3/8/8/5p1p/1P1Pr2P/p3PKP1/P3RB2/3k4 b - - 0 115 moves e8c8 e2e1 d1c2 e1e2
+> go infinite
+> stop
+> ucinewgame
+> position fen 2r5/8/8/5p1p/1P1Pr2P/p3PKP1/P3R3/2k1B3 b - - 6 118
+> go infinite
+> stop
+> ucinewgame
+> position fen 8/8/8/1P3p1p/3Pr2P/p3PKP1/P3r3/2k1B3 w - - 0 120
+> go infinite
+> stop
+> ucinewgame
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5d5
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5d5 d3c4
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5d5
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5e8
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5e8
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5e8 d3d4
+> go infinite
+> stop
+> position fen 8/8/8/1P1P1p1p/4r2P/p3P1P1/Pk2K3/4B3 b - - 0 121 moves e4e5 e2d3 b2a2 e1c3 e5e8 d3d4 a2b3
+> go infinite
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> quit
+> uci
+> setoption name Contempt value 0
+> setoption name UCI_ShowWDL value true
+> setoption name MultiPV value 3
+> setoption name Hash value 512
+> isready
+> ucinewgame
+> ucinewgame
+> position fen 2q1kb1r/p1r2p2/4bp2/4p3/Pn5P/1P1P4/3BPPBP/1R1Q1KNR b k - 0 18
+> go infinite
+> quit

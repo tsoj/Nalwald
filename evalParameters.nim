@@ -11,6 +11,7 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     passedPawnTable*: array[8, ValueType]
     bonusIsolatedPawn*: ValueType
     bonusPawnHasTwoNeighbors*: ValueType
+    bonusKnightAttackingPiece*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType
     mobilityMultiplier*: array[knight..queen, float]
@@ -36,6 +37,7 @@ func convertTemplate[InValueType, OutValueType](
         result.passedPawnTable[i] = a.passedPawnTable[i].OutValueType
     result.bonusIsolatedPawn = a.bonusIsolatedPawn.OutValueType
     result.bonusPawnHasTwoNeighbors = a.bonusPawnHasTwoNeighbors.OutValueType
+    result.bonusKnightAttackingPiece = a.bonusKnightAttackingPiece.OutValueType
     result.bonusBothBishops = a.bonusBothBishops.OutValueType
     result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.OutValueType
     result.mobilityMultiplier = a.mobilityMultiplier
@@ -63,6 +65,7 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float], b: float) =
         a.passedPawnTable[i] *= b
     a.bonusIsolatedPawn *= b
     a.bonusPawnHasTwoNeighbors *= b
+    a.bonusKnightAttackingPiece *= b
     a.bonusBothBishops *= b
     a.bonusRookOnOpenFile *= b
     for piece in knight..queen:
