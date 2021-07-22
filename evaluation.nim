@@ -143,6 +143,13 @@ func evaluateKnight(
     # mobility
     result += evalParameters.mobility(position, knight, us, enemy, attackMask, gradient)
 
+    # attacking bishop, rook, or queen
+    if (attackMask and position[enemy] and (position[bishop] or position[rook] or position[queen])) != 0:
+        for phase in Phase: result[phase] += evalParameters[phase].bonusKnightAttackingPiece
+
+        when not (gradient is Nothing):
+            for phase in Phase: gradient[phase].bonusKnightAttackingPiece += (if us == black: -1.0 else: 1.0)
+
 #-------------- bishop evaluation --------------#
 
 func evaluateBishop(

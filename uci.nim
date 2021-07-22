@@ -12,7 +12,7 @@ import evaluation
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-    mega = 1_000_000
+    megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1048576
 
@@ -45,7 +45,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 # TODO: fix memory leak
                 echo "WARNING: changing size of hash table more than once may lead to memory leaks"
             uciState.changedHashTableSize = true
-            uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * mega)
+            uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
     else:
         echo "Unknown parameters"
     
@@ -137,7 +137,7 @@ proc uciLoop*() =
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "---- Copyright (c) 2021 Jost Triller ----"
     var uciState = UciState(position: startposFen.toPosition, changedHashTableSize: false)
-    uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * mega)
+    uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:

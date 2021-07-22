@@ -34,29 +34,31 @@ func `$`*(a: EvalParameters): string =
         
             result &= "            ],\n"
 
-        result &= "    ],\n"
+        result &= "        ],\n"
         
-        result &= "    passedPawnTable: ["
+        result &= "        passedPawnTable: ["
         for i in 0..7:
             result &= fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
         result &= "],\n"
 
-        result &= "    mobilityMultiplier: ["
+        result &= "        mobilityMultiplier: ["
         for piece in knight..queen:
             result &= $piece & ": " & fmt"{a[phase].mobilityMultiplier[piece]:>5.2f}" & ", "
         result &= "],\n"
 
-        result &= "    bonusTargetingKingArea: ["
+        result &= "        bonusTargetingKingArea: ["
         for piece in bishop..queen:
             result &= $piece & ": " & fmt"{a[phase].bonusTargetingKingArea[piece]:>3}" & ".Value, "
         result &= "],\n"
 
-        result &= "    bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value"
-        result &= ",\n    bonusPawnHasTwoNeighbors: " & fmt"{a[phase].bonusPawnHasTwoNeighbors:>3}" & ".Value"
-        result &= ",\n    bonusBothBishops: " & fmt"{a[phase].bonusBothBishops:>3}" & ".Value"
-        result &= ",\n    bonusRookOnOpenFile: " & fmt"{a[phase].bonusRookOnOpenFile:>3}" & ".Value"
-        result &= ",\n    kingSafetyMultiplier: " & fmt"{a[phase].kingSafetyMultiplier:>5.2f}"
-        result &= "\n    ),\n"
+        result &= "        bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value,\n"
+        result &= "        bonusPawnHasTwoNeighbors: " & fmt"{a[phase].bonusPawnHasTwoNeighbors:>3}" & ".Value,\n"
+        result &= "        bonusKnightAttackingPiece: " & fmt"{a[phase].bonusKnightAttackingPiece:>3}" & ".Value,\n"
+        result &= "        bonusBothBishops: " & fmt"{a[phase].bonusBothBishops:>3}" & ".Value,\n"
+        result &= "        bonusRookOnOpenFile: " & fmt"{a[phase].bonusRookOnOpenFile:>3}" & ".Value,\n"
+        result &= "        kingSafetyMultiplier: " & fmt"{a[phase].kingSafetyMultiplier:>5.2f}" & "\n"
+
+        result &= "    ),\n"
 
     result &= "]\n"
 
@@ -74,6 +76,7 @@ func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: 
             op(a[phase].passedPawnTable[i], b[phase].passedPawnTable[i])
         op(a[phase].bonusIsolatedPawn, b[phase].bonusIsolatedPawn)
         op(a[phase].bonusPawnHasTwoNeighbors, b[phase].bonusPawnHasTwoNeighbors)
+        op(a[phase].bonusKnightAttackingPiece, b[phase].bonusKnightAttackingPiece)
         op(a[phase].bonusBothBishops, b[phase].bonusBothBishops)
         op(a[phase].bonusRookOnOpenFile, b[phase].bonusRookOnOpenFile)
         for piece in knight..queen:
@@ -107,6 +110,7 @@ proc randomEvalParametersFloat*(a: var EvalParametersFloat, max = 5.0) =
             a[phase].passedPawnTable[i] += r
         a[phase].bonusIsolatedPawn += r
         a[phase].bonusPawnHasTwoNeighbors += r
+        a[phase].bonusKnightAttackingPiece += r
         a[phase].bonusBothBishops += r
         a[phase].bonusRookOnOpenFile += r
         for piece in knight..queen:

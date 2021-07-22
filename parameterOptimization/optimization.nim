@@ -1,7 +1,6 @@
 import ../evalParameters
 import evalParametersUtils
 import gradient
-import random
 import times
 import strformat
 import startingParameters
@@ -12,130 +11,109 @@ import terminal
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 1000.0,
+    lr = 280.0,
     minLearningRate = 10.0,
     maxIterations = int.high,
-    batchSize = int.high,
-    # Only one optimization run to omit over specialization and because more don't work anyway
-    numReIterations = 1,
-    randomAdditions = 15.0,
+    minTries = 20,
     discount = 0.9
 ): EvalParameters =
-    var batchSize = batchSize
 
-    var finalSolution: EvalParametersFloat
-    var finalError = float.high
-
-
-    proc getError(): float = start.convert.error(data)
-    optimizeK(getError = getError)
+    echo "-------------------"
+    optimizeK(getError = proc(): float = start.convert.error(data))
 
     var bestSolution: EvalParametersFloat = start
-    for reIteration in 0..<numReIterations:
-        batchSize = min(batchSize, data.len)
 
-        echo "-------------------"
-        echo "batchsize: ", batchSize
+    echo "-------------------"
 
-        var lr = lr
-        var bestError = bestSolution.convert.error(data)
-        echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
+    var lr = lr
+    var bestError = bestSolution.convert.error(data)
+    echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
-        var previousGradient: EvalParametersFloat 
-        for j in 0..maxIterations:
-            optimizeK(getError = getError, suppressOutput = true)
+    var previousGradient: EvalParametersFloat 
+    for j in 0..maxIterations:
 
-            var shuffledData = data
-            shuffledData.shuffle()
-            var numBatches = shuffledData.len div batchSize
-            if shuffledData.len mod batchSize != 0:
-                numBatches += 1
+        var gradient: EvalParametersFloat
+        var currentSolution = bestSolution
+        let bestSolutionConverted = bestSolution.convert
+        var totalWeight: float = 0.0
 
-            for i in 0..<numBatches:
-                var gradient: EvalParametersFloat
-                var currentSolution = bestSolution
-                let bestSolutionConverted = bestSolution.convert
-                var batchWeight: float = 0.0
-                
-                let currentBatchSize = min((i+1)*batchSize - 1, shuffledData.len - 1) - (i*batchSize)
+        const numProgressBarPoints = 100
 
-                const numProgressBarPoints = 100
+        eraseLine()
+        stdout.write("[")
+        for p in 1..numProgressBarPoints:
+            stdout.write("-")
+        stdout.write("]")
+        setCursorXPos(1)
+        stdout.flushFile
 
-                eraseLine()
-                stdout.write("[")
-                for p in 1..numProgressBarPoints:
-                    stdout.write("-")
-                stdout.write("]")
-                setCursorXPos(1)
+        var p = 0
+        for entry in data:
+            p += 1
+            if p mod (data.len div numProgressBarPoints) == 0:
+                stdout.write("#")
                 stdout.flushFile
+            
+            totalWeight += entry.weight
+            gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
+        # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
+        # result is better
+        gradient *= (1.0/totalWeight)
+        gradient *= 1.0 - discount
+        previousGradient *= discount
+        gradient += previousGradient
+        previousGradient = gradient
 
-                var p = 0
-                for entry in shuffledData.toOpenArray(
-                    first = i*batchSize,
-                    last = i*batchSize + currentBatchSize
-                ):
-                    p += 1
-                    if p mod (currentBatchSize div numProgressBarPoints) == 0:
-                        stdout.write("#")
-                        stdout.flushFile
-                    
-                    batchWeight += entry.weight
-                    gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
-                # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
-                # result is better
-                gradient *= (1.0/batchWeight)
-                gradient *= 1.0 - discount
-                previousGradient *= discount
-                gradient += previousGradient
-                previousGradient = gradient
+        gradient *= lr
 
-                gradient *= lr
-                currentSolution += gradient
-
-                var error = currentSolution.convert.error(data)
-                
-                eraseLine()
-                echo(
-                    "iteration: ", fmt"{j:>3}", ", batch: ", i, "/", numBatches - 1,
-                    ", error: ", fmt"{error:>9.7f}", ", lr: ", lr, ", k: ", fmt"{getK():.7f}"
-                )
-
-                if error >= bestError and lr >= minLearningRate:
-                    lr /= 2.0
-
-                gradient *= 0.5
-                while error < bestError:
-                    bestError = error
-                    bestSolution = currentSolution
-
-                    currentSolution += gradient
-                    error = currentSolution.convert.error(data)
-
-                    if error < bestError:
-                        echo(
-                            "             ↺, batch: ", i, "/", numBatches - 1,
-                            ", error: ", fmt"{error:>9.7f}", ", lr: ", lr*0.5
-                        )
-
-                if lr < minLearningRate:
-                    break
-
-            if lr < minLearningRate:
-                break
+        let oldBestError = bestError
+        # TODO: clean all this up, thanks
         
-        if bestError <= finalError:
-            finalSolution = bestSolution
-            finalError = bestError
-            let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-            echo "filename: ", filename
-            writeFile(filename, $finalSolution.convert)
+        eraseLine()
+        stdout.write("iteration: " & fmt"{j:>3}")
+        stdout.flushFile
 
-        bestSolution = finalSolution
-        bestSolution.randomEvalParametersFloat(randomAdditions)
+        var leftTries = minTries
+        var successes = 0
+        var tries = 0
+        while leftTries > 0:
 
-        batchSize = (15*batchSize) div 10
+            currentSolution += gradient
+            let error = currentSolution.convert.error(data)
+
+            tries += 1                    
+            if error < bestError:
+                leftTries += 1
+                successes += 1
+
+                bestError = error
+                bestSolution = currentSolution
+            else:
+                leftTries -= 1
+            
+            # print info
+            eraseLine()
+            let s = $successes & "/" & $tries
+            stdout.write(
+                "iteration: " & fmt"{j:>3}" & ", successes: " & fmt"{s:>9}" &
+                ", error: " & fmt"{bestError:>9.7f}", ", lr: ", lr
+            )
+            stdout.flushFile
         
-    return finalSolution.convert
+        stdout.write("\n")
+        stdout.flushFile
+
+        if oldBestError <= bestError and lr >= minLearningRate:
+            lr /= 2.0
+
+        if lr < minLearningRate:
+            break
+        
+    let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+    echo "filename: ", filename
+    writeFile(filename, $bestSolution.convert)
+        
+    return bestSolution.convert
 
 
 var data: seq[Entry]
