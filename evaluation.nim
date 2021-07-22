@@ -10,7 +10,6 @@ func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] += b[phase]
 
-
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
 
@@ -23,6 +22,11 @@ func getPstValue(
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
     let square = if us == black: square else: square.mirror
+
+    for phase in Phase:
+        result[phase] =
+            evalParameters[phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
+            evalParameters[phase].pst[ourKing][kingSquare[ourKing]][piece][square]
 
     when not (gradient is Nothing):
 
@@ -38,11 +42,6 @@ func getPstValue(
                         gradient[phase].pst[whoseKing][kingSquare][piece][pieceSquare] +=
                             (if us == black: -1.0 else: 1.0)*multiplier
 
-    for phase in Phase:
-        result[phase] =
-            evalParameters[phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
-            evalParameters[phase].pst[ourKing][kingSquare[ourKing]][piece][square]
-
 func bonusPassedPawn(
     evalParameters: EvalParameters,
     square: Square,
@@ -53,14 +52,10 @@ func bonusPassedPawn(
     if us == black:
         index = 7 - index
 
+    for phase in Phase: result[phase] = evalParameters[phase].passedPawnTable[index]
+
     when not (gradient is Nothing):
         for phase in Phase: gradient[phase].passedPawnTable[index] += (if us == black: -1.0 else: 1.0)
-
-    [
-        opening: evalParameters[opening].passedPawnTable[index],
-        endgame: evalParameters[endgame].passedPawnTable[index]
-    ]
-
 
 func mobility(
     evalParameters: EvalParameters,
@@ -238,12 +233,12 @@ func evaluateKing(
     result = [opening: 0.Value, endgame: 0.Value]
 
     # kingsafety by pawn shielding
-    let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
-    for phase in Phase: result[phase] += (evalParameters[phase].kingSafetyMultiplier*numPossibleQueenAttack.float).Value
+    let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits.float
+    for phase in Phase: result[phase] += (evalParameters[phase].kingSafetyMultiplier*numPossibleQueenAttack).Value
 
     when not (gradient is Nothing):
         for phase in Phase:
-            gradient[phase].kingSafetyMultiplier += numPossibleQueenAttack.float * (if us == black: -1.0 else: 1.0)
+            gradient[phase].kingSafetyMultiplier += numPossibleQueenAttack * (if us == black: -1.0 else: 1.0)
 
 func evaluatePiece(
     position: Position,
