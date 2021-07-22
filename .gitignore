@@ -13,7 +13,7 @@ massif.out
 !parameterOptimization/quietSetNalwald.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
-txt.txt
+*.txt
 vgcore.*
 *ptimizationResult*
 game
