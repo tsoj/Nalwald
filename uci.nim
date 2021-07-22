@@ -14,7 +14,7 @@ const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
-    maxHashSizeMB = 1048576
+    maxHashSizeMB = 1_048_576
 
 type UciState = object
     position: Position
@@ -25,7 +25,7 @@ type UciState = object
 
 
 proc uci() =
-    echo "id name Nalwald 1.TODO"
+    echo "id name Nalwald 1.11"
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -42,7 +42,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
             echo "Invalid value"
         else:
             if uciState.changedHashTableSize:
-                # TODO: fix memory leak
+                # TODO: fix memory leak, try to use -d:useMalloc together with --gc:arc once it is fast enough
                 echo "WARNING: changing size of hash table more than once may lead to memory leaks"
             uciState.changedHashTableSize = true
             uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
@@ -112,7 +112,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             return
      
     if searchThreadResult.isReady:
-        # TODO: fix crashes because of spawn
+        # TODO: fix crashes because of spawn, use --gc:arc once it is fast enough
         searchThreadResult = spawn uciSearch(
             position = uciState.position,
             hashTable = addr uciState.hashTable,

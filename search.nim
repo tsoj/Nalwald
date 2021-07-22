@@ -25,7 +25,7 @@ func futilityReduction(value: Value): Ply =
     7.Ply
 
 
-func hashResultMargin(depthDifference: Ply): Value =
+func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return values[king]
     depthDifference.Value * 200.Value
 
@@ -178,7 +178,7 @@ func search(
             if alpha >= beta:
                 return alpha
         else:    
-            let margin = hashResultMargin(depth - hashResult.depth)
+            let margin = hashResultFutilityMargin(depth - hashResult.depth)
             var
                 noisyAlpha = alpha
                 noisyBeta = beta

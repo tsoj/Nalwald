@@ -67,7 +67,6 @@ proc optimize(
         gradient *= lr
 
         let oldBestError = bestError
-        # TODO: clean all this up, thanks
         
         eraseLine()
         stdout.write("iteration: " & fmt"{j:>3}")

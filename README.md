@@ -38,6 +38,8 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
   - mobility
   - sliding pieces attacking area around king
   - rook on open file
+  - both bishops
+  - knight attacking bishop, rook, or queen
   - tapered parameters
   - optimized using gradient descent
 - search:
@@ -48,13 +50,14 @@ nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --
     - transposition table suggested best move
     - static exchange evaluation
     - killermoves
-    - history heuristic
+    - relative history heuristic
   - nullmove reduction
   - late move reductions
   - check extensions
   - delta pruning
   - fail-high delta pruning
   - futility reductions
+  - hash result futility pruning
 
 #### License
 
