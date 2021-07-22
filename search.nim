@@ -24,7 +24,6 @@ func futilityReduction(value: Value): Ply =
     if value < 1400: return 6.Ply
     7.Ply
 
-
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return values[king]
     depthDifference.Value * 200.Value
@@ -36,7 +35,6 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
 const
     deltaMargin = 150
     failHighDeltaMargin = 50
-
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -211,7 +209,7 @@ func search(
     let futilityMargin = alpha - state.evaluation(position)
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height)):
-        
+
         var newPosition = position
         newPosition.doMove(move)
         if newPosition.inCheck(position.us, position.enemy):
