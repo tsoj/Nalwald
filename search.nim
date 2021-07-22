@@ -210,11 +210,8 @@ func search(
     let doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.Value and not inCheck
     let futilityMargin = alpha - state.evaluation(position)
 
-    for move in position.moveIterator(
-        tryFirstMove = hashResult.bestMove,
-        state.historyTable,
-        killers = state.killerTable.get(height)
-    ):
+    for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height)):
+        
         var newPosition = position
         newPosition.doMove(move)
         if newPosition.inCheck(position.us, position.enemy):
