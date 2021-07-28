@@ -57,6 +57,7 @@ func see*(position: Position, move: Move): Value =
         source = move.source
         target = move.target
         moved = move.moved
+        promoted = move.promoted
 
 
     var stage = [white: pawn, black: pawn]
@@ -71,11 +72,11 @@ func see*(position: Position, move: Move): Value =
     if move.capturedEnPassant:
         position.removePiece(enemy, pawn, pawnQuietAttackTable[enemy][target])
         position.movePiece(us, pawn, bitAt[source], bitAt[target])
-    elif moved == pawn and (target >= a8 or target <= h1):
+    elif promoted != noPiece:
         position.removePiece(position.us, moved, bitAt[source])
-        position.addPiece(position.us, queen, bitAt[target])
-        result = values[queen] - values[pawn]
-        currentVictim = queen
+        position.addPiece(position.us, promoted, bitAt[target])
+        result = values[promoted] - values[pawn]
+        currentVictim = promoted
     else:
         position.movePiece(position.us, moved, bitAt[source], bitAt[target])
 

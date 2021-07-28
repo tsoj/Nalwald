@@ -10,22 +10,22 @@ git clone https://gitlab.com/tsoj/Nalwald.git
 Pre-compiled executables for Windows and Linux can be found [here](https://gitlab.com/tsoj/Nalwald/-/releases).
 #### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 1.4.0 or higher) and the Clang compiler.  
+You need the [Nim](https://nim-lang.org/) compiler (version 1.5.1 2021-07-27 or higher) and the Clang compiler.  
 If you can't use the Clang compiler you can omit the `--cc:clang` flag, but it might result in a slower executable.
 
 **Compiling for native CPU**
 ```
-nim c -d:danger -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
+nim c -d:danger --panics:on --gc:arc -d:lto --passC:"-march=native" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
 
 **Compiling for generic 64-bit CPUs**
 ```
-nim c -d:danger -d:lto --passL:"-static" --cc:clang --threads:on Nalwald.nim
+nim c -d:danger --panics:on --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
 
 **Compiling for modern 64-bit CPUs (BMI2 and POPCNT)**
 ```
-nim c -d:danger -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --threads:on Nalwald.nim
+nim c -d:danger --panics:on --gc:arc -d:lto --passC:"-mbmi2 -mpopcnt" --passL:"-static" --cc:clang --threads:on Nalwald.nim
 ```
 
 #### Features

@@ -105,17 +105,15 @@ func evaluatePawn(
         result += evalParameters.bonusPassedPawn(square, us, gradient)
 
     # isolated pawn
-    if (square.isLeftEdge or (position[pawn] and position[us] and files[square.left]) == 0) and
-    (square.isRightEdge or (position[pawn] and position[us] and files[square.right]) == 0):
+    if (position[pawn] and position[us] and adjacentFiles[square]) == 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusIsolatedPawn
 
         when not (gradient is Nothing):
             for phase in Phase: gradient[phase].bonusIsolatedPawn += (if us == black: -1.0 else: 1.0)
 
     # has two neighbors
-    elif (not square.isLeftEdge) and (not square.isRightEdge) and
-    (position[us] and position[pawn] and files[square.left]) != 0 and
-    (position[us] and position[pawn] and files[square.right]) != 0:
+    elif (position[us] and position[pawn] and rightFiles[square]) != 0 and
+    (position[us] and position[pawn] and leftFiles[square]) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusPawnHasTwoNeighbors
 
         when not (gradient is Nothing):

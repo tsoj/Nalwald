@@ -198,6 +198,26 @@ const isPassedMask*: array[white..black, array[a1..h8, Bitboard]] = block:
                 isPassedMask[black][square] = isPassedMask[black][square] and (not ranks[(j*8).Square])
     isPassedMask
 
+const leftFiles*: array[a1..h8, Bitboard] = block:
+    var leftFiles: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        if not square.isLeftEdge:
+            leftFiles[square] = files[square.left]
+    leftFiles
+
+const rightFiles*: array[a1..h8, Bitboard] = block:
+    var rightFiles: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        if not square.isRightEdge:
+            rightFiles[square] = files[square.right]
+    rightFiles
+
+const adjacentFiles*: array[a1..h8, Bitboard] = block:
+    var adjacentFiles: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        adjacentFiles[square] = rightFiles[square] or leftFiles[square]
+    adjacentFiles
+
 const homeRank*: array[white..black, Bitboard] = [white: ranks[a1], black: ranks[a8]]
 const pawnHomeRank*: array[white..black, Bitboard] = [white: ranks[a2], black: ranks[a7]]
 
