@@ -1,7 +1,8 @@
-import types
-import utils
-import options
-import bitops
+import
+    types,
+    utils,
+    options,
+    bitops
 
 type Bitboard* = uint64
 
@@ -39,7 +40,6 @@ const files*: array[a1..h8, Bitboard] = block:
     for square in a1..h8:
         files[square] = 0b0000000100000001000000010000000100000001000000010000000100000001u64 shl (square.int8 mod 8)
     files
-
 
 const mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64 # a1 to h9
 const antiDiagonal: Bitboard = 0b0000000100000010000001000000100000010000001000000100000010000000u64 # h1 to a8
@@ -219,6 +219,7 @@ const adjacentFiles*: array[a1..h8, Bitboard] = block:
     adjacentFiles
 
 const homeRank*: array[white..black, Bitboard] = [white: ranks[a1], black: ranks[a8]]
+
 const pawnHomeRank*: array[white..black, Bitboard] = [white: ranks[a2], black: ranks[a7]]
 
 func attackMaskKnight*(square: Square, occupancy: Bitboard): Bitboard =
@@ -241,7 +242,7 @@ func attackMaskQueen*(square: Square, occupancy: Bitboard): Bitboard =
 func attackMaskKing*(square: Square, occupancy: Bitboard): Bitboard =
     kingAttackTable[square]
 
-func attackMask*(piece: Piece, square: Square, occupancy: Bitboard): Bitboard {.inline.} =
+func attackMask*(piece: Piece, square: Square, occupancy: Bitboard): Bitboard =
     const attackFunctions = [
         knight: attackMaskKnight,
         bishop: attackMaskBishop,

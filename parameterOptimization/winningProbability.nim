@@ -1,6 +1,7 @@
-import math
-import ../types
-import strformat
+import
+    ../types,
+    math,
+    strformat
 
 var k = 1.0
 
@@ -30,8 +31,6 @@ proc optimizeK*(getError: proc(): float, suppressOutput = false) =
     k = bestK
     if not suppressOutput:
         debugEcho "optimized k: ", k
-
-proc getK*(): float = k
 
 
 

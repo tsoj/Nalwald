@@ -1,9 +1,10 @@
-import position
-import bitboard
-import move
-import types
-import bitops
-import castling
+import
+    position,
+    bitboard,
+    move,
+    types,
+    castling,
+    bitops
 
 func generateCaptures(position: Position, piece: Piece, moves: var openArray[Move]): int =
     result = 0
@@ -18,7 +19,8 @@ func generateCaptures(position: Position, piece: Piece, moves: var openArray[Mov
                     moves[result].create(
                         source = source, target = target, enPassantTarget = noSquare,
                         moved = piece, captured = captured, promoted = noPiece,
-                        castled = false, capturedEnPassant = false)
+                        castled = false, capturedEnPassant = false
+                    )
                     result += 1
                     break
 
@@ -34,7 +36,8 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = piece, captured = noPiece, promoted = noPiece,
-                castled = false, capturedEnPassant = false)
+                castled = false, capturedEnPassant = false
+            )
             result += 1
 
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
@@ -48,7 +51,8 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
             moves[counter].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = captured, promoted = promoted,
-                castled = false, capturedEnPassant = false)
+                castled = false, capturedEnPassant = false
+            )
             counter += 1
 
     var pawnOccupancy = position[pawn] and position[us]
@@ -71,7 +75,8 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
                         moves[result].create(
                             source = source, target = target, enPassantTarget = noSquare,
                             moved = pawn, captured = captured, promoted = noPiece,
-                            castled = false, capturedEnPassant = false)
+                            castled = false, capturedEnPassant = false
+                        )
                         result += 1
                     break
 
@@ -82,7 +87,8 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = pawn, promoted = noPiece,
-                castled = false, capturedEnPassant = true)
+                castled = false, capturedEnPassant = true
+            )
             result += 1
 
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
@@ -98,7 +104,8 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = noPiece, promoted = noPiece,
-                castled = false, capturedEnPassant = false)
+                castled = false, capturedEnPassant = false
+            )
             result += 1
 
             # double pushs
@@ -108,7 +115,8 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
                     moves[result].create(
                         source = source, target = doublePushTarget, enPassantTarget = target,
                         moved = pawn, captured = noPiece, promoted = noPiece,
-                        castled = false, capturedEnPassant = false)
+                        castled = false, capturedEnPassant = false
+                    )
                     result += 1
 
 func generateCastlingMoves(position: Position, moves: var openArray[Move]): int =
@@ -129,7 +137,8 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
             moves[result].create(
                 source = kingSource[us], target = kingTarget[castlingSide][us], enPassantTarget = noSquare,
                 moved = king, captured = noPiece, promoted = noPiece,
-                castled = true, capturedEnPassant = false)
+                castled = true, capturedEnPassant = false
+            )
             result += 1
 
 func generateCaptures*(position: Position, moves: var openArray[Move]): int =

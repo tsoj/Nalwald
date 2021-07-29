@@ -1,5 +1,6 @@
-import types
-import bitboard
+import
+    types,
+    bitboard
 
 type CastlingSide* = enum
   queenside, kingside

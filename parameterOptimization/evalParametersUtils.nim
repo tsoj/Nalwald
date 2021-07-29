@@ -11,29 +11,21 @@ func `$`*(a: EvalParameters): string =
         result &= "    " & $phase & ": SinglePhaseEvalParametersTemplate[Value](\n"
 
         result &= "    pst: [\n"
-
         for whoseKing in ourKing..enemyKing: 
             result &= "            " & $whoseKing & ": [\n"
-
             for kingSquare in a1..h8:
                 result &= "                " & $kingSquare & ": [\n"
-
                 for piece in pawn..king:
                     result &= "                    " & $piece & ": ["
-
                     for square in a1..h8:
                         if square.int8 mod 8 == 0:
                             result &= "\n                        "
                         result &= fmt"{a[phase].pst[whoseKing][kingSquare][piece][square]:>3}" & ".Value"
                         if square != h8:
                             result &= ", "
-
                     result &= "\n                    ],\n"
-
-                result &= "                ],\n"
-        
+                result &= "                ],\n"        
             result &= "            ],\n"
-
         result &= "        ],\n"
         
         result &= "        passedPawnTable: ["

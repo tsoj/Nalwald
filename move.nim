@@ -1,8 +1,9 @@
-import types
-import utils
+import
+    types,
+    utils
 
 type Move* = distinct uint32
-# source: [0...6], target: [7...13], moved: [14...16], captured: [17...19], promoted: [20...22],
+# source: [0..6], target: [7..13], moved: [14..16], captured: [17..19], promoted: [20..22],
 # castled: 23, capturedEnPassant: 24, enPassantTarget: [25..31]
 
 func `==`*(a,b: Move): bool =
@@ -13,7 +14,7 @@ func create*(
     source, target, enPassantTarget: Square,
     moved, captured, promoted: Piece,
     castled, capturedEnPassant: bool
-    ) =
+) =
     move = cast[Move](0u32)
     move = cast[Move](cast[uint32](move) or (source.uint32 and 0b1111111))
     move = cast[Move](cast[uint32](move) or ((target.uint32 and 0b1111111) shl 7))

@@ -1,13 +1,14 @@
-import types
-import move
-import position
-import tables
+import
+    types,
+    move,
+    position,
+    tables
 
 type
-    HashTableEntry* = object
+    HashTableEntry* {.packed.} = object
         zobristKey: uint64
         nodeType*: NodeType
-        value*: Value
+        value*: int16
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
@@ -17,7 +18,7 @@ type
         nonPvNodes: seq[HashTableEntry]
         pvNodes: Table[uint64, CountedHashTableEntry]
 
-const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, value: valueInfinity, bestMove: noMove)
+const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, bestMove: noMove)
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
@@ -53,10 +54,11 @@ func add*(
     let entry = HashTableEntry(
         zobristKey: zobristKey,
         nodeType: nodeType,
-        value: value,
+        value: value.int16,
         depth: depth,
         bestMove: bestMove
     )
+    static: doAssert (valueInfinity <= int16.high.Value and -valueInfinity >= int16.low.Value)
 
     if nodeType == pvNode:
         if (not ht.pvNodes.hasKey(zobristKey)) or

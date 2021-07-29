@@ -90,7 +90,7 @@ const values*: array[Piece, Value] = [
     noPiece: 0.Value
 ]
 static: doAssert values[king] > 8*values[pawn] + 2*values[knight] + 2*values[bishop] + 2*values[rook] + values[queen]
-const valueInfinity* = 1_000_000.Value
+const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
 static: doAssert -valueInfinity <= valueInfinity
 const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Ply
 static: doAssert valueCheckmate > values[king]*2

@@ -1,11 +1,12 @@
-import ../position
-import times
-import game
-import threadpool
-import os
-import psutil
-import tables
-import strutils
+import
+    ../position,
+    game,
+    times,
+    threadpool,
+    os,
+    psutil,
+    tables,
+    strutils
 
 proc playGame(fen: string): (string, float) =
     var game = newGame(
@@ -13,6 +14,8 @@ proc playGame(fen: string): (string, float) =
         moveTime = initDuration(milliseconds = 80),
     )
     (fen, game.playGame(suppressOutput = true))
+
+const maxLoadPercentageCPU = 60.0
 
 proc labelPositions() =
     var alreadyLabeled = block:
@@ -54,7 +57,7 @@ proc labelPositions() =
             alreadyLabeled[line] = 0
             continue
         writeResults()
-        while cpu_percent() >= 70.0:
+        while cpu_percent() >= maxLoadPercentageCPU:
             sleep(10)
         threadResults.add(spawn playGame(line))
         sleep(10)

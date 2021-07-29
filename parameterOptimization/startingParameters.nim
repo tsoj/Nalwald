@@ -1,5 +1,6 @@
-import ../types
-import ../evalParameters
+import
+    ../types,
+    ../evalParameters
 
 const pst: array[Phase, array[pawn..king, array[a1..h8, int]]] = [
     opening: [

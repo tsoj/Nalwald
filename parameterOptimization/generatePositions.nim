@@ -1,9 +1,10 @@
-import ../position
-import ../evaluation
-import times
-import game
-import ../types
-import random
+import
+    ../types,
+    ../position,
+    ../evaluation,
+    game,
+    times,
+    random  
 
 var numEvaluatedPositions: uint64 = 0
 func evaluationWriteToFile(position: Position): Value =

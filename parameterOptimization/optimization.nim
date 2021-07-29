@@ -1,13 +1,13 @@
-import ../evalParameters
-import evalParametersUtils
-import gradient
-import times
-import strformat
-import startingParameters
-import dataUtils
-import winningProbability
-import terminal
-import ../defaultParameters
+import
+    ../evalParameters,
+    evalParametersUtils,
+    startingParameters,
+    winningProbability,
+    gradient,
+    dataUtils,
+    times,
+    strformat,
+    terminal
 
 proc optimize(
     start: EvalParametersFloat,
@@ -115,15 +115,12 @@ proc optimize(
         
     return bestSolution.convert
 
-#echo defaultEvalParameters.s
-
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
 data.loadData("quietSetNalwald.epd", weight = 0.6)
 
-#let startingEvalParametersFloat = defaultEvalParameters.convert
 let startingEvalParametersFloat = startingEvalParameters
 
 discard startingEvalParametersFloat.optimize(data)

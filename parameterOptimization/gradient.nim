@@ -1,10 +1,11 @@
-import ../evalParameters
-import evalParametersUtils
-import ../evaluation
-import winningProbability
-import ../position
-import ../types
-import error
+import
+    ../evalParameters,
+    ../evaluation,
+    ../position,
+    ../types,
+    evalParametersUtils,
+    winningProbability,
+    error
 
 func addGradient*(
     gradient: var EvalParametersFloat,
