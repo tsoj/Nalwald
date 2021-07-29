@@ -7,6 +7,7 @@ import startingParameters
 import dataUtils
 import winningProbability
 import terminal
+import ../defaultParameters
 
 proc optimize(
     start: EvalParametersFloat,
@@ -114,6 +115,7 @@ proc optimize(
         
     return bestSolution.convert
 
+#echo defaultEvalParameters.s
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
@@ -123,7 +125,6 @@ data.loadData("quietSetNalwald.epd", weight = 0.6)
 
 #let startingEvalParametersFloat = defaultEvalParameters.convert
 let startingEvalParametersFloat = startingEvalParameters
-#let startingEvalParametersFloat = randomEvalParametersFloat(100.0)
 
 discard startingEvalParametersFloat.optimize(data)
 

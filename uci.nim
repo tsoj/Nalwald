@@ -9,6 +9,8 @@ import times
 import perft
 import see
 import evaluation
+import os
+import version
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -21,11 +23,9 @@ type UciState = object
     history: seq[Position]
     hashTable: HashTable
     stopFlag: Atomic[bool]
-    changedHashTableSize: bool
-
 
 proc uci() =
-    echo "id name Nalwald 1.11.1"
+    echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "uciok"
@@ -41,10 +41,6 @@ proc setOption(uciState: var UciState, params: seq[string]) =
         if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
             echo "Invalid value"
         else:
-            if uciState.changedHashTableSize:
-                # TODO: fix memory leak, try to use -d:useMalloc together with --gc:arc once it is fast enough
-                echo "WARNING: changing size of hash table more than once may lead to memory leaks"
-            uciState.changedHashTableSize = true
             uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
     else:
         echo "Unknown parameters"
@@ -112,7 +108,6 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             return
      
     if searchThreadResult.isReady:
-        # TODO: fix crashes because of spawn, use --gc:arc once it is fast enough
         searchThreadResult = spawn uciSearch(
             position = uciState.position,
             hashTable = addr uciState.hashTable,
@@ -136,11 +131,12 @@ proc uciLoop*() =
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "---- Copyright (c) 2021 Jost Triller ----"
-    var uciState = UciState(position: startposFen.toPosition, changedHashTableSize: false)
+    var uciState = UciState(position: startposFen.toPosition)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:
+            sleep(5)
             let command = readLine(stdin)
             let params = command.splitWhitespace()
             if params.len == 0 or params[0] == "":

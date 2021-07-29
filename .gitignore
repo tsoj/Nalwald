@@ -1,5 +1,6 @@
 Nalwald*
 !Nalwald.nim
+!Nalwald.nims
 perf.data
 callgrind.out.*
 profile_results.txt

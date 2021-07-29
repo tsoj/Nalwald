@@ -19,42 +19,34 @@ proc uciSearch*(
     increment, timeLeft: array[white..black, Duration],
     moveTime: Duration
 ): bool =
-    try:
-        var bestMove = noMove    
-        var iteration = 0
-        for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
-            position,
-            hashTable[],
-            positionHistory,
-            targetDepth,
-            stop,
-            movesToGo,
-            increment, timeLeft,
-            moveTime
-        ):
-            doAssert pv.len >= 1
-            bestMove = pv[0]
+    var bestMove = noMove    
+    var iteration = 0
+    for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
+        position,
+        hashTable[],
+        positionHistory,
+        targetDepth,
+        stop,
+        movesToGo,
+        increment, timeLeft,
+        moveTime
+    ):
+        doAssert pv.len >= 1
+        bestMove = pv[0]
 
-            # uci info
-            var scoreString = " score cp " & fmt"{(100*value.int) div values[pawn].int:>4}"
-            if abs(value) >= valueCheckmate:
-                if value < 0:
-                    scoreString = " score mate -"
-                else:
-                    scoreString = " score mate "
-                scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
+        # uci info
+        var scoreString = " score cp " & fmt"{(100*value.int) div values[pawn].int:>4}"
+        if abs(value) >= valueCheckmate:
+            if value < 0:
+                scoreString = " score mate -"
+            else:
+                scoreString = " score mate "
+            scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
 
-            let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-            echo "info depth ", fmt"{iteration+1:>2}", " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
-                " nps ", fmt"{nps:>7}", " hashfull ", fmt"{hashTable[].hashFull:>5}", scoreString, " pv ", pv
+        let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
+        echo "info depth ", fmt"{iteration+1:>2}", " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
+            " nps ", fmt"{nps:>7}", " hashfull ", fmt"{hashTable[].hashFull:>5}", scoreString, " pv ", pv
 
-            iteration += 1
+        iteration += 1
 
-        echo "bestmove ", bestMove
-    except:
-        var errorMessage = "info string " & getCurrentExceptionMsg() & "\n" & getCurrentException().getStackTrace()
-        if errorMessage[^1] == '\n':
-            errorMessage.delete(errorMessage.len - 1, errorMessage.len - 1)
-        errorMessage = errorMessage.replace("\n", "\ninfo string ")
-        echo errorMessage
-        echo "bestmove ", noMove
+    echo "bestmove ", bestMove

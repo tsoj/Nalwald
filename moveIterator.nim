@@ -48,7 +48,7 @@ iterator moveIterator*(
         yield tryFirstMove
 
     # init capture moves
-    var captureList {.noInit.}: OrderedMoveList
+    var captureList {.noinit.}: OrderedMoveList
     captureList.numMoves = position.generateCaptures(captureList.moves)
     for i in 0..<captureList.numMoves:
         captureList.movePriorities[i] = position.see(captureList.moves[i])
@@ -69,7 +69,7 @@ iterator moveIterator*(
 
     # quiet moves
     if doQuiets:
-        var quietList {.noInit.}: OrderedMoveList
+        var quietList {.noinit.}: OrderedMoveList
         quietList.numMoves = position.generateQuiets(quietList.moves)
         for i in 0..<quietList.numMoves:
             quietList.movePriorities[i] = historyTable.get(quietList.moves[i], position.us)

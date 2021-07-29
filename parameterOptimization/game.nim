@@ -1,11 +1,12 @@
-import ../position
-import ../types
-import ../search
-import ../hashTable
-import times
-import ../movegen
-import ../move
-import ../evaluation
+import
+    ../position,
+    ../types,
+    ../search,
+    ../hashTable,
+    ../movegen,
+    ../move,
+    ../evaluation,
+    times
 
 type
     Game* = object

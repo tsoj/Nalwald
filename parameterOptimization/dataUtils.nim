@@ -1,9 +1,10 @@
-import ../position
-import ../evalParameters
-import strutils
-import ../evaluation
-import winningProbability
-import error
+import 
+    ../position,
+    ../evalParameters,
+    ../evaluation,
+    winningProbability,
+    error,
+    strutils
 
 type Entry* = object
     position*: Position

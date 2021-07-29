@@ -387,7 +387,7 @@ iterator iterativeTimeManagedSearch*(
 
     var iteration = -1
     for (value, pv, nodes) in iterativeDeepeningSearch(
-        position, hashtable, positionHistory, targetDepth, stop, evaluation
+        position, hashTable, positionHistory, targetDepth, stop, evaluation
     ):
         iteration += 1
         let totalPassedTime = now() - start

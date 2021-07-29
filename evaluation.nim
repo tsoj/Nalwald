@@ -1,10 +1,11 @@
-import position
-import types
-import bitboard
-import bitops
-import evalParameters
-import utils
-import defaultParameters
+import
+    position,
+    types,
+    bitboard,
+    bitops,
+    evalParameters,
+    utils,
+    defaultParameters
 
 func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
