@@ -1,9 +1,10 @@
-import types
-import move
-import position
-import movegen
-import see
-import searchUtils
+import
+    types,
+    move,
+    position,
+    movegen,
+    see,
+    searchUtils
 
 const zeroHistoryTable = block:
     var h: HistoryTable

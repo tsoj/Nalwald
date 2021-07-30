@@ -1,9 +1,10 @@
-import position
-import strutils
-import moveIterator
-import times
-import move
-import random
+import
+    position,
+    move,
+    moveIterator,
+    strutils,
+    times,
+    random
 
 var randomMoves = newSeq[Move](10000)
 

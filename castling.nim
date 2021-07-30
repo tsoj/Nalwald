@@ -32,6 +32,15 @@ const rookTarget* = [
     kingside: [white: f1, black: f8]
 ]
 
+# TODO: bring some consistency to this
+
+const classicalRookSource* = [
+    white: [queenside: a1, kingside: h1],
+    black: [queenside: a8, kingside: h8]
+]
+
+const classicalKingSquare* = [white: e1, black: e8]
+
 const blockSensitiveRook = blockSensitive(rookTarget)
 
 const blockSensitiveKing = blockSensitive(kingTarget)

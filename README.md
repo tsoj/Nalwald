@@ -57,6 +57,7 @@ nim modern Nalwald.nim
   - fail-high delta pruning
   - futility reductions
   - hash result futility pruning
+- supports Chess960/Fischer random chess
 
 #### License
 

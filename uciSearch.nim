@@ -1,13 +1,41 @@
-import position
-import types
-import hashTable
-import atomics
-import times
-import search
-import move
-import strformat
-import strutils
-import math
+import
+    types,
+    move,
+    position,
+    search,
+    hashTable,
+    atomics,
+    times,
+    strformat,
+    strutils,
+    math
+
+func infoString(
+    iteration: int,
+    value: Value,
+    nodes: uint64,
+    time: Duration,
+    hashFull: int,
+    pv: string
+): string =
+    var scoreString = " score cp " & fmt"{(100*value.int) div values[pawn].int:>4}"
+    if abs(value) >= valueCheckmate:
+        if value < 0:
+            scoreString = " score mate -"
+        else:
+            scoreString = " score mate "
+        scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
+
+    let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
+
+    result = "info"
+    result &= " depth " & fmt"{iteration+1:>2}"
+    result &= " time " & fmt"{time.inMilliseconds:>6}"
+    result &= " nodes " & fmt"{nodes:>9}"
+    result &= " nps " & fmt"{nps:>7}"
+    result &= " hashfull " & fmt"{hashFull:>5}"
+    result &= scoreString
+    result &= " pv " & pv
 
 proc uciSearch*(
     position: Position,
@@ -21,32 +49,28 @@ proc uciSearch*(
 ): bool =
     var bestMove = noMove    
     var iteration = 0
-    for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
-        position,
+    for (value, pv, nodes, passedTime) in position.iterativeTimeManagedSearch(
         hashTable[],
         positionHistory,
         targetDepth,
         stop,
-        movesToGo,
-        increment, timeLeft,
-        moveTime
+        movesToGo = movesToGo,
+        increment = increment,
+        timeLeft = timeLeft,
+        moveTime = moveTime
     ):
         doAssert pv.len >= 1
         bestMove = pv[0]
 
         # uci info
-        var scoreString = " score cp " & fmt"{(100*value.int) div values[pawn].int:>4}"
-        if abs(value) >= valueCheckmate:
-            if value < 0:
-                scoreString = " score mate -"
-            else:
-                scoreString = " score mate "
-            scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
-
-        let nps: uint64 = 1000*(nodes div (passedTime.inMilliseconds.uint64 + 1))
-        echo "info depth ", fmt"{iteration+1:>2}", " time ",fmt"{passedTime.inMilliseconds:>6}", " nodes ", fmt"{nodes:>9}",
-            " nps ", fmt"{nps:>7}", " hashfull ", fmt"{hashTable[].hashFull:>5}", scoreString, " pv ", pv
+        echo iteration.infoString(
+            value,
+            nodes,
+            passedTime,
+            hashTable[].hashFull,
+            pv.notation(position)
+        )
 
         iteration += 1
 
-    echo "bestmove ", bestMove
+    echo "bestmove ", bestMove.notation(position)

@@ -1,22 +1,25 @@
-import position
-import atomics
-import threadpool
-import types
-import hashTable
-import strutils
-import uciSearch
-import times
-import perft
-import see
-import evaluation
-import os
-import version
+import
+    types,
+    position,
+    hashTable,
+    uciSearch,
+    perft,
+    see,
+    evaluation,
+    version,
+    times,
+    strutils,
+    os,
+    atomics,
+    threadpool
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
+
+# TODO: self play test using cute chess with error output and release flags
 
 type UciState = object
     position: Position
@@ -28,6 +31,7 @@ proc uci() =
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
+    echo "option name UCI_Chess960 type check default false"
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: seq[string]) =
@@ -35,13 +39,17 @@ proc setOption(uciState: var UciState, params: seq[string]) =
 
     if params.len == 5 and
     params[1] == "name" and
-    params[2] == "Hash" and
     params[3] == "value":
-        let newHashSizeMB = params[4].parseInt
-        if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
-            echo "Invalid value"
+        if params[2] == "Hash":
+            let newHashSizeMB = params[4].parseInt
+            if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
+                echo "Invalid value"
+            else:
+                uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
+        elif params[2] == "UCI_Chess960":
+            discard
         else:
-            uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
+            echo "Unknown option: ", params[2]
     else:
         echo "Unknown parameters"
     

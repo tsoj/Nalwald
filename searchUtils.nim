@@ -1,7 +1,8 @@
-import move
-import types
-import position
-import math
+import
+    types,
+    move,
+    position,
+    math
 
 type HistoryTable* = array[white..black, array[pawn..king, array[a1..h8, float]]]
 const maxHistoryTableValue = 20000.0

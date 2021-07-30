@@ -1,13 +1,13 @@
-import types
-import bitboard
-import bitops
-import zobristBitmasks
-import move
-import castling
-import utils
-import options
-import strutils
-import castling
+import
+    types,
+    bitboard,
+    move,
+    zobristBitmasks,
+    castling,
+    utils,
+    bitops,
+    options,
+    strutils
 
 type Position* = object
     pieces: array[pawn..king, Bitboard]
@@ -76,6 +76,11 @@ func inCheck*(position: Position, us, enemy: Color): bool =
 func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
     (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 
+func castlingSide*(position: Position, move: Move): CastlingSide =
+    if move.target == position.rookSource[position.us][queenside]:
+        return queenside
+    kingside
+
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:
         return false
@@ -128,13 +133,11 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     if move.castled:
         if (position.enPassantCastling and homeRank[us]) == 0:
             return false
-        let castlingSide =
-            if target == position.rookSource[us][queenside]:
-                queenside
-            elif target == position.rookSource[us][kingside]:
-                kingside
-            else:
-                return false
+
+        if not (target in position.rookSource[us]):
+            return false
+
+        let castlingSide = position.castlingSide(move)
         
         let
             kingSource = (position[us] and position[king]).toSquare
@@ -202,11 +205,9 @@ func doMove*(position: var Position, move: Move) =
         let
             rookSource = target
             kingSource = source
-        let (rookTarget, kingTarget) =
-            if target == position.rookSource[us][queenside]:
-                (rookTarget[queenside][us], kingTarget[queenside][us])
-            else:
-                (rookTarget[kingside][us], kingTarget[kingside][us])
+            castlingSide = position.castlingSide(move)
+            rookTarget = rookTarget[castlingSide][us]
+            kingTarget = kingTarget[castlingSide][us]
         
         position.removePiece(us, king, bitAt[kingSource])
         position.removePiece(us, rook, bitAt[rookSource])
@@ -434,6 +435,11 @@ func debugString*(position: Position): string =
     result &= "zobristKey: " & $position.zobristKey & "\n"
     result &= "rookSource: " & $position.rookSource
 
+func isChess960(position: Position): bool =
+    let us = position.us
+    (position.enPassantCastling and homeRank[us]) != 0 and
+    (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSquare[us])
+
 func toMove*(s: string, position: Position): Move =
     let us = position.us
 
@@ -459,7 +465,10 @@ func toMove*(s: string, position: Position): Move =
         kingside
     let castled = moved == king and
     (position.enPassantCastling and homeRank[us]) != 0 and
-    (target == kingTarget[castlingSide][us] or target == position.rookSource[us][castlingSide])
+    (
+        target == position.rookSource[us][castlingSide] or 
+        (target == kingTarget[castlingSide][us] and not position.isChess960)
+    )
 
     result.create(
         source = source,
@@ -473,7 +482,16 @@ func toMove*(s: string, position: Position): Move =
     )
     
     doAssert position.isLegal(result)
-    
+
+func notation*(move: Move, position: Position): string =
+    if move.castled and not position.isChess960:
+        return $move.source & $kingTarget[position.castlingSide(move)][position.us]
+    $move
+
+func notation*(pv: seq[Move], position: Position): string =
+    for move in pv:
+        result &= move.notation(position) & " "
+
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
 

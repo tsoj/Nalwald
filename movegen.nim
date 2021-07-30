@@ -3,8 +3,7 @@ import
     bitboard,
     move,
     types,
-    castling,
-    bitops
+    castling
 
 func generateCaptures(position: Position, piece: Piece, moves: var openArray[Move]): int =
     result = 0

@@ -1,16 +1,17 @@
-import searchUtils
-import position
-import move
-import moveIterator
-import atomics
-import hashTable
-import types
-import evaluation
-import see
-import bitops
-import times
-import threadpool
-import utils
+import
+    types,
+    position,
+    move,
+    searchUtils,
+    moveIterator,
+    hashTable,
+    evaluation,
+    see,
+    atomics,
+    utils,
+    bitops,
+    times,
+    threadpool
 
 static: doAssert values[pawn] == 100
 
@@ -433,9 +434,10 @@ proc timeManagedSearch*(
         positionHistory,
         targetDepth,
         stop,
-        movesToGo,
-        increment, timeLeft,
-        moveTime,
+        movesToGo = movesToGo,
+        increment = increment,
+        timeLeft = timeLeft,
+        moveTime = moveTime,
         evaluation
     ):
         result = (value, pv)
