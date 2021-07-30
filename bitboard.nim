@@ -10,6 +10,8 @@ func removeTrailingOneBit*(x: var SomeInteger): int =
     result = x.countTrailingZeroBits
     x = x and (x - 1)
 
+# TODO: replace .countTrailingZeroBits.Square with just .Square
+
 const bitAt*: array[a1..h8, Bitboard] = block:
     var bitAt: array[a1..h8, Bitboard]
     for square in a1..h8:

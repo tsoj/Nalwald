@@ -129,7 +129,7 @@ func evaluateKnight(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0.} =
     result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = knight.attackMask(square, position.occupancy)
@@ -153,7 +153,7 @@ func evaluateBishop(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0.} =
     result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = bishop.attackMask(square, position.occupancy)
@@ -181,7 +181,7 @@ func evaluateRook(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0.} =
     result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = rook.attackMask(square, position.occupancy)
@@ -208,7 +208,7 @@ func evaluateQueen(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0.} =
     result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = queen.attackMask(square, position.occupancy)
@@ -228,7 +228,7 @@ func evaluateKing(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0.} = # TODO: fix these locks
     result = [opening: 0.Value, endgame: 0.Value]
 
     # kingsafety by pawn shielding

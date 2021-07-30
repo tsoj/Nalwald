@@ -124,22 +124,33 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
         us = position.us
         enemy = position.enemy
         occupancy = position.occupancy
-
-    if (position.enPassantCastling and bitAt[kingSource[us]]) == 0:
-        return 0
+        kingSource = (position[us] and position[king]).countTrailingZeroBits.Square
 
     result = 0
-    for castlingSide in [queenside, kingside]:
-        if (position.enPassantCastling and bitAt[rookSource[castlingSide][us]]) != 0 and
-        (blockSensitiveArea[castlingSide][us] and occupancy) == 0 and
-        not position.isAttacked(us, enemy, checkSensitive[castlingSide][us][0]) and
-        not position.isAttacked(us, enemy, checkSensitive[castlingSide][us][1]):
-            moves[result].create(
-                source = kingSource[us], target = kingTarget[castlingSide][us], enPassantTarget = noSquare,
-                moved = king, captured = noPiece, promoted = noPiece,
-                castled = true, capturedEnPassant = false
-            )
-            result += 1
+    for (castlingSide, rookSource) in position.rookSource[us].pairs:
+        # castling is still allowed
+        if (position.enPassantCastling and bitAt[rookSource] and homeRank[us]) == 0:
+            continue
+
+        # all necessary squares are empty
+        if (blockSensitive(castlingSide, us, kingSource, rookSource) and occupancy) != 0:
+            continue
+
+        # king will never be in check
+        var kingInCheck = false
+        for checkSquare in checkSensitive[castlingSide][us][kingSource]:
+            if position.isAttacked(us, enemy, checkSquare):
+                kingInCheck = true
+                break
+        if kingInCheck:
+            continue
+
+        moves[result].create(
+            source = kingSource, target = rookSource, enPassantTarget = noSquare,
+            moved = king, captured = noPiece, promoted = noPiece,
+            castled = true, capturedEnPassant = false
+        )
+        result += 1
 
 func generateCaptures*(position: Position, moves: var openArray[Move]): int =
     result = position.generatePawnCaptures(moves)

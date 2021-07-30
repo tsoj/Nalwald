@@ -135,68 +135,71 @@ proc uciLoop*() =
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
-        try:
-            sleep(5)
-            let command = readLine(stdin)
-            let params = command.splitWhitespace()
-            if params.len == 0 or params[0] == "":
-                continue
-            case params[0]
-            of "uci":
-                uci()
-            of "setoption":
-                uciState.setOption(params)
-            of "isready":
-                echo "readyok"
-            of "position":
-                uciState.setPosition(params)
-            of "go":
-                uciState.go(params, searchThreadResult)
-            of "stop":
-                uciState.stop()
-            of "quit":
-                uciState.stop()
-                break
-            of "ucinewgame":
-                uciState.uciNewGame()
-            of "print":
-                echo uciState.position
-            of "printdebug":
-                echo uciState.position.debugString
-            of "fen":
-                echo uciState.position.fen
-            of "test":
-                seeTest()
-                if params.len >= 2:
-                    perftTest(params[1].parseInt.uint64)
-                else:
-                    perftTest()
-            of "benchmark":
-                perftTest(100_000_000, testZobristKeys = false)
-            of "eval":
-                echo uciState.position.absoluteEvaluate, " centipawns"
-            of "flip":
-                uciState.position = uciState.position.flipColors()
-
+        sleep(5)
+        let command = readLine(stdin)
+        let params = command.splitWhitespace()
+        if params.len == 0 or params[0] == "":
+            continue
+        case params[0]
+        of "uci":
+            uci()
+        of "setoption":
+            uciState.setOption(params)
+        of "isready":
+            echo "readyok"
+        of "position":
+            uciState.setPosition(params)
+        of "go":
+            uciState.go(params, searchThreadResult)
+        of "stop":
+            uciState.stop()
+        of "quit":
+            uciState.stop()
+            break
+        of "ucinewgame":
+            uciState.uciNewGame()
+        of "print":
+            echo uciState.position
+        of "printdebug":
+            echo uciState.position.debugString
+        of "fen":
+            echo uciState.position.fen
+        of "perft":
+            if params.len >= 2:
+                echo uciState.position.perft(params[1].parseInt.int, printMoveNodes = true)
             else:
-                if params[0] != "help": echo "Unknown command: ", params[0]
-                echo "Possible commands:"
-                echo "* uci"
-                echo "* setoption"
-                echo "* isready"
-                echo "* position"
-                echo "* go"
-                echo "* stop"
-                echo "* quit"
-                echo "* ucinewgame"
-                echo "* print"
-                echo "* printdebug"
-                echo "* fen"
-                echo "* test"
-                echo "* benchmark"
-                echo "* eval"
-                echo "* flip"
-        except:
-            echo "info string ", getCurrentExceptionMsg()
+                echo "Missing depth parameter"
+
+        of "test":
+            seeTest()
+            if params.len >= 2:
+                perftTest(params[1].parseInt.uint64)
+            else:
+                perftTest()
+        of "benchmark":
+            perftTest(100_000_000, testZobristKeys = false)
+        of "eval":
+            echo uciState.position.absoluteEvaluate, " centipawns"
+        of "flip":
+            uciState.position = uciState.position.flipColors()
+
+        else:
+            if params[0] != "help": echo "Unknown command: ", params[0]
+            echo "Possible commands:"
+            echo "* uci"
+            echo "* setoption"
+            echo "* isready"
+            echo "* position"
+            echo "* go"
+            echo "* stop"
+            echo "* quit"
+            echo "* ucinewgame"
+            echo "* print"
+            echo "* printdebug"
+            echo "* fen"
+            echo "* test"
+            echo "* benchmark"
+            echo "* eval"
+            echo "* flip"
 
     discard ^searchThreadResult
