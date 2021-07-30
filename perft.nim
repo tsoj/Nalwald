@@ -10,9 +10,9 @@ var randomMoves = newSeq[Move](10000)
 func perft*(
     position: Position,
     depth: int, height: int = 0,
-    testZobristKeys: static bool = true,
-    testPseudoLegality: static bool = true,
-    printMoveNodes: static bool = false
+    testZobristKeys = false,
+    testPseudoLegality = false,
+    printMoveNodes = false
 ): uint64 =
     if depth == 0:
         return 1
@@ -20,18 +20,14 @@ func perft*(
     var nodes: uint64 = 0
 
     var claimedPseudoLegalMoves: seq[Move]
-    when testPseudoLegality:
+    if testPseudoLegality:
         {.cast(noSideEffect).}:
             for move in randomMoves:
                 if position.isPseudoLegal(move):
                     claimedPseudoLegalMoves.add(move)
 
     for move in position.moveIterator:
-
-        when testPseudoLegality:
-            if not position.isPseudoLegal(move):
-                debugEcho position
-                debugEcho $move
+        if testPseudoLegality:
             doAssert position.isPseudoLegal(move)
             for claimedMove in claimedPseudoLegalMoves.mitems:
                 if claimedMove == move:
@@ -42,45 +38,33 @@ func perft*(
         var newPosition = position
         newPosition.doMove(move)
 
-        when testZobristKeys:
+        if testZobristKeys:
             doAssert newPosition.zobristKey == newPosition.calculateZobristKey
 
         if not newPosition.inCheck(position.us, position.enemy):
             let n = newPosition.perft(
                 depth - 1, height + 1,
-                testZobristKeys = testZobristKeys
+                testZobristKeys = testZobristKeys,
+                testPseudoLegality = testPseudoLegality
             )                
             nodes += n
 
-            when printMoveNodes:
-                debugEcho "    ", $move, " ", n, " ", newPosition.fen
-    when testPseudoLegality:
-        for claimedMove in claimedPseudoLegalMoves:
-            if not `==`(claimedMove, noMove):
-                debugEcho position
-                debugEcho $claimedMove
-            doAssert claimedMove == noMove
-    nodes#TODO fix weird move nim behaviours
+            if printMoveNodes:
+                debugEcho "    ", move, " ", n, " ", newPosition.fen
 
+    if testPseudoLegality:
+        for claimedMove in claimedPseudoLegalMoves:
+            doAssert claimedMove == noMove
+    nodes
 
 type PerftData = object
     position: Position
     nodes: seq[uint64]
 
-proc getPerftTestData(): seq[PerftData] =
+proc getPerftTestData(useAllFENs: bool): seq[PerftData] =
 
-    var lines: seq[string]
-    var file: File
-    if file.open("./perft_test.txt"):
-        lines = newSeq[string](0)
-        var line: string
-        while file.readLine(line):
-            if line.isEmptyOrWhitespace:
-                continue
-            lines.add(line)
-        file.close
-    else:
-        lines = @[
+    var lines = if useAllFENs:
+        @[
             "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w QKqk - 0 1,48,2039,97862,4085603,193690690",
             "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1,14,191,2812,43238,674624,11030083,178633661",
             "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w qk - 0 1,6,264,9467,422333,15833292",
@@ -88,6 +72,17 @@ proc getPerftTestData(): seq[PerftData] =
             "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10,46,2079,89890,3894594,164075551",
             "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk -,20,400,8902,197281,4865609,119060324"
         ]
+    else:
+        @[]
+
+    var file: File
+    if file.open("./perft_test.txt"):
+        var line: string
+        while file.readLine(line):
+            if line.isEmptyOrWhitespace:
+                continue
+            lines.add(line)
+        file.close
 
     for line in lines:
         var words = line.split(',')
@@ -97,9 +92,14 @@ proc getPerftTestData(): seq[PerftData] =
             result[^1].nodes.add(words[i].parseBiggestUInt)
 
 
-proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true, testPseudoLegality: static bool = false) =
+proc perftTest*(
+    maxNodes = uint64.high,
+    testZobristKeys = true,
+    testPseudoLegality = false,
+    useAllFENs = true
+) =
 
-    let data = getPerftTestData()
+    let data = getPerftTestData(useAllFENs)
     
     var totalPassedMilliseconds: int64 = 0
     var totalNumNodes: uint64 = 0
@@ -114,7 +114,7 @@ proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true, tes
             let perftResult = perftData.position.perft(
                 depth + 1,
                 testZobristKeys = testZobristKeys,
-                testPseudoLegality = true
+                testPseudoLegality = testPseudoLegality
             )
             let passedTime = now() - start
             totalPassedMilliseconds += passedTime.inMilliseconds

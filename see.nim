@@ -13,7 +13,7 @@ func getLeastValuableAttacker(position: Position, target: Square, stage: var Pie
     if stage == pawn:
         let attack = pawnCaptureAttackTable[enemy][target] and position[pawn] and position[us]
         if attack != 0:
-            return (attack.countTrailingZeroBits.Square, pawn)
+            return (attack.toSquare, pawn)
     
     for piece in knight..king:
         if stage <= piece:
@@ -22,7 +22,7 @@ func getLeastValuableAttacker(position: Position, target: Square, stage: var Pie
             if attack != 0:
                 if piece == queen:
                     stage = bishop
-                return (attack.countTrailingZeroBits.Square, piece)
+                return (attack.toSquare, piece)
     (noSquare, noPiece)
 
 

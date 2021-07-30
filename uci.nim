@@ -119,10 +119,33 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             timeLeft = timeLeft,
             moveTime = moveTime
         )
-    
 
 func uciNewGame(uciState: var UciState) =
     uciState.hashTable.clear()
+
+proc test(params: seq[string]) =
+    seeTest()
+    if params.len == 1:
+        perftTest()
+    else:
+        let numNodes = try:
+            params[1].parseInt.uint64
+        except:
+            uint64.high
+
+        perftTest(
+            numNodes,
+            testPseudoLegality = "pseudo" in params,
+            testZobristKeys = not ("nozobrist" in params),
+            useAllFENs = not ("onlytxt" in params)
+        )
+
+proc perft(uciState: UciState, params: seq[string]) =
+    if params.len >= 2:
+        echo uciState.position.perft(params[1].parseInt, printMoveNodes = true)
+    else:
+        echo "Missing depth parameter"
+
 
 proc uciLoop*() =
     echo "---------------- Nalwald ----------------"
@@ -165,24 +188,9 @@ proc uciLoop*() =
         of "fen":
             echo uciState.position.fen
         of "perft":
-            if params.len >= 2:
-                echo uciState.position.perft(params[1].parseInt.int, printMoveNodes = true)
-            else:
-                echo "Missing depth parameter"
-
+            uciState.perft(params)
         of "test":
-            seeTest()
-            if params.len >= 3:
-                if params[2] == "testPseudoLegality":
-                    perftTest(params[1].parseInt.uint64, testPseudoLegality = true)#TODO: fix
-                else:
-                    echo "Unknown parameter: ", params[2]
-            elif params.len >= 2:
-                perftTest(params[1].parseInt.uint64)
-            else:
-                perftTest()
-        of "benchmark":
-            perftTest(100_000_000, testZobristKeys = false)
+            test(params)
         of "eval":
             echo uciState.position.absoluteEvaluate, " centipawns"
         of "flip":
@@ -202,8 +210,8 @@ proc uciLoop*() =
             echo "* print"
             echo "* printdebug"
             echo "* fen"
+            echo "* perft"
             echo "* test"
-            echo "* benchmark"
             echo "* eval"
             echo "* flip"
 

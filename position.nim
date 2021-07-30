@@ -68,7 +68,7 @@ func isAttacked*(position: Position, us, enemy: Color, target: Square): bool =
 
 func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1
-    (position[king] and position[color]).countTrailingZeroBits.Square
+    (position[king] and position[color]).toSquare
 
 func inCheck*(position: Position, us, enemy: Color): bool =
     position.isAttacked(us, enemy, position.kingSquare(us))
@@ -79,9 +79,6 @@ func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:
         return false
-
-    #TODO: fix
-    #TODO: test with -d:debug properly enabled
 
     let
         target = move.target
@@ -140,7 +137,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
                 return false
         
         let
-            kingSource = (position[us] and position[king]).countTrailingZeroBits.Square
+            kingSource = (position[us] and position[king]).toSquare
             rookSource = position.rookSource[us][castlingSide]
 
         if (position.enPassantCastling and bitAt[rookSource]) == 0 or
@@ -191,7 +188,7 @@ func doMove*(position: var Position, move: Move) =
         position.removePiece(enemy, pawn, pawnQuietAttackTable[enemy][target])
         position.movePiece(us, pawn, bitAt[source], bitAt[target])
 
-        let capturedSquare = pawnQuietAttackTable[enemy][target].countTrailingZeroBits.Square
+        let capturedSquare = pawnQuietAttackTable[enemy][target].toSquare
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[pawn][capturedSquare]
         position.zobristKey = position.zobristKey xor zobristColorBitmasks[enemy][capturedSquare]
     # removing captured piece
@@ -337,8 +334,8 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
         let
             us = if castlingChar.isUpperAscii: white else: black
-            kingSquare = (result[us] and result[king]).countTrailingZeroBits.Square
-            rookSource = (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).countTrailingZeroBits.Square
+            kingSquare = (result[us] and result[king]).toSquare
+            rookSource = (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
             castlingSide = if rookSource < kingSquare: queenside else: kingside
         
         result.enPassantCastling = result.enPassantCastling or bitAt[rookSource]
@@ -407,7 +404,7 @@ func fen*(position: Position): string =
     result &= " "
 
     if (position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0:
-        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).countTrailingZeroBits.Square)
+        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).toSquare)
     else:
         result &= "-"
 
@@ -452,7 +449,7 @@ func toMove*(s: string, position: Position): Move =
     let captured = if capturedEnPassant: pawn else: position.coloredPiece(target).piece
 
     let enPassantTarget = if moved == pawn and captured == noPiece and (bitAt[target] and pawnQuietAttackTable[us][source]) == 0:
-        pawnQuietAttackTable[us][source].countTrailingZeroBits.Square
+        pawnQuietAttackTable[us][source].toSquare
     else:
         noSquare
 
