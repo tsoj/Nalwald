@@ -1,7 +1,6 @@
 import version
 import distros
 
---define:danger
 --panics:on
 --gc:arc
 --define:useMalloc
@@ -18,17 +17,25 @@ if defined(windows):
 let suffix = if defined(windows): ".exe" else: ""
 let name = projectName() & "-" & version()
 
+task debug, "debug compile":
+    --define:release
+    switch("o", name & "-debug" & suffix)
+    setCommand "c"
+
 task default, "default compile":
+    --define:danger
     switch("o", name & "-default" & suffix)
     setCommand "c"
 
 task native, "native compile":
+    --define:danger
     --passC:"-march=native"
     --passC:"-mtune=native"
     switch("o", name & "-native" & suffix)
     setCommand "c"
 
 task modern, "BMI2 and POPCNT compile":
+    --define:danger
     --passC:"-mbmi2"
     --passC:"-mpopcnt"
     switch("o", name & "-modern" & suffix)

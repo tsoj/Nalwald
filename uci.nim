@@ -172,7 +172,12 @@ proc uciLoop*() =
 
         of "test":
             seeTest()
-            if params.len >= 2:
+            if params.len >= 3:
+                if params[2] == "testPseudoLegality":
+                    perftTest(params[1].parseInt.uint64, testPseudoLegality = true)#TODO: fix
+                else:
+                    echo "Unknown parameter: ", params[2]
+            elif params.len >= 2:
                 perftTest(params[1].parseInt.uint64)
             else:
                 perftTest()

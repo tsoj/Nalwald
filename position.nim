@@ -97,22 +97,38 @@ func isPseudoLegal*(position: Position, move: Move): bool =
 
     if (bitAt[source] and position[us] and position[moved]) == 0:
         return false
+    
     if (bitAt[target] and position[us]) != 0 and not move.castled:
         return false
+
     if captured != noPiece and (bitAt[target] and position[enemy] and position[captured]) == 0 and not capturedEnPassant:
         return false
+
     if captured == noPiece and  (bitAt[target] and position[enemy]) != 0:
         return false
+
     if moved == pawn and captured == noPiece and 
     ((occupancy and bitAt[target]) != 0 or (enPassantTarget != noSquare and (bitAt[enPassantTarget] and occupancy) != 0)):
         return false
+
     if capturedEnPassant and (bitAt[target] and position.enPassantCastling and not(ranks[a1] or ranks[a8])) == 0:
         return false
+
     if (moved == bishop or moved == rook or moved == queen) and
     (bitAt[target] and moved.attackMask(source, occupancy)) == 0:
         return false
 
-    elif move.castled:
+    if moved == pawn:
+        if captured != noPiece and (bitAt[target] and pawnCaptureAttackTable[us][source]) == 0:
+            return false
+        elif captured == noPiece and (bitAt[target] and pawnQuietAttackTable[us][source]) == 0 and
+        (
+            (pawnQuietAttackTable[enemy][target] and pawnQuietAttackTable[us][source]) == 0 or
+            (occupancy and pawnQuietAttackTable[us][source]) != 0
+        ):
+            return false
+
+    if move.castled:
         if (position.enPassantCastling and homeRank[us]) == 0:
             return false
         let castlingSide =
@@ -458,7 +474,7 @@ func toMove*(s: string, position: Position): Move =
         castled = castled,
         capturedEnPassant = capturedEnPassant
     )
-
+    
     doAssert position.isLegal(result)
     
 func gamePhase*(position: Position): GamePhase =

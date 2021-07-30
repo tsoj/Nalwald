@@ -3,41 +3,64 @@ import strutils
 import moveIterator
 import times
 import move
+import random
+
+var randomMoves = newSeq[Move](10000)
 
 func perft*(
     position: Position,
     depth: int, height: int = 0,
     testZobristKeys: static bool = true,
     testPseudoLegality: static bool = true,
-    printMoveNodes: static bool = false,
+    printMoveNodes: static bool = false
 ): uint64 =
     if depth == 0:
         return 1
 
     var nodes: uint64 = 0
 
+    var claimedPseudoLegalMoves: seq[Move]
+    when testPseudoLegality:
+        {.cast(noSideEffect).}:
+            for move in randomMoves:
+                if position.isPseudoLegal(move):
+                    claimedPseudoLegalMoves.add(move)
+
     for move in position.moveIterator:
+
         when testPseudoLegality:
             if not position.isPseudoLegal(move):
                 debugEcho position
-                debugEcho position.debugString
                 debugEcho $move
             doAssert position.isPseudoLegal(move)
+            for claimedMove in claimedPseudoLegalMoves.mitems:
+                if claimedMove == move:
+                    claimedMove = noMove
+            {.cast(noSideEffect).}:
+                randomMoves[rand(0..<randomMoves.len)] = move
+
         var newPosition = position
         newPosition.doMove(move)
+
         when testZobristKeys:
-            if newPosition.zobristKey != newPosition.calculateZobristKey:
-                debugEcho $move
             doAssert newPosition.zobristKey == newPosition.calculateZobristKey
+
         if not newPosition.inCheck(position.us, position.enemy):
             let n = newPosition.perft(
                 depth - 1, height + 1,
                 testZobristKeys = testZobristKeys
-            )
+            )                
+            nodes += n
+
             when printMoveNodes:
                 debugEcho "    ", $move, " ", n, " ", newPosition.fen
-            nodes += n
-    nodes
+    when testPseudoLegality:
+        for claimedMove in claimedPseudoLegalMoves:
+            if not `==`(claimedMove, noMove):
+                debugEcho position
+                debugEcho $claimedMove
+            doAssert claimedMove == noMove
+    nodes#TODO fix weird move nim behaviours
 
 
 type PerftData = object
@@ -74,7 +97,7 @@ proc getPerftTestData(): seq[PerftData] =
             result[^1].nodes.add(words[i].parseBiggestUInt)
 
 
-proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true) =
+proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true, testPseudoLegality: static bool = false) =
 
     let data = getPerftTestData()
     
@@ -88,7 +111,11 @@ proc perftTest*(maxNodes = uint64.high, testZobristKeys: static bool = true) =
                 break
 
             let start = now()
-            let perftResult = perftData.position.perft(depth + 1, testZobristKeys = testZobristKeys)
+            let perftResult = perftData.position.perft(
+                depth + 1,
+                testZobristKeys = testZobristKeys,
+                testPseudoLegality = true
+            )
             let passedTime = now() - start
             totalPassedMilliseconds += passedTime.inMilliseconds
             totalNumNodes += perftResult
