@@ -6,6 +6,7 @@ import
     perft,
     see,
     evaluation,
+    movegen,
     version,
     times,
     strutils,

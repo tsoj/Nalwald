@@ -4,6 +4,9 @@ import
     move,
     types,
     castling
+import
+    strutils,
+    utils
 
 func generateCaptures(position: Position, piece: Piece, moves: var openArray[Move]): int =
     result = 0
@@ -175,3 +178,21 @@ func legalMoves*(position: Position): seq[Move] =
         if newPosition.inCheck(position.us, position.enemy):
             continue
         result.add(moveArray[i])
+
+func toMove*(s: string, position: Position): Move =
+    # TODO: move to better place (not movegen)
+
+    doAssert s.len == 4 or s.len == 5
+
+    let
+        source = parseEnum[Square](s[0..1])
+        target = parseEnum[Square](s[2..3])
+        promoted = if s.len == 5: s[4].toColoredPiece.piece else: noPiece
+
+    for move in position.legalMoves:
+        if move.source == source and move.promoted == promoted:
+            if move.target == target:
+                return move
+            if move.castled and target == kingTarget[position.castlingSide(move)][position.us] and not position.isChess960:
+                return move
+    doAssert false, "Move is illegal: " & s

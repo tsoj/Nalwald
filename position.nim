@@ -76,8 +76,8 @@ func inCheck*(position: Position, us, enemy: Color): bool =
 func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
     (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 
-func castlingSide*(position: Position, target: Square): CastlingSide =
-    if target == position.rookSource[position.us][queenside]:
+func castlingSide*(position: Position, move: Move): CastlingSide =
+    if move.target == position.rookSource[position.us][queenside]:
         return queenside
     kingside
 
@@ -137,7 +137,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         if not (target in position.rookSource[us]):
             return false
 
-        let castlingSide = position.castlingSide(target)
+        let castlingSide = position.castlingSide(move)
         
         let
             kingSource = (position[us] and position[king]).toSquare
@@ -205,7 +205,7 @@ func doMove*(position: var Position, move: Move) =
         let
             rookSource = target
             kingSource = source
-            castlingSide = position.castlingSide(target)
+            castlingSide = position.castlingSide(move)
             rookTarget = rookTarget[castlingSide][us]
             kingTarget = kingTarget[castlingSide][us]
         
@@ -435,52 +435,14 @@ func debugString*(position: Position): string =
     result &= "zobristKey: " & $position.zobristKey & "\n"
     result &= "rookSource: " & $position.rookSource
 
-func isChess960(position: Position): bool =
+func isChess960*(position: Position): bool =
     let us = position.us
     (position.enPassantCastling and homeRank[us]) != 0 and
     (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSquare[us])
 
-func toMove*(s: string, position: Position): Move =
-    let us = position.us
-
-    doAssert s.len == 4 or s.len == 5
-
-    let
-        source = parseEnum[Square](s[0..1])
-        target = parseEnum[Square](s[2..3])
-
-    let promoted = if s.len == 5: s[4].toColoredPiece.piece else: noPiece
-    let moved = position.coloredPiece(source).piece
-    let capturedEnPassant = moved == pawn and (bitAt[target] and position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0
-    let captured = if capturedEnPassant: pawn else: position.coloredPiece(target).piece
-
-    let enPassantTarget = if moved == pawn and captured == noPiece and (bitAt[target] and pawnQuietAttackTable[us][source]) == 0:
-        pawnQuietAttackTable[us][source].toSquare
-    else:
-        noSquare
-
-    let castlingSide = position.castlingSide(target)
-    let castled = moved == king and (position.enPassantCastling and homeRank[us] and bitAt[target]) != 0
-
-    result.create(
-        source = source,
-        target = if castled: position.rookSource[us][castlingSide] else: target,
-        enPassantTarget = enPassantTarget,
-        moved = moved,
-        captured = if castled: noPiece else: captured,
-        promoted = promoted,
-        castled = castled,
-        capturedEnPassant = capturedEnPassant
-    )
-    if not position.isLegal(result):
-        debugEcho position
-        debugEcho result
-        debugEcho result.debugString
-    doAssert position.isLegal(result)
-
 func notation*(move: Move, position: Position): string =
     if move.castled and not position.isChess960:
-        return $move.source & $kingTarget[position.castlingSide(move.target)][position.us]
+        return $move.source & $kingTarget[position.castlingSide(move)][position.us]
     $move
 
 func notation*(pv: seq[Move], position: Position): string =
