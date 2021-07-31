@@ -23,7 +23,7 @@ func legalMoves*(position: Position): seq[Move] =
 func isChess960*(position: Position): bool =
     let us = position.us
     (position.enPassantCastling and homeRank[us]) != 0 and
-    (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSquare[us])
+    (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSource[us])
 
 func toMove*(s: string, position: Position): Move =
 
@@ -38,7 +38,7 @@ func toMove*(s: string, position: Position): Move =
         if move.source == source and move.promoted == promoted:
             if move.target == target:
                 return move
-            if move.castled and target == kingTarget[position.castlingSide(move)][position.us] and not position.isChess960:
+            if move.castled and target == kingTarget[position.us][position.castlingSide(move)] and not position.isChess960:
                 return move
     doAssert false, "Move is illegal: " & s
 
@@ -207,7 +207,7 @@ func debugString*(position: Position): string =
 
 func notation*(move: Move, position: Position): string =
     if move.castled and not position.isChess960:
-        return $move.source & $kingTarget[position.castlingSide(move)][position.us]
+        return $move.source & $kingTarget[position.us][position.castlingSide(move)]
     $move
 
 func notation*(pv: seq[Move], position: Position): string =

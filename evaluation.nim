@@ -228,7 +228,7 @@ func evaluateKing(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} = # TODO: fix these locks
+): array[Phase, Value] {.locks: 0.} =
     result = [opening: 0.Value, endgame: 0.Value]
 
     # kingsafety by pawn shielding

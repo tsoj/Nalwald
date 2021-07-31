@@ -132,12 +132,12 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
             continue
 
         # all necessary squares are empty
-        if (blockSensitive(castlingSide, us, kingSource, rookSource) and occupancy) != 0:
+        if (blockSensitive(us, castlingSide, kingSource, rookSource) and occupancy) != 0:
             continue
 
         # king will never be in check
         var kingInCheck = false
-        for checkSquare in checkSensitive[castlingSide][us][kingSource]:
+        for checkSquare in checkSensitive[us][castlingSide][kingSource]:
             if position.isAttacked(us, enemy, checkSquare):
                 kingInCheck = true
                 break

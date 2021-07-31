@@ -10,7 +10,7 @@ type Position* = object
     pieces: array[pawn..king, Bitboard]
     colors: array[white..black, Bitboard]
     enPassantCastling*: Bitboard
-    rookSource*: array[white..black, array[queenside..kingside, Square]]
+    rookSource*: array[white..black, array[CastlingSide, Square]]
     zobristKey*: uint64
     us*, enemy*: Color
     halfmovesPlayed*: int16
@@ -124,10 +124,10 @@ func isPseudoLegal*(position: Position, move: Move): bool =
             rookSource = position.rookSource[us][castlingSide]
 
         if (position.enPassantCastling and bitAt[rookSource]) == 0 or
-        (blockSensitive(castlingSide, us, kingSource, rookSource) and occupancy) != 0:
+        (blockSensitive(us, castlingSide, kingSource, rookSource) and occupancy) != 0:
             return false
 
-        for checkSquare in checkSensitive[castlingSide][us][kingSource]:
+        for checkSquare in checkSensitive[us][castlingSide][kingSource]:
             if position.isAttacked(us, enemy, checkSquare):
                 return false
     true
@@ -186,8 +186,8 @@ func doMove*(position: var Position, move: Move) =
             rookSource = target
             kingSource = source
             castlingSide = position.castlingSide(move)
-            rookTarget = rookTarget[castlingSide][us]
-            kingTarget = kingTarget[castlingSide][us]
+            rookTarget = rookTarget[us][castlingSide]
+            kingTarget = kingTarget[us][castlingSide]
         
         position.removePiece(us, king, bitAt[kingSource])
         position.removePiece(us, rook, bitAt[rookSource])
