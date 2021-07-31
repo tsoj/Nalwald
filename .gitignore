@@ -15,6 +15,7 @@ massif.out
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 *.txt
+*.sh
 vgcore.*
 *ptimizationResult*
 game

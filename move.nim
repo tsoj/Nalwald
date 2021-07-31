@@ -68,3 +68,13 @@ func `$`*(move: Move): string =
     result = $move.source & $move.target
     if move.promoted != noPiece:
         result &= move.promoted.notation
+
+func debugString*(move: Move): string =
+    result &= "source: " & $move.source & "\n"
+    result &= "target: " & $move.target & "\n"
+    result &= "enPassantTarget: " & $move.enPassantTarget & "\n"
+    result &= "moved: " & $move.moved & "\n"
+    result &= "captured: " & $move.captured & "\n"
+    result &= "promoted: " & $move.promoted & "\n"
+    result &= "castled: " & $move.castled & "\n"
+    result &= "capturedEnPassant: " & $move.capturedEnPassant

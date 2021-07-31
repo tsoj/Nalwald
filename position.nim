@@ -76,8 +76,8 @@ func inCheck*(position: Position, us, enemy: Color): bool =
 func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
     (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 
-func castlingSide*(position: Position, move: Move): CastlingSide =
-    if move.target == position.rookSource[position.us][queenside]:
+func castlingSide*(position: Position, target: Square): CastlingSide =
+    if target == position.rookSource[position.us][queenside]:
         return queenside
     kingside
 
@@ -137,7 +137,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         if not (target in position.rookSource[us]):
             return false
 
-        let castlingSide = position.castlingSide(move)
+        let castlingSide = position.castlingSide(target)
         
         let
             kingSource = (position[us] and position[king]).toSquare
@@ -205,7 +205,7 @@ func doMove*(position: var Position, move: Move) =
         let
             rookSource = target
             kingSource = source
-            castlingSide = position.castlingSide(move)
+            castlingSide = position.castlingSide(target)
             rookTarget = rookTarget[castlingSide][us]
             kingTarget = kingTarget[castlingSide][us]
         
@@ -459,16 +459,8 @@ func toMove*(s: string, position: Position): Move =
     else:
         noSquare
 
-    let castlingSide = if target == kingTarget[queenside][us] or target == position.rookSource[us][queenside]:
-        queenside
-    else:
-        kingside
-    let castled = moved == king and
-    (position.enPassantCastling and homeRank[us]) != 0 and
-    (
-        target == position.rookSource[us][castlingSide] or 
-        (target == kingTarget[castlingSide][us] and not position.isChess960)
-    )
+    let castlingSide = position.castlingSide(target)
+    let castled = moved == king and (position.enPassantCastling and homeRank[us] and bitAt[target]) != 0
 
     result.create(
         source = source,
@@ -480,17 +472,22 @@ func toMove*(s: string, position: Position): Move =
         castled = castled,
         capturedEnPassant = capturedEnPassant
     )
-    
+    if not position.isLegal(result):
+        debugEcho position
+        debugEcho result
+        debugEcho result.debugString
     doAssert position.isLegal(result)
 
 func notation*(move: Move, position: Position): string =
     if move.castled and not position.isChess960:
-        return $move.source & $kingTarget[position.castlingSide(move)][position.us]
+        return $move.source & $kingTarget[position.castlingSide(move.target)][position.us]
     $move
 
 func notation*(pv: seq[Move], position: Position): string =
+    var currentPosition = position
     for move in pv:
-        result &= move.notation(position) & " "
+        result &= move.notation(currentPosition) & " "
+        currentPosition.doMove(move)
 
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
