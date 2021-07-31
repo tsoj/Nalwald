@@ -176,7 +176,6 @@ func search(
                 return alpha
         else:
             # hash result futility pruning
-            #TODO: check if this still works
             let margin = hashResultFutilityMargin(depth - hashResult.depth)
             var
                 noisyAlpha = alpha
