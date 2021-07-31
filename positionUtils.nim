@@ -26,7 +26,6 @@ func isChess960*(position: Position): bool =
     (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSquare[us])
 
 func toMove*(s: string, position: Position): Move =
-    # TODO: move to better place (not movegen)
 
     doAssert s.len == 4 or s.len == 5
 
