@@ -55,7 +55,7 @@ func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
         (rook.attackMask(target, occupancy) and (position[rook] or position[queen])) or
         (knight.attackMask(target, occupancy) and position[knight]) or
         (king.attackMask(target, occupancy) and position[king]) or
-        (pawnCaptureAttackTable[us][target] and position[pawn])
+        (attackTablePawnCapture[us][target] and position[pawn])
     ) and position[enemy]
 
 func isAttacked*(position: Position, us, enemy: Color, target: Square): bool =
@@ -101,12 +101,12 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         return false
 
     if moved == pawn:
-        if captured != noPiece and (bitAt[target] and pawnCaptureAttackTable[us][source]) == 0:
+        if captured != noPiece and (bitAt[target] and attackTablePawnCapture[us][source]) == 0:
             return false
-        elif captured == noPiece and (bitAt[target] and pawnQuietAttackTable[us][source]) == 0 and
+        elif captured == noPiece and (bitAt[target] and attackTablePawnQuiet[us][source]) == 0 and
         (
-            (pawnQuietAttackTable[enemy][target] and pawnQuietAttackTable[us][source]) == 0 or
-            (occupancy and pawnQuietAttackTable[us][source]) != 0
+            (attackTablePawnQuiet[enemy][target] and attackTablePawnQuiet[us][source]) == 0 or
+            (occupancy and attackTablePawnQuiet[us][source]) != 0
         ):
             return false
 
@@ -137,7 +137,7 @@ func calculateZobristKey*(position: Position): uint64 =
     for piece in pawn..king:
         var occupancy = position[piece]
         while occupancy != 0:
-            let square: Square = occupancy.removeTrailingOneBit.Square
+            let square: Square = occupancy.removeTrailingOneBit
             result = result xor (if (position[white] and bitAt[square]) != 0:
                 zobristColorBitmasks[white][square]
             else:
@@ -168,10 +168,10 @@ func doMove*(position: var Position, move: Move) =
 
     # en passant
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, pawnQuietAttackTable[enemy][target])
+        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
         position.movePiece(us, pawn, bitAt[source], bitAt[target])
 
-        let capturedSquare = pawnQuietAttackTable[enemy][target].toSquare
+        let capturedSquare = attackTablePawnQuiet[enemy][target].toSquare
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[pawn][capturedSquare]
         position.zobristKey = position.zobristKey xor zobristColorBitmasks[enemy][capturedSquare]
     # removing captured piece

@@ -278,7 +278,7 @@ func evaluatePieceType(
 
     var tmpOccupancy = position[piece]
     while tmpOccupancy != 0:
-        let square = tmpOccupancy.removeTrailingOneBit.Square
+        let square = tmpOccupancy.removeTrailingOneBit
         let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 

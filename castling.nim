@@ -57,6 +57,6 @@ const checkSensitive* = block:
                     # I don't need to check if king will be in check after the move is done
                     (bitAt[kingSource] or not bitAt[kingTarget[us][castlingSide]])
                 while tmp != 0:
-                    checkSensitive[us][castlingSide][kingSource].add(tmp.removeTrailingOneBit.Square)
+                    checkSensitive[us][castlingSide][kingSource].add(tmp.removeTrailingOneBit)
 
     checkSensitive

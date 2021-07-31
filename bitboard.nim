@@ -6,19 +6,18 @@ import
 
 type Bitboard* = uint64
 
-func removeTrailingOneBit*(x: var SomeInteger): int =
-    result = x.countTrailingZeroBits
-    x = x and (x - 1)
-
-func toSquare*(x: Bitboard): Square =
+func toSquare*(x: Bitboard): Square {.inline.} =
     x.countTrailingZeroBits.Square
-
 
 const bitAt*: array[a1..h8, Bitboard] = block:
     var bitAt: array[a1..h8, Bitboard]
     for square in a1..h8:
         bitAt[square] = 1u64 shl square.int8
     bitAt
+
+func removeTrailingOneBit*(x: var SomeInteger): Square {.inline.} =
+    result = x.countTrailingZeroBits.Square
+    x = x and not bitAt[result]
 
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
@@ -59,12 +58,12 @@ const diagonals*: array[a1..h8, Bitboard] = block:
         let currentDiagonal = (mainDiagonal shl i) and upperLeftSideZero
         var tmp = currentDiagonal
         while tmp != 0:
-            diagonals[tmp.removeTrailingOneBit.Square] = currentDiagonal
+            diagonals[tmp.removeTrailingOneBit] = currentDiagonal
     for i in 1..7:
         let currentDiagonal = (mainDiagonal shr i) and lowerRightSideZero
         var tmp = currentDiagonal
         while tmp != 0:
-            diagonals[tmp.removeTrailingOneBit.Square] = currentDiagonal
+            diagonals[tmp.removeTrailingOneBit] = currentDiagonal
     diagonals
 
 const antiDiagonals: array[a1..h8, Bitboard] = block:
@@ -74,12 +73,12 @@ const antiDiagonals: array[a1..h8, Bitboard] = block:
         let currentAntiDiagonal = (antiDiagonal shl i) and lowerLeftSideZero
         var tmp = currentAntiDiagonal
         while tmp != 0:
-            antiDiagonals[tmp.removeTrailingOneBit.Square] = currentAntiDiagonal
+            antiDiagonals[tmp.removeTrailingOneBit] = currentAntiDiagonal
     for i in 1..7:
         let currentAntiDiagonal = (antiDiagonal shr i) and upperRightSideZero
         var tmp = currentAntiDiagonal
         while tmp != 0:
-            antiDiagonals[tmp.removeTrailingOneBit.Square] = currentAntiDiagonal
+            antiDiagonals[tmp.removeTrailingOneBit] = currentAntiDiagonal
     antiDiagonals
 
 func hashkeyRank*(square: Square, occupancy: Bitboard): uint8 =
@@ -162,28 +161,28 @@ const kingAttackTable: array[a1..h8, Bitboard] = block:
                 kingAttackTable[square] = kingAttackTable[square] or bitAt[targetSquare]
     kingAttackTable
 
-const pawnQuietAttackTable*: array[white..black, array[a1..h8, Bitboard]] = block:
-    var pawnQuietAttackTable: array[white..black, array[a1..h8, Bitboard]]
+const attackTablePawnQuiet*: array[white..black, array[a1..h8, Bitboard]] = block:
+    var attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]]
     for square in a1..h8:
         var targetSquare = square
         if targetSquare.goUp:
-            pawnQuietAttackTable[white][square] = bitAt[targetSquare]
+            attackTablePawnQuiet[white][square] = bitAt[targetSquare]
         targetSquare = square
         if targetSquare.goDown:
-            pawnQuietAttackTable[black][square] = bitAt[targetSquare]
-    pawnQuietAttackTable
+            attackTablePawnQuiet[black][square] = bitAt[targetSquare]
+    attackTablePawnQuiet
 
-const pawnCaptureAttackTable*: array[white..black, array[a1..h8, Bitboard]] = block:
-    var pawnCaptureAttackTable: array[white..black, array[a1..h8, Bitboard]]
+const attackTablePawnCapture*: array[white..black, array[a1..h8, Bitboard]] = block:
+    var attackTablePawnCapture: array[white..black, array[a1..h8, Bitboard]]
     for square in a1..h8:
         for direction in [goLeft, goRight]:
             var targetSquare = square
             if targetSquare.goUp and targetSquare.direction:
-                pawnCaptureAttackTable[white][square] = pawnCaptureAttackTable[white][square] or bitAt[targetSquare]
+                attackTablePawnCapture[white][square] = attackTablePawnCapture[white][square] or bitAt[targetSquare]
             targetSquare = square
             if targetSquare.goDown and targetSquare.direction:
-                pawnCaptureAttackTable[black][square] = pawnCaptureAttackTable[black][square] or bitAt[targetSquare]
-    pawnCaptureAttackTable
+                attackTablePawnCapture[black][square] = attackTablePawnCapture[black][square] or bitAt[targetSquare]
+    attackTablePawnCapture
 
 const isPassedMask*: array[white..black, array[a1..h8, Bitboard]] = block:
     var isPassedMask: array[white..black, array[a1..h8, Bitboard]]

@@ -12,7 +12,7 @@ func getLeastValuableAttacker(position: Position, target: Square, stage: var Pie
         occupancy = position.occupancy
 
     if stage == pawn:
-        let attack = pawnCaptureAttackTable[enemy][target] and position[pawn] and position[us]
+        let attack = attackTablePawnCapture[enemy][target] and position[pawn] and position[us]
         if attack != 0:
             return (attack.toSquare, pawn)
     
@@ -26,24 +26,20 @@ func getLeastValuableAttacker(position: Position, target: Square, stage: var Pie
                 return (attack.toSquare, piece)
     (noSquare, noPiece)
 
-
 func see(position: var Position, target: Square, victim: Piece, stage: var array[white..black, Piece]): Value =
 
-    result = 0
-
-    let (source, attacker) = position.getLeastValuableAttacker(target, stage[position.us])
+    let 
+        us = position.us
+        (source, attacker) = position.getLeastValuableAttacker(target, stage[us])
     var currentVictim = attacker
     if source != noSquare:
 
-        position.removePiece(position.enemy, victim, bitAt[target])
-
         if attacker == pawn and (target >= a8 or target <= h1):
-            position.removePiece(position.us, attacker, bitAt[source])
-            position.addPiece(position.us, queen, bitAt[target])
+            position.removePiece(us, attacker, bitAt[source])
             result = values[queen] - values[pawn]
             currentVictim = queen
         else:
-            position.movePiece(position.us, attacker, bitAt[source], bitAt[target])
+            position.removePiece(us, attacker, bitAt[source])
         
         position.us = position.enemy
         position.enemy = position.enemy.opposite
@@ -60,29 +56,24 @@ func see*(position: Position, move: Move): Value =
         moved = move.moved
         promoted = move.promoted
 
-
     var stage = [white: pawn, black: pawn]
     var position = position
     var currentVictim = moved
 
-    position.movePiece(us, moved, bitAt[source], bitAt[target])
-
-    if captured != noPiece:
-        position.removePiece(enemy, captured, bitAt[target])
+    position.removePiece(us, moved, bitAt[source])
 
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, pawnQuietAttackTable[enemy][target])
-        position.movePiece(us, pawn, bitAt[source], bitAt[target])
+        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
+        position.removePiece(us, pawn, bitAt[source])
     elif promoted != noPiece:
-        position.removePiece(position.us, moved, bitAt[source])
-        position.addPiece(position.us, promoted, bitAt[target])
+        position.removePiece(us, moved, bitAt[source])
         result = values[promoted] - values[pawn]
         currentVictim = promoted
     else:
-        position.movePiece(position.us, moved, bitAt[source], bitAt[target])
+        position.removePiece(us, moved, bitAt[source])
 
-    position.us = position.enemy
-    position.enemy = position.enemy.opposite
+    position.us = enemy
+    position.enemy = enemy.opposite
 
     result += values[captured] - position.see(target, currentVictim, stage)
                 
@@ -111,7 +102,8 @@ proc seeTest*() =
             ("2r4k/2r4p/p7/2b2p1b/4pP2/1BR5/P1R3PP/2Q4K w - - 0 1", "c3c5", values[bishop]),
             ("8/pp6/2pkp3/4bp2/2R3b1/2P5/PP4B1/1K6 w - - 0 1", "g2c6", values[pawn]-values[bishop]),
             ("4q3/1p1pr1k1/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "e6e4", values[pawn]-values[rook]),
-            ("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "h7e4", values[pawn])
+            ("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "h7e4", values[pawn]),
+            ("r1q1r1k1/pb1nppbp/1p3np1/1Pp1N3/3pNP2/B2P2PP/P3P1B1/2R1QRK1 w - c6 0 11", "b5c6", values[pawn])
         ]
     for (fen, moveString, seeValue) in data:
         var position = fen.toPosition

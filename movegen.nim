@@ -9,10 +9,10 @@ func generateCaptures(position: Position, piece: Piece, moves: var openArray[Mov
     result = 0
     var pieceOccupancy = position[position.us] and position[piece]
     while pieceOccupancy != 0:
-        let source = pieceOccupancy.removeTrailingOneBit.Square
+        let source = pieceOccupancy.removeTrailingOneBit
         var attackMask = piece.attackMask(source, position.occupancy) and position[position.enemy]
         while attackMask != 0:
-            let target = attackMask.removeTrailingOneBit.Square
+            let target = attackMask.removeTrailingOneBit
             for captured in pawn..king:
                 if (position[captured] and bitAt[target]) != 0:
                     moves[result].create(
@@ -28,10 +28,10 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
     result = 0
     var pieceOccupancy = position[position.us] and position[piece]
     while pieceOccupancy != 0:
-        let source = pieceOccupancy.removeTrailingOneBit.Square
+        let source = pieceOccupancy.removeTrailingOneBit
         var attackMask = piece.attackMask(source, occupancy) and (not occupancy)
         while attackMask != 0:
-            let target = attackMask.removeTrailingOneBit.Square
+            let target = attackMask.removeTrailingOneBit
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = piece, captured = noPiece, promoted = noPiece,
@@ -56,16 +56,16 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
 
     var pawnOccupancy = position[pawn] and position[us]
     while pawnOccupancy != 0:
-        let source = pawnOccupancy.removeTrailingOneBit.Square
+        let source = pawnOccupancy.removeTrailingOneBit
         # quiet promotions
-        if (bitAt[source] and pawnHomeRank[enemy]) != 0 and (pawnQuietAttackTable[us][source] and position.occupancy) == 0:
-            let target = pawnQuietAttackTable[us][source].toSquare
+        if (bitAt[source] and pawnHomeRank[enemy]) != 0 and (attackTablePawnQuiet[us][source] and position.occupancy) == 0:
+            let target = attackTablePawnQuiet[us][source].toSquare
             moves.addPromotions(source, target, result)
 
         # captures
-        var attackMask = pawnCaptureAttackTable[us][source] and position[enemy]
+        var attackMask = attackTablePawnCapture[us][source] and position[enemy]
         while attackMask != 0:
-            let target = attackMask.removeTrailingOneBit.Square
+            let target = attackMask.removeTrailingOneBit
             for captured in pawn..king:
                 if (position[captured] and bitAt[target]) != 0:
                     if (bitAt[target] and homeRank[enemy]) != 0:
@@ -80,7 +80,7 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
                     break
 
         # en passant capture
-        attackMask = pawnCaptureAttackTable[us][source] and position.enPassantCastling and (ranks[a3] or ranks[a6])
+        attackMask = attackTablePawnCapture[us][source] and position.enPassantCastling and (ranks[a3] or ranks[a6])
         if attackMask != 0:
             let target = attackMask.toSquare
             moves[result].create(
@@ -97,9 +97,9 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
     result = 0
     var pawnOccupancy = position[pawn] and position[us]
     while pawnOccupancy != 0:
-        let source = pawnOccupancy.removeTrailingOneBit.Square
-        if (pawnQuietAttackTable[us][source] and (occupancy or homeRank[position.enemy])) == 0:
-            let target = pawnQuietAttackTable[us][source].toSquare
+        let source = pawnOccupancy.removeTrailingOneBit
+        if (attackTablePawnQuiet[us][source] and (occupancy or homeRank[position.enemy])) == 0:
+            let target = attackTablePawnQuiet[us][source].toSquare
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = noPiece, promoted = noPiece,
@@ -109,7 +109,7 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
 
             # double pushs
             if (bitAt[source] and pawnHomeRank[us]) != 0:
-                let doublePushTarget = pawnQuietAttackTable[us][target].toSquare
+                let doublePushTarget = attackTablePawnQuiet[us][target].toSquare
                 if (bitAt[doublePushTarget] and occupancy) == 0:
                     moves[result].create(
                         source = source, target = doublePushTarget, enPassantTarget = target,
