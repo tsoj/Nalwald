@@ -4,10 +4,7 @@ import
     move,
     zobristBitmasks,
     castling,
-    utils,
-    bitops,
-    options,
-    strutils
+    bitops
 
 type Position* = object
     pieces: array[pawn..king, Bitboard]
@@ -31,16 +28,6 @@ template `[]`*(position: Position, color: Color): Bitboard =
 template `[]=`*(position: var Position, color: Color, bitboard: Bitboard) =
     position.colors[color] = bitboard
 
-func coloredPiece*(position: Position, square: Square): ColoredPiece =
-    for color in white..black:
-        for piece in pawn..king:
-            if (bitAt[square] and position[piece] and position[color]) != 0:
-                return ColoredPiece(piece: piece, color: color)
-    ColoredPiece(piece: noPiece, color: noColor)
-
-template occupancy*(position: Position): Bitboard =
-    position[white] or position[black]
-
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) =
     position[piece] = position[piece] or target
     position[color] = position[color] or target
@@ -52,6 +39,14 @@ func removePiece*(position: var Position, color: Color, piece: Piece, source: Bi
 func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) =
     position.removePiece(color, piece, source)
     position.addPiece(color, piece, target)
+
+func castlingSide*(position: Position, move: Move): CastlingSide =
+    if move.target == position.rookSource[position.us][queenside]:
+        return queenside
+    kingside
+
+func occupancy*(position: Position): Bitboard =
+    position[white] or position[black]
 
 func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
     let occupancy = position.occupancy
@@ -65,21 +60,6 @@ func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
 
 func isAttacked*(position: Position, us, enemy: Color, target: Square): bool =
     position.attackers(us, enemy, target) != 0
-
-func kingSquare*(position: Position, color: Color): Square =
-    assert (position[king] and position[color]).countSetBits == 1
-    (position[king] and position[color]).toSquare
-
-func inCheck*(position: Position, us, enemy: Color): bool =
-    position.isAttacked(us, enemy, position.kingSquare(us))
-
-func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
-    (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
-
-func castlingSide*(position: Position, move: Move): CastlingSide =
-    if move.target == position.rookSource[position.us][queenside]:
-        return queenside
-    kingside
 
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:
@@ -257,12 +237,26 @@ func doNullMove*(position: var Position) =
     position.enemy = position.us
     position.us = position.us.opposite
 
+func kingSquare*(position: Position, color: Color): Square =
+    assert (position[king] and position[color]).countSetBits == 1
+    (position[king] and position[color]).toSquare
+
+func inCheck*(position: Position, us, enemy: Color): bool =
+    position.isAttacked(us, enemy, position.kingSquare(us))
+
 func isLegal*(position: Position, move: Move): bool =
     if not position.isPseudoLegal(move):
         return false
     var newPosition = position
     newPosition.doMove(move)
     return not newPosition.inCheck(position.us, position.enemy)
+
+func coloredPiece*(position: Position, square: Square): ColoredPiece =
+    for color in white..black:
+        for piece in pawn..king:
+            if (bitAt[square] and position[piece] and position[color]) != 0:
+                return ColoredPiece(piece: piece, color: color)
+    ColoredPiece(piece: noPiece, color: noColor)
 
 func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square: Square) =
     for color in [white, black]:
@@ -271,188 +265,6 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
         position[piece] = position[piece] and (not bitAt[square])
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, bitAt[square])
-
-proc toPosition*(fen: string, suppressWarnings = false): Position =
-    var fenWords = fen.splitWhitespace()    
-    if fenWords.len < 4:
-        raise newException(ValueError, "FEN must have at least 4 words")
-    if fenWords.len > 6 and not suppressWarnings:
-        echo "Warning: FEN shouldn't have more than 6 words"
-    while fenWords.len < 6:
-        fenWords.add("0")   
-
-    let piecePlacement = fenWords[0]
-    let activeColor = fenWords[1]
-    let castlingRights = fenWords[2]
-    let enPassant = fenWords[3]
-    let halfmoveClock = fenWords[4]
-    let fullmoveNumber = fenWords[5]
-
-    var currentSquare = a8
-    for pieceChar in piecePlacement:
-        case pieceChar
-        of '/':
-            currentSquare = ((currentSquare).int8 - 16).Square
-        of '8', '7', '6', '5', '4', '3', '2', '1':
-            currentSquare = (currentSquare.int8 + parseInt($pieceChar)).Square
-        else:
-            if currentSquare > h8 or currentSquare < a1:
-                raise newException(ValueError, "FEN piece placement is not correctly formatted: " & $currentSquare)
-            try:
-                result.addColoredPiece(pieceChar.toColoredPiece, currentSquare)
-            except ValueError:
-                raise newException(ValueError, "FEN piece placement is not correctly formatted: " &
-                        getCurrentExceptionMsg())
-            currentSquare = (currentSquare.int8 + 1).Square
-    
-    # active color
-    case activeColor
-    of "w", "W":
-        result.us = white
-        result.enemy = black
-    of "b", "B":
-        result.us = black
-        result.enemy = white
-    else:
-        raise newException(ValueError, "FEN active color notation does not exist: " & activeColor)
-
-    # castling rights
-    result.enPassantCastling = 0
-    for castlingChar in castlingRights:
-        let castlingChar = case castlingChar:
-        of '-':
-            continue
-        of 'K':
-            'H'
-        of 'k':
-            'h'
-        of 'Q':
-            'A'
-        of 'q':
-            'a'
-        else:
-            castlingChar
-
-        let
-            us = if castlingChar.isUpperAscii: white else: black
-            kingSquare = (result[us] and result[king]).toSquare
-            rookSource = (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
-            castlingSide = if rookSource < kingSquare: queenside else: kingside
-        
-        result.enPassantCastling = result.enPassantCastling or bitAt[rookSource]
-        result.rookSource[us][castlingSide] = rookSource
-
-    # en passant square
-    if enPassant != "-":
-        try:
-            result.enPassantCastling = result.enPassantCastling or bitAt[parseEnum[Square](enPassant.toLowerAscii)]
-        except ValueError:
-            raise newException(ValueError, "FEN en passant target square is not correctly formatted: " &
-                    getCurrentExceptionMsg())
-
-    # halfmove clock and fullmove number
-    try:
-        result.halfmoveClock = parseUInt(halfmoveClock).int16
-    except ValueError:
-        raise newException(ValueError, "FEN halfmove clock is not correctly formatted: " & getCurrentExceptionMsg())
-
-    try:
-        result.halfmovesPlayed = parseUInt(fullmoveNumber).int16 * 2
-    except ValueError:
-        raise newException(ValueError, "FEN fullmove number is not correctly formatted: " & getCurrentExceptionMsg())
-
-    result.zobristKey = result.calculateZobristKey
-
-func fen*(position: Position): string =
-    result = ""
-    var emptySquareCounter = 0
-    for rank in countdown(7, 0):
-        for file in 0..7:
-            let square = (rank*8 + file).Square
-            let coloredPiece = position.coloredPiece(square)
-            if coloredPiece.piece != noPiece and coloredPiece.color != noColor:
-                if emptySquareCounter > 0:
-                    result &= $emptySquareCounter
-                    emptySquareCounter = 0
-                result &= coloredPiece.notation
-            else:
-                emptySquareCounter += 1
-        if emptySquareCounter > 0:
-            result &= $emptySquareCounter
-            emptySquareCounter = 0
-        if rank != 0:
-            result &= "/"
-            
-    result &= (if position.us == white: " w " else: " b ")
-
-    for color in [white, black]:
-        for castlingSide in queenside..kingside:
-            let rookSource = position.rookSource[color][castlingSide]
-            if (position.enPassantCastling and bitAt[rookSource] and homeRank[color]) != 0:
-                result &= ($rookSource)[0]
-
-                if result[^1] == 'h':
-                    result[^1] = 'k'
-                if result[^1] == 'a':
-                    result[^1] = 'q'
-
-                if color == white:
-                    result[^1] = result[^1].toUpperAscii
-                
-    if result.endsWith(' '):
-        result &= "-"
-
-    result &= " "
-
-    if (position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0:
-        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).toSquare)
-    else:
-        result &= "-"
-
-    result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2)
-
-func `$`*(position: Position): string =
-    result = boardString(proc (square: Square): Option[string] =
-        if (bitAt[square] and position.occupancy) != 0:
-            return some($position.coloredPiece(square))
-        none(string)
-    ) & "\n"
-    let fenWords = position.fen.splitWhitespace
-    for i in 1..<fenWords.len:
-        result &= fenWords[i] & " "
-
-func debugString*(position: Position): string =    
-    for piece in pawn..king:
-        result &= $piece & ":\n"
-        result &= position[piece].bitboardString & "\n"
-    for color in white..black:
-        result &= $color & ":\n"
-        result &= position[color].bitboardString & "\n"
-    result &= "enPassantCastling:\n"
-    result &= position.enPassantCastling.bitboardString & "\n"
-    result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
-    result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
-    result &= "zobristKey: " & $position.zobristKey & "\n"
-    result &= "rookSource: " & $position.rookSource
-
-func isChess960*(position: Position): bool =
-    let us = position.us
-    (position.enPassantCastling and homeRank[us]) != 0 and
-    (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSquare[us])
-
-func notation*(move: Move, position: Position): string =
-    if move.castled and not position.isChess960:
-        return $move.source & $kingTarget[position.castlingSide(move)][position.us]
-    $move
-
-func notation*(pv: seq[Move], position: Position): string =
-    var currentPosition = position
-    for move in pv:
-        result &= move.notation(currentPosition) & " "
-        currentPosition.doMove(move)
-
-func gamePhase*(position: Position): GamePhase =
-    position.occupancy.countSetBits.GamePhase
 
 func material*(position: Position): Value =
     result = 0
@@ -465,17 +277,8 @@ func absoluteMaterial*(position: Position): Value =
     if position.us == black:
         result = -result
 
-func insufficientMaterial*(position: Position): bool =
-    (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
+    (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 
-func flipColors*(position: Position): Position =
-    result = Position(
-        colors: [white: position[black].mirror, black: position[white].mirror],
-        enPassantCastling: position.enPassantCastling.mirror,
-        us: position.enemy, enemy: position.us,
-        halfmovesPlayed: position.halfmovesPlayed,
-        halfmoveClock: position.halfmoveClock
-    )
-    for piece in pawn..king:
-        result[piece] = position[piece].mirror
-    result.zobristKey = result.calculateZobristKey
+func gamePhase*(position: Position): GamePhase =
+    position.occupancy.countSetBits.GamePhase

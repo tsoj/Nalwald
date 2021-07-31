@@ -2,8 +2,8 @@ import
     types,
     move,
     position,
-    bitboard,
-    movegen
+    positionUtils,
+    bitboard
 
 func getLeastValuableAttacker(position: Position, target: Square, stage: var Piece = pawn): (Square, Piece) =
     let

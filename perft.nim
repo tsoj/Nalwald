@@ -1,5 +1,6 @@
 import
     position,
+    positionUtils,
     move,
     moveIterator,
     strutils,

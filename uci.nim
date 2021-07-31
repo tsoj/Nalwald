@@ -1,12 +1,12 @@
 import
     types,
     position,
+    positionUtils,
     hashTable,
     uciSearch,
     perft,
     see,
     evaluation,
-    movegen,
     version,
     times,
     strutils,
