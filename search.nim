@@ -325,7 +325,6 @@ iterator iterativeDeepeningSearch*(
 
         doAssert not hashResult.isEmpty
         let pv = if state.numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
-        doAssert pv.len >= 1
 
         yield (value, pv, state.countedNodes)
 
