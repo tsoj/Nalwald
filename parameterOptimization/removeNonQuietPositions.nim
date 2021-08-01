@@ -1,7 +1,7 @@
 import
     ../search,
     ../position,
-    ../movegen
+    ../positionUtils
 
 let f = open("unlabeledNonQuietSetNalwald.epd")
 var line: string

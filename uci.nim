@@ -20,8 +20,6 @@ const
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
 
-# TODO: self play test using cute chess with error output and release flags
-
 type UciState = object
     position: Position
     history: seq[Position]
