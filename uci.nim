@@ -34,21 +34,20 @@ proc uci() =
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: openArray[string]) =
-    assert params.len >= 1 and params[0] == "setoption"
 
-    if params.len == 5 and
-    params[1] == "name" and
-    params[3] == "value":
-        if params[2].toLowerAscii == "Hash".toLowerAscii:
-            let newHashSizeMB = params[4].parseInt
+    if params.len == 4 and
+    params[0] == "name" and
+    params[2] == "value":
+        if params[1].toLowerAscii == "Hash".toLowerAscii:
+            let newHashSizeMB = params[3].parseInt
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
-        elif params[2].toLowerAscii == "UCI_Chess960".toLowerAscii:
+        elif params[1].toLowerAscii == "UCI_Chess960".toLowerAscii:
             discard
         else:
-            echo "Unknown option: ", params[2]
+            echo "Unknown option: ", params[1]
     else:
         echo "Unknown parameters"
     
@@ -56,23 +55,28 @@ func stop(uciState: var UciState) =
     uciState.stopFlag.store(true)
 
 proc moves(uciState: var UciState, params: openArray[string]) =
-    if params.len < 2:
+    if params.len < 1:
         echo "Missing moves"
-    uciState.history.setLen(0)
-    for i in 1..<params.len:
-        uciState.history.add(uciState.position)
-        uciState.position.doMove(params[i].toMove(uciState.position))
+
+    var history: seq[Position]
+    var position = uciState.position
+    
+    for i in 0..<params.len:
+        history.add(uciState.position)
+        position.doMove(params[i].toMove(position))
+
+    uciState.history = history
+    uciState.position = position
 
 proc setPosition(uciState: var UciState, params: openArray[string]) =
-    assert params.len >= 1 and params[0] == "position"
 
     var index = 0
     var fen: string
-    if params.len >= 2 and params[1] == "startpos":
+    if params.len >= 1 and params[0] == "startpos":
         fen = startposFen
-        index = 2
-    elif params.len >= 2 and params[1] == "fen":
-        index = 2
+        index = 1
+    elif params.len >= 1 and params[0] == "fen":
+        index = 1
         var numFenWords = 0
         while params.len > index and params[index] != "moves":
             if numFenWords < 6:
@@ -85,10 +89,11 @@ proc setPosition(uciState: var UciState, params: openArray[string]) =
 
     uciState.position = fen.toPosition
 
-    uciState.moves(params[index..^1])
+    if params.len > index and params[index] == "moves":
+        index += 1
+        uciState.moves(params[index..^1])
 
 proc go(uciState: var UciState, params: openArray[string], searchThreadResult: var FlowVar[bool]) =
-    assert params.len >= 1 and params[0] == "go"
 
     var targetDepth = Ply.high
     var movesToGo: int16 = int16.high
@@ -96,7 +101,7 @@ proc go(uciState: var UciState, params: openArray[string], searchThreadResult: v
     var timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
     var moveTime = initDuration(milliseconds = int64.high)
 
-    for i in countup(1, params.len - 2, 2):
+    for i in countup(0, params.len - 2, 2):
         case params[i]:
         of "depth":
             targetDepth = params[i+1].parseInt.Ply
@@ -134,11 +139,11 @@ func uciNewGame(uciState: var UciState) =
 
 proc test(params: openArray[string]) =
     seeTest()
-    if params.len == 1:
+    if params.len == 0:
         perftTest()
     else:
         let numNodes = try:
-            params[1].parseInt.uint64
+            params[0].parseInt.uint64
         except:
             uint64.high
 
@@ -150,13 +155,13 @@ proc test(params: openArray[string]) =
         )
 
 proc perft(uciState: UciState, params: openArray[string]) =
-    if params.len >= 2:
-        echo uciState.position.perft(params[1].parseInt, printMoveNodes = true)
+    if params.len >= 1:
+        echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
     else:
         echo "Missing depth parameter"
 
 proc help(params: openArray[string]) =
-    if params.len <= 1:
+    if params.len == 0:
         echo "Possible commands:"
         echo "* uci"
         echo "* setoption"
@@ -177,7 +182,7 @@ proc help(params: openArray[string]) =
         echo "Use 'help <command>' to get info about a specific command"
     else:
         echo "-----------------------------------------"
-        case params[1]:
+        case params[0]:
         of "uci":
             echo(
                 "Tells engine to use the uci (universal chess interface). ",
@@ -243,7 +248,12 @@ proc help(params: openArray[string]) =
             echo "This is sent to the engine when the next search should be assumed to be from a different game."
         of "moves":
             echo "moves <move_1> ... <move_i>"
-            echo "Plays the moves <move_1> to <move_i> on the internal chess board."
+            echo(
+                "Plays the moves <move_1> to <move_i> on the internal chess board. The keyword 'moves' can also be",
+                " omitted: If all moves are detected to be legal they will be played on the internal board."
+            )
+            echo "Example:"
+            echo "'e2e4 c7c6 d2d4 d7d5' will have the same effect as 'moves e2e4 c7c6 d2d4 d7d5'"
         of "print":
             echo "Prints the current internal board."
         of "printdebug":
@@ -254,7 +264,7 @@ proc help(params: openArray[string]) =
             echo "perft <x>"
             echo "Calculates the perft of the current position to depth <x>."
         of "test":
-            echo "test [<x>|nozobrist|pseudo|onlytxt]..."
+            echo "test [<x>] [nozobrist|pseudo|onlytxt]..."
             echo(
                 "Runs SEE and perft tests. ",
                 "If a file 'perft_test.txt' exists then the positions from that file will be included."
@@ -278,28 +288,55 @@ proc help(params: openArray[string]) =
         of "about":
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
         else:
-            echo "Unknown command: ", params[1]
+            echo "Unknown command: ", params[0]
         
         echo "-----------------------------------------"
 
 proc about() =
     echo(
         "-----------------------------------------\n",
-        "Nalwald is a Super GM level chess engine for classical and fischer random chess. It supports the UCI, ",
-        "so it can be used in most chess GUIs (Nibbler, Cutechess, Arena, etc.).\n",
-        "Nalwald is written in the programming language Nim, which is a compiled language with an intuitive and clean syntax.\n",
-        "I started programming chess engines in 2016. After the 'Hello World', the natural first program, my first big project ",
-        "was jht-chess, a chess playing program with an console GUI. I used C++ but it looked more like messy C. ",
-        "In hindsight I would say that it is hard to write worse spaghetti code than I did then, but it played well enough ",
-        "to win against amateur chess players. Since then I wrote multiple chess engine, ",
-        "most in C++ (jht-chess, zebra-chess, jht-chess 2, squared-chess, Googleplex Starthinker) but also one in Rust (Hactar) ",
-        "and now also in Nim. While my first engine could barely beat myself (and I am not a very good chess player, ",
-        "and much less in 2016), today Nalwald maybe could even beat Magnus Carlsen.\n",
-        "On this way, the chessprogamming.org wiki was of great help many times. ",
-        "From there I got most ideas for search improvements (move ordering, transposition table, LMR, etc.). ",
-        "During the development of Nalwald I also introduced some techniques ",
-        "that I believe are novelties (king contextual PSTs, fail-high delta pruning, ",
-        "futility reductions, hash result futility pruning).\n",
+        "Nalwald ", version(), "\n",
+        "Compiled at ", compileDate(), "\n",
+        "(c) 2016-", compileYear() , " by Jost Triller\n",
+        "\n",
+        "Nalwald is a Super GM level chess engine\n",
+        "for classical and fischer random chess.\n",
+        "It supports the UCI, so it can be used in\n",
+        "most chess GUIs (e.g. Cutechess, Arena).\n",
+        "Nalwald is written in the programming\n",
+        "language Nim, which is a compiled\n",
+        "language with an intuitive and clean\n",
+        "syntax.\n",
+        "I started programming in 2016. After the\n",
+        "well-known 'Hello World' program, my\n",
+        "first big project was jht-chess, a chess\n",
+        "playing program with an console GUI. I\n",
+        "used C++ but it looked more like messy C.\n",
+        "In hindsight I would say that it is hard\n",
+        "to write worse spaghetti code than I did\n",
+        "then, but it played well enough to win\n",
+        "against amateur chess players. Since then\n",
+        "I wrote multiple chess engine, most in\n",
+        "C++ (jht-chess, zebra-chess, jht-chess 2,\n",
+        "squared-chess, Googleplex Starthinker)\n",
+        "but also one in Rust (Hactar) and now\n",
+        "also in Nim. While my first engine could\n",
+        "barely beat me (and I am not a very\n",
+        "good chess player, and much less in\n",
+        "2016), today maybe Nalwald could even\n",
+        "beat Magnus Carlsen.\n",
+        "On this way from a at best mediocre chess\n",
+        "program to a chess engine that could win\n",
+        "against the best human players, the\n",
+        "chessprogamming.org wiki was of great\n",
+        "help many times. From there I got most\n",
+        "ideas for search improvements (move\n",
+        "ordering, transposition table, LMR, etc.).\n",
+        "During the development of Nalwald I also\n",
+        "introduced some techniques that I believe\n",
+        "are novelties (king contextual PSTs,\n",
+        "fail-high delta pruning, futility\n",
+        "reductions, hash result futility pruning).\n",
         "Anyway, have fun using Nalwald!\n",
         "-----------------------------------------"
     )
@@ -311,55 +348,61 @@ proc uciLoop*() =
         " o    /  o\\    ( )    \\   /    \\ /    \\ /\n",
         "( )   \\  \\_>   / \\    |   |    / \\    ( )\n",
         "|_|   /__\\    /___\\   /___\\   /___\\   /_\\\n",
-        "---- Copyright (c) 2021 Jost Triller ----"
+        "------------ by Jost Triller ------------"
     )
     var uciState = UciState(position: startposFen.toPosition)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
-        sleep(5)
-        let command = readLine(stdin)
-        let params = command.splitWhitespace()
-        if params.len == 0 or params[0] == "":
-            continue
-        case params[0]
-        of "uci":
-            uci()
-        of "setoption":
-            uciState.setOption(params)
-        of "isready":
-            echo "readyok"
-        of "position":
-            uciState.setPosition(params)
-        of "go":
-            uciState.go(params, searchThreadResult)
-        of "stop":
-            uciState.stop()
-        of "quit":
-            uciState.stop()
-            break
-        of "ucinewgame":
-            uciState.uciNewGame()
-        of "moves":
-            uciState.moves(params)
-        of "print":
-            echo uciState.position
-        of "printdebug":
-            echo uciState.position.debugString
-        of "fen":
-            echo uciState.position.fen
-        of "perft":
-            uciState.perft(params)
-        of "test":
-            test(params)
-        of "eval":
-            echo uciState.position.absoluteEvaluate, " centipawns"
-        of "about":
-            about()
-        of "help":
-            help(params)
-        else:
-            echo "Unknown command: ", params[0]
-            echo "Use 'help'"
+        try:
+            sleep(5)
+            let command = readLine(stdin)
+            let params = command.splitWhitespace()
+            if params.len == 0 or params[0] == "":
+                continue
+            case params[0]
+            of "uci":
+                uci()
+            of "setoption":
+                uciState.setOption(params[1..^1])
+            of "isready":
+                echo "readyok"
+            of "position":
+                uciState.setPosition(params[1..^1])
+            of "go":
+                uciState.go(params[1..^1], searchThreadResult)
+            of "stop":
+                uciState.stop()
+            of "quit":
+                uciState.stop()
+                break
+            of "ucinewgame":
+                uciState.uciNewGame()
+            of "moves":
+                uciState.moves(params[1..^1])
+            of "print":
+                echo uciState.position
+            of "printdebug":
+                echo uciState.position.debugString
+            of "fen":
+                echo uciState.position.fen
+            of "perft":
+                uciState.perft(params[1..^1])
+            of "test":
+                test(params[1..^1])
+            of "eval":
+                echo uciState.position.absoluteEvaluate, " centipawns"
+            of "about":
+                about()
+            of "help":
+                help(params[1..^1])
+            else:
+                try:
+                    uciState.moves(params)
+                except:
+                    echo "Unknown command: ", params[0]
+                    echo "Use 'help'"
+        except:
+            echo "info string ", getCurrentExceptionMsg()
 
     discard ^searchThreadResult

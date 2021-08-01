@@ -58,6 +58,8 @@ nim modern Nalwald.nim
   - futility reductions
   - hash result futility pruning
 - supports Chess960/FRC
+- UCI compatible
+  - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`
 
 #### License
 
