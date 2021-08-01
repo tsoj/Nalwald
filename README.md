@@ -1,6 +1,6 @@
 # Nalwald
 ### Chess engine written in Nim
-![](https://gitlab.com/tsoj/Nalwald/-/raw/master/logo.png)
+![](./logo.png)
 
 You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 #### Download:

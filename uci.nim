@@ -176,7 +176,7 @@ proc help(params: openArray[string]) =
         echo "* about"
         echo "Use 'help <command>' to get info about a specific command"
     else:
-        echo "---------------------------------"
+        echo "-----------------------------------------"
         case params[1]:
         of "uci":
             echo(
@@ -279,9 +279,12 @@ proc help(params: openArray[string]) =
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
         else:
             echo "Unknown command: ", params[1]
+        
+        echo "-----------------------------------------"
 
 proc about() =
     echo(
+        "-----------------------------------------\n",
         "Nalwald is a Super GM level chess engine for classical and fischer random chess. It supports the UCI, ",
         "so it can be used in most chess GUIs (Nibbler, Cutechess, Arena, etc.).\n",
         "Nalwald is written in the programming language Nim, which is a compiled language with an intuitive and clean syntax.\n",
@@ -291,13 +294,14 @@ proc about() =
         "to win against amateur chess players. Since then I wrote multiple chess engine, ",
         "most in C++ (jht-chess, zebra-chess, jht-chess 2, squared-chess, Googleplex Starthinker) but also one in Rust (Hactar) ",
         "and now also in Nim. While my first engine could barely beat myself (and I am not a very good chess player, ",
-        "and much less in 2016), today Nalwald probably could beat Magnus Carlsen.\n",
+        "and much less in 2016), today Nalwald maybe could even beat Magnus Carlsen.\n",
         "On this way, the chessprogamming.org wiki was of great help many times. ",
         "From there I got most ideas for search improvements (move ordering, transposition table, LMR, etc.). ",
         "During the development of Nalwald I also introduced some techniques ",
         "that I believe are novelties (king contextual PSTs, fail-high delta pruning, ",
         "futility reductions, hash result futility pruning).\n",
-        "Anyway, have fun using Nalwald!"
+        "Anyway, have fun using Nalwald!\n",
+        "-----------------------------------------"
     )
 
 proc uciLoop*() =
