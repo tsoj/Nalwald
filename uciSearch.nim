@@ -3,7 +3,7 @@ import
     move,
     position,
     positionUtils,
-    timeManagedSearch,
+    search,
     hashTable,
     atomics,
     times,
