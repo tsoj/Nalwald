@@ -82,11 +82,7 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     else:
         tmp = tmp / (GamePhase.high - GamePhase.low).T
 
-    result = tmp.T    
-    if not((result >= forOpening and result <= forEndgame and forOpening <= forEndgame) or
-    (result <= forOpening and result >= forEndgame and forOpening >= forEndgame)):
-        debugEcho gamePhase, ", ", forOpening, ", ", forEndgame, ", ", result
-        doAssert false
+    result = tmp.T
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
     let start = now()
