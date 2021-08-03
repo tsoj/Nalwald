@@ -1,6 +1,6 @@
 # Nalwald
 ### Chess engine written in Nim
-![](https://gitlab.com/tsoj/Nalwald/-/raw/master/logo.png)
+![](./logo.png)
 
 You can play against Nalwald [here](https://lichess.org/@/squared-chess).
 #### Download:
@@ -57,7 +57,9 @@ nim modern Nalwald.nim
   - fail-high delta pruning
   - futility reductions
   - hash result futility pruning
-- supports Chess960/Fischer random chess
+- supports Chess960/FRC
+- UCI compatible
+  - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`
 
 #### License
 

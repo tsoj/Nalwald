@@ -24,6 +24,11 @@ func blockSensitive(
                 result[us][castlingSide][source] = connectOnFile(source, target[us][castlingSide])
 
 const
+    classicalRookSource* = [
+        white: [queenside: a1, kingside: h1],
+        black: [queenside: a8, kingside: h8]
+    ]
+    classicalKingSource* = [white: e1, black: e8]
     kingTarget* = [
         white: [queenside: c1, kingside: g1],
         black: [queenside: c8, kingside: g8]
@@ -32,11 +37,6 @@ const
         white: [queenside: d1, kingside: f1],
         black: [queenside: d8, kingside: f8]
     ]
-    classicalRookSource* = [
-        white: [queenside: a1, kingside: h1],
-        black: [queenside: a8, kingside: h8]
-    ]
-    classicalKingSource* = [white: e1, black: e8]
     blockSensitiveRook = blockSensitive(rookTarget)
     blockSensitiveKing = blockSensitive(kingTarget)
 

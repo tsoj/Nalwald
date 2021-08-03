@@ -138,7 +138,7 @@ proc about*() =
         "-----------------------------------------\n",
         "Nalwald ", version(), "\n",
         "Compiled at ", compileDate(), "\n",
-        "(c) 2016-", compileYear() , " by Jost Triller\n",
+        "Copyright (c) 2016-", compileYear() , " by Jost Triller\n",
         "\n",
         "Nalwald is a Super GM level chess engine\n",
         "for classical and fischer random chess.\n",
