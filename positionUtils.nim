@@ -27,8 +27,7 @@ func isChess960*(position: Position): bool =
 
 func toMove*(s: string, position: Position): Move =
 
-    if s.len != 4 and s.len != 5:
-        raise newException(ValueError, "Move string is wrong length: " & s)
+    doAssert s.len == 4 or s.len == 5
 
     let
         source = parseEnum[Square](s[0..1])
@@ -41,7 +40,7 @@ func toMove*(s: string, position: Position): Move =
                 return move
             if move.castled and target == kingTarget[position.us][position.castlingSide(move)] and not position.isChess960:
                 return move
-    raise newException(ValueError, "Move is illegal: " & s)
+    doAssert false, "Move is illegal: " & s
 
 proc toPosition*(fen: string, suppressWarnings = false): Position =
     var fenWords = fen.splitWhitespace()    
@@ -216,6 +215,19 @@ func notation*(pv: seq[Move], position: Position): string =
     for move in pv:
         result &= move.notation(currentPosition) & " "
         currentPosition.doMove(move)
+
+func flipColors*(position: Position): Position =
+    result = Position(
+        enPassantCastling: position.enPassantCastling.mirror,
+        us: position.enemy, enemy: position.us,
+        halfmovesPlayed: position.halfmovesPlayed,
+        halfmoveClock: position.halfmoveClock
+    )
+    for color in white..black:
+        result[color] = position[color].mirror
+    for piece in pawn..king:
+        result[piece] = position[piece].mirror
+    result.zobristKey = result.calculateZobristKey
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1

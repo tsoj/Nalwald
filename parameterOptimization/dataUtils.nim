@@ -1,6 +1,5 @@
 import 
     ../position,
-    ../positionUtils,
     ../evalParameters,
     ../evaluation,
     winningProbability,
