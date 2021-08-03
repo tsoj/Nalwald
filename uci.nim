@@ -155,6 +155,55 @@ proc perft(uciState: UciState, params: seq[string]) =
     else:
         echo "Missing depth parameter"
 
+proc about() =
+    echo(
+        "-----------------------------------------\n",
+        "Nalwald ", version(), "\n",
+        "Compiled at ", compileDate(), "\n",
+        "(c) 2016-", compileYear() , " by Jost Triller\n",
+        "\n",
+        "Nalwald is a Super GM level chess engine\n",
+        "for classical and fischer random chess.\n",
+        "It supports the UCI, so it can be used in\n",
+        "most chess GUIs (e.g. Cutechess, Arena).\n",
+        "Nalwald is written in the programming\n",
+        "language Nim, which is a compiled\n",
+        "language with an intuitive and clean\n",
+        "syntax.\n",
+        "I started programming in 2016. After the\n",
+        "well-known 'Hello World' program, my\n",
+        "first big project was jht-chess, a chess\n",
+        "playing program with an console GUI. I\n",
+        "used C++ but it looked more like messy C.\n",
+        "In hindsight I would say that it is hard\n",
+        "to write worse spaghetti code than I did\n",
+        "then, but it played well enough to win\n",
+        "against amateur chess players. Since then\n",
+        "I wrote multiple chess engine, most in\n",
+        "C++ (jht-chess, zebra-chess, jht-chess 2,\n",
+        "squared-chess, Googleplex Starthinker)\n",
+        "but also one in Rust (Hactar) and now\n",
+        "also in Nim. While my first engine could\n",
+        "barely beat me (and I am not a very\n",
+        "good chess player, and much less in\n",
+        "2016), today maybe Nalwald could even\n",
+        "beat Magnus Carlsen.\n",
+        "On this way from a at best mediocre chess\n",
+        "program to a chess engine that could win\n",
+        "against the best human players, the\n",
+        "chessprogamming.org wiki was of great\n",
+        "help many times. From there I got most\n",
+        "ideas for search improvements (move\n",
+        "ordering, transposition table, LMR, etc.).\n",
+        "During the development of Nalwald I also\n",
+        "introduced some techniques that I believe\n",
+        "are novelties (king contextual PSTs,\n",
+        "fail-high delta pruning, futility\n",
+        "reductions, hash result futility pruning).\n",
+        "Anyway, have fun using Nalwald!\n",
+        "-----------------------------------------"
+    )
+
 
 proc uciLoop*() =
     echo "---------------- Nalwald ----------------"
@@ -204,6 +253,8 @@ proc uciLoop*() =
             echo uciState.position.absoluteEvaluate, " centipawns"
         of "flip":
             uciState.position = uciState.position.flipColors()
+        of "about":
+            about()
 
         else:
             if params[0] != "help": echo "Unknown command: ", params[0]
