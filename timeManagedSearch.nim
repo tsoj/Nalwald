@@ -10,8 +10,6 @@ import
     threadpool,
     times
 
-# TODO test if all parameterOptimization programs still compile
-
 type MoveTime = object
     maxTime, approxTime: Duration
 func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
@@ -62,9 +60,8 @@ iterator iterativeTimeManagedSearch*(
         lastNumNodes = uint64.high
 
     var iteration = -1
-    for (value, pv, nodes) in iterativeDeepeningSearch(
-        position, hashTable, positionHistory, targetDepth, stop, evaluation
-    ):
+    for (value, pv, nodes) in iterativeDeepeningSearch(position, hashTable, positionHistory, targetDepth, stop, evaluation):
+        
         iteration += 1
         let totalPassedTime = now() - start
         let iterationPassedTime = (now() - startLastIteration)
