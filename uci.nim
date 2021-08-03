@@ -37,21 +37,20 @@ proc uci() =
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: seq[string]) =
-    assert params.len >= 1 and params[0] == "setoption"
 
-    if params.len == 5 and
-    params[1] == "name" and
-    params[3] == "value":
-        if params[2] == "Hash":
-            let newHashSizeMB = params[4].parseInt
+    if params.len == 4 and
+    params[0] == "name" and
+    params[2] == "value":
+        if params[1] == "Hash":
+            let newHashSizeMB = params[3].parseInt
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
-        elif params[2] == "UCI_Chess960":
+        elif params[1] == "UCI_Chess960":
             discard
         else:
-            echo "Unknown option: ", params[2]
+            echo "Unknown option: ", params[1]
     else:
         echo "Unknown parameters"
     
@@ -59,15 +58,14 @@ func stop(uciState: var UciState) =
     uciState.stopFlag.store(true)
     
 proc setPosition(uciState: var UciState, params: seq[string]) =
-    assert params.len >= 1 and params[0] == "position"
 
     var index = 0
     var fen: string
-    if params.len >= 2 and params[1] == "startpos":
+    if params.len >= 1 and params[0] == "startpos":
         fen = startposFen
-        index = 2
-    elif params.len >= 2 and params[1] == "fen":
-        index = 2
+        index = 1
+    elif params.len >= 1 and params[0] == "fen":
+        index = 1
         var numFenWords = 0
         while params.len > index and params[index] != "moves":
             if numFenWords < 6:
@@ -89,7 +87,6 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
             uciState.position.doMove(params[i].toMove(uciState.position))
 
 proc go(uciState: var UciState, params: seq[string], searchThreadResult: var FlowVar[bool]) =
-    assert params.len >= 1 and params[0] == "go"
 
     var targetDepth = Ply.high
     var movesToGo: int16 = int16.high
@@ -97,7 +94,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
     var timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
     var moveTime = initDuration(milliseconds = int64.high)
 
-    for i in countup(1, params.len - 2, 2):
+    for i in countup(0, params.len - 2, 2):
         case params[i]:
         of "depth":
             targetDepth = params[i+1].parseInt.Ply
@@ -135,11 +132,11 @@ func uciNewGame(uciState: var UciState) =
 
 proc test(params: seq[string]) =
     seeTest()
-    if params.len == 1:
+    if params.len == 0:
         perftTest()
     else:
         let numNodes = try:
-            params[1].parseInt.uint64
+            params[0].parseInt.uint64
         except:
             uint64.high
 
@@ -151,8 +148,8 @@ proc test(params: seq[string]) =
         )
 
 proc perft(uciState: UciState, params: seq[string]) =
-    if params.len >= 2:
-        echo uciState.position.perft(params[1].parseInt, printMoveNodes = true)
+    if params.len >= 1:
+        echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
     else:
         echo "Missing depth parameter"
 
@@ -176,13 +173,13 @@ proc uciLoop*() =
         of "uci":
             uci()
         of "setoption":
-            uciState.setOption(params)
+            uciState.setOption(params[1..^1])
         of "isready":
             echo "readyok"
         of "position":
-            uciState.setPosition(params)
+            uciState.setPosition(params[1..^1])
         of "go":
-            uciState.go(params, searchThreadResult)
+            uciState.go(params[1..^1], searchThreadResult)
         of "stop":
             uciState.stop()
         of "quit":
@@ -197,9 +194,9 @@ proc uciLoop*() =
         of "fen":
             echo uciState.position.fen
         of "perft":
-            uciState.perft(params)
+            uciState.perft(params[1..^1])
         of "test":
-            test(params)
+            test(params[1..^1])
         of "eval":
             echo uciState.position.absoluteEvaluate, " centipawns"
         of "flip":
@@ -207,7 +204,7 @@ proc uciLoop*() =
         of "about":
             about()
         of "help":
-            help(params)
+            help(params[1..^1])
         else:
             echo "Unknown command: ", params[0]
 
