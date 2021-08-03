@@ -1,6 +1,5 @@
 import
     ../position,
-    ../positionUtils,
     game,
     times,
     threadpool,

@@ -9,7 +9,10 @@ import
     evaluation,
     see,
     atomics,
-    bitops
+    utils,
+    bitops,
+    times,
+    threadpool
 
 static: doAssert values[pawn] == 100
 

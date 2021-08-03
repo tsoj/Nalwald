@@ -1,7 +1,7 @@
 import version
 
 proc help*(params: openArray[string]) =
-    if params.len == 0:
+    if params.len <= 1:
         echo "Possible commands:"
         echo "* uci"
         echo "* setoption"
@@ -22,7 +22,7 @@ proc help*(params: openArray[string]) =
         echo "Use 'help <command>' to get info about a specific command"
     else:
         echo "-----------------------------------------"
-        case params[0]:
+        case params[1]:
         of "uci":
             echo(
                 "Tells engine to use the uci (universal chess interface). ",
@@ -128,16 +128,17 @@ proc help*(params: openArray[string]) =
         of "about":
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
         else:
-            echo "Unknown command: ", params[0]
+            echo "Unknown command: ", params[1]
         
         echo "-----------------------------------------"
+
 
 proc about*() =
     echo(
         "-----------------------------------------\n",
         "Nalwald ", version(), "\n",
         "Compiled at ", compileDate(), "\n",
-        "Copyright (c) 2016-", compileYear() , " by Jost Triller\n",
+        "(c) 2016-", compileYear() , " by Jost Triller\n",
         "\n",
         "Nalwald is a Super GM level chess engine\n",
         "for classical and fischer random chess.\n",
