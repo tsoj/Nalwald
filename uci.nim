@@ -56,7 +56,22 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     
 func stop(uciState: var UciState) =
     uciState.stopFlag.store(true)
+
+proc moves(uciState: var UciState, params: seq[string]) =
+    if params.len < 1:
+        echo "Missing moves"
+
+    var history = uciState.history
+    var position = uciState.position
     
+    for i in 0..<params.len:
+        history.add(position)
+        position.doMove(params[i].toMove(position))
+
+    uciState.history = history
+    uciState.position = position
+
+
 proc setPosition(uciState: var UciState, params: seq[string]) =
 
     var index = 0
@@ -80,11 +95,9 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
 
     uciState.history.setLen(0)
 
-    if params.len > index:
-        doAssert params[index] == "moves"
-        for i in (index + 1)..<params.len:
-            uciState.history.add(uciState.position)
-            uciState.position.doMove(params[i].toMove(uciState.position))
+    if params.len > index and params[index] == "moves":
+        index += 1
+        uciState.moves(params[index..^1])
 
 proc go(uciState: var UciState, params: seq[string], searchThreadResult: var FlowVar[bool]) =
 

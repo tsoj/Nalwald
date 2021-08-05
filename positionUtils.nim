@@ -216,18 +216,5 @@ func notation*(pv: seq[Move], position: Position): string =
         result &= move.notation(currentPosition) & " "
         currentPosition.doMove(move)
 
-func flipColors*(position: Position): Position =
-    result = Position(
-        enPassantCastling: position.enPassantCastling.mirror,
-        us: position.enemy, enemy: position.us,
-        halfmovesPlayed: position.halfmovesPlayed,
-        halfmoveClock: position.halfmoveClock
-    )
-    for color in white..black:
-        result[color] = position[color].mirror
-    for piece in pawn..king:
-        result[piece] = position[piece].mirror
-    result.zobristKey = result.calculateZobristKey
-
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
