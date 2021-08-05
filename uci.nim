@@ -199,8 +199,6 @@ proc uciLoop*() =
             test(params[1..^1])
         of "eval":
             echo uciState.position.absoluteEvaluate, " centipawns"
-        of "flip":
-            uciState.position = uciState.position.flipColors()
         of "about":
             about()
         of "help":
