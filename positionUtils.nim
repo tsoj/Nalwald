@@ -27,7 +27,8 @@ func isChess960*(position: Position): bool =
 
 func toMove*(s: string, position: Position): Move =
 
-    doAssert s.len == 4 or s.len == 5
+    if s.len != 4 and s.len != 5:
+        raise newException(ValueError, "Move string is wrong length: " & s)
 
     let
         source = parseEnum[Square](s[0..1])
@@ -40,7 +41,7 @@ func toMove*(s: string, position: Position): Move =
                 return move
             if move.castled and target == kingTarget[position.us][position.castlingSide(move)] and not position.isChess960:
                 return move
-    doAssert false, "Move is illegal: " & s
+    raise newException(ValueError, "Move is illegal: " & s)
 
 proc toPosition*(fen: string, suppressWarnings = false): Position =
     var fenWords = fen.splitWhitespace()    

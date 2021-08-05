@@ -177,46 +177,56 @@ proc uciLoop*() =
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
-        sleep(5)
-        let command = readLine(stdin)
-        let params = command.splitWhitespace()
-        if params.len == 0 or params[0] == "":
-            continue
-        case params[0]
-        of "uci":
-            uci()
-        of "setoption":
-            uciState.setOption(params[1..^1])
-        of "isready":
-            echo "readyok"
-        of "position":
-            uciState.setPosition(params[1..^1])
-        of "go":
-            uciState.go(params[1..^1], searchThreadResult)
-        of "stop":
-            uciState.stop()
-        of "quit":
-            uciState.stop()
-            break
-        of "ucinewgame":
-            uciState.uciNewGame()
-        of "print":
-            echo uciState.position
-        of "printdebug":
-            echo uciState.position.debugString
-        of "fen":
-            echo uciState.position.fen
-        of "perft":
-            uciState.perft(params[1..^1])
-        of "test":
-            test(params[1..^1])
-        of "eval":
-            echo uciState.position.absoluteEvaluate, " centipawns"
-        of "about":
-            about()
-        of "help":
-            help(params[1..^1])
-        else:
-            echo "Unknown command: ", params[0]
+        try:
+            sleep(5)
+            let command = readLine(stdin)
+            let params = command.splitWhitespace()
+            if params.len == 0 or params[0] == "":
+                continue
+            case params[0]
+            of "uci":
+                uci()
+            of "setoption":
+                uciState.setOption(params[1..^1])
+            of "isready":
+                echo "readyok"
+            of "position":
+                uciState.setPosition(params[1..^1])
+            of "go":
+                uciState.go(params[1..^1], searchThreadResult)
+            of "stop":
+                uciState.stop()
+            of "quit":
+                uciState.stop()
+                break
+            of "ucinewgame":
+                uciState.uciNewGame()
+            of "moves":
+                uciState.moves(params[1..^1])
+            of "print":
+                echo uciState.position
+            of "printdebug":
+                echo uciState.position.debugString
+            of "fen":
+                echo uciState.position.fen
+            of "perft":
+                uciState.perft(params[1..^1])
+            of "test":
+                test(params[1..^1])
+            of "eval":
+                echo uciState.position.absoluteEvaluate, " centipawns"
+            of "about":
+                about()
+            of "help":
+                help(params[1..^1])
+            else:
+                try:
+                    uciState.moves(params)
+                except:
+                    echo "Unknown command: ", params[0]
+                    echo "Use 'help'"
+        except:
+            echo "info string ", getCurrentExceptionMsg()
+
 
     discard ^searchThreadResult
