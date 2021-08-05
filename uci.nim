@@ -159,7 +159,7 @@ proc uciLoop*() =
     echo " o    /  o\\    ( )    \\   /    \\ /    \\ /"
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
-    echo "---- Copyright (c) 2021 Jost Triller ----"
+    echo "------------ by Jost Triller ------------"
     var uciState = UciState(position: startposFen.toPosition)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
