@@ -43,6 +43,11 @@ func `$`*(a: EvalParameters): string =
             result &= $piece & ": " & fmt"{a[phase].bonusTargetingKingArea[piece]:>3}" & ".Value, "
         result &= "],\n"
 
+        result &= "        bonusAttackingKing: ["
+        for piece in bishop..queen:
+            result &= $piece & ": " & fmt"{a[phase].bonusAttackingKing[piece]:>3}" & ".Value, "
+        result &= "],\n"
+
         result &= "        bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value,\n"
         result &= "        bonusPawnHasTwoNeighbors: " & fmt"{a[phase].bonusPawnHasTwoNeighbors:>3}" & ".Value,\n"
         result &= "        bonusKnightAttackingPiece: " & fmt"{a[phase].bonusKnightAttackingPiece:>3}" & ".Value,\n"
@@ -73,6 +78,7 @@ func convertTemplate[InValueType, OutValueType](
     result.mobilityMultiplier = a.mobilityMultiplier
     for piece in bishop..queen:
         result.bonusTargetingKingArea[piece] = a.bonusTargetingKingArea[piece].OutValueType
+        result.bonusAttackingKing[piece] = a.bonusAttackingKing[piece].OutValueType
     result.kingSafetyMultiplier = a.kingSafetyMultiplier
 
 func convertTemplate[InValueType, OutValueType](a: EvalParametersTemplate[InValueType]): EvalParametersTemplate[OutValueType] =
@@ -106,6 +112,7 @@ func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: 
             op(a[phase].mobilityMultiplier[piece], b[phase].mobilityMultiplier[piece])        
         for piece in bishop..queen:
             op(a[phase].bonusTargetingKingArea[piece], b[phase].bonusTargetingKingArea[piece])
+            op(a[phase].bonusAttackingKing[piece], b[phase].bonusAttackingKing[piece])
         op(a[phase].kingSafetyMultiplier, b[phase].kingSafetyMultiplier)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =

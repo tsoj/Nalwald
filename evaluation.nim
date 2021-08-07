@@ -83,11 +83,19 @@ func targetingKingArea(
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
+    # knight and pawn are not included, as the king contextual piece square tables are enough in this case
+    assert piece in bishop..queen
     if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusTargetingKingArea[piece]
 
         when not (gradient is Nothing):
             for phase in Phase: gradient[phase].bonusTargetingKingArea[piece] += (if us == black: -1.0 else: 1.0)
+    
+    if (attackMask and bitAt[kingSquare[enemy]]) != 0:
+        for phase in Phase: result[phase] += evalParameters[phase].bonusAttackingKing[piece]
+
+        when not (gradient is Nothing):
+            for phase in Phase: gradient[phase].bonusAttackingKing[piece] += (if us == black: -1.0 else: 1.0)
 
 #-------------- pawn evaluation --------------#
 
@@ -220,6 +228,9 @@ func evaluateQueen(
     result += evalParameters.targetingKingArea(position, queen, us, enemy, kingSquare, attackMask, gradient)
 
 #-------------- king evaluation --------------#
+
+# TODO: add pawn to king attacking area
+# TODO: evaluation for in check
 
 func evaluateKing(
     position: Position,

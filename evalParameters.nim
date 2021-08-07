@@ -16,6 +16,7 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     bonusRookOnOpenFile*: ValueType
     mobilityMultiplier*: array[knight..queen, float]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
+    bonusAttackingKing*: array[bishop..queen, ValueType]
     kingSafetyMultiplier*: float
 
 type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
@@ -41,4 +42,5 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float], b: float) =
         a.mobilityMultiplier[piece] *= b
     for piece in bishop..queen:
         a.bonusTargetingKingArea[piece] *= b
+        a.bonusAttackingKing[piece] *= b
     a.kingSafetyMultiplier *= b

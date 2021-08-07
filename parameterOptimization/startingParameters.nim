@@ -157,6 +157,7 @@ const startingEvalParameters* = block:
             bonusRookOnOpenFile: 5.0,
             mobilityMultiplier: [knight: 2.0, bishop: 3.0, rook: 4.0, queen: 2.0],
             bonusTargetingKingArea: [bishop: 5.0, rook: 5.0, queen: 8.0],
+            bonusAttackingKing: [bishop: 5.0, rook: 5.0, queen: 8.0],
             kingSafetyMultiplier: -2.5,
         )
         for whoseKing in ourKing..enemyKing:
