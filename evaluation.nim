@@ -229,9 +229,6 @@ func evaluateQueen(
 
 #-------------- king evaluation --------------#
 
-# TODO: add pawn to king attacking area
-# TODO: evaluation for in check
-
 func evaluateKing(
     position: Position,
     square: Square,
