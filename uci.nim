@@ -9,6 +9,7 @@ import
     see,
     evaluation,
     version,
+    easteregg/easteregg,
     times,
     strutils,
     os,
@@ -157,7 +158,8 @@ proc test(params: seq[string]) =
             numNodes,
             testPseudoLegality = "pseudo" in params,
             testZobristKeys = not ("nozobrist" in params),
-            useAllFENs = not ("onlytxt" in params)
+            useInternal = not ("nointernal" in params),
+            useExternal = not ("noexternal" in params)
         )
 
 proc perft(uciState: UciState, params: seq[string]) =
@@ -217,6 +219,8 @@ proc uciLoop*() =
                 echo uciState.position.absoluteEvaluate, " centipawns"
             of "about":
                 about()
+            of "easteregg":
+                run()
             of "help":
                 help(params[1..^1])
             else:

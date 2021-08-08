@@ -9,10 +9,8 @@ import
     evaluation,
     see,
     atomics,
-    utils,
     bitops,
-    times,
-    threadpool
+    times
 
 static: doAssert values[pawn] == 100
 
@@ -98,7 +96,8 @@ func quiesce(
         
         # delta pruning
         if seeEval + deltaMargin < alpha and doPruning:
-            continue
+            # return instead of just continue, as later captures must have lower SEE value
+            return bestValue
         
         # fail-high delta pruning
         if seeEval - failHighDeltaMargin >= beta and doPruning:

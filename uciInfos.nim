@@ -1,7 +1,7 @@
 import version
 
 proc help*(params: openArray[string]) =
-    if params.len <= 1:
+    if params.len == 0:
         echo "Possible commands:"
         echo "* uci"
         echo "* setoption"
@@ -18,11 +18,12 @@ proc help*(params: openArray[string]) =
         echo "* perft"
         echo "* test"
         echo "* eval"
+        echo "* easteregg"
         echo "* about"
         echo "Use 'help <command>' to get info about a specific command"
     else:
         echo "-----------------------------------------"
-        case params[1]:
+        case params[0]:
         of "uci":
             echo(
                 "Tells engine to use the uci (universal chess interface). ",
@@ -115,16 +116,20 @@ proc help*(params: openArray[string]) =
             echo "Don't do zobrist key tests."
             echo "* pseudo"
             echo "Do tests for the pseudo legality function."
-            echo "* onlytxt"
-            echo "Use only the positions given in 'perft_test.txt' and not the internal test positions."
+            echo "* nointernal"
+            echo "Don't use the internal test positions."
+            echo "* noexternal"
+            echo "Don't use the positions given in 'perft_test.txt'."
             echo "Example:"
-            echo "'test 100000 nozobrist onlytxt'"
+            echo "'test 100000 nozobrist nointernal'"
             echo(
                 "Runs perft only up to 100000 nodes per positions, doens't do zobrist key test and only ",
                 "uses positions from 'perft_test.txt'."
             )
         of "eval":
             echo "Prints the static evaluation value for the current internal position."
+        of "easteregg":
+            echo "Try it out."
         of "about":
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
         else:

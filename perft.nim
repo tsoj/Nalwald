@@ -63,9 +63,9 @@ type PerftData = object
     position: Position
     nodes: seq[uint64]
 
-proc getPerftTestData(useAllFENs: bool): seq[PerftData] =
+proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
 
-    var lines = if useAllFENs:
+    var lines = if useInternal:
         @[
             # classical positions
             "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w QKqk - 0 1,48,2039,97862,4085603,193690690",
@@ -85,7 +85,7 @@ proc getPerftTestData(useAllFENs: bool): seq[PerftData] =
         @[]
 
     var file: File
-    if file.open("./perft_test.txt"):
+    if useExternal and file.open("./perft_test.txt"):
         var line: string
         while file.readLine(line):
             if line.isEmptyOrWhitespace:
@@ -105,10 +105,11 @@ proc perftTest*(
     maxNodes = uint64.high,
     testZobristKeys = true,
     testPseudoLegality = false,
-    useAllFENs = true
+    useInternal = true,
+    useExternal = true
 ) =
 
-    let data = getPerftTestData(useAllFENs)
+    let data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
     
     var totalPassedMilliseconds: int64 = 0
     var totalNumNodes: uint64 = 0
@@ -134,7 +135,7 @@ proc perftTest*(
 
     echo "---------------\nPassed time: ", totalPassedMilliseconds, " ms"
     echo "Counted nodes: ", totalNumNodes
-    echo "Nodes per second: ", (1000 * totalNumNodes) div totalPassedMilliseconds.uint64, " nps"
+    echo "Nodes per second: ", (1000 * totalNumNodes) div max(1, totalPassedMilliseconds).uint64, " nps"
     
     echo "Finished perft test successfully"
 

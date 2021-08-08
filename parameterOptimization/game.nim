@@ -1,9 +1,9 @@
 import
     ../position,
+    ../positionUtils,
     ../types,
-    ../search,
+    ../timeManagedSearch,
     ../hashTable,
-    ../movegen,
     ../move,
     ../evaluation,
     times
