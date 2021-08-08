@@ -24,7 +24,7 @@ task debug, "debug compile":
 
 task default, "default compile":
     --define:danger
-    switch("o", name & "-default" & suffix)
+    switch("o", name & suffix)
     setCommand "c"
 
 task native, "native compile":

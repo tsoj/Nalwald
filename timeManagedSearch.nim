@@ -10,8 +10,6 @@ import
     threadpool,
     times
 
-# TODO test if all parameterOptimization programs still compile
-
 type MoveTime = object
     maxTime, approxTime: Duration
 func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
