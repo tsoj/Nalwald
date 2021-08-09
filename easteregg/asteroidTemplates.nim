@@ -85,9 +85,6 @@ const asteroidBigMiddleTemplates* = [
     ]
 ]
 const asteroidBigTopTemplates* = [
-    # "`OOOOOOO`".toRunes,
-    # "``OOOOOO`".toRunes,
-    # "`OOOOOO``".toRunes,
     "```OOOOO`".toRunes,
     "``OOOOO``".toRunes,
     "`OOOOO```".toRunes,
