@@ -61,6 +61,7 @@ nim modern Nalwald.nim
 - UCI compatible
   - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`
 - easteregg
+  - my highscore is **179**
 
 
 #### License
