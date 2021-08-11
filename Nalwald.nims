@@ -19,6 +19,7 @@ let name = projectName() & "-" & version()
 
 task debug, "debug compile":
     --define:release
+    --passC:"-fno-omit-frame-pointer -g"
     switch("o", name & "-debug" & suffix)
     setCommand "c"
 

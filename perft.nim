@@ -1,7 +1,9 @@
 import
+    types,
     position,
     positionUtils,
     move,
+    movegen,
     moveIterator,
     strutils,
     times,
@@ -58,6 +60,18 @@ func perft*(
         for claimedMove in claimedPseudoLegalMoves:
             doAssert claimedMove == noMove
     nodes
+
+func fastPerft*(position: Position, depth: int): uint64 =
+    if depth <= 0:
+        return 1
+    var moves: array[maxNumMoves, Move]
+    let numMoves = position.generateMoves(moves)
+    for i in 0..<numMoves:
+        template move: Move = moves[i]
+        var newPosition = position
+        newPosition.doMove(move)
+        if not newPosition.inCheck(position.us, position.enemy):
+            result += newPosition.fastPerft(depth - 1)
 
 type PerftData = object
     position: Position

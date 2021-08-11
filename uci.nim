@@ -12,6 +12,7 @@ import
     easteregg/easteregg,
     times,
     strutils,
+    strformat,
     os,
     atomics,
     threadpool
@@ -162,7 +163,13 @@ proc test(params: seq[string]) =
 
 proc perft(uciState: UciState, params: seq[string]) =
     if params.len >= 1:
-        echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
+        if "fast" in params:
+            let start = now()
+            let nodes = uciState.position.fastPerft(params[0].parseInt)
+            let s = (now() - start).inMilliseconds.float / 1000.0
+            echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
+        else:
+            echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
     else:
         echo "Missing depth parameter"
 

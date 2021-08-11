@@ -102,8 +102,12 @@ proc help*(params: openArray[string]) =
         of "fen":
             echo "Prints the FEN notation of the current internal board."    
         of "perft":
-            echo "perft <x>"
-            echo "Calculates the perft of the current position to depth <x>."
+            echo "perft <x> [fast]"
+            echo(
+                "Calculates the perft of the current position to depth <x>. ",
+                "If 'fast' is added, no node counts for root moves are printed. ",
+                "Instead printed will be final node count and time needed for the most optimized perft function."
+            )
         of "test":
             echo "test [<x>] [nozobrist|pseudo|onlytxt]..."
             echo(
