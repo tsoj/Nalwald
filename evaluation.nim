@@ -316,6 +316,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     let gamePhase = position.gamePhase
 
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
+    doAssert valueCheckmate > result.abs
 
     when not (gradient is Nothing):
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)

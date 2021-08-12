@@ -25,7 +25,7 @@ func futilityReduction(value: Value): Ply =
     7.Ply
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
-    if depthDifference >= 5.Ply: return values[king]
+    if depthDifference >= 5.Ply: return valueInfinity
     depthDifference.Value * 200.Value
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
@@ -113,7 +113,7 @@ func quiesce(
             alpha = value
 
     if moveCounter == 0 and position.inCheck(position.us, position.enemy):
-        bestValue = -values[king]
+        bestValue = -(height.checkmateValue)
     bestValue
 
 func materialQuiesce*(position: Position): Value =

@@ -80,25 +80,24 @@ func `-=`*(a: var Ply, b: Ply) =
 func `+=`*(a: var Ply, b: Ply) =
     a = a + b
 
+
+const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
+static: doAssert -valueInfinity <= valueInfinity
+const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Value
 const values*: array[Piece, Value] = [
     pawn: 100.Value,
     knight: 300.Value,
     bishop: 300.Value,
     rook: 500.Value,
     queen: 900.Value,
-    king: (100*8 + 300*4 + 500*2 + 900*2).Value,
+    king: valueInfinity,
     noPiece: 0.Value
 ]
-static: doAssert values[king] > 8*values[pawn] + 2*values[knight] + 2*values[bishop] + 2*values[rook] + values[queen]
-const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
-static: doAssert -valueInfinity <= valueInfinity
-const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Ply
-static: doAssert valueCheckmate > values[king]*2
 
 func checkmateValue*(height: Ply): Value =
     valueCheckmate + (Ply.high - height).Value
 static: doAssert Ply.low.checkmateValue < valueInfinity
-static: doAssert Ply.high.checkmateValue > values[king]
+static: doAssert Ply.high.checkmateValue >= valueCheckmate
 
 func plysUntilCheckmate*(value: Value): Ply =
     (-(((abs(value.int32) - (valueCheckmate.int32 + Ply.high.int32))))).Ply
