@@ -290,7 +290,13 @@ func evaluatePieceType(
         let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 
-        var currentResult: array[Phase, Value] = [values[piece], values[piece]]
+        var currentResult: array[Phase, Value]
+        
+        for phase in Phase: currentResult[phase] = evalParameters[phase].pieceValues[piece]
+        when not (gradient is Nothing):
+            for phase in Phase:
+                gradient[phase].pieceValues[piece] += (if currentUs == black: -1.0 else: 1.0)
+
         currentResult += evalParameters.getPstValue(
             square, piece, currentUs,
             [ourKing: kingSquareMirrored[currentUs], enemyKing: kingSquareMirrored[currentEnemy]],
@@ -340,3 +346,17 @@ func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Valu
 func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.absoluteEvaluate(defaultEvalParameters, gradient)
+
+
+const valueTable: array[GamePhase, array[pawn..king, Value]] = block:
+    var valueTable: array[GamePhase, array[pawn..king, Value]]
+    for gamePhase in GamePhase.low..GamePhase.high:
+        for piece in pawn..queen:
+            valueTable[gamePhase][piece] = gamePhase.interpolate(
+                forOpening = defaultEvalParameters[opening].pieceValues[piece],
+                forEndgame = defaultEvalParameters[endgame].pieceValues[piece]
+            )
+        valueTable[gamePhase][king] = valueInfinity
+    valueTable
+func value(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
+    valueTable[gamePhase][piece]

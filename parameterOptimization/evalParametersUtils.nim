@@ -10,7 +10,12 @@ func `$`*(a: EvalParameters): string =
 
         result &= "    " & $phase & ": SinglePhaseEvalParametersTemplate[Value](\n"
 
-        result &= "    pst: [\n"
+        result &= "        pieceValues: ["
+        for piece in pawn..queen:
+            result &= $piece & ": " & fmt"{a[phase].pieceValues[piece]:>3}" & ".Value, "
+        result &= "],\n"
+
+        result &= "        pst: [\n"
         for whoseKing in ourKing..enemyKing: 
             result &= "            " & $whoseKing & ": [\n"
             for kingSquare in a1..h8:
@@ -62,6 +67,8 @@ func `$`*(a: EvalParameters): string =
 func convertTemplate[InValueType, OutValueType](
     a: SinglePhaseEvalParametersTemplate[InValueType]
 ): SinglePhaseEvalParametersTemplate[OutValueType] =
+    for piece in pawn..queen:
+        result.pieceValues[piece] = a.pieceValues[piece].OutValueType
     for whoseKing in ourKing..enemyKing:
         for kingSquare in a1..h8:
             for piece in pawn..king:
@@ -93,6 +100,8 @@ func convert*(a: EvalParametersFloat): EvalParameters =
 
 func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: var float, b: float)) =
     for phase in Phase:
+        for piece in pawn..queen:
+            op(a[phase].pieceValues[piece], b[phase].pieceValues[piece])
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for piece in pawn..king:

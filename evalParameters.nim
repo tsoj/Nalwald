@@ -7,6 +7,7 @@ type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
 type SinglePhaseEvalParametersTemplate*[ValueType] = object
+    pieceValues*: array[pawn..queen, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]
     passedPawnTable*: array[8, ValueType]
     bonusIsolatedPawn*: ValueType
@@ -26,6 +27,8 @@ type EvalParametersFloat* = EvalParametersTemplate[float]
 type EvalParameters* = EvalParametersTemplate[Value]
 
 func `*=`*(a: var SinglePhaseEvalParametersTemplate[float], b: float) =
+    for piece in pawn..queen:
+        a.pieceValues[piece] *= b
     for whoseKing in ourKing..enemyKing:
         for kingSquare in a1..h8:
             for piece in pawn..king:
