@@ -12,29 +12,29 @@ import
     bitops,
     times
 
-static: doAssert values[pawn] == 100
+static: doAssert pawn.value == 100.cp
 
 func futilityReduction(value: Value): Ply =
-    if value < 150: return 0.Ply
-    if value < 200: return 1.Ply
-    if value < 300: return 2.Ply
-    if value < 500: return 3.Ply
-    if value < 750: return 4.Ply
-    if value < 1050: return 5.Ply
-    if value < 1400: return 6.Ply
+    if value < 150.cp: return 0.Ply
+    if value < 200.cp: return 1.Ply
+    if value < 300.cp: return 2.Ply
+    if value < 500.cp: return 3.Ply
+    if value < 750.cp: return 4.Ply
+    if value < 1050.cp: return 5.Ply
+    if value < 1400.cp: return 6.Ply
     7.Ply
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
-    depthDifference.Value * 200.Value
+    depthDifference.Value * 200.cp
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
     ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
 const
-    deltaMargin = 150
-    failHighDeltaMargin = 50
+    deltaMargin = 150.cp
+    failHighDeltaMargin = 50.cp
 
 type SearchState = object
     stop: ptr Atomic[bool]

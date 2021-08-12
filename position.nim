@@ -266,17 +266,6 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, bitAt[square])
 
-func material*(position: Position): Value =
-    result = 0
-    for piece in pawn..king:
-        result += (position[piece] and position[position.us]).countSetBits.Value * values[piece]
-        result -= (position[piece] and position[position.enemy]).countSetBits.Value * values[piece]
-
-func absoluteMaterial*(position: Position): Value =
-    result = position.material
-    if position.us == black:
-        result = -result
-
 func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
     (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 

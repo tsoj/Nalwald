@@ -84,15 +84,6 @@ func `+=`*(a: var Ply, b: Ply) =
 const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
 static: doAssert -valueInfinity <= valueInfinity
 const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Value
-const values*: array[Piece, Value] = [
-    pawn: 100.Value,
-    knight: 300.Value,
-    bishop: 300.Value,
-    rook: 500.Value,
-    queen: 900.Value,
-    king: valueInfinity,
-    noPiece: 0.Value
-]
 
 func checkmateValue*(height: Ply): Value =
     valueCheckmate + (Ply.high - height).Value

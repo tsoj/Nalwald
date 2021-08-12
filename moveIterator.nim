@@ -4,6 +4,7 @@ import
     position,
     movegen,
     see,
+    evaluation,
     searchUtils
 
 const zeroHistoryTable = block:
@@ -55,7 +56,7 @@ iterator moveIterator*(
         captureList.movePriorities[i] = position.see(captureList.moves[i])
 
     # winning captures
-    captureList.findBestMoves(minValue = -2*values[pawn])
+    captureList.findBestMoves(minValue = -2*pawn.value)
 
     # killers
     if doQuiets:

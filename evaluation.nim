@@ -348,8 +348,8 @@ func absoluteEvaluate*(position: Position): Value =
     position.absoluteEvaluate(defaultEvalParameters, gradient)
 
 
-const valueTable: array[GamePhase, array[pawn..king, Value]] = block:
-    var valueTable: array[GamePhase, array[pawn..king, Value]]
+const valueTable: array[GamePhase, array[Piece, Value]] = block:
+    var valueTable: array[GamePhase, array[Piece, Value]]
     for gamePhase in GamePhase.low..GamePhase.high:
         for piece in pawn..queen:
             valueTable[gamePhase][piece] = gamePhase.interpolate(
@@ -357,6 +357,24 @@ const valueTable: array[GamePhase, array[pawn..king, Value]] = block:
                 forEndgame = defaultEvalParameters[endgame].pieceValues[piece]
             )
         valueTable[gamePhase][king] = valueInfinity
+        valueTable[gamePhase][noPiece] = 0.Value
     valueTable
-func value(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
+func value*(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
     valueTable[gamePhase][piece]
+
+func cp*(cp: int): Value =
+    (pawn.value * cp.Value) div 100.Value
+
+func toCp*(value: Value): int =
+    (100 * value.int) div pawn.value.int
+
+func material*(position: Position): Value =
+    result = 0
+    for piece in pawn..king:
+        result += (position[piece] and position[position.us]).countSetBits.Value * piece.value
+        result -= (position[piece] and position[position.enemy]).countSetBits.Value * piece.value
+
+func absoluteMaterial*(position: Position): Value =
+    result = position.material
+    if position.us == black:
+        result = -result

@@ -5,6 +5,7 @@ import
     positionUtils,
     timeManagedSearch,
     hashTable,
+    evaluation,
     atomics,
     times,
     strformat,
@@ -19,7 +20,7 @@ func infoString(
     hashFull: int,
     pv: string
 ): string =
-    var scoreString = " score cp " & fmt"{(100*value.int) div values[pawn].int:>4}"
+    var scoreString = " score cp " & fmt"{value.toCp:>4}"
     if abs(value) >= valueCheckmate:
         if value < 0:
             scoreString = " score mate -"
