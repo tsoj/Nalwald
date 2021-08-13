@@ -121,7 +121,7 @@ func materialQuiesce*(position: Position): Value =
         stop: nil,
         hashTable: nil,
         gameHistory: newGameHistory(@[]),
-        evaluation: material
+        evaluation: material# TODO: check if/how this still works with new piecevalue calculation
     )
     position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
 
