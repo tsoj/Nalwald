@@ -6,32 +6,27 @@ import
     evaluation,
     bitboard
 
-func getLeastValuableAttacker(position: Position, target: Square, stage: var Piece = pawn): (Square, Piece) =
+func getLeastValuableAttacker(position: Position, target: Square): (Square, Piece) =
     let
         us = position.us
         enemy = position.enemy
         occupancy = position.occupancy
 
-    if stage == pawn:
-        let attack = attackTablePawnCapture[enemy][target] and position[pawn] and position[us]
-        if attack != 0:
-            return (attack.toSquare, pawn)
+    let attack = attackTablePawnCapture[enemy][target] and position[pawn] and position[us]
+    if attack != 0:
+        return (attack.toSquare, pawn)
     
     for piece in knight..king:
-        if stage <= piece:
-            stage = piece
-            let attack = attackMask(piece, target, occupancy) and position[piece] and position[us]
-            if attack != 0:
-                if piece == queen:
-                    stage = bishop
-                return (attack.toSquare, piece)
+        let attack = attackMask(piece, target, occupancy) and position[piece] and position[us]
+        if attack != 0:
+            return (attack.toSquare, piece)
     (noSquare, noPiece)
 
-func see(position: var Position, target: Square, victim: Piece, stage: var array[white..black, Piece]): Value =
+func see(position: var Position, target: Square, victim: Piece): Value =
 
     let 
         us = position.us
-        (source, attacker) = position.getLeastValuableAttacker(target, stage[us])
+        (source, attacker) = position.getLeastValuableAttacker(target)
     var currentVictim = attacker
     if source != noSquare:
 
@@ -45,7 +40,7 @@ func see(position: var Position, target: Square, victim: Piece, stage: var array
         position.us = position.enemy
         position.enemy = position.enemy.opposite
 
-        result += max(0, victim.value - position.see(target, currentVictim, stage))
+        result += max(0, victim.value - position.see(target, currentVictim))
 
 func see*(position: Position, move: Move): Value =
     let
@@ -57,7 +52,6 @@ func see*(position: Position, move: Move): Value =
         moved = move.moved
         promoted = move.promoted
 
-    var stage = [white: pawn, black: pawn]
     var position = position
     var currentVictim = moved
 
@@ -76,7 +70,7 @@ func see*(position: Position, move: Move): Value =
     position.us = enemy
     position.enemy = enemy.opposite
 
-    result += captured.value - position.see(target, currentVictim, stage)
+    result += captured.value - position.see(target, currentVictim)
                 
 proc seeTest*() =
     const data =

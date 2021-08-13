@@ -254,6 +254,7 @@ func evaluatePiece(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    kingSquareMirrored: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -266,24 +267,31 @@ func evaluatePiece(
         king: evaluateKing[GradientOrNothing]
     ]
     assert piece != noPiece
-    evaluationFunctions[piece](position, square, us, enemy, kingSquare, evalParameters, gradient)
+        
+    for phase in Phase: result[phase] = evalParameters[phase].pieceValues[piece]
+    when not (gradient is Nothing):
+        for phase in Phase:
+            gradient[phase].pieceValues[piece] += (if us == black: -1.0 else: 1.0)
+
+    result += evaluationFunctions[piece](position, square, us, enemy, kingSquare, evalParameters, gradient)
+    result += evalParameters.getPstValue(
+        square, piece, us,
+        [ourKing: kingSquareMirrored[us], enemyKing: kingSquareMirrored[enemy]],
+        gradient
+    )
     
 func evaluatePieceType(
     position: Position,
     piece: Piece,
     evalParameters: EvalParameters,
     kingSquare: array[white..black, Square],
+    kingSquareMirrored: array[white..black, Square],
     gradient: var GradientOrNothing
 ): array[Phase, Value]  =
     result = [opening: 0.Value, endgame: 0.Value]
     let
         us = position.us
         enemy = position.enemy
-    
-    let kingSquareMirrored = [
-        white: kingSquare[white].mirror,
-        black: kingSquare[black]
-    ]
 
     var tmpOccupancy = position[piece]
     while tmpOccupancy != 0:
@@ -291,20 +299,12 @@ func evaluatePieceType(
         let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 
-        var currentResult: array[Phase, Value]
-        
-        for phase in Phase: currentResult[phase] = evalParameters[phase].pieceValues[piece]
-        when not (gradient is Nothing):
-            for phase in Phase:
-                gradient[phase].pieceValues[piece] += (if currentUs == black: -1.0 else: 1.0)
-
-        currentResult += evalParameters.getPstValue(
-            square, piece, currentUs,
-            [ourKing: kingSquareMirrored[currentUs], enemyKing: kingSquareMirrored[currentEnemy]],
-            gradient
+        var currentResult: array[Phase, Value] = position.evaluatePiece(
+            piece, square,
+            currentUs, currentEnemy,
+            kingSquare, kingSquareMirrored,
+            evalParameters, gradient
         )
-        currentResult +=
-            position.evaluatePiece(piece, square, currentUs, currentEnemy, kingSquare, evalParameters, gradient)
         
         if currentUs == enemy:
             for phase in Phase: currentResult[phase] = -currentResult[phase]
@@ -316,9 +316,16 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     var value = [opening: 0.Value, endgame: 0.Value]
 
-    let kingSquare = [white: position.kingSquare(white), black: position.kingSquare(black)]
+    let kingSquare = [
+        white: position.kingSquare(white),
+        black: position.kingSquare(black)
+    ]    
+    let kingSquareMirrored = [
+        white: kingSquare[white].mirror,
+        black: kingSquare[black]
+    ]
     for piece in pawn..king:
-        value += position.evaluatePieceType(piece, evalParameters, kingSquare, gradient)
+        value += position.evaluatePieceType(piece, evalParameters, kingSquare, kingSquareMirrored, gradient)
     
     let gamePhase = position.gamePhase
 
@@ -357,20 +364,21 @@ const valueTable: array[GamePhase, array[Piece, Value]] = block:
                 forOpening = defaultEvalParameters[opening].pieceValues[piece],
                 forEndgame = defaultEvalParameters[endgame].pieceValues[piece]
             )
-        valueTable[gamePhase][king] = valueInfinity
+        valueTable[gamePhase][king] = 1000000.Value
         valueTable[gamePhase][noPiece] = 0.Value
     valueTable
 
 func value*(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
     valueTable[gamePhase][piece]
 
-const valueSortedPieces: array[GamePhase, array[6, Piece]] = block:
-    var valueSortedPieces: array[GamePhase, array[6, Piece]]
-    for gamePhase in GamePhase.low..GamePhase.high:
-        valueSortedPieces[gamePhase] = [pawn, knight, bishop, rook, queen, king]
-        valueSortedPieces[gamePhase].sort(proc(x, y: Piece): int = cmp(x.value(gamePhase), y.value(gamePhase)))
-        echo valueSortedPieces[gamePhase]
-    valueSortedPieces
+func value*(piece: Piece, position: Position, square: Square, us: Color, evalParameters: EvalParameters): Value =
+    discard 
+
+func cp*(cp: int): Value =
+    (pawn.value * cp.Value) div 100.Value
+
+func toCp*(value: Value): int =
+    (100 * value.int) div pawn.value.int
 
 func valueClassical(piece: Piece): Value =
     const table = [
@@ -383,12 +391,6 @@ func valueClassical(piece: Piece): Value =
         noPiece: 0.Value
     ]
     table[piece]
-
-func cp*(cp: int): Value =
-    (pawn.value * cp.Value) div 100.Value
-
-func toCp*(value: Value): int =
-    (100 * value.int) div pawn.value.int
 
 func material*(position: Position): Value =
     result = 0
