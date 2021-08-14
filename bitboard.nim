@@ -7,6 +7,7 @@ import
 type Bitboard* = uint64
 
 func toSquare*(x: Bitboard): Square {.inline.} =
+    assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
 
 const bitAt*: array[a1..h8, Bitboard] = block:
@@ -15,9 +16,14 @@ const bitAt*: array[a1..h8, Bitboard] = block:
         bitAt[square] = 1u64 shl square.int8
     bitAt
 
-func removeTrailingOneBit*(x: var SomeInteger): Square {.inline.} =
+func removeTrailingOneBit(x: var SomeInteger): Square {.inline.} =
     result = x.countTrailingZeroBits.Square
     x = x and not bitAt[result]
+
+iterator items*(bitboard: Bitboard): Square {.inline.} =
+    var tmp = bitboard
+    while tmp != 0:
+        yield tmp.removeTrailingOneBit
 
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
@@ -56,14 +62,12 @@ const diagonals*: array[a1..h8, Bitboard] = block:
     var diagonals: array[a1..h8, Bitboard]
     for i in 0..7:
         let currentDiagonal = (mainDiagonal shl i) and upperLeftSideZero
-        var tmp = currentDiagonal
-        while tmp != 0:
-            diagonals[tmp.removeTrailingOneBit] = currentDiagonal
+        for square in currentDiagonal:
+            diagonals[square] = currentDiagonal
     for i in 1..7:
         let currentDiagonal = (mainDiagonal shr i) and lowerRightSideZero
-        var tmp = currentDiagonal
-        while tmp != 0:
-            diagonals[tmp.removeTrailingOneBit] = currentDiagonal
+        for square in currentDiagonal:
+            diagonals[square] = currentDiagonal
     diagonals
 
 const antiDiagonals: array[a1..h8, Bitboard] = block:
@@ -71,14 +75,12 @@ const antiDiagonals: array[a1..h8, Bitboard] = block:
     antiDiagonals[h8] = bitAt[h8]
     for i in 0..6:
         let currentAntiDiagonal = (antiDiagonal shl i) and lowerLeftSideZero
-        var tmp = currentAntiDiagonal
-        while tmp != 0:
-            antiDiagonals[tmp.removeTrailingOneBit] = currentAntiDiagonal
+        for square in currentAntiDiagonal:
+            antiDiagonals[square] = currentAntiDiagonal
     for i in 1..7:
         let currentAntiDiagonal = (antiDiagonal shr i) and upperRightSideZero
-        var tmp = currentAntiDiagonal
-        while tmp != 0:
-            antiDiagonals[tmp.removeTrailingOneBit] = currentAntiDiagonal
+        for square in currentAntiDiagonal:
+            antiDiagonals[square] = currentAntiDiagonal
     antiDiagonals
 
 func hashkeyRank*(square: Square, occupancy: Bitboard): uint8 =

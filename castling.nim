@@ -52,11 +52,11 @@ const checkSensitive* = block:
     for us in white..black:
         for castlingSide in queenside..kingside:
             for kingSource in a1..h8:
-                var tmp =
+                let b =
                     blockSensitiveKing[us][castlingSide][kingSource] and
                     # I don't need to check if king will be in check after the move is done
                     (bitAt[kingSource] or not bitAt[kingTarget[us][castlingSide]])
-                while tmp != 0:
-                    checkSensitive[us][castlingSide][kingSource].add(tmp.removeTrailingOneBit)
+                for square in b:
+                    checkSensitive[us][castlingSide][kingSource].add(square)
 
     checkSensitive

@@ -144,7 +144,7 @@ func uciNewGame(uciState: var UciState) =
     uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
-    seeTest()
+    #seeTest()
     if params.len == 0:
         perftTest()
     else:

@@ -135,9 +135,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
 func calculateZobristKey*(position: Position): uint64 =
     result = 0
     for piece in pawn..king:
-        var occupancy = position[piece]
-        while occupancy != 0:
-            let square: Square = occupancy.removeTrailingOneBit
+        for square in position[piece]:
             result = result xor (if (position[white] and bitAt[square]) != 0:
                 zobristColorBitmasks[white][square]
             else:

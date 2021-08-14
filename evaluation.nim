@@ -293,9 +293,7 @@ func evaluatePieceType(
         us = position.us
         enemy = position.enemy
 
-    var tmpOccupancy = position[piece]
-    while tmpOccupancy != 0:
-        let square = tmpOccupancy.removeTrailingOneBit
+    for square in position[piece]:
         let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 
@@ -370,9 +368,6 @@ const valueTable: array[GamePhase, array[Piece, Value]] = block:
 
 func value*(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
     valueTable[gamePhase][piece]
-
-func value*(piece: Piece, position: Position, square: Square, us: Color, evalParameters: EvalParameters): Value =
-    discard 
 
 func cp*(cp: int): Value =
     (pawn.value * cp.Value) div 100.Value
