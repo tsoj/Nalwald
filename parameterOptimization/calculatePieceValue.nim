@@ -1,9 +1,44 @@
 import
     ../types,
     ../position,
+    ../positionUtils,
     ../evaluation,
+    ../bitboard,
+    ../defaultParameters,
+    ../evalParameters,
     dataUtils
 
-func getPieceValue(piece: Piece, evalParameters: EvalParameters, positions: seq[Position]): Value =
-    result = 0.Value
-    
+func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry]): Value =
+    var sum: int64 = 0
+    var numPieceEvals: int64 = 0
+    for entry in data:
+        let position = entry.position
+        let startEval = position.absoluteEvaluate(evalParameters)
+        for square in position[piece]:
+            let us = position.coloredPiece(square).color
+            assert position.coloredPiece(square).piece == piece
+            var newPosition = position
+            newPosition.removePiece(us, piece, bitAt[square])
+            var diff = startEval - newPosition.absoluteEvaluate(evalParameters)
+            if us == black:
+                diff *= -1
+            if piece == rook and diff < 0.Value:
+                debugEcho position
+                debugEcho square
+                debugEcho piece
+                debugEcho diff
+                doAssert diff >= 0.Value
+            sum += diff.int
+            numPieceEvals += 1
+    (sum div numPieceEvals).Value
+
+proc printPieceValues*(evalParameters: EvalParameters) =
+    var data: seq[Entry]
+    data.loadData("quietSetZuri.epd", 1.0)
+    data.loadData("quietSetNalwald.epd", 1.0)
+    echo "Piece values:"
+    for piece in pawn..queen:
+        echo piece, ": ", getPieceValue(piece, evalParameters, data), " cp"
+
+when isMainModule:
+    printPieceValues(defaultEvalParameters)

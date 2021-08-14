@@ -18,8 +18,10 @@ proc help*(params: openArray[string]) =
         echo "* perft"
         echo "* test"
         echo "* eval"
+        echo "* piecevalues"
         echo "* easteregg"
         echo "* about"
+        echo "* help"
         echo "Use 'help <command>' to get info about a specific command"
     else:
         echo "-----------------------------------------"
@@ -132,12 +134,17 @@ proc help*(params: openArray[string]) =
             )
         of "eval":
             echo "Prints the static evaluation value for the current internal position."
+        of "piecevalues":
+            echo "Prints the values for each piece type."
         of "easteregg":
             echo "Try it out."
         of "about":
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
+        of "help":
+            echo "help [<command>]"
+            echo "Prints all possible commands, or if <command> is given, then help about <command> is printed."
         else:
-            echo "Unknown command: ", params[1]
+            echo "Unknown command: ", params[0]
         
         echo "-----------------------------------------"
 

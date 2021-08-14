@@ -5,6 +5,7 @@ import
     winningProbability,
     gradient,
     dataUtils,
+    calculatePieceValue,
     times,
     strformat,
     terminal
@@ -123,7 +124,8 @@ data.loadData("quietSetNalwald.epd", weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
-discard startingEvalParametersFloat.optimize(data)
+let evalParameters = startingEvalParametersFloat.optimize(data)
+printPieceValues(evalParameters)
 
     
 

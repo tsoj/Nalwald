@@ -353,21 +353,17 @@ func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.absoluteEvaluate(defaultEvalParameters, gradient)
 
-
-const valueTable: array[GamePhase, array[Piece, Value]] = block:
-    var valueTable: array[GamePhase, array[Piece, Value]]
-    for gamePhase in GamePhase.low..GamePhase.high:
-        for piece in pawn..queen:
-            valueTable[gamePhase][piece] = gamePhase.interpolate(
-                forOpening = defaultEvalParameters[opening].pieceValues[piece],
-                forEndgame = defaultEvalParameters[endgame].pieceValues[piece]
-            )
-        valueTable[gamePhase][king] = 1000000.Value
-        valueTable[gamePhase][noPiece] = 0.Value
-    valueTable
-
-func value*(piece: Piece, gamePhase: GamePhase = (GamePhase.high - GamePhase.low) div 2): Value =
-    valueTable[gamePhase][piece]
+func value*(piece: Piece): Value =
+    const table = [
+        pawn: 126.Value,
+        knight: 407.Value,
+        bishop: 433.Value,
+        rook: 616.Value,
+        queen: 1128.Value,
+        king: 1000000.Value,
+        noPiece: 0.Value
+    ]
+    table[piece]
 
 func cp*(cp: int): Value =
     (pawn.value * cp.Value) div 100.Value
@@ -375,23 +371,11 @@ func cp*(cp: int): Value =
 func toCp*(value: Value): int =
     (100 * value.int) div pawn.value.int
 
-func valueClassical(piece: Piece): Value =
-    const table = [
-        pawn: 100.Value,
-        knight: 300.Value,
-        bishop: 300.Value,
-        rook: 500.Value,
-        queen: 900.Value,
-        king: 1000000.Value,
-        noPiece: 0.Value
-    ]
-    table[piece]
-
 func material*(position: Position): Value =
     result = 0
     for piece in pawn..king:
-        result += (position[piece] and position[position.us]).countSetBits.Value * piece.valueClassical
-        result -= (position[piece] and position[position.enemy]).countSetBits.Value * piece.valueClassical
+        result += (position[piece] and position[position.us]).countSetBits.Value * piece.value
+        result -= (position[piece] and position[position.enemy]).countSetBits.Value * piece.value
 
 func absoluteMaterial*(position: Position): Value =
     result = position.material

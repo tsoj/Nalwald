@@ -6,6 +6,17 @@ import
     evaluation,
     bitboard
 
+func checkAssumptions(): bool =
+    for piece in Piece.low..<Piece.high:
+        var next = piece
+        inc next
+        if (king in [piece, next]) or (noPiece in [piece, next]):
+            continue
+        if piece.value > next.value:
+            return false
+    true
+static: doAssert checkAssumptions()
+
 func getLeastValuableAttacker(position: Position, target: Square): (Square, Piece) =
     let
         us = position.us
@@ -77,7 +88,7 @@ proc seeTest*() =
         [
             ("4R3/2r3p1/5bk1/1p1r3p/p2PR1P1/P1BK1P2/1P6/8 b - - 0 1", "h5g4", 0.Value),
             ("4R3/2r3p1/5bk1/1p1r1p1p/p2PR1P1/P1BK1P2/1P6/8 b - - 0 1", "h5g4", 0.Value),
-            ("4r1k1/5pp1/nbp4p/1p2p2q/1P2P1b1/1BP2N1P/1B2QPPK/3R4 b - - 0 1", "g4f3", 0.Value),
+            ("4r1k1/5pp1/nbp4p/1p2p2q/1P2P1b1/1BP2N1P/1B2QPPK/3R4 b - - 0 1", "g4f3", knight.value - bishop.value),
             ("2r1r1k1/pp1bppbp/3p1np1/q3P3/2P2P2/1P2B3/P1N1B1PP/2RQ1RK1 b - - 0 1", "d6e5", pawn.value),
             ("7r/5qpk/p1Qp1b1p/3r3n/BB3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", 0.Value),
             ("6rr/6pk/p1Qp1b1p/2n5/1B3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", -rook.value),

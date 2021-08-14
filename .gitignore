@@ -24,3 +24,4 @@ removeNonQuietPositions
 generatePositions
 labelPositions
 generateSmallerSet
+calculatePieceValue

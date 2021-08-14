@@ -14,27 +14,28 @@ import
 
 static: doAssert pawn.value == 100.cp
 
+#TODO: try make all of these lower (down to 4/5)
 func futilityReduction(value: Value): Ply =
-    if value < 150.cp: return 0.Ply
-    if value < 200.cp: return 1.Ply
-    if value < 300.cp: return 2.Ply
-    if value < 500.cp: return 3.Ply
-    if value < 750.cp: return 4.Ply
-    if value < 1050.cp: return 5.Ply
-    if value < 1400.cp: return 6.Ply
+    if value < 150.cp: return 0.Ply#120#140
+    if value < 200.cp: return 1.Ply#160#180
+    if value < 300.cp: return 2.Ply#240#260
+    if value < 500.cp: return 3.Ply#400#420
+    if value < 750.cp: return 4.Ply#600#650
+    if value < 1050.cp: return 5.Ply#840##900
+    if value < 1400.cp: return 6.Ply#1120##1200
     7.Ply
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
-    depthDifference.Value * 200.cp
+    depthDifference.Value * 200.cp#160#180
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
     ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
 const
-    deltaMargin = 150.cp
-    failHighDeltaMargin = 50.cp
+    deltaMargin = 150.cp#120#140
+    failHighDeltaMargin = 50.cp#40
 
 type SearchState = object
     stop: ptr Atomic[bool]
@@ -121,7 +122,7 @@ func materialQuiesce*(position: Position): Value =
         stop: nil,
         hashTable: nil,
         gameHistory: newGameHistory(@[]),
-        evaluation: material# TODO: check if/how this still works with new piecevalue calculation
+        evaluation: material
     )
     position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
 

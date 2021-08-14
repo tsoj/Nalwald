@@ -144,7 +144,7 @@ func uciNewGame(uciState: var UciState) =
     uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
-    #seeTest()
+    seeTest()
     if params.len == 0:
         perftTest()
     else:
@@ -222,9 +222,9 @@ proc uciLoop*() =
                 test(params[1..^1])
             of "eval":
                 echo uciState.position.absoluteEvaluate, " centipawns"
-            of "piecevalue":# TODO: add to uciInfo
+            of "piecevalues":
                 for p in pawn..queen:
-                    echo $p, ": ", p.value, " cp"
+                    echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
             of "about":
                 about()
             of "easteregg":
