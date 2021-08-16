@@ -153,6 +153,8 @@ func search(
         inCheck = position.inCheck(position.us, position.enemy)
         depth = if inCheck: depth + 1.Ply else: depth
         hashResult = state.hashTable[].get(position.zobristKey)
+        originalAlpha = alpha
+        originalBeta = beta
 
     var
         alpha = alpha
@@ -236,7 +238,8 @@ func search(
             newBeta = alpha + 1.Value
 
         # late move reduction
-        if newDepth > 1.Ply and moveCounter > 3 and
+        if newDepth > 1.Ply and
+        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
         (not (move.isTactical or inCheck or givingCheck)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             newDepth = lmrDepth(newDepth, lmrMoveCounter)
