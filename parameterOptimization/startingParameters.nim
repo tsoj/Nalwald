@@ -153,7 +153,7 @@ const startingEvalParameters* = block:
             pieceValues: [
                 pawn: 100.0,
                 knight: 300.0,
-                bishop: 350.0,
+                bishop: 300.0,
                 rook: 500.0,
                 queen: 900.0,
                 king: 0.0

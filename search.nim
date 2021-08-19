@@ -153,8 +153,6 @@ func search(
         inCheck = position.inCheck(position.us, position.enemy)
         depth = if inCheck: depth + 1.Ply else: depth
         hashResult = state.hashTable[].get(position.zobristKey)
-        originalAlpha = alpha
-        originalBeta = beta
 
     var
         alpha = alpha
