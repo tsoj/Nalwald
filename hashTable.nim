@@ -30,7 +30,7 @@ func clear*(ht: var HashTable) =
 
 func setSize*(ht: var HashTable, sizeInBytes: int) =
     let numEntries = sizeInBytes div sizeof(HashTableEntry)
-    ht.nonPvNodes.setLen(numEntries)
+    ht.nonPvNodes.setLen(max(numEntries, 1))
     ht.clear
 
 func age*(ht: var HashTable)  =
