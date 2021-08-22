@@ -180,15 +180,10 @@ func search(
         else:
             # hash result futility pruning
             let margin = hashResultFutilityMargin(depth - hashResult.depth)
-            var
-                noisyAlpha = alpha
-                noisyBeta = beta
-            if hashResult.nodeType != upperBound:
-                noisyAlpha = max(noisyAlpha, hashResult.value - margin)
-            if hashResult.nodeType == upperBound:
-                noisyBeta = min(noisyBeta, hashResult.value + margin)
-            if noisyAlpha >= noisyBeta:
-                return noisyAlpha    
+            if hashResult.nodeType != upperBound and hashResult.value - margin >= beta:
+                return hashResult.value - margin
+            if hashResult.nodeType == upperBound and alpha >= hashResult.value + margin:
+                return alpha   
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
