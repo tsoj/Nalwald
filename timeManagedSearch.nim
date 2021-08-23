@@ -25,7 +25,7 @@ func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, half
         clamp(incPerMove.inMilliseconds, 0, int.high div 2))
 
     if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 2):
-        result.approxTime = (12 * result.approxTime) div 10
+        result.approxTime = (15 * result.approxTime) div 10
     elif incPerMove.inMilliseconds < 200 and timeLeft < initDuration(seconds = 30):
         result.approxTime = (8 * result.approxTime) div 10
         if movesToGo > 2:
