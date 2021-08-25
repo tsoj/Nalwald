@@ -191,7 +191,7 @@ proc about*() =
         "ordering, transposition table, LMR, etc.).\n",
         "At the beginning the Wikipedia article\n",
         "\"Schachprogramm\" was really important\n",
-        "for my understand of chess programming.\n",
+        "for my understanding of chess programming.\n",
         "During the development of Nalwald I also\n",
         "introduced some techniques that I believe\n",
         "are novelties (king contextual PSTs,\n",
