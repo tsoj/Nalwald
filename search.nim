@@ -203,7 +203,7 @@ func search(
             return value
 
     # determine amount of futility reduction
-    let doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.Value and not inCheck
+    let doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
     let futilityMargin = alpha - state.evaluation(position)
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height)):

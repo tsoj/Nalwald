@@ -40,11 +40,11 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
     
-    var start = killerTable[height].find(move)
-    if start == -1:
-        start = numKillers - 1
+    if move == killerTable[height][0]:
+        return
+    static: doAssert numKillers == 2
 
-    for i in countdown(start, 1):
+    for i in countdown(numKillers - 1, 1):
         killerTable[height][i] = killerTable[height][i-1]
     killerTable[height][0] = move
 
