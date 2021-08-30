@@ -23,7 +23,7 @@ func futilityReduction(value: Value): Ply =
     if value < 750.cp: return 4.Ply
     if value < 1050.cp: return 5.Ply
     if value < 1400.cp: return 6.Ply
-    7.Ply
+    Ply.high
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
