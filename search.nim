@@ -221,6 +221,14 @@ func search(
             newDepth = depth
             newBeta = beta
 
+        # late move reduction
+        if newDepth > 1.Ply and
+        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
+        (not (move.isTactical or inCheck or givingCheck)) and
+        (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
+            newDepth = lmrDepth(newDepth, lmrMoveCounter)
+            lmrMoveCounter += 1
+
         # futility reduction
         if doFutilityReduction and (not givingCheck) and bestValue > -valueInfinity:
             newDepth -= futilityReduction(futilityMargin - position.see(move))
@@ -230,16 +238,6 @@ func search(
         # first explore with null window
         if alpha > -valueInfinity:
             newBeta = alpha + 1.Value
-
-        # late move reduction
-        if newDepth > 1.Ply and
-        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
-        (not (move.isTactical or inCheck or givingCheck)) and
-        (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
-            newDepth = lmrDepth(newDepth, lmrMoveCounter)
-            if staticEval + 20.cp < alpha and newDepth <= 1.Ply:
-                continue
-            lmrMoveCounter += 1
 
         if state.stop[].load:
             return 0.Value
