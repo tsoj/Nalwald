@@ -202,9 +202,10 @@ func search(
         if value >= beta:
             return value
 
-    # determine amount of futility reduction
-    let doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
-    let futilityMargin = alpha - state.evaluation(position)
+    let
+        staticEval = state.evaluation(position)
+        doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
+        futilityMargin = alpha - staticEval
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height)):
 
@@ -236,6 +237,8 @@ func search(
         (not (move.isTactical or inCheck or givingCheck)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             newDepth = lmrDepth(newDepth, lmrMoveCounter)
+            if staticEval + 20.cp < alpha and newDepth <= 1.Ply:
+                continue
             lmrMoveCounter += 1
 
         if state.stop[].load:
