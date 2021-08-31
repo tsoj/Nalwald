@@ -67,13 +67,17 @@ func mobility(
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    let reachableSquares = (attackMask and not position[us]).countSetBits.float
+    let reachableSquares = (attackMask and not position[us]).countSetBits
 
-    for phase in Phase: result[phase] += (reachableSquares * evalParameters[phase].mobilityMultiplier[piece]).Value
+    for phase in Phase: result[phase] += evalParameters[phase].bonusMobility[piece][reachableSquares]
 
     when not (gradient is Nothing):
         for phase in Phase:
-            gradient[phase].mobilityMultiplier[piece] += (if us == black: -reachableSquares else: reachableSquares)/8.0
+            template g: auto = gradient[phase].bonusMobility[piece] 
+            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
+                if reachableSquares + offset in g.low..g.high:
+                    g[reachableSquares + offset] += (if us == black: -f else: f)
+
 
 func targetingKingArea(
     evalParameters: EvalParameters,
@@ -355,11 +359,11 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 126.Value,
-        knight: 407.Value,
-        bishop: 433.Value,
-        rook: 616.Value,
-        queen: 1128.Value,
+        pawn: 124.Value,
+        knight: 402.Value,
+        bishop: 429.Value,
+        rook: 609.Value,
+        queen: 1121.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]

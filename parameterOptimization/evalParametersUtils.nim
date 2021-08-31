@@ -38,10 +38,13 @@ func `$`*(a: EvalParameters): string =
             result &= fmt"{a[phase].passedPawnTable[i]:>3}" & ".Value, "
         result &= "],\n"
 
-        result &= "        mobilityMultiplier: ["
+        result &= "        bonusMobility: [\n"
         for piece in knight..queen:
-            result &= $piece & ": " & fmt"{a[phase].mobilityMultiplier[piece]:>5.2f}" & ", "
-        result &= "],\n"
+            result &= "                " & $piece & ": ["
+            for i in 0..<32:
+                 result &= fmt"{a[phase].bonusMobility[piece][i]:>3}" & ".Value, "
+            result &= "],\n"
+        result &= "        ],\n"
 
         result &= "        bonusTargetingKingArea: ["
         for piece in bishop..queen:
@@ -82,7 +85,9 @@ func convertTemplate[InValueType, OutValueType](
     result.bonusKnightAttackingPiece = a.bonusKnightAttackingPiece.OutValueType
     result.bonusBothBishops = a.bonusBothBishops.OutValueType
     result.bonusRookOnOpenFile = a.bonusRookOnOpenFile.OutValueType
-    result.mobilityMultiplier = a.mobilityMultiplier
+    for piece in knight..queen:
+        for i in 0..<32:
+            result.bonusMobility[piece][i] = a.bonusMobility[piece][i].OutValueType
     for piece in bishop..queen:
         result.bonusTargetingKingArea[piece] = a.bonusTargetingKingArea[piece].OutValueType
         result.bonusAttackingKing[piece] = a.bonusAttackingKing[piece].OutValueType
@@ -118,7 +123,8 @@ func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: 
         op(a[phase].bonusBothBishops, b[phase].bonusBothBishops)
         op(a[phase].bonusRookOnOpenFile, b[phase].bonusRookOnOpenFile)
         for piece in knight..queen:
-            op(a[phase].mobilityMultiplier[piece], b[phase].mobilityMultiplier[piece])        
+            for i in 0..<32:
+                op(a[phase].bonusMobility[piece][i], b[phase].bonusMobility[piece][i])        
         for piece in bishop..queen:
             op(a[phase].bonusTargetingKingArea[piece], b[phase].bonusTargetingKingArea[piece])
             op(a[phase].bonusAttackingKing[piece], b[phase].bonusAttackingKing[piece])

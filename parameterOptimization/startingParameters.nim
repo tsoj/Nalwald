@@ -163,11 +163,15 @@ const startingEvalParameters* = block:
             bonusKnightAttackingPiece: 5.0,
             bonusBothBishops: 10.0,
             bonusRookOnOpenFile: 5.0,
-            mobilityMultiplier: [knight: 2.0, bishop: 3.0, rook: 4.0, queen: 2.0],
             bonusTargetingKingArea: [bishop: 5.0, rook: 5.0, queen: 8.0],
             bonusAttackingKing: [bishop: 5.0, rook: 5.0, queen: 8.0],
             kingSafetyMultiplier: -2.5,
         )
+        for i in 0..<32:
+            startingEvalParameters[phase].bonusMobility[knight][i] = i.float*2.0
+            startingEvalParameters[phase].bonusMobility[bishop][i] = i.float*3.0
+            startingEvalParameters[phase].bonusMobility[rook][i] = i.float*4.0
+            startingEvalParameters[phase].bonusMobility[queen][i] = i.float*2.0
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for piece in pawn..king:

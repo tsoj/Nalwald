@@ -124,8 +124,8 @@ data.loadData("quietSetNalwald.epd", weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
-let evalParameters = startingEvalParametersFloat.optimize(data)
-printPieceValues(evalParameters)
+let ep = startingEvalParametersFloat.optimize(data)
+printPieceValues(ep)
 
     
 
