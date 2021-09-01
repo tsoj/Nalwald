@@ -56,12 +56,16 @@ func `$`*(a: EvalParameters): string =
             result &= $piece & ": " & fmt"{a[phase].bonusAttackingKing[piece]:>3}" & ".Value, "
         result &= "],\n"
 
+        result &= "        bonusKingSafety: ["
+        for i in 0..<32:
+            result &= fmt"{a[phase].bonusKingSafety[i]:>3}" & ".Value, "
+        result &= "],\n"
+
         result &= "        bonusIsolatedPawn: " & fmt"{a[phase].bonusIsolatedPawn:>3}" & ".Value,\n"
         result &= "        bonusPawnHasTwoNeighbors: " & fmt"{a[phase].bonusPawnHasTwoNeighbors:>3}" & ".Value,\n"
         result &= "        bonusKnightAttackingPiece: " & fmt"{a[phase].bonusKnightAttackingPiece:>3}" & ".Value,\n"
         result &= "        bonusBothBishops: " & fmt"{a[phase].bonusBothBishops:>3}" & ".Value,\n"
         result &= "        bonusRookOnOpenFile: " & fmt"{a[phase].bonusRookOnOpenFile:>3}" & ".Value,\n"
-        result &= "        kingSafetyMultiplier: " & fmt"{a[phase].kingSafetyMultiplier:>5.2f}" & "\n"
 
         result &= "    ),\n"
 
@@ -91,7 +95,8 @@ func convertTemplate[InValueType, OutValueType](
     for piece in bishop..queen:
         result.bonusTargetingKingArea[piece] = a.bonusTargetingKingArea[piece].OutValueType
         result.bonusAttackingKing[piece] = a.bonusAttackingKing[piece].OutValueType
-    result.kingSafetyMultiplier = a.kingSafetyMultiplier
+    for i in 0..<32:
+        result.bonusKingSafety[i] = a.bonusKingSafety[i].OutValueType
 
 func convertTemplate[InValueType, OutValueType](a: EvalParametersTemplate[InValueType]): EvalParametersTemplate[OutValueType] =
     for phase in Phase:
@@ -128,7 +133,8 @@ func opTemplate(a: var EvalParametersFloat, b: EvalParametersFloat, op: proc(a: 
         for piece in bishop..queen:
             op(a[phase].bonusTargetingKingArea[piece], b[phase].bonusTargetingKingArea[piece])
             op(a[phase].bonusAttackingKing[piece], b[phase].bonusAttackingKing[piece])
-        op(a[phase].kingSafetyMultiplier, b[phase].kingSafetyMultiplier)
+        for i in 0..<32:
+            op(a[phase].bonusKingSafety[i], b[phase].bonusKingSafety[i])
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     opTemplate(a, b, proc(a: var float, b: float) = a += b)

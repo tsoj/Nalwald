@@ -269,3 +269,12 @@ func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
 
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
+    # clamp(
+    #     (position.occupancy.countSetBits * position[pawn].countSetBits) div 16,
+    #     GamePhase.low.int, GamePhase.high.int
+    # ).GamePhase#TODO: try this: 
+
+
+# TODO: check missing repetition
+# TODO: check potential
+

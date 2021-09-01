@@ -18,7 +18,7 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     bonusMobility*: array[knight..queen, array[32, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
     bonusAttackingKing*: array[bishop..queen, ValueType]
-    kingSafetyMultiplier*: float#TODO: change this to a table
+    bonusKingSafety*: array[32, ValueType]#float#TODO: change this to a table
 
 type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
@@ -47,4 +47,5 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float], b: float) =
     for piece in bishop..queen:
         a.bonusTargetingKingArea[piece] *= b
         a.bonusAttackingKing[piece] *= b
-    a.kingSafetyMultiplier *= b
+    for i in 0..<32:
+        a.bonusKingSafety[i] *= b

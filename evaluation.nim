@@ -73,7 +73,7 @@ func mobility(
 
     when not (gradient is Nothing):
         for phase in Phase:
-            template g: auto = gradient[phase].bonusMobility[piece] 
+            template g: auto = gradient[phase].bonusMobility[piece]
             for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
                 if reachableSquares + offset in g.low..g.high:
                     g[reachableSquares + offset] += (if us == black: -f else: f)
@@ -245,12 +245,16 @@ func evaluateKing(
     result = [opening: 0.Value, endgame: 0.Value]
 
     # kingsafety by pawn shielding
-    let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits.float
-    for phase in Phase: result[phase] += (evalParameters[phase].kingSafetyMultiplier*numPossibleQueenAttack).Value
+    let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
+    for phase in Phase: result[phase] += evalParameters[phase].bonusKingSafety[numPossibleQueenAttack]
 
     when not (gradient is Nothing):
         for phase in Phase:
-            gradient[phase].kingSafetyMultiplier += numPossibleQueenAttack * (if us == black: -1.0 else: 1.0)
+            #TODO: avoid repetition with mobility gradient calculation
+            template g: auto = gradient[phase].bonusKingSafety
+            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
+                if numPossibleQueenAttack + offset in g.low..g.high:
+                    g[numPossibleQueenAttack + offset] += (if us == black: -f else: f)
 
 func evaluatePiece(
     position: Position,
@@ -359,15 +363,24 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 124.Value,
-        knight: 402.Value,
-        bishop: 429.Value,
-        rook: 609.Value,
-        queen: 1121.Value,
+        pawn: 127.Value,
+        knight: 419.Value,
+        bishop: 444.Value,
+        rook: 630.Value,
+        queen: 1173.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
     table[piece]
+
+#TODO:
+#     pawn: 134 cp
+# knight: 436 cp
+# bishop: 464 cp
+# rook: 660 cp
+# queen: 1197 cp
+
+
 
 func cp*(cp: int): Value =
     (pawn.value * cp.Value) div 100.Value
