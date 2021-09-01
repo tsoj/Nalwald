@@ -18,7 +18,7 @@ type SinglePhaseEvalParametersTemplate*[ValueType] = object
     bonusMobility*: array[knight..queen, array[32, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
     bonusAttackingKing*: array[bishop..queen, ValueType]
-    bonusKingSafety*: array[32, ValueType]#float#TODO: change this to a table
+    bonusKingSafety*: array[32, ValueType]
 
 type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 

@@ -373,15 +373,6 @@ func value*(piece: Piece): Value =
     ]
     table[piece]
 
-#TODO:
-#     pawn: 134 cp
-# knight: 436 cp
-# bishop: 464 cp
-# rook: 660 cp
-# queen: 1197 cp
-
-
-
 func cp*(cp: int): Value =
     (pawn.value * cp.Value) div 100.Value
 
