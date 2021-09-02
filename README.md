@@ -60,8 +60,6 @@ nim modern Nalwald.nim
 - supports Chess960/FRC
 - UCI compatible
   - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`
-- easteregg
-  - my highscore is **188**
 
 
 #### License
