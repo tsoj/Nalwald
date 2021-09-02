@@ -57,7 +57,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
 func newGame*(
     startingPosition: Position,
     moveTime = initDuration(milliseconds = 10),
-    earlyResignMargin = 500.Value,
+    earlyResignMargin = 800.Value,
     earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
