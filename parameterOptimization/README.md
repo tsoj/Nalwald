@@ -18,6 +18,7 @@ nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run 
 ```
 nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run optimization.nim
 ```
+
 ##### Get piece values
 ```
 nim c -d:release --gc:arc -d:lto --passL:"-static" --cc:clang --run calculatePieceValue.nim

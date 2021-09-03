@@ -89,6 +89,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
     # castling rights
     result.enPassantCastling = 0
+    result.rookSource = [[d4,d4],[d4,d4]] # d4 should be ignored by castling and enpassant
     for castlingChar in castlingRights:
         let castlingChar = case castlingChar:
         of '-':

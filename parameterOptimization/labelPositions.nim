@@ -10,11 +10,17 @@ import
     strutils
 
 proc playGame(fen: string): (string, float) =
-    var game = newGame(
-        startingPosition = fen.toPosition,
-        moveTime = initDuration(milliseconds = 80),
-    )
-    (fen, game.playGame(suppressOutput = true))
+    try:
+        
+        var game = newGame(
+            startingPosition = fen.toPosition,
+            moveTime = initDuration(milliseconds = 80),
+        )
+        return (fen, game.playGame(suppressOutput = true))
+        
+    except:
+        echo getCurrentExceptionMsg()
+        return ("", -1.0)
 
 const maxLoadPercentageCPU = 70.0
 
@@ -44,8 +50,9 @@ proc labelPositions() =
         for tr in threadResults:
             if tr.isReady:
                 let (fen, outcome) = ^tr
-                g.writeLine(fen & " " & $outcome)
-                g.flushFile
+                if fen != "":
+                    g.writeLine(fen & " " & $outcome)
+                    g.flushFile
             else:
                 newThreadResults.add(tr)
         threadResults = newThreadResults

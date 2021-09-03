@@ -60,6 +60,8 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
         debugEcho "!!!!!"
         debugEcho getCurrentExceptionMsg()
         debugEcho game.positionHistory[^1].fen
+        debugEcho game.positionHistory[^1]
+        debugEcho game.positionHistory[^1].debugString
         raise newException(ValueError, "Some Error")
 
 
