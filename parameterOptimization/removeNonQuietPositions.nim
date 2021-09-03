@@ -2,10 +2,13 @@ import
     ../search,
     ../position,
     ../positionUtils,
+    ../evaluation,
     ../movegen
 
 let f = open("unlabeledNonQuietSetNalwald.epd")
+let g = open("unlabeledQuietSetNalwald.epd", fmWrite)
 var line: string
+var i = 0
 while f.readLine(line):
     if line.len > 0 and line[^1] == 's':
         continue
@@ -14,4 +17,10 @@ while f.readLine(line):
         continue
     if position.legalMoves.len == 0:
         continue
-    echo position.fen
+    g.writeLine(position.fen)
+    i += 1
+    if (i mod 1000) == 0:
+        echo i
+
+g.close()
+f.close()

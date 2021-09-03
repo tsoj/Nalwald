@@ -16,7 +16,7 @@ proc playGame(fen: string): (string, float) =
     )
     (fen, game.playGame(suppressOutput = true))
 
-const maxLoadPercentageCPU = 60.0
+const maxLoadPercentageCPU = 70.0
 
 proc labelPositions() =
     var alreadyLabeled = block:
@@ -52,7 +52,7 @@ proc labelPositions() =
         
     while f.readLine(line):
         i += 1
-        if i mod 1000 == 0:
+        if (i mod 1000) == 0:
             echo i
         if line in alreadyLabeled and alreadyLabeled[line] == 1:
             alreadyLabeled[line] = 0
@@ -62,7 +62,9 @@ proc labelPositions() =
             sleep(10)
         threadResults.add(spawn playGame(line))
         sleep(10)
-    writeResults()
+    
+    while threadResults.len > 0:
+        writeResults()
 
     f.close
     g.close

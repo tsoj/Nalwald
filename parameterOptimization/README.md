@@ -1,12 +1,12 @@
 ##### Generate positions
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on generatePositions.nim && ./generatePositions > unlabeledNonQuietSetNalwald.epd
+nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run generatePositions.nim
 ```
 
 ##### Remove non-quiet positions
 
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on removeNonQuietPositions.nim && ./removeNonQuietPositions > unlabeledQuietSetNalwald.epd
+nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run removeNonQuietPositions.nim
 ```
 ##### Label positions
 

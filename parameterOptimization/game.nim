@@ -10,7 +10,7 @@ import
 
 type
     Game* = object
-        hashTable: array[white..black, HashTable]
+        hashTable: HashTable
         positionHistory: seq[Position]
         moveTime: Duration
         earlyResignMargin: Value
@@ -41,18 +41,27 @@ func gameStatus(positionHistory: openArray[Position]): GameStatus =
 
 proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
-    let position = game.positionHistory[^1]
-    let us = position.us
-    let (value, pv) = position.timeManagedSearch(
-        hashTable = game.hashTable[us],
-        positionHistory = game.positionHistory,
-        evaluation = game.evaluation,
-        moveTime = game.moveTime
-    )
-    doAssert pv.len >= 1 and pv[0] != noMove
-    game.positionHistory.add(position)
-    game.positionHistory[^1].doMove(pv[0])
-    (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
+    try:
+        doAssert game.positionHistory.gameStatus == running
+        let position = game.positionHistory[^1]
+        let (value, pv) = position.timeManagedSearch(
+            hashTable = game.hashTable,
+            positionHistory = game.positionHistory,
+            evaluation = game.evaluation,
+            moveTime = game.moveTime
+        )
+        doAssert pv.len >= 1
+        doAssert pv[0] != noMove
+        game.positionHistory.add(position)
+        game.positionHistory[^1].doMove(pv[0])
+        return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
+        
+    except:
+        debugEcho "!!!!!"
+        debugEcho getCurrentExceptionMsg()
+        debugEcho game.positionHistory[^1].fen
+        raise newException(ValueError, "Some Error")
+
 
 func newGame*(
     startingPosition: Position,
@@ -69,8 +78,7 @@ func newGame*(
         earlyAdjudicationPly: earlyAdjudicationPly,
         evaluation: evaluation
     )
-    result.hashTable[white].setSize(hashSize)
-    result.hashTable[black].setSize(hashSize)
+    result.hashTable.setSize(hashSize)
 
 proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
