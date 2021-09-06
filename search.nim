@@ -113,8 +113,8 @@ func quiesce(
         if value > alpha:
             alpha = value
 
-    if moveCounter == 0 and position.inCheck(position.us, position.enemy):
-        bestValue = -(height.checkmateValue)#TODO: try removing this
+    # if moveCounter == 0 and position.inCheck(position.us, position.enemy):
+    #     bestValue = -(height.checkmateValue)#TODO: try removing this
     bestValue
 
 func materialQuiesce*(position: Position): Value =
