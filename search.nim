@@ -77,7 +77,6 @@ func quiesce(
 
     var
         alpha = alpha
-        moveCounter = 0
         bestValue = standPat
 
     if standPat >= beta:
@@ -88,10 +87,6 @@ func quiesce(
     for move in position.moveIterator(doQuiets = false):#TODO try generating quiet moves when in check while also alpha = -inf and beta = inf
         var newPosition = position
         newPosition.doMove(move)
-
-        if newPosition.inCheck(position.us, position.enemy):
-            continue
-        moveCounter += 1
         
         let seeEval = standPat + position.see(move)
         
@@ -99,6 +94,9 @@ func quiesce(
         if seeEval + deltaMargin < alpha and doPruning:
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
+
+        if newPosition.inCheck(position.us, position.enemy):
+            continue
         
         # fail-high delta pruning
         if seeEval - failHighDeltaMargin >= beta and doPruning:
@@ -112,9 +110,7 @@ func quiesce(
             return bestValue
         if value > alpha:
             alpha = value
-
-    # if moveCounter == 0 and position.inCheck(position.us, position.enemy):
-    #     bestValue = -(height.checkmateValue)#TODO: try removing this
+            
     bestValue
 
 func materialQuiesce*(position: Position): Value =
