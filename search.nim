@@ -84,7 +84,7 @@ func quiesce(
     if standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = false):#TODO try generating quiet moves when in check while also alpha = -inf and beta = inf
+    for move in position.moveIterator(doQuiets = false):
         var newPosition = position
         newPosition.doMove(move)
         
@@ -287,9 +287,6 @@ func search(
     
     state.update(position, bestMove, depth = depth, height = height, nodeType, bestValue)
     bestValue
-
-
-# TODO: wrong mate score: 3R1R2/K3k3/1p1nPb2/pN2P2N/nP1ppp2/4P3/6P1/4Qq1r w - - 0 1
 
 iterator iterativeDeepeningSearch*(
     position: Position,

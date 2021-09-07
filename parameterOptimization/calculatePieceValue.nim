@@ -38,7 +38,7 @@ proc printPieceValues*(evalParameters: EvalParameters) =
     data.loadData("quietSetNalwald.epd", 1.0)
     echo "Piece values:"
     for piece in pawn..queen:
-        echo piece, ": ", getPieceValue(piece, evalParameters, data), " cp"
+        echo piece, ": ", getPieceValue(piece, evalParameters, data)
 
 when isMainModule:
     printPieceValues(defaultEvalParameters)
