@@ -2,7 +2,8 @@ import
     types,
     move,
     position,
-    tables
+    tables,
+    random
 
 type
     HashTableEntry* {.packed.} = object
@@ -18,7 +19,7 @@ type
         nonPvNodes: seq[HashTableEntry]
         pvNodes: Table[uint64, CountedHashTableEntry]
 
-const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, bestMove: noMove)
+const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, depth: 0.Ply, bestMove: noMove)
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
@@ -42,6 +43,14 @@ func age*(ht: var HashTable)  =
             entry.lookupCounter = 0
     for key in deleteQueue:
         ht.pvNodes.del(key)
+
+func shouldReplace(oldNodeType, newNodeType: NodeType, oldDepth, newDepth: Ply): bool =
+    var probability = 1.0 - (0.8/6.0) * clamp(oldDepth - newDepth, 0, 6).float
+    if oldNodeType == cutNode and newNodeType == allNode:
+        probability -= 0.1
+    doAssert probability > 0.09
+    {.cast(noSideEffect).}:
+        rand(1.0) < probability
 
 func add*(
     ht: var HashTable,
@@ -67,6 +76,9 @@ func add*(
     else:
         let i = zobristKey mod ht.nonPvNodes.len.uint64
         if ht.nonPvNodes[i].isEmpty or ht.nonPvNodes[i].zobristKey != zobristKey or ht.nonPvNodes[i].depth <= depth:
+            if not (ht.nonPvNodes[i].isEmpty or ht.nonPvNodes[i].zobristKey == zobristKey):
+                if not shouldReplace(ht.nonPvNodes[i].nodeType, nodeType, ht.nonPvNodes[i].depth, depth):
+                    return
             ht.nonPvNodes[i] = entry
 
 func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =

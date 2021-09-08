@@ -288,6 +288,10 @@ func search(
     state.update(position, bestMove, depth = depth, height = height, nodeType, bestValue)
     bestValue
 
+# TODO: counter move things
+# TODO: killermove previous 2-Ply
+# TODO: randomized replacement scheme based on depth hash table
+
 iterator iterativeDeepeningSearch*(
     position: Position,
     hashTable: var HashTable,
