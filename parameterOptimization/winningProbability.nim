@@ -4,7 +4,7 @@ import
     strformat
 
 var k = 1.0
-
+# TODO: fix all this, use utils.sigmoid
 func winningProbability*(centipawn: Value): float =
     {.cast(noSideEffect).}: 1.0/(1.0 + pow(10.0, -((k*centipawn.float)/400.0)))
 

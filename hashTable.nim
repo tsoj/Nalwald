@@ -2,6 +2,7 @@ import
     types,
     move,
     position,
+    utils,
     tables,
     random
 
@@ -47,14 +48,20 @@ func age*(ht: var HashTable) =
 func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     if oldEntry.isEmpty:
         return true
+    
     if oldEntry.zobristKey == newEntry.zobristKey:
         return oldEntry.depth <= newEntry.depth
-    var probability = 1.0 - (0.8/6.0) * clamp(oldEntry.depth - newEntry.depth, 0, 6).float
-    if oldEntry.nodeType == cutNode and newEntry.nodeType == allNode:
+
+    var probability = max(0.2, 1.0 + (newEntry.depth.float - oldEntry.depth.float)/6.0)
+    if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
         probability -= 0.1
-    doAssert probability > 0.09
+    # if newEntry.nodeType == cutNode and oldEntry.nodeType == allNode:
+    #     probability += 0.1#TODO: try
+    
     {.cast(noSideEffect).}:
         rand(1.0) < probability
+
+# TODO: add proper hashfull
 
 func add*(
     ht: var HashTable,
