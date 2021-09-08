@@ -34,7 +34,7 @@ func setSize*(ht: var HashTable, sizeInBytes: int) =
     ht.nonPvNodes.setLen(max(numEntries, 1))
     ht.clear
 
-func age*(ht: var HashTable)  =
+func age*(ht: var HashTable) =
     var deleteQueue: seq[uint64]
     for (key, entry) in ht.pvNodes.mpairs:
         if entry.lookupCounter <= 0:
