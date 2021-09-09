@@ -32,7 +32,7 @@ func update*(historyTable: var HistoryTable, move: Move, color: Color, depth: Pl
 func get*(historyTable: HistoryTable, move: Move, color: Color): Value =
     historyTable[color][move.moved][move.target].Value
 
-const numKillers* = 2
+const numKillers = 2
 
 type KillerTable* = array[Ply, array[numKillers, Move]]
 

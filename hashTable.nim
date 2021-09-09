@@ -2,7 +2,6 @@ import
     types,
     move,
     position,
-    utils,
     tables,
     random
 

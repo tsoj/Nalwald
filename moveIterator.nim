@@ -15,7 +15,7 @@ iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: HistoryTable = zeroHistoryTable,
-    killers: array[numKillers, Move] = [noMove, noMove],
+    killers = [noMove, noMove],
     doQuiets = true
 ): Move =
     type OrderedMoveList = object
@@ -35,7 +35,7 @@ iterator moveIterator*(
                 moveList.movePriorities[bestIndex] = -valueInfinity
                 
                 var isDuplicate = false
-                for j in 0..<numKillers:
+                for j in killers.low..killers.high:
                     if moveList.moves[bestIndex] == killers[j]:
                         isDuplicate = true
                         break
@@ -60,7 +60,7 @@ iterator moveIterator*(
 
     # killers
     if doQuiets:
-        for i in 0..<numKillers:
+        for i in killers.low..killers.high:
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
 
