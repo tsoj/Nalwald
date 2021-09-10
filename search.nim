@@ -47,12 +47,12 @@ type SearchState = object
     numMovesAtRoot: int
     evaluation: proc(position: Position): Value {.noSideEffect.}
 
-func update(state: var SearchState, position: Position, bestMove: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
+func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
     if not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
             if nodeType != allNode:
-                state.historyTable.update(bestMove, position.us, depth)
+                state.historyTable.update(bestMove, previous, position.us, depth)
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
@@ -126,7 +126,8 @@ func search(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    depth: Ply, height = 0.Ply
+    depth: Ply, height = 0.Ply,
+    previous: Move
 ): Value =
     assert alpha < beta
 
@@ -192,8 +193,9 @@ func search(
         let value = -newPosition.search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
-            depth = depth - 2.Ply - depth div 3.Ply, height = height + 3.Ply
+            depth = depth - 2.Ply - depth div 3.Ply, height = height + 3.Ply,
             # height + 3 is not a bug, it somehow improves the performance by ~20 Elo
+            previous = noMove
         )
         if value >= beta:
             return value
@@ -203,7 +205,7 @@ func search(
         doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
         futilityMargin = alpha - staticEval
 
-    for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height)):
+    for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous):
 
         var newPosition = position
         newPosition.doMove(move)
@@ -241,7 +243,8 @@ func search(
         var value = -newPosition.search(
             state,
             alpha = -newBeta, beta = -alpha,
-            depth = newDepth - 1.Ply, height = height + 1.Ply
+            depth = newDepth - 1.Ply, height = height + 1.Ply,
+            previous = move
         )
 
         # first re-search with full window and reduced depth
@@ -249,7 +252,8 @@ func search(
             value = -newPosition.search(
                 state,
                 alpha = -beta, beta = -alpha,
-                depth = newDepth - 1.Ply, height = height + 1.Ply
+                depth = newDepth - 1.Ply, height = height + 1.Ply,
+                previous = move
             )
 
         # re-search with full window and full depth
@@ -258,7 +262,8 @@ func search(
             value = -newPosition.search(
                 state,
                 alpha = -beta, beta = -alpha,
-                depth = depth - 1.Ply, height = height + 1.Ply
+                depth = depth - 1.Ply, height = height + 1.Ply,
+                previous = move
             )
 
         if value > bestValue:
@@ -266,14 +271,14 @@ func search(
             bestMove = move
 
         if value >= beta:
-            state.update(position, bestMove, depth = depth, height = height, cutNode, value)
+            state.update(position, bestMove, previous, depth = depth, height = height, cutNode, value)
             return bestValue
 
         if value > alpha:
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable.update(move, position.us, newDepth, weakMove = true)
+            state.historyTable.update(move, previous, position.us, newDepth, weakMove = true)
 
     if moveCounter == 0:
         # checkmate
@@ -285,7 +290,7 @@ func search(
     if height == 0:
         state.numMovesAtRoot = moveCounter
     
-    state.update(position, bestMove, depth = depth, height = height, nodeType, bestValue)
+    state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
     bestValue
 
 # TODO: counter move things
@@ -304,6 +309,7 @@ iterator iterativeDeepeningSearch*(
     var state = SearchState(
         stop: stop,
         hashTable: addr hashTable,
+        historyTable: newHistoryTable(),
         gameHistory: newGameHistory(positionHistory),
         evaluation: evaluation
     )
@@ -315,7 +321,8 @@ iterator iterativeDeepeningSearch*(
         let value = position.search(
             state,
             alpha = -valueInfinity, beta = valueInfinity,
-            depth = depth, height = 0
+            depth = depth, height = 0,
+            previous = noMove
         )
 
         if stop[].load:

@@ -16,6 +16,7 @@ iterator moveIterator*(
     tryFirstMove = noMove,
     historyTable: HistoryTable = zeroHistoryTable,
     killers = [noMove, noMove],
+    previous = noMove,
     doQuiets = true
 ): Move =
     type OrderedMoveList = object
@@ -23,7 +24,7 @@ iterator moveIterator*(
         movePriorities: array[maxNumMoves, Value]
         numMoves: int
 
-    template findBestMoves(moveList: var OrderedMoveList, minValue = -valueInfinity) =
+    template findBestMoves(moveList: var OrderedMoveList, minValue = Value.low) =
         while true:
             var bestIndex = moveList.numMoves
             var bestValue = minValue
@@ -32,7 +33,7 @@ iterator moveIterator*(
                     bestValue = moveList.movePriorities[i]
                     bestIndex = i
             if bestIndex != moveList.numMoves:
-                moveList.movePriorities[bestIndex] = -valueInfinity
+                moveList.movePriorities[bestIndex] = Value.low
                 
                 var isDuplicate = false
                 for j in killers.low..killers.high:
@@ -69,7 +70,7 @@ iterator moveIterator*(
         var quietList {.noinit.}: OrderedMoveList
         quietList.numMoves = position.generateQuiets(quietList.moves)
         for i in 0..<quietList.numMoves:
-            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], position.us)
+            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
                 
         quietList.findBestMoves()
     
