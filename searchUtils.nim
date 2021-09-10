@@ -24,28 +24,23 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     if move.isTactical:
         return
 
-    var addition: float = depth.float^2
-    addition *= (if weakMove: -1.0/25.0 else: 1.0)
+    func add(
+        table: var array[white..black, array[pawn..king, array[a1..h8, float]]],
+        color: Color, piece: Piece, target: Square, addition: float
+    ) =
+        table[color][piece][target] = clamp(
+            table[color][piece][target] + addition,
+            -maxHistoryTableValue, maxHistoryTableValue
+        )    
+        if table[color][piece][target].abs >= maxHistoryTableValue:
+            table.halve
 
-    historyTable.table[color][move.moved][move.target] = clamp(
-        historyTable.table[color][move.moved][move.target] + addition,
-        -maxHistoryTableValue, maxHistoryTableValue
-    )
-    
-    if historyTable.table[color][move.moved][move.target].abs >= maxHistoryTableValue:
-        historyTable.table.halve
+    let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.float^2
+
+    historyTable.table.add(color, move.moved, move.target, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-
-        historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target] = clamp(
-            historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target] + addition * 25.0,
-            #TODO: maybe bigger multiplyer
-            -maxHistoryTableValue, maxHistoryTableValue#TODO: clean up
-        )
-    
-        if historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].abs >= maxHistoryTableValue:
-            historyTable.counterTable[0][previous.moved][previous.target].halve
-        
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 25.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
     result = historyTable.table[color][move.moved][move.target].Value
