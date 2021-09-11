@@ -40,14 +40,12 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     historyTable.table.add(color, move.moved, move.target, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 25.0)        
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
     result = historyTable.table[color][move.moved][move.target].Value
     if previous.moved in pawn..king and previous.target in a1..h8:
         result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
-    if result >= valueInfinity:
-        result = valueInfinity - 1
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
