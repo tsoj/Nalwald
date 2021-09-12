@@ -234,7 +234,7 @@ func search(
                 continue
 
         # first explore with null window
-        if alpha > -valueInfinity:
+        if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.nodeType == allNode or move != hashResult.bestMove):
             newBeta = alpha + 1.Value
 
         if state.stop[].load:
