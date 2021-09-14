@@ -9,7 +9,6 @@ import
     see,
     evaluation,
     version,
-    easteregg/asteroids,
     times,
     strutils,
     strformat,
@@ -227,8 +226,6 @@ proc uciLoop*() =
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
             of "about":
                 about()
-            of "easteregg":
-                run()
             of "help":
                 help(params[1..^1])
             else:
