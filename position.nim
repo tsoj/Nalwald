@@ -16,16 +16,16 @@ type Position* = object
     halfmovesPlayed*: int16
     halfmoveClock*: int16
 
-template `[]`*(position: Position, piece: Piece): Bitboard =
+func `[]`*(position: Position, piece: Piece): Bitboard {.inline.} =
     position.pieces[piece]
 
-template `[]=`*(position: var Position, piece: Piece, bitboard: Bitboard) =
+func `[]=`*(position: var Position, piece: Piece, bitboard: Bitboard) {.inline.} =
     position.pieces[piece] = bitboard
 
-template `[]`*(position: Position, color: Color): Bitboard =
+func `[]`*(position: Position, color: Color): Bitboard {.inline.} =
     position.colors[color]
 
-template `[]=`*(position: var Position, color: Color, bitboard: Bitboard) =
+func `[]=`*(position: var Position, color: Color, bitboard: Bitboard) {.inline.} =
     position.colors[color] = bitboard
 
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) =
