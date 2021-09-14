@@ -10,6 +10,8 @@ nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run 
 ```
 ##### Label positions
 
+Create an empty file called `quietSetNalwald.epd`.
+
 ```
 nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run labelPositions.nim
 ```
