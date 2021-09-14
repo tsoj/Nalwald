@@ -8,7 +8,7 @@ import
     defaultParameters,
     algorithm
 
-func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) =
+func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
         a[phase] += b[phase]
 
