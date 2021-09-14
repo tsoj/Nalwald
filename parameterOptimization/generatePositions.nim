@@ -29,7 +29,6 @@ while f.readLine(line):
     try:
         discard game.playGame(suppressOutput = true)            
     except:
-        echo "!!!!!"#TODO: fix exceptions
         echo getCurrentExceptionMsg()
         
     i += 1

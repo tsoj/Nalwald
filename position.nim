@@ -270,7 +270,3 @@ func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool =
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
 
-
-# TODO: check missing repetition
-# TODO: check potential search explosion
-

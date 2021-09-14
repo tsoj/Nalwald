@@ -57,12 +57,11 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
         return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
         
     except:
-        debugEcho "!!!!!"
-        debugEcho getCurrentExceptionMsg()
-        debugEcho game.positionHistory[^1].fen
-        debugEcho game.positionHistory[^1]
-        debugEcho game.positionHistory[^1].debugString
-        raise newException(ValueError, "Some Error")
+        var s = getCurrentExceptionMsg() & "\n"
+        s &= game.positionHistory[^1].fen & "\n"
+        s &= $game.positionHistory[^1] & "\n"
+        s &= game.positionHistory[^1].debugString & "\n"
+        raise newException(AssertionDefect, s)
 
 
 func newGame*(

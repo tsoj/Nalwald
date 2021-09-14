@@ -59,6 +59,11 @@ func bonusPassedPawn(
     when not (gradient is Nothing):
         for phase in Phase: gradient[phase].passedPawnTable[index] += (if us == black: -1.0 else: 1.0)
 
+func addSmooth(g: var openArray[float], index: int, a: float) =
+    for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
+        if index + offset in g.low..g.high:
+            g[index + offset] += a*f
+
 func mobility(
     evalParameters: EvalParameters,
     position: Position,
@@ -73,10 +78,7 @@ func mobility(
 
     when not (gradient is Nothing):
         for phase in Phase:
-            template g: auto = gradient[phase].bonusMobility[piece]
-            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
-                if reachableSquares + offset in g.low..g.high:
-                    g[reachableSquares + offset] += (if us == black: -f else: f)
+            gradient[phase].bonusMobility[piece].addSmooth(reachableSquares, if us == black: -1.0 else: 1.0)
 
 
 func targetingKingArea(
@@ -250,11 +252,7 @@ func evaluateKing(
 
     when not (gradient is Nothing):
         for phase in Phase:
-            #TODO: avoid repetition with mobility gradient calculation
-            template g: auto = gradient[phase].bonusKingSafety
-            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
-                if numPossibleQueenAttack + offset in g.low..g.high:
-                    g[numPossibleQueenAttack + offset] += (if us == black: -f else: f)
+            gradient[phase].bonusKingSafety.addSmooth(numPossibleQueenAttack, if us == black: -1.0 else: 1.0)
 
 func evaluatePiece(
     position: Position,
