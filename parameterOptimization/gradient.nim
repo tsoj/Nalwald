@@ -6,7 +6,7 @@ import
     evalParametersUtils,
     winningProbability,
     error,
-    ../bitboard#TODO fix ???
+    ../bitboard
 
 func addGradient*(
     gradient: var EvalParametersFloat,
