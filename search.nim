@@ -118,6 +118,7 @@ func materialQuiesce*(position: Position): Value =
         stop: nil,
         hashTable: nil,
         gameHistory: newGameHistory(@[]),
+        historyTable: nil,
         evaluation: material
     )
     position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
@@ -305,7 +306,7 @@ iterator iterativeDeepeningSearch*(
     var state = SearchState(
         stop: stop,
         hashTable: addr hashTable,
-        historyTable: newHistoryTable(),
+        historyTable: new HistoryTable,
         gameHistory: newGameHistory(positionHistory),
         evaluation: evaluation
     )
