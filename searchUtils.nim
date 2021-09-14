@@ -7,9 +7,11 @@ import
 type HistoryTable* = object
     table: array[white..black, array[pawn..king, array[a1..h8, float]]]
     counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]]
+    kingTable: seq[array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]
 
 func newHistoryTable*(): HistoryTable =
     result.counterTable.setLen(1)
+    result.kingTable.setLen(1)
 
 const maxHistoryTableValue = 20000.0
 static: doAssert maxHistoryTableValue < valueInfinity.float
@@ -20,7 +22,7 @@ func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]
             for square in a1..h8:
                 table[color][piece][square] = table[color][piece][square] / 2.0
 
-func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
+func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, enemyKingSquare: Square, weakMove = false) =
     if move.isTactical:
         return
 
@@ -40,12 +42,15 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     historyTable.table.add(color, move.moved, move.target, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)
 
-func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
+    historyTable.kingTable[0][enemyKingSquare].add(color, move.moved, move.target, addition)
+
+func get*(historyTable: HistoryTable, move, previous: Move, color: Color, enemyKingSquare: Square): Value =
     result = historyTable.table[color][move.moved][move.target].Value
     if previous.moved in pawn..king and previous.target in a1..h8:
         result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
+    result += historyTable.kingTable[0][enemyKingSquare][color][move.moved][move.target].Value
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
