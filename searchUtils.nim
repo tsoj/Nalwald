@@ -7,7 +7,6 @@ import
 type HistoryTable* = ref object
     table: array[white..black, array[pawn..king, array[a1..h8, float]]]
     counterTable: array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]
-    kingTable: array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]
 
 const maxHistoryTableValue = 20000.0
 
@@ -17,7 +16,7 @@ func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]
             for square in a1..h8:
                 table[color][piece][square] = table[color][piece][square] / 2.0
 
-func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, enemyKingSquare: Square, weakMove = false) =
+func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
     if move.isTactical:
         return
 
@@ -39,13 +38,10 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     if previous.moved in pawn..king and previous.target in a1..h8:
         historyTable.counterTable[previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)
 
-    historyTable.kingTable[enemyKingSquare].add(color, move.moved, move.target, addition)
-
-func get*(historyTable: HistoryTable, move, previous: Move, color: Color, enemyKingSquare: Square): Value =
+func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
     result = historyTable.table[color][move.moved][move.target].Value
     if previous.moved in pawn..king and previous.target in a1..h8:
         result += historyTable.counterTable[previous.moved][previous.target][color][move.moved][move.target].Value
-    result += historyTable.kingTable[enemyKingSquare][color][move.moved][move.target].Value
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]

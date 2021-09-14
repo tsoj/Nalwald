@@ -69,9 +69,8 @@ iterator moveIterator*(
     if doQuiets:
         var quietList {.noinit.}: OrderedMoveList
         quietList.numMoves = position.generateQuiets(quietList.moves)
-        let enemyKingSquare = position.kingSquare(position.enemy)
         for i in 0..<quietList.numMoves:
-            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us, enemyKingSquare)
+            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
                 
         quietList.findBestMoves()
     

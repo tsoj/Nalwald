@@ -21,13 +21,12 @@ func typeId*(T:typedesc): TypeId =
     id
 
 func bitTypeId(id: TypeId): uint64 =
-    (0b10'u64 shl id.uint64)
+    (0b10'u64 shl id)
 
 func bitTypeId(T: typedesc): uint64 =
     let bitID {.global.} = bitTypeId(typeId(T))
     {.cast(noSideEffect).}:
         bitID
-
 
 func bitTypeIdUnion(Ts: tuple): uint64 =
     {.cast(noSideEffect).}:
@@ -74,11 +73,12 @@ func get(componentVectors: ComponentVectors, T: typedesc): lent seq[T] =
     doAssert componentVectors.vec.len > id and componentVectors.vec[id] != nil
     cast[ref seq[T]](componentVectors.vec[id])[]
 
-# Rare and big objects should be passed as refs to the entity component manager,
-# otherwiese alot of space will be wasted.
-# Components of type tuple may not work. Better use proper objects.
+type Entity* = distinct int
+func `<`*(x, y: Entity): bool {.borrow.}
+func `<=`*(x, y: Entity): bool {.borrow.}
+func `==`*(x, y: Entity): bool {.borrow.}
+func `$`*(x: Entity): string {.borrow.}
 
-type Entity* = int
 type EntityComponentManager* = object
     componentVectors: ComponentVectors
     hasMask: seq[uint64]
@@ -86,14 +86,14 @@ type EntityComponentManager* = object
     unusedEntities: seq[Entity]
 
 func has*(ecm: EntityComponentManager, entity: Entity): bool =
-    if entity < ecm.hasMask.len:
-        return (ecm.hasMask[entity] and entityBit) != 0
+    if entity.int < ecm.hasMask.len:
+        return (ecm.hasMask[entity.int] and entityBit) != 0
     false
 
-func hasInternal*(ecm: EntityComponentManager, entity: Entity, ComponentTypes: tuple): bool =
+func hasImpl*(ecm: EntityComponentManager, entity: Entity, ComponentTypes: tuple): bool =
     if ecm.has(entity):
         let bitId = bitTypeIdUnion(ComponentTypes)
-        return (ecm.hasMask[entity] and bitId) == bitId
+        return (ecm.hasMask[entity.int] and bitId) == bitId
     false
 
 template has*(ecm: EntityComponentManager, entity: Entity, ComponentTypes: untyped): bool =
@@ -102,18 +102,18 @@ template has*(ecm: EntityComponentManager, entity: Entity, ComponentTypes: untyp
         var t: ComponentTypes
     else:
         var t: (ComponentTypes,)
-    ecm.hasInternal(entity, t)
+    ecm.hasImpl(entity, t)
 
 func addEntity*(ecm: var EntityComponentManager): Entity =
     if ecm.unusedEntities.len > 0:
         result = ecm.unusedEntities.pop()
-        assert ecm.hasMask[result] == 0
-        ecm.hasMask[result] = entityBit
+        assert ecm.hasMask[result.int] == 0
+        ecm.hasMask[result.int] = entityBit
     else:
-        result = ecm.hasMask.len
+        result = ecm.hasMask.len.Entity
         ecm.hasMask.add(entityBit)
-    assert result < ecm.hasMask.len
-    assert ecm.hasMask[result] == entityBit
+    assert result.int < ecm.hasMask.len
+    assert ecm.hasMask[result.int] == entityBit
 
 func remove(typeToEntity: var seq[Entity], entity: Entity) =
     let index = typeToEntity.find(entity)
@@ -125,10 +125,10 @@ func remove*(ecm: var EntityComponentManager, entity: Entity) =
         raise newException(KeyError, "Entity cannot be removed: Entity " & $entity & " does not exist.")
 
     for id in 0..<maxNumComponentTypes:
-        if (ecm.hasMask[entity] and bitTypeId(id)) != 0:
+        if (ecm.hasMask[entity.int] and bitTypeId(id)) != 0:
             ecm.componentTypeToEntity[id].remove(entity)
 
-    ecm.hasMask[entity] = 0
+    ecm.hasMask[entity.int] = 0
     ecm.unusedEntities.add(entity)
 
 func add*[T](ecm: var EntityComponentManager, entity: Entity, component: T) =
@@ -144,10 +144,10 @@ func add*[T](ecm: var EntityComponentManager, entity: Entity, component: T) =
         )
     
     template componentVector: auto = ecm.componentVectors.get(T)
-    if componentVector.len <= entity:
-        componentVector.setLen(entity + 1)
-    componentVector[entity] = component
-    ecm.hasMask[entity] = ecm.hasMask[entity] or bitTypeId(T)
+    if componentVector.len <= entity.int:
+        componentVector.setLen(entity.int + 1)
+    componentVector[entity.int] = component
+    ecm.hasMask[entity.int] = ecm.hasMask[entity.int] or bitTypeId(T)
     ecm.componentTypeToEntity[typeId(T)].add entity
 
 func remove*(ecm: var EntityComponentManager, entity: Entity, T: typedesc) =
@@ -162,7 +162,7 @@ func remove*(ecm: var EntityComponentManager, entity: Entity, T: typedesc) =
             "Component cannot be remove from entity: Entity " & $entity & " does not have component " & $T & "."
         )
     
-    ecm.hasMask[entity] = ecm.hasMask[entity] and not bitTypeId(T)
+    ecm.hasMask[entity.int] = ecm.hasMask[entity.int] and not bitTypeId(T)
     ecm.componentTypeToEntity[typeId(T)].remove(entity)
 
 template getTemplate(ecm: EntityComponentManager or var EntityComponentManager, entity: Entity, T: typedesc): auto =
@@ -177,8 +177,8 @@ template getTemplate(ecm: EntityComponentManager or var EntityComponentManager, 
             "Component cannot be accessed: Entity " & $entity & " does not have component " & $T & "."
         )
     
-    assert ecm.componentVectors.get(T).len > entity
-    ecm.componentVectors.get(T)[entity]
+    assert ecm.componentVectors.get(T).len > entity.int
+    ecm.componentVectors.get(T)[entity.int]
 
 func get*[T](ecm: var EntityComponentManager, entity: Entity, desc: typedesc[T]): var T =
     ecm.getTemplate(entity, T)
@@ -198,24 +198,20 @@ func getRarestComponent(ecm: EntityComponentManager, ComponentTypes: tuple): Typ
             min = ecm.componentTypeToEntity[id].len
             result = id
 
-iterator iterInternal*(ecm: EntityComponentManager, ComponentTypes: tuple): Entity =
+iterator iterImpl*(ecm: EntityComponentManager, ComponentTypes: tuple): Entity =
     let rarestComponent = ecm.getRarestComponent(ComponentTypes)
     for entity in ecm.componentTypeToEntity[rarestComponent]:
-        if ecm.hasInternal(entity, ComponentTypes):
+        if ecm.hasImpl(entity, ComponentTypes):
             yield entity
 
 template iter*(ecm: EntityComponentManager, ComponentTypes: varargs[untyped]): auto =
-    ecm.iterInternal((new (ComponentTypes,))[])
+    ecm.iterImpl((new (ComponentTypes,))[])
 
 iterator iterAll*(ecm: EntityComponentManager): Entity =
-    for entity, hasMask in ecm.hasMask.pairs:
-        if ecm.has(entity):
-            yield entity
+    for i, hasMask in ecm.hasMask.pairs:
+        if ecm.has(i.Entity):
+            yield i.Entity
 
-# Example:
-# forEach(ecm, a: ComponentA, b: var ComponentB, c: ComponentC):
-#     echo a
-#     b.x = c.y
 macro forEach*(args: varargs[untyped]): untyped =
     args.expectMinLen 3
     args[0].expectKind nnkIdent

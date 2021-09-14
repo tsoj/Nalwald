@@ -9,7 +9,7 @@ import
     see,
     evaluation,
     version,
-    easteregg/easteregg,
+    easteregg/asteroids,
     times,
     strutils,
     strformat,

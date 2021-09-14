@@ -1,7 +1,7 @@
 import
     framebuffer,
     inputCatcher,
-    ecSystem,
+    ecm,
     asteroidTemplates,
     unicode,
     random,
