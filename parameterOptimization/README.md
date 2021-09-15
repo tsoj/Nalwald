@@ -13,6 +13,19 @@ nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run 
 Create an empty file called `quietSetNalwald.epd`.
 
 ```
+mv quietSetNalwald.epd quietSetNalwald.epd.backup
+touch quietSetNalwald.epd
+```
+
+Install [Psutil-Nim](https://github.com/johnscillieri/psutil-nim).
+
+```
+nimble install psutil
+```
+
+Label positions.
+
+```
 nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run labelPositions.nim
 ```
 
@@ -25,5 +38,3 @@ nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run 
 ```
 nim c -d:release --gc:arc -d:lto --passL:"-static" --cc:clang --run calculatePieceValue.nim
 ```
-
-TODO: test if these all still work
