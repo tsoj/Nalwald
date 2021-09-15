@@ -9,6 +9,7 @@ type HistoryTable* = object
     counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]]
 
 func newHistoryTable*(): HistoryTable =
+    # allocating this on the heap, as it is too big for the stack
     result.counterTable.setLen(1)
 
 const maxHistoryTableValue = 20000.0
