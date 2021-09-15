@@ -10,7 +10,7 @@ func connectOnFile(a,b: Square): Bitboard =
     if (ranks[a] and ranks[b]) != 0:
         var currentSquare = min(a, b)
         while true:
-            result = result or currentSquare.toBitboard
+            result = result or bitAt[currentSquare]
             if currentSquare == max(a, b):
                 break
             inc currentSquare
@@ -44,7 +44,7 @@ func blockSensitive*(us: Color, castlingSide: CastlingSide, kingSource, rookSour
     (
         blockSensitiveKing[us][castlingSide][kingSource] or
         blockSensitiveRook[us][castlingSide][rookSource]
-    ) and not (kingSource.toBitboard or rookSource.toBitboard)
+    ) and not (bitAt[kingSource] or bitAt[rookSource])
 
 const checkSensitive* = block:
     var checkSensitive: array[white..black, array[CastlingSide, array[a1..h8, seq[Square]]]]
@@ -55,7 +55,7 @@ const checkSensitive* = block:
                 let b =
                     blockSensitiveKing[us][castlingSide][kingSource] and
                     # I don't need to check if king will be in check after the move is done
-                    (kingSource.toBitboard or not kingTarget[us][castlingSide].toBitboard)
+                    (bitAt[kingSource] or not bitAt[kingTarget[us][castlingSide]])
                 for square in b:
                     checkSensitive[us][castlingSide][kingSource].add(square)
 

@@ -21,14 +21,14 @@ proc optimize(
 ): EvalParameters =
 
     echo "-------------------"
-    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
+    optimizeK(getError = proc(): float = start.convert.error(data))
 
     var bestSolution: EvalParametersFloat = start
 
     echo "-------------------"
 
     var lr = lr
-    var bestError = bestSolution.convert.error(data, k)
+    var bestError = bestSolution.convert.error(data)
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
     var previousGradient: EvalParametersFloat 
@@ -57,7 +57,7 @@ proc optimize(
                 stdout.flushFile
             
             totalWeight += entry.weight
-            gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, k = k, weight = entry.weight)
+            gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, weight = entry.weight)
         # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
         # result is better
         gradient *= (1.0/totalWeight)
@@ -80,7 +80,7 @@ proc optimize(
         while leftTries > 0:
 
             currentSolution += gradient
-            let error = currentSolution.convert.error(data, k)
+            let error = currentSolution.convert.error(data)
 
             tries += 1                    
             if error < bestError:

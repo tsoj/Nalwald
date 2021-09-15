@@ -8,7 +8,7 @@ import
     defaultParameters,
     algorithm
 
-func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] += b[phase]
 
@@ -59,11 +59,6 @@ func bonusPassedPawn(
     when not (gradient is Nothing):
         for phase in Phase: gradient[phase].passedPawnTable[index] += (if us == black: -1.0 else: 1.0)
 
-func addSmooth(g: var openArray[float], index: int, a: float) =
-    for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
-        if index + offset in g.low..g.high:
-            g[index + offset] += a*f
-
 func mobility(
     evalParameters: EvalParameters,
     position: Position,
@@ -78,7 +73,10 @@ func mobility(
 
     when not (gradient is Nothing):
         for phase in Phase:
-            gradient[phase].bonusMobility[piece].addSmooth(reachableSquares, if us == black: -1.0 else: 1.0)
+            template g: auto = gradient[phase].bonusMobility[piece]
+            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
+                if reachableSquares + offset in g.low..g.high:
+                    g[reachableSquares + offset] += (if us == black: -f else: f)
 
 
 func targetingKingArea(
@@ -98,7 +96,7 @@ func targetingKingArea(
         when not (gradient is Nothing):
             for phase in Phase: gradient[phase].bonusTargetingKingArea[piece] += (if us == black: -1.0 else: 1.0)
     
-    if (attackMask and kingSquare[enemy].toBitboard) != 0:
+    if (attackMask and bitAt[kingSquare[enemy]]) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusAttackingKing[piece]
 
         when not (gradient is Nothing):
@@ -180,7 +178,7 @@ func evaluateBishop(
     result += evalParameters.targetingKingArea(position, bishop, us, enemy, kingSquare, attackMask, gradient)
     
     # both bishops
-    if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
+    if (position[us] and position[bishop] and (not bitAt[square])) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusBothBishops
 
         when not (gradient is Nothing):
@@ -252,7 +250,11 @@ func evaluateKing(
 
     when not (gradient is Nothing):
         for phase in Phase:
-            gradient[phase].bonusKingSafety.addSmooth(numPossibleQueenAttack, if us == black: -1.0 else: 1.0)
+            #TODO: avoid repetition with mobility gradient calculation
+            template g: auto = gradient[phase].bonusKingSafety
+            for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
+                if numPossibleQueenAttack + offset in g.low..g.high:
+                    g[numPossibleQueenAttack + offset] += (if us == black: -f else: f)
 
 func evaluatePiece(
     position: Position,
@@ -300,7 +302,7 @@ func evaluatePieceType(
         enemy = position.enemy
 
     for square in position[piece]:
-        let currentUs = if (square.toBitboard and position[us]) != 0: us else: enemy
+        let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 
         var currentResult: array[Phase, Value] = position.evaluatePiece(

@@ -111,13 +111,13 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
             rookSource = (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
             castlingSide = if rookSource < kingSquare: queenside else: kingside
         
-        result.enPassantCastling = result.enPassantCastling or rookSource.toBitboard
+        result.enPassantCastling = result.enPassantCastling or bitAt[rookSource]
         result.rookSource[us][castlingSide] = rookSource
 
     # en passant square
     if enPassant != "-":
         try:
-            result.enPassantCastling = result.enPassantCastling or parseEnum[Square](enPassant.toLowerAscii).toBitboard
+            result.enPassantCastling = result.enPassantCastling or bitAt[parseEnum[Square](enPassant.toLowerAscii)]
         except ValueError:
             raise newException(ValueError, "FEN en passant target square is not correctly formatted: " &
                     getCurrentExceptionMsg())
@@ -160,7 +160,7 @@ func fen*(position: Position): string =
     for color in [white, black]:
         for castlingSide in queenside..kingside:
             let rookSource = position.rookSource[color][castlingSide]
-            if (position.enPassantCastling and rookSource.toBitboard and homeRank[color]) != 0:
+            if (position.enPassantCastling and bitAt[rookSource] and homeRank[color]) != 0:
                 result &= ($rookSource)[0]
 
                 if result[^1] == 'h':
@@ -185,7 +185,7 @@ func fen*(position: Position): string =
 
 func `$`*(position: Position): string =
     result = boardString(proc (square: Square): Option[string] =
-        if (square.toBitboard and position.occupancy) != 0:
+        if (bitAt[square] and position.occupancy) != 0:
             return some($position.coloredPiece(square))
         none(string)
     ) & "\n"

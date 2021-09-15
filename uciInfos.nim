@@ -19,6 +19,7 @@ proc help*(params: openArray[string]) =
         echo "* test"
         echo "* eval"
         echo "* piecevalues"
+        echo "* easteregg"
         echo "* about"
         echo "* help"
         echo "Use 'help <command>' to get info about a specific command"
@@ -135,6 +136,8 @@ proc help*(params: openArray[string]) =
             echo "Prints the static evaluation value for the current internal position."
         of "piecevalues":
             echo "Prints the values for each piece type."
+        of "easteregg":
+            echo "Try it out."
         of "about":
             echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
         of "help":

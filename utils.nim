@@ -4,7 +4,8 @@ import
     strutils,
     atomics,
     times,
-    os
+    os,
+    math
 
 
 func boardString*(f: proc(square: Square): Option[string]): string =
@@ -92,3 +93,6 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         sleep(5)
         if now() - start >= duration:
             flag[].store(true)
+
+func sigmoid*(x,k,a,b: float): float =
+    k/(1.0 + exp(a + b*x))

@@ -42,11 +42,11 @@ func see(position: var Position, target: Square, victim: Piece): Value =
     if source != noSquare:
 
         if attacker == pawn and (target >= a8 or target <= h1):
-            position.removePiece(us, attacker, source.toBitboard)
+            position.removePiece(us, attacker, bitAt[source])
             result = queen.value - pawn.value
             currentVictim = queen
         else:
-            position.removePiece(us, attacker, source.toBitboard)
+            position.removePiece(us, attacker, bitAt[source])
         
         position.us = position.enemy
         position.enemy = position.enemy.opposite
@@ -66,17 +66,17 @@ func see*(position: Position, move: Move): Value =
     var position = position
     var currentVictim = moved
 
-    position.removePiece(us, moved, source.toBitboard)
+    position.removePiece(us, moved, bitAt[source])
 
     if move.capturedEnPassant:
         position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
-        position.removePiece(us, pawn, source.toBitboard)
+        position.removePiece(us, pawn, bitAt[source])
     elif promoted != noPiece:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, bitAt[source])
         result = promoted.value - pawn.value
         currentVictim = promoted
     else:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, bitAt[source])
 
     position.us = enemy
     position.enemy = enemy.opposite

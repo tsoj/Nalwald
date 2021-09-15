@@ -58,6 +58,8 @@ func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     {.cast(noSideEffect).}:
         rand(1.0) < probability
 
+# TODO: add proper hashfull
+
 func add*(
     ht: var HashTable,
     zobristKey: uint64,

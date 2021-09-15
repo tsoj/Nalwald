@@ -4,11 +4,15 @@ import
     position,
     math
 
-type HistoryTable* = ref object
+type HistoryTable* = object
     table: array[white..black, array[pawn..king, array[a1..h8, float]]]
-    counterTable: array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]
+    counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]]
+
+func newHistoryTable*(): HistoryTable =
+    result.counterTable.setLen(1)
 
 const maxHistoryTableValue = 20000.0
+static: doAssert maxHistoryTableValue < valueInfinity.float
 
 func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]]]) =
     for color in white..black:
@@ -36,12 +40,12 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     historyTable.table.add(color, move.moved, move.target, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        historyTable.counterTable[previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
     result = historyTable.table[color][move.moved][move.target].Value
     if previous.moved in pawn..king and previous.target in a1..h8:
-        result += historyTable.counterTable[previous.moved][previous.target][color][move.moved][move.target].Value
+        result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]

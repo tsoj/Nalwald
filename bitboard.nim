@@ -10,11 +10,15 @@ func toSquare*(x: Bitboard): Square {.inline.} =
     assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
 
-func toBitboard*(square: Square): Bitboard = 1u64 shl square.int8
+const bitAt*: array[a1..h8, Bitboard] = block:
+    var bitAt: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        bitAt[square] = 1u64 shl square.int8
+    bitAt
 
 func removeTrailingOneBit(x: var SomeInteger): Square {.inline.} =
     result = x.countTrailingZeroBits.Square
-    x = x and not result.toBitboard
+    x = x and not bitAt[result]
 
 iterator items*(bitboard: Bitboard): Square {.inline.} =
     var tmp = bitboard
@@ -23,7 +27,7 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
 
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
-        if (square.toBitboard and bitboard) != 0:
+        if (bitAt[square] and bitboard) != 0:
             return some("●")
         none(string)
     )
@@ -31,8 +35,8 @@ func bitboardString*(bitboard: Bitboard): string =
 func mirror*(bitboard: Bitboard): Bitboard =
     result = 0
     for square in a1..h8:
-        if (square.toBitboard and bitboard) != 0:
-            result = result or square.mirror.toBitboard
+        if (bitAt[square] and bitboard) != 0:
+            result = result or bitAt[square.mirror]
 
 const ranks*: array[a1..h8, Bitboard] = block:
     var ranks: array[a1..h8, Bitboard]
@@ -68,7 +72,7 @@ const diagonals*: array[a1..h8, Bitboard] = block:
 
 const antiDiagonals: array[a1..h8, Bitboard] = block:
     var antiDiagonals: array[a1..h8, Bitboard]
-    antiDiagonals[h8] = h8.toBitboard
+    antiDiagonals[h8] = bitAt[h8]
     for i in 0..6:
         let currentAntiDiagonal = (antiDiagonal shl i) and lowerLeftSideZero
         for square in currentAntiDiagonal:
@@ -118,8 +122,8 @@ func generateSlidingAttackTable[F](
             for goDirection in directions:
                 var targetSquare = square
                 while goDirection[0](targetSquare) and goDirection[1](targetSquare):
-                    attackMask = attackMask or targetSquare.toBitboard
-                    if (occupancy and targetSquare.toBitboard) != 0:
+                    attackMask = attackMask or bitAt[targetSquare]
+                    if (occupancy and bitAt[targetSquare]) != 0:
                         break;
             result[square][hashkeyFunction(square, occupancy)] = attackMask
 
@@ -144,7 +148,7 @@ const knightAttackTable: array[a1..h8, Bitboard] = block:
         ]:
             var targetSquare = square
             if directions[0](targetSquare) and directions[1](targetSquare) and directions[2](targetSquare):
-                knightAttackTable[square] = knightAttackTable[square] or targetSquare.toBitboard
+                knightAttackTable[square] = knightAttackTable[square] or bitAt[targetSquare]
     knightAttackTable
 
 const kingAttackTable: array[a1..h8, Bitboard] = block:
@@ -156,7 +160,7 @@ const kingAttackTable: array[a1..h8, Bitboard] = block:
         ]:
             var targetSquare = square
             if directions[0](targetSquare) and directions[1](targetSquare):
-                kingAttackTable[square] = kingAttackTable[square] or targetSquare.toBitboard
+                kingAttackTable[square] = kingAttackTable[square] or bitAt[targetSquare]
     kingAttackTable
 
 const attackTablePawnQuiet*: array[white..black, array[a1..h8, Bitboard]] = block:
@@ -164,10 +168,10 @@ const attackTablePawnQuiet*: array[white..black, array[a1..h8, Bitboard]] = bloc
     for square in a1..h8:
         var targetSquare = square
         if targetSquare.goUp:
-            attackTablePawnQuiet[white][square] = targetSquare.toBitboard
+            attackTablePawnQuiet[white][square] = bitAt[targetSquare]
         targetSquare = square
         if targetSquare.goDown:
-            attackTablePawnQuiet[black][square] = targetSquare.toBitboard
+            attackTablePawnQuiet[black][square] = bitAt[targetSquare]
     attackTablePawnQuiet
 
 const attackTablePawnCapture*: array[white..black, array[a1..h8, Bitboard]] = block:
@@ -176,10 +180,10 @@ const attackTablePawnCapture*: array[white..black, array[a1..h8, Bitboard]] = bl
         for direction in [goLeft, goRight]:
             var targetSquare = square
             if targetSquare.goUp and targetSquare.direction:
-                attackTablePawnCapture[white][square] = attackTablePawnCapture[white][square] or targetSquare.toBitboard
+                attackTablePawnCapture[white][square] = attackTablePawnCapture[white][square] or bitAt[targetSquare]
             targetSquare = square
             if targetSquare.goDown and targetSquare.direction:
-                attackTablePawnCapture[black][square] = attackTablePawnCapture[black][square] or targetSquare.toBitboard
+                attackTablePawnCapture[black][square] = attackTablePawnCapture[black][square] or bitAt[targetSquare]
     attackTablePawnCapture
 
 const isPassedMask*: array[white..black, array[a1..h8, Bitboard]] = block:
