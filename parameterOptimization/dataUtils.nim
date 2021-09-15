@@ -28,15 +28,15 @@ proc loadData*(data: var seq[Entry], filename: string, weight: float, suppressOu
         debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float * weight
 
 
-func error*(evalParameters: EvalParameters, entry: Entry): float =
-    let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
+func error*(evalParameters: EvalParameters, entry: Entry, k: float): float =
+    let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability(k)
     error(entry.outcome, estimate)*entry.weight
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry]): float =
+func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float): float =
     result = 0.0
     
     var summedWeight: float = 0.0
     for entry in data:
-        result += evalParameters.error(entry)
+        result += evalParameters.error(entry, k)
         summedWeight += entry.weight
     result /= summedWeight

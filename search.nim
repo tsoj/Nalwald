@@ -194,7 +194,7 @@ func search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
             depth = depth - 2.Ply - depth div 3.Ply, height = height + 3.Ply,
-            # height + 3 is not a bug, it somehow improves the performance by ~20 Elo
+            # height + 3 is not a bug, it somehow improves the performance by ~15 Elo
             previous = noMove
         )
         if value >= beta:
@@ -221,7 +221,7 @@ func search(
 
         # late move reduction
         if newDepth > 1.Ply and
-        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and#TODO: try movecoutre +1
+        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
         (not (move.isTactical or inCheck or givingCheck)) and
         (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
             newDepth = lmrDepth(newDepth, lmrMoveCounter)
@@ -292,10 +292,6 @@ func search(
     
     state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
     bestValue
-
-# TODO: counter move things
-# TODO: killermove previous 2-Ply
-# TODO: randomized replacement scheme based on depth hash table
 
 iterator iterativeDeepeningSearch*(
     position: Position,
