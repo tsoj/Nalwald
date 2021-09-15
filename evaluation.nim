@@ -96,7 +96,7 @@ func targetingKingArea(
         when not (gradient is Nothing):
             for phase in Phase: gradient[phase].bonusTargetingKingArea[piece] += (if us == black: -1.0 else: 1.0)
     
-    if (attackMask and bitAt[kingSquare[enemy]]) != 0:
+    if (attackMask and kingSquare[enemy].toBitboard) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusAttackingKing[piece]
 
         when not (gradient is Nothing):
@@ -178,7 +178,7 @@ func evaluateBishop(
     result += evalParameters.targetingKingArea(position, bishop, us, enemy, kingSquare, attackMask, gradient)
     
     # both bishops
-    if (position[us] and position[bishop] and (not bitAt[square])) != 0:
+    if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusBothBishops
 
         when not (gradient is Nothing):
@@ -302,7 +302,7 @@ func evaluatePieceType(
         enemy = position.enemy
 
     for square in position[piece]:
-        let currentUs = if (bitAt[square] and position[us]) != 0: us else: enemy
+        let currentUs = if (square.toBitboard and position[us]) != 0: us else: enemy
         let currentEnemy = currentUs.opposite
 
         var currentResult: array[Phase, Value] = position.evaluatePiece(
