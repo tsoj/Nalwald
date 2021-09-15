@@ -14,7 +14,6 @@ import
 
 static: doAssert pawn.value == 100.cp
 
-
 func futilityReduction(value: Value): Ply =
     if value < 150.cp: return 0.Ply
     if value < 200.cp: return 1.Ply
