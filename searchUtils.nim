@@ -41,11 +41,12 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     historyTable.table.add(color, move.moved, move.target, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
+        doAssert historyTable.counterTable.len == 1
         historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
     result = historyTable.table[color][move.moved][move.target].Value
-    if previous.moved in pawn..king and previous.target in a1..h8:
+    if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
         result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
 
 type KillerTable* = object
