@@ -10,13 +10,7 @@ func toSquare*(x: Bitboard): Square {.inline.} =
     assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
 
-const bitAt: array[a1..h8, Bitboard] = block:
-    var bitAt: array[a1..h8, Bitboard]
-    for square in a1..h8:
-        bitAt[square] = 1u64 shl square.int8
-    bitAt
-
-func toBitboard*(square: Square): Bitboard = bitAt[square]
+func toBitboard*(square: Square): Bitboard = 1u64 shl square.int8
 
 func removeTrailingOneBit(x: var SomeInteger): Square {.inline.} =
     result = x.countTrailingZeroBits.Square
