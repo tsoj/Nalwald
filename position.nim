@@ -16,27 +16,27 @@ type Position* = object
     halfmovesPlayed*: int16
     halfmoveClock*: int16
 
-template `[]`*(position: Position, piece: Piece): Bitboard =
+func `[]`*(position: Position, piece: Piece): Bitboard {.inline.} =
     position.pieces[piece]
 
-template `[]=`*(position: var Position, piece: Piece, bitboard: Bitboard) =
+func `[]=`*(position: var Position, piece: Piece, bitboard: Bitboard) {.inline.} =
     position.pieces[piece] = bitboard
 
-template `[]`*(position: Position, color: Color): Bitboard =
+func `[]`*(position: Position, color: Color): Bitboard {.inline.} =
     position.colors[color]
 
-template `[]=`*(position: var Position, color: Color, bitboard: Bitboard) =
+func `[]=`*(position: var Position, color: Color, bitboard: Bitboard) {.inline.} =
     position.colors[color] = bitboard
 
-func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) =
+func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) {.inline.} =
     position[piece] = position[piece] or target
     position[color] = position[color] or target
 
-func removePiece*(position: var Position, color: Color, piece: Piece, source: Bitboard) =
+func removePiece*(position: var Position, color: Color, piece: Piece, source: Bitboard) {.inline.} =
     position[piece] = position[piece] and (not source)
     position[color] = position[color] and (not source)
 
-func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) =
+func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) {.inline.} =
     position.removePiece(color, piece, source)
     position.addPiece(color, piece, target)
 
