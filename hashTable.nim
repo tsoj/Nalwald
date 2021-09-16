@@ -2,8 +2,7 @@ import
     types,
     move,
     position,
-    tables,
-    random
+    tables
 
 type
     HashTableEntry* {.packed.} = object
@@ -51,12 +50,7 @@ func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     if oldEntry.zobristKey == newEntry.zobristKey:
         return oldEntry.depth <= newEntry.depth
 
-    var probability = max(0.25, 1.0 + (newEntry.depth.float - oldEntry.depth.float)/6.0)
-    if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
-        probability -= 0.2
-    
-    {.cast(noSideEffect).}:
-        rand(1.0) < probability
+    true
 
 func add*(
     ht: var HashTable,
