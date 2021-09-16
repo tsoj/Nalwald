@@ -17,6 +17,7 @@ type
         lookupCounter: uint32
     HashTable* = object
         nonPvNodes: seq[HashTableEntry]
+        hashFullCounter: int
         pvNodes: Table[uint64, CountedHashTableEntry]
 
 const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, depth: 0.Ply, bestMove: noMove)
@@ -26,6 +27,7 @@ template isEmpty*(entry: HashTableEntry): bool =
 
 func clear*(ht: var HashTable) =
     ht.pvNodes.clear
+    ht.hashFullCounter = 0
     for entry in ht.nonPvNodes.mitems:
         entry = noEntry
 
@@ -83,6 +85,8 @@ func add*(
     else:
         let i = zobristKey mod ht.nonPvNodes.len.uint64
         if entry.shouldReplace(ht.nonPvNodes[i]):
+            if ht.nonPvNodes[i].isEmpty:
+                ht.hashFullCounter += 1
             ht.nonPvNodes[i] = entry
 
 func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
@@ -98,7 +102,7 @@ func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
     noEntry
 
 func hashFull*(ht: HashTable): int =
-    ht.pvNodes.len
+    (ht.hashFullCounter * 1000) div ht.nonPvNodes.len
             
 func getPv*(ht: var HashTable, position: Position): seq[Move] =
     var encounteredZobristKeys: seq[uint64]

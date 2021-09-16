@@ -49,7 +49,7 @@ nim modern Nalwald.nim
     - transposition table suggested best move
     - static exchange evaluation
     - killermoves
-    - relative history heuristic
+    - relative and counter move history heuristic
   - nullmove reduction
   - late move reductions
   - check extensions
@@ -59,7 +59,7 @@ nim modern Nalwald.nim
   - hash result futility pruning
 - supports Chess960/FRC
 - UCI compatible
-  - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`
+  - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`. `piecevalues`
 
 
 #### License
