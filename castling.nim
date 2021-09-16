@@ -54,7 +54,7 @@ const checkSensitive* = block:
             for kingSource in a1..h8:
                 let b =
                     blockSensitiveKing[us][castlingSide][kingSource] and
-                    # I don't need to check if king will be in check after the move is done
+                    # I don't need to check if the king will be in check after the move is done
                     (kingSource.toBitboard or not kingTarget[us][castlingSide].toBitboard)
                 for square in b:
                     checkSensitive[us][castlingSide][kingSource].add(square)
