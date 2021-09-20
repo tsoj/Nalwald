@@ -80,7 +80,7 @@ const antiDiagonals: array[a1..h8, Bitboard] = block:
     antiDiagonals
 
 func hashkeyRank*(square: Square, occupancy: Bitboard): uint8 =
-    (((occupancy.uint64 shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
+    (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
 func hashkeyFile*(square: Square, occupancy: Bitboard): uint8 =
     ((((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1) and 0b111111).uint8
 func hashkeyDiagonal*(square: Square, occupancy: Bitboard): uint8 =
