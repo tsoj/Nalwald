@@ -10,7 +10,7 @@ git clone https://gitlab.com/tsoj/Nalwald.git
 Pre-compiled executables for Windows and Linux can be found [here](https://gitlab.com/tsoj/Nalwald/-/releases).
 #### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 1.5.1 2021-07-27 or higher) and the Clang compiler.
+You need the [Nim](https://nim-lang.org/) compiler (version 1.6 or higher) and the Clang compiler.
 
 **Compiling for native CPU**
 ```
