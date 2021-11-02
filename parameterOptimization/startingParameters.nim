@@ -147,6 +147,7 @@ const passedPawnTable = [
 ]
 
 const startingEvalParameters* = block:
+    let pst = pst # workaround for https://github.com/nim-lang/Nim/issues/19075
     var startingEvalParameters: EvalParametersFloat
     for phase in Phase:
         startingEvalParameters[phase] = SinglePhaseEvalParametersTemplate[float](
