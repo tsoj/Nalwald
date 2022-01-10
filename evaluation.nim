@@ -33,24 +33,10 @@ func getPstValue(
             evalParameters[phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
             evalParameters[phase].pst[ourKing][kingSquare[ourKing]][piece][square]
 
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
 
         for whoseKing in ourKing..enemyKing:
             for currentKingSquare in a1..h8:
-                #  10, 0.4, 0.2, 0.1: 0.0656363
-                #   5, 0.5, 0.2, 0.1: 0.0648710
-                #   1, 0.5, 0.2, 0.1: 0.0649711
-                #   2, 0.5, 0.2, 0.1: 0.0638843
-                #   2, 1.0, 0.2, 0.1: 0.0644539
-                #   2, 0.3, 0.2, 0.1: 0.0634396 <- selected
-                #   2, 0.1, 0.1, 0.1: 0.0635893
-                #   2, 0.2, 0.2, 0.1: 0.0632217 <- best
-                #   2, .25, 0.2, .05: 0.0645271
-                #   2, .25, .25, 0.2: 0.0634961
-                #   3, 0.3, .25, 0.2: 0.0634081
-                #   3, 0.3, 0.2, 0.1: 0.0636901
-                # 1.5, 0.2, 0.2, 0.1: 0.0635045
-                # 1.5, 0.3, 0.2, 0.1: 0.0640492
                 let multiplier = whiteBlackGradient() * (if currentKingSquare == kingSquare[whoseKing]:
                     2.0
                 elif (currentKingSquare.toBitboard and mask3x3[kingSquare[whoseKing]]) != 0:
@@ -78,7 +64,7 @@ func bonusPassedPawn(
 
     for phase in Phase: result[phase] = evalParameters[phase].passedPawnTable[index]
 
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
         for phase in Phase: gradient[phase].passedPawnTable[index] += whiteBlackGradient()
 
 func addSmooth(g: var openArray[Float], index: int, a: Float) =
@@ -98,11 +84,9 @@ func mobility(
 
     for phase in Phase: result[phase] += evalParameters[phase].bonusMobility[piece][reachableSquares]
 
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
         for phase in Phase:
             gradient[phase].bonusMobility[piece].addSmooth(reachableSquares, whiteBlackGradient())
-
-
 
 func targetingKingArea(
     evalParameters: EvalParameters,
@@ -118,13 +102,13 @@ func targetingKingArea(
     if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusTargetingKingArea[piece]
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusTargetingKingArea[piece] += whiteBlackGradient()
     
     if (attackMask and kingSquare[enemy].toBitboard) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusAttackingKing[piece]
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusAttackingKing[piece] += whiteBlackGradient()
 
 #-------------- pawn evaluation --------------#
@@ -147,7 +131,7 @@ func evaluatePawn(
     if (position[pawn] and position[us] and adjacentFiles[square]) == 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusIsolatedPawn
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusIsolatedPawn += whiteBlackGradient()
 
     # has two neighbors
@@ -155,7 +139,7 @@ func evaluatePawn(
     (position[us] and position[pawn] and leftFiles[square]) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusPawnHasTwoNeighbors
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusPawnHasTwoNeighbors += whiteBlackGradient()
 
 #-------------- knight evaluation --------------#
@@ -179,7 +163,7 @@ func evaluateKnight(
     if (attackMask and position[enemy] and (position[bishop] or position[rook] or position[queen])) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusKnightAttackingPiece
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusKnightAttackingPiece += whiteBlackGradient()
 
 #-------------- bishop evaluation --------------#
@@ -206,7 +190,7 @@ func evaluateBishop(
     if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusBothBishops
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusBothBishops += whiteBlackGradient()
 
 
@@ -234,7 +218,7 @@ func evaluateRook(
     if (files[square] and position[pawn]) == 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusRookOnOpenFile
 
-        when not (gradient is Nothing):
+        when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusRookOnOpenFile += whiteBlackGradient()
 
 #-------------- queen evaluation --------------#
@@ -273,7 +257,7 @@ func evaluateKing(
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     for phase in Phase: result[phase] += evalParameters[phase].bonusKingSafety[numPossibleQueenAttack]
 
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
         for phase in Phase:
             gradient[phase].bonusKingSafety.addSmooth(numPossibleQueenAttack, whiteBlackGradient())
 
@@ -299,7 +283,7 @@ func evaluatePiece(
     assert piece != noPiece
         
     for phase in Phase: result[phase] = evalParameters[phase].pieceValues[piece]
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
         for phase in Phase:
             gradient[phase].pieceValues[piece] += whiteBlackGradient()
 
@@ -360,7 +344,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
     doAssert valueCheckmate > result.abs
 
-    when not (gradient is Nothing):
+    when gradient isnot Nothing:
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
 
