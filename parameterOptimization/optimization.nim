@@ -1,6 +1,5 @@
 import
     ../evalParameters,
-    evalParametersUtils,
     startingParameters,
     winningProbability,
     gradient,
@@ -58,7 +57,7 @@ proc optimize(
             
             totalWeight += entry.weight
             gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, k = k, weight = entry.weight)
-        # smooth the gradient out over previous discounted gradients. Seems to help in optimizatin speed and the final
+        # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
         # result is better
         gradient *= (1.0/totalWeight)
         gradient *= 1.0 - discount
@@ -117,16 +116,12 @@ proc optimize(
     return bestSolution.convert
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd", weight = 1.0)
+# data.loadData("quietSetZuri.epd", weight = 1.0)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.6)
+data.loadData("quietSetNalwald.epd")#, weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
 let ep = startingEvalParametersFloat.optimize(data)
 printPieceValues(ep)
-
-    
-
-

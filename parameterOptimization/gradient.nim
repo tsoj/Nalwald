@@ -3,7 +3,6 @@ import
     ../evaluation,
     ../position,
     ../types,
-    evalParametersUtils,
     winningProbability,
     error,
     ../bitboard

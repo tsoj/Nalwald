@@ -12,7 +12,7 @@ type Entry* = object
     outcome*: float
     weight*: float
 
-proc loadData*(data: var seq[Entry], filename: string, weight: float, suppressOutput = false) =
+proc loadData*(data: var seq[Entry], filename: string, weight: float = 1.0, maxLen = int.high, suppressOutput = false) =
     let f = open(filename)
     var line: string
     var numEntries = 0
@@ -23,6 +23,8 @@ proc loadData*(data: var seq[Entry], filename: string, weight: float, suppressOu
         doAssert words.len >= 7
         numEntries += 1
         data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat, weight: weight))
+        if numEntries >= maxLen:
+            break
     f.close()
     if not suppressOutput:
         debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float * weight
