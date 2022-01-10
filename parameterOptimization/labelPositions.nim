@@ -9,7 +9,7 @@ import
     tables,
     strutils
 
-proc playGame(fen: string): (string, float) =
+proc playGame(fen: string): (string, Float) =
     try:
         
         var game = newGame(
@@ -44,9 +44,9 @@ proc labelPositions() =
     var line: string
     var i = 0
 
-    var threadResults: seq[FlowVar[(string, float)]]
+    var threadResults: seq[FlowVar[(string, Float)]]
     template writeResults() =
-        var newThreadResults: seq[FlowVar[(string, float)]]
+        var newThreadResults: seq[FlowVar[(string, Float)]]
         for tr in threadResults:
             if tr.isReady:
                 let (fen, outcome) = ^tr

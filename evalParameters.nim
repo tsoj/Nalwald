@@ -6,8 +6,6 @@ type Phase* = enum
 type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
-type Float* = float
-
 type SinglePhaseEvalParametersTemplate*[ValueType: Value or Float] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]
@@ -75,11 +73,14 @@ func convert*(a: EvalParametersFloat): EvalParameters =
     a.convert(EvalParameters)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(a: var float, b: float) = a += b)
+    transform(a, b, proc(x: var Float, y: Float) = x += y)
 
 func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(a: var float, b: float) = a *= b)
+    transform(a, b, proc(x: var Float, y: Float) = x *= y)
 
-func `*=`*(a: var EvalParametersFloat, b: float) =
+func `*=`*(a: var EvalParametersFloat, b: Float) =
     for phase in Phase:
         a[phase] *= b
+
+func setAll*(a: var EvalParametersFloat, b: Float) =
+    transform(a, a, proc(x: var Float, y: Float) = x = b)

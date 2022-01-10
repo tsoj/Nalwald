@@ -5,17 +5,17 @@ import
     math
 
 type HistoryTable* = object
-    table: array[white..black, array[pawn..king, array[a1..h8, float]]]
-    counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]]
+    table: array[white..black, array[pawn..king, array[a1..h8, Float]]]
+    counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, Float]]]]]]
 
 func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
     result.counterTable.setLen(1)
 
 const maxHistoryTableValue = 20000.0
-static: doAssert maxHistoryTableValue < valueInfinity.float
+static: doAssert maxHistoryTableValue < valueInfinity.Float
 
-func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]]]) =
+func halve(table: var array[white..black, array[pawn..king, array[a1..h8, Float]]]) =
     for color in white..black:
         for piece in pawn..king:
             for square in a1..h8:
@@ -26,8 +26,8 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         return
 
     func add(
-        table: var array[white..black, array[pawn..king, array[a1..h8, float]]],
-        color: Color, piece: Piece, target: Square, addition: float
+        table: var array[white..black, array[pawn..king, array[a1..h8, Float]]],
+        color: Color, piece: Piece, target: Square, addition: Float
     ) =
         table[color][piece][target] = clamp(
             table[color][piece][target] + addition,
@@ -36,7 +36,7 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         if table[color][piece][target].abs >= maxHistoryTableValue:
             table.halve
 
-    let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.float^2
+    let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.Float^2
 
     historyTable.table.add(color, move.moved, move.target, addition)
 

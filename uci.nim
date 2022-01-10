@@ -165,7 +165,7 @@ proc perft(uciState: UciState, params: seq[string]) =
         if "fast" in params:
             let start = now()
             let nodes = uciState.position.fastPerft(params[0].parseInt)
-            let s = (now() - start).inMilliseconds.float / 1000.0
+            let s = (now() - start).inMilliseconds.Float / 1000.0
             echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
         else:
             echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)

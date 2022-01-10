@@ -30,6 +30,7 @@ type
         cutNode,
         noNode
     GamePhase* = 0..32
+    Float* = float32
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0

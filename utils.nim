@@ -67,12 +67,17 @@ const mirrorTable = block:
 func mirror*(square: Square): Square =
     mirrorTable[square]
 
+const mirrorVerticalyTable = block:
+    var table: array[Square, Square]
+    for s in a1..h8:
+        table[s] =  ((s.int8 div 8)*8 + (7 - s.int8 mod 8)).Square
+    table
 func mirrorVertically*(square: Square): Square =
-    ((square.int8 div 8)*8 + (7 - square.int8 mod 8)).Square
+    mirrorVerticalyTable[square]
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 
-    type I = (when T is SomeInteger: BiggestInt else: float)
+    type I = (when T is SomeInteger: BiggestInt else: Float)
 
     var tmp: I
     tmp = forOpening.I*(gamePhase - GamePhase.low).I + forEndgame.I*(GamePhase.high - gamePhase).I

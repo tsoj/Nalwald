@@ -7,16 +7,17 @@ import
     error,
     ../bitboard
 
+
 func addGradient*(
     gradient: var EvalParametersFloat,
     currentSolution: EvalParameters,
-    position: Position, outcome: float,
-    k: float,
-    weight: float
+    position: Position, outcome: Float,
+    k: Float,
+    weight: Float
 ) =
     var currentGradient: EvalParametersFloat
     let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
-    var g: float = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
+    var g: Float = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
     currentGradient *= g
     gradient += currentGradient
 

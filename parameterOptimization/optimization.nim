@@ -1,5 +1,6 @@
 import
     ../evalParameters,
+    ../types,
     startingParameters,
     winningProbability,
     gradient,
@@ -12,15 +13,15 @@ import
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 280.0,
-    minLearningRate = 10.0,
+    lr = 960.0,
+    minLearningRate = 40.0,
     maxIterations = int.high,
     minTries = 20,
     discount = 0.9
 ): EvalParameters =
 
     echo "-------------------"
-    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
+    let k = optimizeK(getError = proc(k: Float): Float = start.convert.error(data, k))
 
     var bestSolution: EvalParametersFloat = start
 
@@ -31,12 +32,12 @@ proc optimize(
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
     var previousGradient: EvalParametersFloat 
-    for j in 0..maxIterations:
+    for j in 0..<maxIterations:
 
         var gradient: EvalParametersFloat
         var currentSolution = bestSolution
         let bestSolutionConverted = bestSolution.convert
-        var totalWeight: float = 0.0
+        var totalWeight: Float = 0.0
 
         const numProgressBarPoints = 100
 
@@ -108,10 +109,10 @@ proc optimize(
 
         if lr < minLearningRate:
             break
-        
-    let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-    echo "filename: ", filename
-    writeFile(filename, $bestSolution.convert)
+    # TODO !!!
+    # let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+    # echo "filename: ", filename
+    # writeFile(filename, $bestSolution.convert)
         
     return bestSolution.convert
 
@@ -119,9 +120,9 @@ var data: seq[Entry]
 # data.loadData("quietSetZuri.epd", weight = 1.0)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd")#, weight = 0.6)
+data.loadData("quietSetNalwald.epd", maxLen = 20_000)#, weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
-let ep = startingEvalParametersFloat.optimize(data)
-printPieceValues(ep)
+let ep = startingEvalParametersFloat.optimize(data, maxIterations = 10)
+#printPieceValues(ep)
