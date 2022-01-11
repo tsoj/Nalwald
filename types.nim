@@ -40,6 +40,8 @@ template isUpperEdge*(square: Square): bool =
     square >= a8
 template isLowerEdge*(square: Square): bool =
     square <= h1
+template isEdge*(square: Square): bool =
+    square.isLeftEdge or square.isRightEdge or square.isUpperEdge or square.isLowerEdge
 func color*(square: Square): Color =
     if (square.int8 div 8) mod 2 == (square.int8 mod 8) mod 2:
         return black

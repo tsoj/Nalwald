@@ -61,8 +61,8 @@ func pawnMaskIndex(
     template pmirror(s: auto): auto = (if us == black: s.mirror else: s)
     let
         square = square.pmirror
-        ourPawns = (position[us] or position[pawn]).pmirror
-        enemyPawns = (position[enemy] or position[pawn]).pmirror
+        ourPawns = (position[us] and position[pawn]).pmirror
+        enemyPawns = (position[enemy] and position[pawn]).pmirror
     
     var counter = 1
     for currentSquareBit in mask3x3[square].bits:
@@ -383,7 +383,12 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     for piece in pawn..king:
         value += position.evaluatePieceType(piece, evalParameters, kingSquare, kingSquareMirrored, gradient)
 
-    for square in a1..h8:
+    for square in [
+        b3, c3, d3, e3, f3, g3,
+        b4, c4, d4, e4, f4, g4,
+        b5, c5, d5, e5, f5, g5,
+        b6, c6, d6, e6, f6, g6
+    ]: # TODO maybe include king relative position
         if (mask3x3[square] and position[pawn]).countSetBits >= 3:
             value += evalParameters.pawnMaskBonus(
                 position,
