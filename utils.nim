@@ -62,14 +62,8 @@ func toColoredPiece*(s: char): ColoredPiece =
 func mirror*(square: Square): Square =
     (square.int8 xor 56).Square
 
-const mirrorVerticalyTable = block:
-    var table: array[Square, Square]
-    for s in a1..h8:
-        table[s] =  ((s.int8 div 8)*8 + (7 - s.int8 mod 8)).Square
-    table
 func mirrorVertically*(square: Square): Square =
     result = (square.int8 xor 7).Square
-    doAssert result == mirrorVerticalyTable[square]
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 

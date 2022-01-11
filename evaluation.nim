@@ -58,27 +58,28 @@ func pawnMaskIndex(
     square: Square,
     us, enemy: Color
 ): int =
-    template pmirror(s: auto): auto = (if us == black: s.mirror else: s)
+    template pmirror(x: auto): auto = (if us == black: x.mirror else: x)
+
+    let square = square.pmirror
+
+    assert not square.isEdge
+    assert square >= b2
+
     let
-        square = square.pmirror
-        ourPawns = (position[us] and position[pawn]).pmirror
-        enemyPawns = (position[enemy] and position[pawn]).pmirror
-    
+        ourPawns = (position[us] and position[pawn]).pmirror shr (square.int8 - b2.int8)
+        enemyPawns = (position[enemy] and position[pawn]).pmirror shr (square.int8 - b2.int8)
+
     var counter = 1
-    for currentSquareBit in mask3x3[square].bits:
-        if (ourPawns and currentSquareBit) != 0:
+    for bit in [
+        a3.toBitboard, b3.toBitboard, c3.toBitboard,
+        a2.toBitboard, b2.toBitboard, c2.toBitboard,
+        a1.toBitboard, b1.toBitboard, c1.toBitboard
+    ]:
+        if (ourPawns and bit) != 0:
             result += counter * 2
-        elif (enemyPawns and currentSquareBit) != 0:
+        elif (enemyPawns and bit) != 0:
             result += counter * 1
-                    
         counter *= 3
-    # debugEcho "----------------------"
-    # var newPosition = position
-    # newPosition[white] = mask3x3[square] and newPosition[pawn] and newPosition[white]
-    # newPosition[black] = mask3x3[square] and newPosition[pawn] and newPosition[black]
-    # debugEcho newPosition
-    # debugEcho square
-    # debugEcho result
 
 
 func pawnMaskBonus(

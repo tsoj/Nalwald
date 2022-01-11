@@ -49,36 +49,8 @@ const files*: array[a1..h8, Bitboard] = block:
         files[square] = 0b0000000100000001000000010000000100000001000000010000000100000001u64 shl (square.int8 mod 8)
     files
 
-func mirror2(bitboard: Bitboard): Bitboard =
-    result = 0
-    for square in a1..h8:
-        if (square.toBitboard and bitboard) != 0:
-            result = result or square.mirror.toBitboard
-
-
-func mirrorVertically2(bitboard: Bitboard): Bitboard =
-    result = 0
-    for square in a1..h8:
-        if (square.toBitboard and bitboard) != 0:
-            result = result or square.mirrorVertically.toBitboard
-
 func mirror*(bitboard: Bitboard): Bitboard =
     swapEndian64(addr result, unsafeAddr bitboard)
-    #doAssert result == bitboard.mirror2
-
-func mirrorVertically*(bitboard: Bitboard): Bitboard =
-    result = (
-        ((bitboard and files[a1]) shl 7) or
-        ((bitboard and files[b1]) shl 5) or
-        ((bitboard and files[c1]) shl 3) or
-        ((bitboard and files[d1]) shl 1) or
-        ((bitboard and files[e1]) shr 1) or
-        ((bitboard and files[f1]) shr 3) or
-        ((bitboard and files[g1]) shr 5) or
-        ((bitboard and files[h1]) shr 7)
-    )
-    #TODO remove
-    doAssert result == bitboard.mirrorVertically2
 
 const mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64 # a1 to h9
 const antiDiagonal: Bitboard = 0b0000000100000010000001000000100000010000001000000100000010000000u64 # h1 to a8
