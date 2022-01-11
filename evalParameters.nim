@@ -9,6 +9,7 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate*[ValueType: Value or Float] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]
+    pawnMaskBonus*: array[3*3*3 * 3*3*3 * 3*3*3, ValueType]
     passedPawnTable*: array[8, ValueType]
     bonusIsolatedPawn*: ValueType
     bonusPawnHasTwoNeighbors*: ValueType
