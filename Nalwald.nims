@@ -4,8 +4,8 @@ import distros
 --panics:on
 --gc:arc
 --define:useMalloc
-# --passC:"-flto"
-# --passL:"-flto"
+--passC:"-flto"
+--passL:"-flto"
 --passL:"-static"
 --cc:clang
 --threads:on
