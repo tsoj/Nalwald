@@ -29,13 +29,15 @@ iterator bits*(bitboard: Bitboard): Bitboard {.inline.} =
         yield bit
         tmp = tmp and not bit
 
+func mirror*(bitboard: Bitboard): Bitboard =
+    swapEndian64(addr result, unsafeAddr bitboard)
+
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
         if (square.toBitboard and bitboard) != 0:
             return some("●")
         none(string)
     )
-
 
 const ranks*: array[a1..h8, Bitboard] = block:
     var ranks: array[a1..h8, Bitboard]
@@ -48,9 +50,6 @@ const files*: array[a1..h8, Bitboard] = block:
     for square in a1..h8:
         files[square] = 0b0000000100000001000000010000000100000001000000010000000100000001u64 shl (square.int8 mod 8)
     files
-
-func mirror*(bitboard: Bitboard): Bitboard =
-    swapEndian64(addr result, unsafeAddr bitboard)
 
 const mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64 # a1 to h9
 const antiDiagonal: Bitboard = 0b0000000100000010000001000000100000010000001000000100000010000000u64 # h1 to a8

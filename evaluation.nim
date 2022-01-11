@@ -390,7 +390,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         b5, c5, d5, e5, f5, g5,
         b6, c6, d6, e6, f6, g6
     ]: # TODO maybe include king relative position
-        if (mask3x3[square] and position[pawn]).countSetBits >= 3:
+        if (mask3x3[square] and position[pawn]).countSetBits >= 2:
             value += evalParameters.pawnMaskBonus(
                 position,
                 square,

@@ -33,7 +33,7 @@ proc optimize(
 
     var previousGradient: EvalParametersFloat 
     for j in 0..<maxIterations:
-
+        let startTime = now()
         var gradient: EvalParametersFloat
         var currentSolution = bestSolution
         let bestSolutionConverted = bestSolution.convert
@@ -95,9 +95,10 @@ proc optimize(
             # print info
             eraseLine()
             let s = $successes & "/" & $tries
+            let passedTime = now() - startTime
             stdout.write(
-                "iteration: " & fmt"{j:>3}" & ", successes: " & fmt"{s:>9}" &
-                ", error: " & fmt"{bestError:>9.7f}", ", lr: ", lr
+                "iteration: ", fmt"{j:>3}", ", successes: ", fmt"{s:>9}",
+                ", error: ", fmt"{bestError:>9.7f}", ", lr: ", lr, ", time: ", $passedTime.inSeconds, " s"
             )
             stdout.flushFile
         
@@ -117,10 +118,10 @@ proc optimize(
     return bestSolution.convert
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd", weight = 1.0, maxLen = 10_000)
+data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.6, maxLen = 10_000)
+data.loadData("quietSetNalwald.epd", weight = 0.6)#, maxLen = 50_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 
