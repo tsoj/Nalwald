@@ -6,7 +6,8 @@ import
     evalParameters,
     utils,
     defaultParameters,
-    algorithm
+    algorithm,
+    positionUtils
 
 func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
@@ -56,33 +57,28 @@ func pawnMaskIndex(
     position: Position,
     square: Square,
     us, enemy: Color
-    # doVerticalMirroring: static bool = false,
-    # doHorizontalMirroring: static bool = false
 ): int =
-    var
-        #square = square
-        ourPawns = position[us] or position[pawn]
-        enemyPawns = position[enemy] or position[pawn]
-    if us == black:
-        ourPawns = ourPawns.mirror
-        enemyPawns = enemyPawns.mirror
-    # when doVerticalMirroring:
-    #     square = square.mirrorVertically
-    #     ourPawns = ourPawns.mirrorVertically
-    #     enemyPawns = enemyPawns.mirrorVertically
-    # when doHorizontalMirroring:
-    #     square = square.mirror
-    #     ourPawns = ourPawns.mirror
-    #     enemyPawns = enemyPawns.mirror
+    template pmirror(s: auto): auto = (if us == black: s.mirror else: s)
+    let
+        square = square.pmirror
+        ourPawns = (position[us] or position[pawn]).pmirror
+        enemyPawns = (position[enemy] or position[pawn]).pmirror
     
     var counter = 1
-    for currentSquareBit in (mask3x3[square] and position[pawn]).bits:
+    for currentSquareBit in mask3x3[square].bits:
         if (ourPawns and currentSquareBit) != 0:
             result += counter * 2
         elif (enemyPawns and currentSquareBit) != 0:
             result += counter * 1
                     
         counter *= 3
+    # debugEcho "----------------------"
+    # var newPosition = position
+    # newPosition[white] = mask3x3[square] and newPosition[pawn] and newPosition[white]
+    # newPosition[black] = mask3x3[square] and newPosition[pawn] and newPosition[black]
+    # debugEcho newPosition
+    # debugEcho square
+    # debugEcho result
 
 
 func pawnMaskBonus(
@@ -97,15 +93,8 @@ func pawnMaskBonus(
     for phase in Phase: result[phase] = evalParameters[phase].pawnMaskBonus[index]
 
     when gradient isnot Nothing:
-        # let mirroredVIndex = position.pawnMaskIndex(square, us, enemy, doVerticalMirroring = true)
-        # let mirroredHIndex = position.pawnMaskIndex(square, us, enemy, doHorizontalMirroring = true)
-        # let mirroredVHIndex =
-        #     position.pawnMaskIndex(square, us, enemy, doVerticalMirroring = true, doHorizontalMirroring = true)
         for phase in Phase:
             gradient[phase].pawnMaskBonus[index] += whiteBlackGradient()
-            # gradient[phase].pawnMaskBonus[mirroredVIndex] += whiteBlackGradient()
-            # gradient[phase].pawnMaskBonus[mirroredHIndex] -= whiteBlackGradient()
-            # gradient[phase].pawnMaskBonus[mirroredVHIndex] -= whiteBlackGradient()
 
 func bonusPassedPawn(
     evalParameters: EvalParameters,

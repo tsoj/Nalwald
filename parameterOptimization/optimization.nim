@@ -110,19 +110,19 @@ proc optimize(
         if lr < minLearningRate:
             break
 
-    # let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-    # echo "filename: ", filename
-    # writeFile(filename, $bestSolution.convert)
+    let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+    echo "filename: ", filename
+    writeFile(filename, $bestSolution.convert)
         
     return bestSolution.convert
 
 var data: seq[Entry]
-# data.loadData("quietSetZuri.epd", weight = 1.0)
+data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 10_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", maxLen = 20_000)#, weight = 0.6)
+data.loadData("quietSetNalwald.epd", weight = 0.6)#, maxLen = 10_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 
-let ep = startingEvalParametersFloat.optimize(data, maxIterations = 10)
+let ep = startingEvalParametersFloat.optimize(data)#, maxIterations = 10)
 printPieceValues(ep)
