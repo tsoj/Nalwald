@@ -117,10 +117,10 @@ proc optimize(
     return bestSolution.convert
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd", weight = 1.0, maxLen = 10_000)
+data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 10_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.6, maxLen = 10_000)
+data.loadData("quietSetNalwald.epd", weight = 0.6)#, maxLen = 10_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 
