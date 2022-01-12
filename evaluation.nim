@@ -264,6 +264,13 @@ func evaluateRook(
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusRookOnOpenFile += whiteBlackGradient()
 
+    elif (files[square] and position[us] and position[pawn]) == 0:
+        for phase in Phase: result[phase] += evalParameters[phase].bonusRookOnHalfOpenFile
+
+        when gradient isnot Nothing:
+            for phase in Phase: gradient[phase].bonusRookOnHalfOpenFile += whiteBlackGradient()
+
+
 #-------------- queen evaluation --------------#
 
 func evaluateQueen(
