@@ -30,7 +30,7 @@ type
         cutNode,
         noNode
     GamePhase* = 0..32
-    Float* = float32
+    Float* = float64# TODO: use float32 only for gradient stuff
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0
