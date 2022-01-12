@@ -3,17 +3,16 @@ import
     ../positionUtils,
     ../evalParameters,
     ../evaluation,
-    ../types,
     winningProbability,
     error,
     strutils
 
 type Entry* = object
     position*: Position
-    outcome*: Float
-    weight*: Float
+    outcome*: float32
+    weight*: float32
 
-proc loadData*(data: var seq[Entry], filename: string, weight: Float = 1.0, maxLen = int.high, suppressOutput = false) =
+proc loadData*(data: var seq[Entry], filename: string, weight: float32 = 1.0, maxLen = int.high, suppressOutput = false) =
     let f = open(filename)
     var line: string
     var numEntries = 0
@@ -28,17 +27,17 @@ proc loadData*(data: var seq[Entry], filename: string, weight: Float = 1.0, maxL
             break
     f.close()
     if not suppressOutput:
-        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.Float * weight
+        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float32 * weight
 
 
-func error*(evalParameters: EvalParameters, entry: Entry, k: Float): Float =
+func error*(evalParameters: EvalParameters, entry: Entry, k: float32): float32 =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability(k)
     error(entry.outcome, estimate)*entry.weight
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry], k: Float): Float =
+func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float32): float32 =
     result = 0.0
     
-    var summedWeight: Float = 0.0
+    var summedWeight: float32 = 0.0
     for entry in data:
         result += evalParameters.error(entry, k)
         summedWeight += entry.weight

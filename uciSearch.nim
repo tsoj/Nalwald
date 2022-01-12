@@ -26,7 +26,7 @@ func infoString(
             scoreString = " score mate -"
         else:
             scoreString = " score mate "
-        scoreString &= $(value.plysUntilCheckmate.Float / 2.0).ceil.int
+        scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
 
     let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
 

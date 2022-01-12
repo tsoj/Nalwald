@@ -56,7 +56,7 @@ iterator iterativeTimeManagedSearch*(
     let start = now()
     var
         startLastIteration = now()
-        branchingFactors = newSeq[Float](targetDepth.int)
+        branchingFactors = newSeq[float](targetDepth.int)
         lastNumNodes = uint64.high
 
     var iteration = -1
@@ -69,7 +69,7 @@ iterator iterativeTimeManagedSearch*(
         yield (value, pv, nodes, iterationPassedTime)
 
         assert calculatedMoveTime.approxTime >= DurationZero
-        branchingFactors[iteration] = nodes.Float / lastNumNodes.Float;
+        branchingFactors[iteration] = nodes.float / lastNumNodes.float;
         lastNumNodes = if nodes <= 100_000: uint64.high else: nodes
         var averageBranchingFactor = branchingFactors[iteration]
         if iteration >= 4:
@@ -80,7 +80,7 @@ iterator iterativeTimeManagedSearch*(
                 branchingFactors[iteration - 3])/4.0
 
         let estimatedTimeNextIteration =
-            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.Float * averageBranchingFactor).int64)
+            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float * averageBranchingFactor).int64)
         if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
             break;
 

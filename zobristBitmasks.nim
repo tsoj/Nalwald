@@ -1,6 +1,4 @@
-import
-    types,
-    random
+import types
 
 const zobristSideToMoveBitmasks*: array[white..black, uint64] = [18135279880233034376'u64, 1131218582810799482'u64]
 

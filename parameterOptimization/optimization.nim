@@ -1,6 +1,5 @@
 import
     ../evalParameters,
-    ../types,
     startingParameters,
     winningProbability,
     gradient,
@@ -21,7 +20,7 @@ proc optimize(
 ): EvalParameters =
 
     echo "-------------------"
-    let k = optimizeK(getError = proc(k: Float): Float = start.convert.error(data, k))
+    let k = optimizeK(getError = proc(k: float32): float32 = start.convert.error(data, k))
 
     var bestSolution: EvalParametersFloat = start
 
@@ -37,7 +36,7 @@ proc optimize(
         var gradient: EvalParametersFloat
         var currentSolution = bestSolution
         let bestSolutionConverted = bestSolution.convert
-        var totalWeight: Float = 0.0
+        var totalWeight: float32 = 0.0
 
         const numProgressBarPoints = 100
 

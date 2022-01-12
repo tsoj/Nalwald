@@ -11,13 +11,13 @@ import
 func addGradient*(
     gradient: var EvalParametersFloat,
     currentSolution: EvalParameters,
-    position: Position, outcome: Float,
-    k: Float,
-    weight: Float
+    position: Position, outcome: float32,
+    k: float32,
+    weight: float32
 ) =
     var currentGradient: EvalParametersFloat
     let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
-    var g: Float = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
+    var g: float32 = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
     currentGradient *= g
     gradient += currentGradient
 

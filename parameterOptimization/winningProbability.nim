@@ -3,14 +3,14 @@ import
     math,
     strformat
 
-func winningProbability*(centipawn: Value, k: Float): Float =
-    1.0/(1.0 + pow(10.0, -((k*centipawn.Float)/400.0)))
+func winningProbability*(centipawn: Value, k: float32): float32 =
+    1.0/(1.0 + pow(10.0, -((k*centipawn.float32)/400.0)))
 
-func winningProbabilityDerivative*(centipawn: Value, k: Float): Float =
-    (ln(10.0) * pow(2.0, -2.0 - ((k*centipawn.Float)/400.0)) * pow(5.0, -((k*centipawn.Float)/400.0))) /
-    pow(1.0 + pow(10.0, -((k*centipawn.Float)/400.0)) , 2.0)
+func winningProbabilityDerivative*(centipawn: Value, k: float32): float32 =
+    (ln(10.0) * pow(2.0, -2.0 - ((k*centipawn.float32)/400.0)) * pow(5.0, -((k*centipawn.float32)/400.0))) /
+    pow(1.0 + pow(10.0, -((k*centipawn.float32)/400.0)) , 2.0)
 
-proc optimizeK*(getError: proc(k: Float): Float, suppressOutput = false): Float =
+proc optimizeK*(getError: proc(k: float32): float32, suppressOutput = false): float32 =
     var change = 1.0
     var k = 1.0
     result = k

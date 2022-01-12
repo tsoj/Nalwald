@@ -6,8 +6,7 @@ import
     evalParameters,
     utils,
     defaultParameters,
-    algorithm,
-    positionUtils
+    algorithm
 
 func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
@@ -111,7 +110,7 @@ func bonusPassedPawn(
     when gradient isnot Nothing:
         for phase in Phase: gradient[phase].passedPawnTable[index] += whiteBlackGradient()
 
-func addSmooth(g: var openArray[Float], index: int, a: Float) =
+func addSmooth(g: var openArray[float32], index: int, a: float32) =
     for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
         if index + offset in g.low..g.high:
             g[index + offset] += a*f

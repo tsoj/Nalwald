@@ -1,9 +1,7 @@
-import
-    math,
-    ../types
+import math
 
-func error*(outcome, estimate: Float): Float =
+func error*(outcome, estimate: float32): float32 =
     (outcome - estimate)^2
 
-func errorDerivative*(outcome, estimate: Float): Float =
+func errorDerivative*(outcome, estimate: float32): float32 =
     2.0 * (outcome - estimate)
