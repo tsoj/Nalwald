@@ -81,7 +81,6 @@ func pawnMaskIndex(
             result += counter * 1
         counter *= 3
 
-
 func pawnMaskBonus(
     evalParameters: EvalParameters,
     position: Position,
