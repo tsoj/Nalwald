@@ -13,8 +13,8 @@ import
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 960.0,
-    minLearningRate = 40.0,
+    lr = 6400.0,
+    minLearningRate = 80.0,
     maxIterations = int.high,
     minTries = 20,
     discount = 0.9
@@ -106,6 +106,7 @@ proc optimize(
         stdout.flushFile
 
         if oldBestError <= bestError and lr >= minLearningRate:
+            previousGradient *= 0.5
             lr /= 2.0
 
         if lr < minLearningRate:
