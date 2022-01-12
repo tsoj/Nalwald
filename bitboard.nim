@@ -22,13 +22,6 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
     while tmp != 0:
         yield tmp.removeTrailingOneBit
 
-iterator bits*(bitboard: Bitboard): Bitboard {.inline.} =
-    var tmp = bitboard
-    while tmp != 0:
-        let bit = tmp.countTrailingZeroBits.Square.toBitboard
-        yield bit
-        tmp = tmp and not bit
-
 func mirror*(bitboard: Bitboard): Bitboard =
     swapEndian64(addr result, unsafeAddr bitboard)
 
