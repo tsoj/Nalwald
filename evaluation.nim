@@ -428,16 +428,15 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 147.Value,
-        knight: 486.Value,
-        bishop: 500.Value,
-        rook: 690.Value,
-        queen: 1268.Value,
+        pawn: 157.Value,
+        knight: 579.Value,
+        bishop: 584.Value,
+        rook: 796.Value,
+        queen: 1556.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
     table[piece]
-
 
 func cp*(cp: int): Value =
     (pawn.value * cp.Value) div 100.Value
