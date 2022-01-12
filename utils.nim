@@ -63,7 +63,7 @@ func mirror*(square: Square): Square =
     (square.int8 xor 56).Square
 
 func mirrorVertically*(square: Square): Square =
-    result = (square.int8 xor 7).Square
+    (square.int8 xor 7).Square
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 

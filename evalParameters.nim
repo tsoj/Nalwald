@@ -27,12 +27,12 @@ type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]
 
-func transform*[Out, In](output: var Out, input: In, float32Op: proc(a: var float32, b: float32)) =
+func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32)) =
 
     when Out is AtomType:
         static: doAssert In is AtomType, "Transforming types must have the same structure."
         when Out is float32 and In is float32:
-            float32Op(output, input)
+            floatOp(output, input)
         else:
             output = input.Out
         
@@ -42,7 +42,7 @@ func transform*[Out, In](output: var Out, input: In, float32Op: proc(a: var floa
             var found = false
             for outName, outValue in fieldPairs(output):
                 when inName == outName:
-                    transform(outValue, inValue, float32Op)
+                    transform(outValue, inValue, floatOp)
                     found = true
                     break
             assert found, "Transforming types must have the same structure."
@@ -53,7 +53,7 @@ func transform*[Out, In](output: var Out, input: In, float32Op: proc(a: var floa
         for i in 0..<input.len:
             var outputIndex = (typeof(output.low))((output.low.int + i))
             var inputIndex = (typeof(input.low))((input.low.int + i))
-            transform(output[outputIndex], input[inputIndex], float32Op)
+            transform(output[outputIndex], input[inputIndex], floatOp)
     
     else:
         static: doAssert false, "Type is not not implemented for transforming"

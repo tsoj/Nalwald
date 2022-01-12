@@ -82,7 +82,6 @@ func `-=`*(a: var Ply, b: Ply) =
 func `+=`*(a: var Ply, b: Ply) =
     a = a + b
 
-
 const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
 static: doAssert -valueInfinity <= valueInfinity
 const valueCheckmate* = valueInfinity - Ply.high.Value - 1.Value
