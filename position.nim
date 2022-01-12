@@ -137,10 +137,10 @@ func calculateZobristKey*(position: Position): uint64 =
     for piece in pawn..king:
         for square in position[piece]:
             result = result xor (if (position[white] and square.toBitboard) != 0:
-                zobristColorBitmasks[white][square]
+                zobristPieceBitmasks[white][piece][square]
             else:
-                zobristColorBitmasks[black][square]
-            ) xor zobristPieceBitmasks[piece][square]
+                zobristPieceBitmasks[black][piece][square]
+            )
     result = result xor position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
 
 func doMove*(position: var Position, move: Move) =
@@ -170,13 +170,11 @@ func doMove*(position: var Position, move: Move) =
         position.movePiece(us, pawn, source.toBitboard, target.toBitboard)
 
         let capturedSquare = attackTablePawnQuiet[enemy][target].toSquare
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[pawn][capturedSquare]
-        position.zobristKey = position.zobristKey xor zobristColorBitmasks[enemy][capturedSquare]
+        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][pawn][capturedSquare]
     # removing captured piece
     elif captured != noPiece:
         position.removePiece(enemy, captured, target.toBitboard)
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[captured][target]
-        position.zobristKey = position.zobristKey xor zobristColorBitmasks[enemy][target]
+        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][captured][target]
 
     # castling
     if move.castled:
@@ -195,23 +193,19 @@ func doMove*(position: var Position, move: Move) =
             (rook, rookSource, rookTarget)
         ]:
             position.addPiece(us, piece, target.toBitboard)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[piece][source]
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[piece][target]
-            position.zobristKey = position.zobristKey xor zobristColorBitmasks[us][source]
-            position.zobristKey = position.zobristKey xor zobristColorBitmasks[us][target]
+            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][source]
+            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][target]
 
     # moving piece
     else:
-        position.zobristKey = position.zobristKey xor zobristColorBitmasks[us][source]
-        position.zobristKey = position.zobristKey xor zobristColorBitmasks[us][target]
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[moved][source]
+        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][source]
         if promoted != noPiece:
             position.removePiece(us, moved, source.toBitboard)
             position.addPiece(us, promoted, target.toBitboard)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[promoted][target]
+            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][promoted][target]
         else:
             position.movePiece(us, moved, source.toBitboard, target.toBitboard)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[moved][target]
+            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][target]
 
     position.halfmovesPlayed += 1 
     position.halfmoveClock += 1
