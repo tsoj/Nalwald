@@ -21,17 +21,21 @@ const
     megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
+    defaultNumThreads = 1
+    maxNumThreads = 512
 
 type UciState = object
     position: Position
     history: seq[Position]
     hashTable: HashTable
     stopFlag: Atomic[bool]
+    numThreads: int
 
 proc uci() =
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
+    echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
     echo "option name UCI_Chess960 type check default false"
     echo "uciok"
 
@@ -48,6 +52,12 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
         elif params[1] == "UCI_Chess960":
             discard
+        if params[1] == "Threads":
+            let newNumThreads = params[3].parseInt
+            if newNumThreads < 1 or newNumThreads > maxNumThreads:
+                echo "Invalid value"
+            else:
+                uciState.numThreads = newNumThreads
         else:
             echo "Unknown option: ", params[1]
     else:
@@ -136,7 +146,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             movesToGo = movesToGo,
             increment = increment,
             timeLeft = timeLeft,
-            moveTime = moveTime
+            moveTime = moveTime,
+            numThreads = uciState.numThreads
         )
 
 func uciNewGame(uciState: var UciState) =
@@ -179,7 +190,7 @@ proc uciLoop*() =
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "------------ by Jost Triller ------------"
-    var uciState = UciState(position: startposFen.toPosition, hashtable: newHashTable())
+    var uciState = UciState(position: startposFen.toPosition, hashtable: newHashTable(), numThreads: defaultNumThreads)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:

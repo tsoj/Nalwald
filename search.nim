@@ -325,12 +325,12 @@ func launchSearchThread(
     SearchThreadResult(value: value, depth: depth, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
 
 type ThreadSeq = object
-    s: seq[FlowVar[SearchThreadResult]]
+    flowVars: seq[FlowVar[SearchThreadResult]]
 
-proc `=destroy`(a: var ThreadSeq) =
-  for r in a.s.mitems:
-      if r != nil:
-        discard ^r
+proc `=destroy`(threadSeq: var ThreadSeq) =
+  for flowVar in threadSeq.flowVars.mitems:
+      if flowVar != nil:
+        discard ^flowVar
 
 iterator iterativeDeepeningSearch*(
     position: Position,
@@ -338,10 +338,11 @@ iterator iterativeDeepeningSearch*(
     positionHistory: seq[Position],
     targetDepth: Ply,
     stop: ptr Atomic[bool],
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    numThreads = 4
-): (Value, seq[Move], uint64) {.noSideEffect.} =
+    numThreads = 1,
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+): tuple[value: Value, pv: seq[Move], nodes: uint64] {.noSideEffect.} =
     {.cast(noSideEffect).}:
+        let numThreads = max(1, numThreads)
         let gameHistory = newGameHistory(positionHistory)
         var historyTable: seq[HistoryTable]
         for _ in 0..<numThreads:
@@ -349,38 +350,35 @@ iterator iterativeDeepeningSearch*(
 
         hashTable.age()        
 
-        var responses = ThreadSeq(s: newSeq[FlowVar[SearchThreadResult]](numThreads))
-
-        template spawnSearch(depth: Ply, i: int): auto = spawn launchSearchThread(
-            position,
-            addr hashTable,
-            stop,
-            addr historyTable[i],
-            gameHistory,
-            depth,
-            evaluation
-        )
+        var threadSeq = ThreadSeq(flowVars: newSeq[FlowVar[SearchThreadResult]](numThreads))    
         
         let start = now()
-
-        template flows(time: auto): auto = # don't use multithreading at low depths
-            responses.s.toOpenArray(0, if time.inMilliseconds < 200: 0 else: responses.s.len - 1)
-        
         for depth in 1.Ply..targetDepth:
             var
                 nodes = 0'u64
                 value: Value
                 numMovesAtRoot: int
 
-            let time = now() - start
+            # don't use multithreading too early
+            let noMultithreading = (now() - start).inMilliseconds < 100
 
-            for i, response in flows(time).mpairs:
-                response = spawnSearch(depth, i)
-                if numThreads > 1:
-                    sleep(5)
+            for i, flowVar in threadSeq.flowVars.mpairs:
+                if i > 0:
+                    if noMultithreading: break
+                    sleep(1)
+                flowVar = spawn launchSearchThread(
+                    position,
+                    addr hashTable,
+                    stop,
+                    addr historyTable[i],
+                    gameHistory,
+                    depth,
+                    evaluation
+                )    
 
-            for response in flows(time).mitems:
-                let r = ^response
+            for i, flowVar in threadSeq.flowVars.mpairs:
+                if i > 0 and noMultithreading: break
+                let r = ^flowVar
                 nodes += r.nodes
                 value = r.value
                 numMovesAtRoot = r.numMovesAtRoot
@@ -393,7 +391,7 @@ iterator iterativeDeepeningSearch*(
             doAssert not hashResult.isEmpty
             let pv = if numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
 
-            yield (value, pv, nodes)
+            yield (value: value, pv: pv, nodes: nodes)
 
             if numMovesAtRoot == 1:
                 break

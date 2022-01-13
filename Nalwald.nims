@@ -20,8 +20,6 @@ func highPerformance() =
     if defined(windows):
         --passL:"-fuse-ld=lld"
 
-
-
 let suffix = if defined(windows): ".exe" else: ""
 let name = projectName() & "-" & version()
 

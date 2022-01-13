@@ -39,6 +39,7 @@ template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
 
 func clear*(ht: var HashTable) =
+    ht.randState = initRand(0)
     ht.pvNodes.clear
     ht.hashFullCounter = 0
     for entry in ht.nonPvNodes.mitems:
@@ -92,8 +93,7 @@ func add*(
 
     if nodeType == pvNode:
         withLock ht.pvTableMutex:
-            if (not ht.pvNodes.hasKey(zobristKey)) or
-            ht.pvNodes[zobristKey].entry.depth <= depth:
+            if (not ht.pvNodes.hasKey(zobristKey)) or ht.pvNodes[zobristKey].entry.depth <= depth:
                 ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
     else:
         let i = zobristKey mod ht.nonPvNodes.len.uint64

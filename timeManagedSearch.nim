@@ -41,8 +41,9 @@ iterator iterativeTimeManagedSearch*(
     increment = [white: DurationZero, black: DurationZero],
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
+    numThreads: int,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
-): (Value, seq[Move], uint64, Duration) =
+): tuple[value: Value, pv: seq[Move], nodes: uint64, passedTime: Duration] =
 
     var stopFlag: Atomic[bool]
     var stop = if stop == nil: addr stopFlag else: stop
@@ -60,13 +61,21 @@ iterator iterativeTimeManagedSearch*(
         lastNumNodes = uint64.high
 
     var iteration = -1
-    for (value, pv, nodes) in iterativeDeepeningSearch(position, hashTable, positionHistory, targetDepth, stop, evaluation):
+    for (value, pv, nodes) in iterativeDeepeningSearch(
+        position,
+        hashTable,
+        positionHistory,
+        targetDepth,
+        stop,
+        numThreads,
+        evaluation
+    ):
         iteration += 1
         let totalPassedTime = now() - start
         let iterationPassedTime = (now() - startLastIteration)
         startLastIteration = now()
 
-        yield (value, pv, nodes, iterationPassedTime)
+        yield (value: value, pv: pv, nodes: nodes, passedTime: iterationPassedTime)
 
         assert calculatedMoveTime.approxTime >= DurationZero
         branchingFactors[iteration] = nodes.float / lastNumNodes.float;
@@ -97,8 +106,9 @@ proc timeManagedSearch*(
     increment = [white: DurationZero, black: DurationZero],
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
+    numThreads = 1,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
-): (Value, seq[Move]) =
+): tuple[value: Value, pv: seq[Move]] =
     for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
         position,
         hashTable,
@@ -109,6 +119,7 @@ proc timeManagedSearch*(
         increment = increment,
         timeLeft = timeLeft,
         moveTime = moveTime,
+        numThreads = numThreads,
         evaluation
     ):
-        result = (value, pv)
+        result = (value: value, pv: pv)

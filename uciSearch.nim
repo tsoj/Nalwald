@@ -47,7 +47,8 @@ proc uciSearch*(
     stop: ptr Atomic[bool],
     movesToGo: int16,
     increment, timeLeft: array[white..black, Duration],
-    moveTime: Duration
+    moveTime: Duration,
+    numThreads: int
 ): bool =
     var bestMove = noMove    
     var iteration = 0
@@ -59,7 +60,8 @@ proc uciSearch*(
         movesToGo = movesToGo,
         increment = increment,
         timeLeft = timeLeft,
-        moveTime = moveTime
+        moveTime = moveTime,
+        numThreads = numThreads
     ):
         doAssert pv.len >= 1
         bestMove = pv[0]
