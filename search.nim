@@ -10,7 +10,9 @@ import
     see,
     atomics,
     bitops,
-    times
+    times,
+    threadpool,
+    os
 
 static: doAssert pawn.value == 100.cp
 
@@ -40,7 +42,7 @@ type SearchState = object
     stop: ptr Atomic[bool]
     hashTable: ptr HashTable
     killerTable: KillerTable
-    historyTable: HistoryTable
+    historyTable: ptr HistoryTable
     gameHistory: GameHistory
     countedNodes: uint64
     numMovesAtRoot: int
@@ -51,7 +53,7 @@ func update(state: var SearchState, position: Position, bestMove, previous: Move
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
             if nodeType != allNode:
-                state.historyTable.update(bestMove, previous, position.us, depth)
+                state.historyTable[].update(bestMove, previous, position.us, depth)
             if nodeType == cutNode:
                 state.killerTable.update(height, bestMove)                
 
@@ -204,7 +206,7 @@ func search(
         doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
         futilityMargin = alpha - staticEval
 
-    for move in position.moveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous):
+    for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         var newPosition = position
         newPosition.doMove(move)
@@ -277,7 +279,7 @@ func search(
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable.update(move, previous, position.us, newDepth, weakMove = true)
+            state.historyTable[].update(move, previous, position.us, newDepth, weakMove = true)
 
     if moveCounter == 0:
         # checkmate
@@ -292,46 +294,101 @@ func search(
     state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
     bestValue
 
+type SearchThreadResult = object
+    value: Value
+    depth: Ply
+    nodes: uint64
+    numMovesAtRoot: int
+
+func launchSearchThread(
+    position: Position,
+    hashTable: ptr HashTable,
+    stop: ptr Atomic[bool],
+    historyTable: ptr HistoryTable,
+    gameHistory: GameHistory,
+    depth: Ply,
+    evaluation: proc(position: Position): Value {.noSideEffect.}
+): SearchThreadResult =
+    var state = SearchState(
+        stop: stop,
+        hashTable: hashTable,
+        historyTable: historyTable,
+        gameHistory: gameHistory,
+        evaluation: evaluation
+    )
+    let value = position.search(
+        state,
+        alpha = -valueInfinity, beta = valueInfinity,
+        depth = depth, height = 0,
+        previous = noMove
+    )
+    SearchThreadResult(value: value, depth: depth, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
+
+type ThreadSeq = object
+    s: seq[FlowVar[SearchThreadResult]]
+
+proc `=destroy`(a: var ThreadSeq) =
+  for r in a.s.mitems:
+      discard ^r
+
 iterator iterativeDeepeningSearch*(
     position: Position,
     hashTable: var HashTable,
     positionHistory: seq[Position],
     targetDepth: Ply,
     stop: ptr Atomic[bool],
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    numThreads = 1
 ): (Value, seq[Move], uint64) {.noSideEffect.} =
+    {.cast(noSideEffect).}:
+        var historyTable = newHistoryTable()
+        let gameHistory = newGameHistory(positionHistory)
 
-    var state = SearchState(
-        stop: stop,
-        hashTable: addr hashTable,
-        historyTable: newHistoryTable(),
-        gameHistory: newGameHistory(positionHistory),
-        evaluation: evaluation
-    )
+        hashTable.age()        
 
-    hashTable.age()
+        var responses = ThreadSeq(s: newSeq[FlowVar[SearchThreadResult]](numThreads))
 
-    for depth in 1.Ply..targetDepth:
-        state.countedNodes = 0
-        let value = position.search(
-            state,
-            alpha = -valueInfinity, beta = valueInfinity,
-            depth = depth, height = 0,
-            previous = noMove
+        template spawnSearch(depth: Ply): auto = spawn launchSearchThread(
+            position,
+            addr hashTable,
+            stop,
+            addr historyTable,
+            gameHistory,
+            depth,
+            evaluation
         )
 
-        if stop[].load:
-            break
+        template flows(): auto = # don't use multithreading at low depths
+            responses.s.toOpenArray(0, if depth < 4.Ply: 0 else: responses.s.len - 1).mitems
+        
+        for depth in 1.Ply..targetDepth:
+            var
+                nodes = 0'u64
+                value: Value
+                numMovesAtRoot: int
 
-        let hashResult = hashTable.get(position.zobristKey)
+            for response in flows():
+                response = spawnSearch(depth)
+                sleep(1)
 
-        doAssert not hashResult.isEmpty
-        let pv = if state.numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
+            for response in flows():
+                let r = ^response
+                nodes += r.nodes
+                value = r.value
+                numMovesAtRoot = r.numMovesAtRoot
 
-        yield (value, pv, state.countedNodes)
+            if stop[].load:
+                break
 
-        if state.numMovesAtRoot == 1:
-            break
+            let hashResult = hashTable.get(position.zobristKey)
 
-        if abs(value) >= valueCheckmate:
-            break
+            doAssert not hashResult.isEmpty
+            let pv = if numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
+
+            yield (value, pv, nodes)
+
+            if numMovesAtRoot == 1:
+                break
+
+            if abs(value) >= valueCheckmate:
+                break

@@ -18,8 +18,8 @@ let suffix = if defined(windows): ".exe" else: ""
 let name = projectName() & "-" & version()
 
 task debug, "debug compile":
-    --define:release
-    --passC:"-fno-omit-frame-pointer -g"
+    --define:debug
+    --passC:"-fno-omit-frame-pointer -g -O3"
     switch("o", name & "-debug" & suffix)
     setCommand "c"
 

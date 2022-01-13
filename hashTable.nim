@@ -3,7 +3,8 @@ import
     move,
     position,
     tables,
-    random
+    random,
+    locks
 
 type
     HashTableEntry* {.packed.} = object
@@ -61,6 +62,9 @@ func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     {.cast(noSideEffect).}:
         rand(1.0) < probability
 
+var mutex: Lock
+initLock mutex
+
 func add*(
     ht: var HashTable,
     zobristKey: uint64,
@@ -79,9 +83,11 @@ func add*(
     static: doAssert (valueInfinity <= int16.high.Value and -valueInfinity >= int16.low.Value)
 
     if nodeType == pvNode:
-        if (not ht.pvNodes.hasKey(zobristKey)) or
-        ht.pvNodes[zobristKey].entry.depth <= depth:
-            ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
+        {.cast(noSideEffect).}:
+            withLock mutex:
+                if (not ht.pvNodes.hasKey(zobristKey)) or
+                ht.pvNodes[zobristKey].entry.depth <= depth:
+                    ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
     else:
         let i = zobristKey mod ht.nonPvNodes.len.uint64
         if entry.shouldReplace(ht.nonPvNodes[i]):
