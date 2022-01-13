@@ -7,7 +7,30 @@ import
     calculatePieceValue,
     times,
     strformat,
-    terminal
+    terminal,
+    threadpool
+
+type ThreadResult = tuple[weight: float32, gradient: EvalParametersFloat]
+
+proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float32, suppressOutput = false): ThreadResult =
+    const numProgressBarPoints = 100
+    if not suppressOutput:
+        eraseLine()
+        stdout.write("[")
+        for p in 1..numProgressBarPoints:
+            stdout.write("-")
+        stdout.write("]")
+        setCursorXPos(1)
+        stdout.flushFile
+    var p = 0
+    for entry in data:
+        p += 1
+        if p mod (data.len div numProgressBarPoints) == 0 and not suppressOutput:
+            stdout.write("#")
+            stdout.flushFile
+        
+        result.weight += entry.weight
+        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
 
 proc optimize(
     start: EvalParametersFloat,
@@ -16,7 +39,8 @@ proc optimize(
     minLearningRate = 80.0,
     maxIterations = int.high,
     minTries = 20,
-    discount = 0.9
+    discount = 0.9,
+    numThreads = 4
 ): EvalParameters =
 
     echo "-------------------"
@@ -33,30 +57,25 @@ proc optimize(
     var previousGradient: EvalParametersFloat 
     for j in 0..<maxIterations:
         let startTime = now()
-        var gradient: EvalParametersFloat
         var currentSolution = bestSolution
+
+        var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)        
+        
         let bestSolutionConverted = bestSolution.convert
+        let batchSize = data.len div numThreads
+        for i, flowVar in threadSeq.mpairs:
+            flowVar = spawn calculateGradient(
+                data[(i*batchSize)..<((i+1)*batchSize)],
+                bestSolutionConverted,
+                k, i > 0
+            )    
+
+        var gradient: EvalParametersFloat
         var totalWeight: float32 = 0.0
-
-        const numProgressBarPoints = 100
-
-        eraseLine()
-        stdout.write("[")
-        for p in 1..numProgressBarPoints:
-            stdout.write("-")
-        stdout.write("]")
-        setCursorXPos(1)
-        stdout.flushFile
-
-        var p = 0
-        for entry in data:
-            p += 1
-            if p mod (data.len div numProgressBarPoints) == 0:
-                stdout.write("#")
-                stdout.flushFile
-            
-            totalWeight += entry.weight
-            gradient.addGradient(bestSolutionConverted, entry.position, entry.outcome, k = k, weight = entry.weight)
+        for flowVar in threadSeq.mitems:
+            let (threadWeight, threadGradient) = ^flowVar
+            totalWeight += threadWeight
+            gradient += threadGradient
         # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
         # result is better
         gradient *= (1.0/totalWeight)
@@ -118,10 +137,10 @@ proc optimize(
     return bestSolution.convert
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
+#data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.6)#, maxLen = 50_000)
+data.loadData("quietSetNalwald.epd")#, weight = 0.6)#, maxLen = 50_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 
