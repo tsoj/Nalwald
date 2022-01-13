@@ -16,10 +16,22 @@ type
     CountedHashTableEntry = object
         entry: HashTableEntry
         lookupCounter: uint32
-    HashTable* = object
+    HashTable* {.requiresInit.} = object
         nonPvNodes: seq[HashTableEntry]
         hashFullCounter: int
         pvNodes: Table[uint64, CountedHashTableEntry]
+        pvTableMutex: Lock
+        randState: Rand
+
+func newHashTable*(): HashTable =
+    result = HashTable(
+        nonPvNodes: newSeq[HashTableEntry](0),
+        hashFullCounter: 0,
+        pvNodes: Table[uint64, CountedHashTableEntry](),
+        pvTableMutex: Lock(),
+        randState: initRand(0)
+    )
+    initLock result.pvTableMutex
 
 const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, depth: 0.Ply, bestMove: noMove)
 
@@ -47,7 +59,7 @@ func age*(ht: var HashTable) =
     for key in deleteQueue:
         ht.pvNodes.del(key)
 
-func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
+func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool =
     if oldEntry.isEmpty:
         return true
     
@@ -59,11 +71,7 @@ func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     else:
         1.0
     
-    {.cast(noSideEffect).}:
-        rand(1.0) < probability
-
-var mutex: Lock
-initLock mutex
+    ht.randState.rand(1.0) < probability
 
 func add*(
     ht: var HashTable,
@@ -82,31 +90,27 @@ func add*(
     )
     static: doAssert (valueInfinity <= int16.high.Value and -valueInfinity >= int16.low.Value)
 
-
-    {.cast(noSideEffect).}:
-        withLock mutex:
-            if nodeType == pvNode:
-                if (not ht.pvNodes.hasKey(zobristKey)) or
-                ht.pvNodes[zobristKey].entry.depth <= depth:
-                    ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
-            else:
-                let i = zobristKey mod ht.nonPvNodes.len.uint64
-                if entry.shouldReplace(ht.nonPvNodes[i]):
-                    if ht.nonPvNodes[i].isEmpty:
-                        ht.hashFullCounter += 1
-                    ht.nonPvNodes[i] = entry
+    if nodeType == pvNode:
+        withLock ht.pvTableMutex:
+            if (not ht.pvNodes.hasKey(zobristKey)) or
+            ht.pvNodes[zobristKey].entry.depth <= depth:
+                ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
+    else:
+        let i = zobristKey mod ht.nonPvNodes.len.uint64
+        if ht.shouldReplace(entry, ht.nonPvNodes[i]):
+            if ht.nonPvNodes[i].isEmpty:
+                ht.hashFullCounter += 1
+            ht.nonPvNodes[i] = entry
 
 func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
     
-    {.cast(noSideEffect).}:
-        withLock mutex:
-            if ht.pvNodes.hasKey(zobristKey):
-                ht.pvNodes[zobristKey].lookupCounter += 1
-                return ht.pvNodes[zobristKey].entry
+    if ht.pvNodes.hasKey(zobristKey):
+        ht.pvNodes[zobristKey].lookupCounter += 1
+        return ht.pvNodes[zobristKey].entry
 
-            let i = zobristKey mod ht.nonPvNodes.len.uint64
-            if not ht.nonPvNodes[i].isEmpty and zobristKey == ht.nonPvNodes[i].zobristKey:
-                return ht.nonPvNodes[i]
+    let i = zobristKey mod ht.nonPvNodes.len.uint64
+    if not ht.nonPvNodes[i].isEmpty and zobristKey == ht.nonPvNodes[i].zobristKey:
+        return ht.nonPvNodes[i]
 
     noEntry
 

@@ -342,25 +342,29 @@ iterator iterativeDeepeningSearch*(
     numThreads = 4
 ): (Value, seq[Move], uint64) {.noSideEffect.} =
     {.cast(noSideEffect).}:
-        var historyTable = newHistoryTable()
         let gameHistory = newGameHistory(positionHistory)
+        var historyTable: seq[HistoryTable]
+        for _ in 0..<numThreads:
+            historyTable.add newHistoryTable()
 
         hashTable.age()        
 
         var responses = ThreadSeq(s: newSeq[FlowVar[SearchThreadResult]](numThreads))
 
-        template spawnSearch(depth: Ply): auto = spawn launchSearchThread(
+        template spawnSearch(depth: Ply, i: int): auto = spawn launchSearchThread(
             position,
             addr hashTable,
             stop,
-            addr historyTable,
+            addr historyTable[i],
             gameHistory,
             depth,
             evaluation
         )
+        
+        let start = now()
 
-        template flows(): auto = # don't use multithreading at low depths
-            responses.s.toOpenArray(0, if depth < 4.Ply: 0 else: responses.s.len - 1).mitems
+        template flows(time: auto): auto = # don't use multithreading at low depths
+            responses.s.toOpenArray(0, if time.inMilliseconds < 200: 0 else: responses.s.len - 1)
         
         for depth in 1.Ply..targetDepth:
             var
@@ -368,12 +372,14 @@ iterator iterativeDeepeningSearch*(
                 value: Value
                 numMovesAtRoot: int
 
-            for response in flows():
-                response = spawnSearch(depth)
-                if numThreads > 1:
-                    sleep(1)
+            let time = now() - start
 
-            for response in flows():
+            for i, response in flows(time).mpairs:
+                response = spawnSearch(depth, i)
+                if numThreads > 1:
+                    sleep(5)
+
+            for response in flows(time).mitems:
                 let r = ^response
                 nodes += r.nodes
                 value = r.value

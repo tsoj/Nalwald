@@ -2,11 +2,7 @@ import
     types,
     move,
     position,
-    math,
-    locks
-
-var mutex: Lock
-initLock mutex
+    math
 
 type HistoryTable* = object
     table: array[white..black, array[pawn..king, array[a1..h8, float]]]
@@ -26,36 +22,32 @@ func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]
                 table[color][piece][square] = table[color][piece][square] / 2.0
 
 func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
-    {.cast(noSideEffect).}:
-        withLock mutex:
-            if move.isTactical:
-                return
+    if move.isTactical:
+        return
 
-            func add(
-                table: var array[white..black, array[pawn..king, array[a1..h8, float]]],
-                color: Color, piece: Piece, target: Square, addition: float
-            ) =
-                table[color][piece][target] = clamp(
-                    table[color][piece][target] + addition,
-                    -maxHistoryTableValue, maxHistoryTableValue
-                )    
-                if table[color][piece][target].abs >= maxHistoryTableValue:
-                    table.halve
+    func add(
+        table: var array[white..black, array[pawn..king, array[a1..h8, float]]],
+        color: Color, piece: Piece, target: Square, addition: float
+    ) =
+        table[color][piece][target] = clamp(
+            table[color][piece][target] + addition,
+            -maxHistoryTableValue, maxHistoryTableValue
+        )    
+        if table[color][piece][target].abs >= maxHistoryTableValue:
+            table.halve
 
-            let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.float^2
+    let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.float^2
 
-            historyTable.table.add(color, move.moved, move.target, addition)
+    historyTable.table.add(color, move.moved, move.target, addition)
 
-            if previous.moved in pawn..king and previous.target in a1..h8:
-                doAssert historyTable.counterTable.len == 1
-                historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
+    if previous.moved in pawn..king and previous.target in a1..h8:
+        doAssert historyTable.counterTable.len == 1
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
-    {.cast(noSideEffect).}:
-        withLock mutex:
-            result = historyTable.table[color][move.moved][move.target].Value
-            if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
-                result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
+    result = historyTable.table[color][move.moved][move.target].Value
+    if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
+        result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
