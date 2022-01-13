@@ -38,9 +38,9 @@ proc optimize(
     lr = 6400.0,
     minLearningRate = 80.0,
     maxIterations = int.high,
-    minTries = 20,
+    minTries = 10,
     discount = 0.9,
-    numThreads = 4
+    numThreads = 4#30
 ): EvalParameters =
 
     echo "-------------------"
@@ -58,11 +58,11 @@ proc optimize(
     for j in 0..<maxIterations:
         let startTime = now()
         var currentSolution = bestSolution
+        let batchSize = data.len div numThreads
 
-        var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)        
+        var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
         
         let bestSolutionConverted = bestSolution.convert
-        let batchSize = data.len div numThreads
         for i, flowVar in threadSeq.mpairs:
             flowVar = spawn calculateGradient(
                 data[(i*batchSize)..<((i+1)*batchSize)],
@@ -98,7 +98,15 @@ proc optimize(
         while leftTries > 0:
 
             currentSolution += gradient
-            let error = currentSolution.convert.error(data, k)
+            let currentSolutionConverted = currentSolution.convert
+            var errors = newSeq[FlowVar[float32]](numThreads)
+            for i, error in errors.mpairs:
+                error = spawn error(currentSolutionConverted, data[(i*batchSize)..<((i+1)*batchSize)], k)
+            var error: float32 = 0.0
+            for e in errors.mitems:
+                error += ^e
+            error /= numThreads.float32
+
 
             tries += 1                    
             if error < bestError:
@@ -140,7 +148,7 @@ var data: seq[Entry]
 #data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd")#, weight = 0.6)#, maxLen = 50_000)
+data.loadData("quietSetNalwald.epd")#, maxLen = 50_000)#, weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
