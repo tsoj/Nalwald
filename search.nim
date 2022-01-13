@@ -329,7 +329,8 @@ type ThreadSeq = object
 
 proc `=destroy`(a: var ThreadSeq) =
   for r in a.s.mitems:
-      discard ^r
+      if r != nil:
+        discard ^r
 
 iterator iterativeDeepeningSearch*(
     position: Position,
@@ -338,7 +339,7 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply,
     stop: ptr Atomic[bool],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    numThreads = 1
+    numThreads = 4
 ): (Value, seq[Move], uint64) {.noSideEffect.} =
     {.cast(noSideEffect).}:
         var historyTable = newHistoryTable()
@@ -369,7 +370,8 @@ iterator iterativeDeepeningSearch*(
 
             for response in flows():
                 response = spawnSearch(depth)
-                sleep(1)
+                if numThreads > 1:
+                    sleep(1)
 
             for response in flows():
                 let r = ^response
