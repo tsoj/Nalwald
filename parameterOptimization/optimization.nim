@@ -40,7 +40,7 @@ proc optimize(
     maxIterations = int.high,
     minTries = 10,
     discount = 0.9,
-    numThreads = 4#30
+    numThreads = 30
 ): EvalParameters =
 
     echo "-------------------"
@@ -145,10 +145,10 @@ proc optimize(
     return bestSolution.convert
 
 var data: seq[Entry]
-#data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
+data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd")#, maxLen = 50_000)#, weight = 0.6)
+data.loadData("quietSetNalwald.epd", weight = 0.8)#, maxLen = 50_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 

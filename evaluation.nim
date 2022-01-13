@@ -138,6 +138,7 @@ func targetingKingArea(
     us, enemy: Color,
     kingSquare: array[white..black, Square],
     attackMask: Bitboard,
+    numTargetingKingArea: var array[white..black, int],
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
     # knight and pawn are not included, as the king contextual piece square tables are enough in this case
@@ -153,6 +154,10 @@ func targetingKingArea(
 
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusAttackingKing[piece] += whiteBlackGradient()
+    
+    # count king attacks
+    if (attackMask and mask3x3[kingSquare[enemy]]) != 0:
+        numTargetingKingArea[us] += 1
 
 #-------------- pawn evaluation --------------#
 
@@ -161,6 +166,7 @@ func evaluatePawn(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -184,6 +190,10 @@ func evaluatePawn(
 
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusPawnHasTwoNeighbors += whiteBlackGradient()
+    
+    # count king attacks
+    if (attackTablePawnCapture[us][square] and mask3x3[kingSquare[enemy]]) != 0:
+        numTargetingKingArea[us] += 1
 
 #-------------- knight evaluation --------------#
 
@@ -192,6 +202,7 @@ func evaluateKnight(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
@@ -209,6 +220,10 @@ func evaluateKnight(
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusKnightAttackingPiece += whiteBlackGradient()
 
+    # count king attacks
+    if (attackMask and mask3x3[kingSquare[enemy]]) != 0:
+        numTargetingKingArea[us] += 1
+
 #-------------- bishop evaluation --------------#
 
 func evaluateBishop(
@@ -216,6 +231,7 @@ func evaluateBishop(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
@@ -227,7 +243,9 @@ func evaluateBishop(
     result += evalParameters.mobility(position, bishop, us, enemy, attackMask, gradient)
     
     # targeting enemy king area
-    result += evalParameters.targetingKingArea(position, bishop, us, enemy, kingSquare, attackMask, gradient)
+    result += evalParameters.targetingKingArea(
+        position, bishop, us, enemy, kingSquare, attackMask, numTargetingKingArea, gradient
+    )
     
     # both bishops
     if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
@@ -244,6 +262,7 @@ func evaluateRook(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
@@ -255,7 +274,9 @@ func evaluateRook(
     result += evalParameters.mobility(position, rook, us, enemy, attackMask, gradient)
     
     # targeting enemy king area
-    result += evalParameters.targetingKingArea(position, rook, us, enemy, kingSquare, attackMask, gradient)
+    result += evalParameters.targetingKingArea(
+        position, rook, us, enemy, kingSquare, attackMask, numTargetingKingArea, gradient
+    )
     
     # rook on open file
     if (files[square] and position[pawn]) == 0:
@@ -272,6 +293,7 @@ func evaluateQueen(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
@@ -283,7 +305,9 @@ func evaluateQueen(
     result += evalParameters.mobility(position, queen, us, enemy, attackMask, gradient)
     
     # targeting enemy king area
-    result += evalParameters.targetingKingArea(position, queen, us, enemy, kingSquare, attackMask, gradient)
+    result += evalParameters.targetingKingArea(
+        position, queen, us, enemy, kingSquare, attackMask, numTargetingKingArea, gradient
+    )
 
 #-------------- king evaluation --------------#
 
@@ -292,6 +316,7 @@ func evaluateKing(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
@@ -313,6 +338,7 @@ func evaluatePiece(
     us, enemy: Color,
     kingSquare: array[white..black, Square],
     kingSquareMirrored: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -331,7 +357,11 @@ func evaluatePiece(
         for phase in Phase:
             gradient[phase].pieceValues[piece] += whiteBlackGradient()
 
-    result += evaluationFunctions[piece](position, square, us, enemy, kingSquare, evalParameters, gradient)
+    result += evaluationFunctions[piece](
+        position, square, us, enemy,
+        kingSquare, numTargetingKingArea,
+        evalParameters, gradient
+    )
     result += evalParameters.getPstValue(
         square, piece, us,
         [ourKing: kingSquareMirrored[us], enemyKing: kingSquareMirrored[enemy]],
@@ -341,9 +371,10 @@ func evaluatePiece(
 func evaluatePieceType(
     position: Position,
     piece: Piece,
-    evalParameters: EvalParameters,
     kingSquare: array[white..black, Square],
     kingSquareMirrored: array[white..black, Square],
+    numTargetingKingArea: var array[white..black, int],
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value]  =
     result = [opening: 0.Value, endgame: 0.Value]
@@ -359,6 +390,7 @@ func evaluatePieceType(
             piece, square,
             currentUs, currentEnemy,
             kingSquare, kingSquareMirrored,
+            numTargetingKingArea,
             evalParameters, gradient
         )
         
@@ -380,8 +412,24 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         white: kingSquare[white].mirror,
         black: kingSquare[black]
     ]
+    var numTargetingKingArea: array[white..black, int]
     for piece in pawn..king:
-        value += position.evaluatePieceType(piece, evalParameters, kingSquare, kingSquareMirrored, gradient)
+        value += position.evaluatePieceType(
+            piece,
+            kingSquare, kingSquareMirrored, numTargetingKingArea,
+            evalParameters, gradient
+        )
+
+    let
+        us = position.us
+        enemy = position. enemy
+    for phase in Phase:
+        value[phase] += evalParameters[phase].bonusNumTargetingKingArea[numTargetingKingArea[us]]
+        value[phase] -= evalParameters[phase].bonusNumTargetingKingArea[numTargetingKingArea[enemy]]
+    when gradient isnot Nothing:
+        for phase in Phase:
+            gradient[phase].bonusNumTargetingKingArea[numTargetingKingArea[us]] += whiteBlackGradient()
+            gradient[phase].bonusNumTargetingKingArea[numTargetingKingArea[enemy]] -= whiteBlackGradient()
 
     for square in [
         b3, c3, d3, e3, f3, g3,
