@@ -10,9 +10,9 @@ import
     terminal,
     threadpool
 
-type ThreadResult = tuple[weight: float32, gradient: EvalParametersFloat]
+type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
-proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float32, suppressOutput = false): ThreadResult =
+proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
     const numProgressBarPoints = 100
     if not suppressOutput:
         eraseLine()
@@ -44,7 +44,7 @@ proc optimize(
 ): EvalParameters =
 
     echo "-------------------"
-    let k = optimizeK(getError = proc(k: float32): float32 = start.convert.error(data, k))
+    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
 
     var bestSolution: EvalParametersFloat = start
 
@@ -60,18 +60,20 @@ proc optimize(
         var currentSolution = bestSolution
         let batchSize = data.len div numThreads
 
+        template batchSlize(i: int): auto = data[(i*batchSize)..<((i+1)*batchSize)]
+
         var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
         
         let bestSolutionConverted = bestSolution.convert
         for i, flowVar in threadSeq.mpairs:
             flowVar = spawn calculateGradient(
-                data[(i*batchSize)..<((i+1)*batchSize)],
+                i.batchSlize,
                 bestSolutionConverted,
                 k, i > 0
             )    
 
         var gradient: EvalParametersFloat
-        var totalWeight: float32 = 0.0
+        var totalWeight: float = 0.0
         for flowVar in threadSeq.mitems:
             let (threadWeight, threadGradient) = ^flowVar
             totalWeight += threadWeight
@@ -98,15 +100,19 @@ proc optimize(
         while leftTries > 0:
 
             currentSolution += gradient
-            let currentSolutionConverted = currentSolution.convert
-            var errors = newSeq[FlowVar[float32]](numThreads)
-            for i, error in errors.mpairs:
-                error = spawn error(currentSolutionConverted, data[(i*batchSize)..<((i+1)*batchSize)], k)
-            var error: float32 = 0.0
-            for e in errors.mitems:
-                error += ^e
-            error /= numThreads.float32
 
+            let currentSolutionConverted = currentSolution.convert
+            var errors = newSeq[FlowVar[tuple[error, summedWeight: float]]](numThreads)
+            for i, error in errors.mpairs:
+                error = spawn errorTuple(currentSolutionConverted, i.batchSlize, k)
+            var
+                error: float = 0.0
+                summedWeight: float = 0.0
+            for e in errors.mitems:
+                let r = ^e
+                error += r.error
+                summedWeight += r.summedWeight
+            error /= summedWeight
 
             tries += 1                    
             if error < bestError:
@@ -148,7 +154,7 @@ var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)#, maxLen = 50_000)
 # Elements in quietSetNalwald are weighed less, because it brings better results.
 # quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.8)#, maxLen = 50_000)
+data.loadData("quietSetNalwald.epd", weight = 0.6)#, maxLen = 50_000)
 
 let startingEvalParametersFloat = startingEvalParameters
 

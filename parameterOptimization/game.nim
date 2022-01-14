@@ -82,7 +82,7 @@ func newGame*(
     )
     result.hashTable.setSize(hashSize)
 
-proc playGame*(game: var Game, suppressOutput = false): float32 =
+proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
     if not suppressOutput:
         echo "-----------------------------"

@@ -9,10 +9,10 @@ import
 
 type Entry* = object
     position*: Position
-    outcome*: float32
-    weight*: float32
+    outcome*: float
+    weight*: float
 
-proc loadData*(data: var seq[Entry], filename: string, weight: float32 = 1.0, maxLen = int.high, suppressOutput = false) =
+proc loadData*(data: var seq[Entry], filename: string, weight: float = 1.0, maxLen = int.high, suppressOutput = false) =
     let f = open(filename)
     var line: string
     var numEntries = 0
@@ -27,18 +27,20 @@ proc loadData*(data: var seq[Entry], filename: string, weight: float32 = 1.0, ma
             break
     f.close()
     if not suppressOutput:
-        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float32 * weight
+        debugEcho filename & ": ", numEntries, " entries", ", weight: ", numEntries.float * weight
 
 
-func error*(evalParameters: EvalParameters, entry: Entry, k: float32): float32 =
+func error*(evalParameters: EvalParameters, entry: Entry, k: float): float =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability(k)
     error(entry.outcome, estimate)*entry.weight
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float32): float32 =
-    result = 0.0
-    
-    var summedWeight: float32 = 0.0
+func errorTuple*(evalParameters: EvalParameters, data: openArray[Entry], k: float): tuple[error, summedWeight: float] =
+    result.error = 0.0    
+    result.summedWeight = 0.0
     for entry in data:
-        result += evalParameters.error(entry, k)
-        summedWeight += entry.weight
-    result /= summedWeight
+        result.error += evalParameters.error(entry, k)
+        result.summedWeight += entry.weight
+
+func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float): float =
+    let (error, summedWeight) = evalParameters.errorTuple(data, k)
+    error / summedWeight
