@@ -60,7 +60,16 @@ proc optimize(
         var currentSolution = bestSolution
         let batchSize = data.len div numThreads
 
-        template batchSlize(i: int): auto = data[(i*batchSize)..<((i+1)*batchSize)]
+        template batchSlize(i: int): auto =
+            let
+                b = data.len mod numThreads + (i+1)*batchSize
+                a = if i == 0: 0 else: b - batchSize
+            doAssert b > a
+            doAssert i < numThreads - 1 or b == data.len
+            doAssert i == 0 or b - a == batchSize
+            doAssert i > 0 or b - a == batchSize + data.len mod numThreads
+            doAssert b <= data.len
+            data[a..<b]
 
         var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
         

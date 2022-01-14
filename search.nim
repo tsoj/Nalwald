@@ -171,8 +171,7 @@ func search(
                 alpha = max(alpha, hashResult.value)
             of upperBound:
                 beta = min(beta, hashResult.value)
-            else:
-                assert false
+
             if alpha >= beta:
                 return alpha
         else:

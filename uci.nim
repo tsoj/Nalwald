@@ -44,15 +44,16 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     if params.len == 4 and
     params[0] == "name" and
     params[2] == "value":
-        if params[1] == "Hash":
+        case params[1]:
+        of "Hash":
             let newHashSizeMB = params[3].parseInt
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
-        elif params[1] == "UCI_Chess960":
+        of "UCI_Chess960":
             discard
-        if params[1] == "Threads":
+        of "Threads":
             let newNumThreads = params[3].parseInt
             if newNumThreads < 1 or newNumThreads > maxNumThreads:
                 echo "Invalid value"

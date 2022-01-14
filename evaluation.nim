@@ -434,11 +434,11 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 155.Value,
-        knight: 577.Value,
-        bishop: 581.Value,
-        rook: 790.Value,
-        queen: 1572.Value,
+        pawn: 156.Value,
+        knight: 591.Value,
+        bishop: 593.Value,
+        rook: 805.Value,
+        queen: 1631.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]

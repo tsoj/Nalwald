@@ -33,7 +33,7 @@ func newHashTable*(): HashTable =
     )
     initLock result.pvTableMutex
 
-const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, depth: 0.Ply, bestMove: noMove)
+const noEntry = HashTableEntry(zobristKey: 0, depth: 0.Ply, bestMove: noMove)
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
