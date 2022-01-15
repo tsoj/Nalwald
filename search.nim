@@ -322,14 +322,6 @@ func launchSearch(
     )
     (value: value, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
 
-type ThreadSeq = object
-    flowVars: seq[FlowVar[SearchThreadResult]]
-
-proc `=destroy`(threadSeq: var ThreadSeq) =
-  for flowVar in threadSeq.flowVars.mitems:
-      if flowVar != nil:
-        discard ^flowVar
-
 iterator iterativeDeepeningSearch*(
     position: Position,
     hashTable: var HashTable,
@@ -348,15 +340,13 @@ iterator iterativeDeepeningSearch*(
 
         hashTable.age()        
 
-        var threadSeq = ThreadSeq(flowVars: newSeq[FlowVar[SearchThreadResult]](numThreads))    
-        
         let start = now()
         for depth in 1.Ply..targetDepth:
             var
                 nodes = 0'u64
                 value: Value
                 numMovesAtRoot: int
-
+            
             template launchSearch(i: auto): auto = launchSearch(
                 position,
                 addr hashTable,
@@ -371,25 +361,24 @@ iterator iterativeDeepeningSearch*(
                 # don't use multithreading too early or when only one thread allowed
                 (value, nodes, numMovesAtRoot) = launchSearch(0)
             else:
-                for i, flowVar in threadSeq.flowVars.mpairs:
+                var threadSeq: seq[FlowVar[SearchThreadResult]]
+                for i in 0..<numThreads:
                     if i > 0: sleep(1)
-                    flowVar = spawn launchSearch(i)
+                    threadSeq.add spawn launchSearch(i)
 
-                while nil notin threadSeq.flowVars:
-                    sleep(5)
-                    for flowVar in threadSeq.flowVars.mitems:
-                        doAssert flowVar != nil
+                while threadSeq.len == numThreads:
+                    sleep(1)
+                    for i, flowVar in threadSeq.mpairs:
                         if flowVar.isReady:
                             (value, nodes, numMovesAtRoot) = ^flowVar
-                            flowVar = nil
+                            threadSeq.del i
                             break
 
                 let oldStop = stop[].load
                 stop[].store(true)                
-                for flowVar in threadSeq.flowVars.mitems:
-                    if flowVar != nil:
-                        let r = ^flowVar
-                        nodes += r.nodes
+                for flowVar in threadSeq.mitems:
+                    let r = ^flowVar
+                    nodes += r.nodes
                 stop[].store(oldStop)
 
 
