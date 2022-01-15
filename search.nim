@@ -293,13 +293,12 @@ func search(
     state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
     bestValue
 
-type SearchThreadResult = object
+type SearchThreadResult = tuple
     value: Value
-    depth: Ply
     nodes: uint64
     numMovesAtRoot: int
 
-func launchSearchThread(
+func launchSearch(
     position: Position,
     hashTable: ptr HashTable,
     stop: ptr Atomic[bool],
@@ -321,7 +320,7 @@ func launchSearchThread(
         depth = depth, height = 0,
         previous = noMove
     )
-    SearchThreadResult(value: value, depth: depth, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
+    (value: value, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
 
 type ThreadSeq = object
     flowVars: seq[FlowVar[SearchThreadResult]]
@@ -358,29 +357,41 @@ iterator iterativeDeepeningSearch*(
                 value: Value
                 numMovesAtRoot: int
 
-            # don't use multithreading too early
-            let noMultithreading = (now() - start).inMilliseconds < 100
+            template launchSearch(i: auto): auto = launchSearch(
+                position,
+                addr hashTable,
+                stop,
+                addr historyTable[i],
+                gameHistory,
+                depth,
+                evaluation
+            )
 
-            for i, flowVar in threadSeq.flowVars.mpairs:
-                if i > 0:
-                    if noMultithreading: break
-                    sleep(1)
-                flowVar = spawn launchSearchThread(
-                    position,
-                    addr hashTable,
-                    stop,
-                    addr historyTable[i],
-                    gameHistory,
-                    depth,
-                    evaluation
-                )    
+            if numThreads == 1 or (now() - start).inMilliseconds < 100:
+                # don't use multithreading too early or when only one thread allowed
+                (value, nodes, numMovesAtRoot) = launchSearch(0)
+            else:
+                for i, flowVar in threadSeq.flowVars.mpairs:
+                    if i > 0: sleep(1)
+                    flowVar = spawn launchSearch(i)
 
-            for i, flowVar in threadSeq.flowVars.mpairs:
-                if i > 0 and noMultithreading: break
-                let r = ^flowVar
-                nodes += r.nodes
-                value = r.value
-                numMovesAtRoot = r.numMovesAtRoot
+                while nil notin threadSeq.flowVars:
+                    sleep(5)
+                    for flowVar in threadSeq.flowVars.mitems:
+                        doAssert flowVar != nil
+                        if flowVar.isReady:
+                            (value, nodes, numMovesAtRoot) = ^flowVar
+                            flowVar = nil
+                            break
+
+                let oldStop = stop[].load
+                stop[].store(true)                
+                for flowVar in threadSeq.flowVars.mitems:
+                    if flowVar != nil:
+                        let r = ^flowVar
+                        nodes += r.nodes
+                stop[].store(oldStop)
+
 
             if stop[].load:
                 break
