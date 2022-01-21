@@ -13,6 +13,7 @@ type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     passedPawnTable*: array[8, ValueType]
     bonusIsolatedPawn*: ValueType
     bonusPawnHasTwoNeighbors*: ValueType
+    bonusPawnAttacksPiece*: ValueType
     bonusKnightAttackingPiece*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType

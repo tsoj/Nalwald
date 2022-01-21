@@ -185,6 +185,16 @@ func evaluatePawn(
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusPawnHasTwoNeighbors += whiteBlackGradient()
 
+
+    # attacks enemy piece
+    let pieces = position[knight] or position[bishop] or position[rook] or position[queen]
+    if (position[enemy] and attackTablePawnCapture[us][square] and pieces) != 0:
+        for phase in Phase: result[phase] += evalParameters[phase].bonusPawnAttacksPiece
+
+        when gradient isnot Nothing: # TODO: reduce code duplication: "for phase in Phase: ... when gradient isnot ..."
+            for phase in Phase: gradient[phase].bonusPawnAttacksPiece += whiteBlackGradient()
+
+
 #-------------- knight evaluation --------------#
 
 func evaluateKnight(
@@ -435,10 +445,10 @@ func absoluteEvaluate*(position: Position): Value =
 func value*(piece: Piece): Value =
     const table = [
         pawn: 156.Value,
-        knight: 591.Value,
-        bishop: 593.Value,
-        rook: 805.Value,
-        queen: 1631.Value,
+        knight: 584.Value,
+        bishop: 587.Value,
+        rook: 798.Value,
+        queen: 1602.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
