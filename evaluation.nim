@@ -154,6 +154,19 @@ func targetingKingArea(
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusAttackingKing[piece] += whiteBlackGradient()
 
+func forkingMajorPieces(
+    evalParameters: EvalParameters,
+    position: Position,
+    us, enemy: Color,
+    attackMask: Bitboard,
+    gradient: var GradientOrNothing
+): array[Phase, Value] =
+    if (attackMask and position[enemy] and (position[queen] or position[rook])).countSetBits >= 2:
+        for phase in Phase: result[phase] = evalParameters[phase].bonusPieceForkedMajorPieces
+
+        when gradient isnot Nothing:
+            for phase in Phase: gradient[phase].bonusPieceForkedMajorPieces += whiteBlackGradient()
+
 #-------------- pawn evaluation --------------#
 
 func evaluatePawn(
@@ -212,6 +225,9 @@ func evaluateKnight(
     # mobility
     result += evalParameters.mobility(position, knight, us, enemy, attackMask, gradient)
 
+    # forks
+    result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
+
     # attacking bishop, rook, or queen
     if (attackMask and position[enemy] and (position[bishop] or position[rook] or position[queen])) != 0:
         for phase in Phase: result[phase] += evalParameters[phase].bonusKnightAttackingPiece
@@ -235,6 +251,9 @@ func evaluateBishop(
 
     # mobility
     result += evalParameters.mobility(position, bishop, us, enemy, attackMask, gradient)
+
+    # forks
+    result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(

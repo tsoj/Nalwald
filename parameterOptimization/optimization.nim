@@ -51,6 +51,7 @@ proc optimize(
     echo "-------------------"
 
     var lr = lr
+    var decreaseLr = true
     var bestError = bestSolution.convert.error(data, k)
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
@@ -148,7 +149,12 @@ proc optimize(
 
         if oldBestError <= bestError and lr >= minLearningRate:
             previousGradient *= 0.5
-            lr /= 2.0
+            if decreaseLr:
+                lr /= 2.0
+            else:
+                decreaseLr = true
+        else:
+            decreaseLr = false
 
         if lr < minLearningRate:
             break
