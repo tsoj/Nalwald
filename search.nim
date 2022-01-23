@@ -203,7 +203,7 @@ func search(
     let
         staticEval = state.evaluation(position)
         doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
-        futilityMargin = alpha - staticEval
+        originalAlpha = alpha
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
@@ -229,7 +229,7 @@ func search(
 
         # futility reduction
         if doFutilityReduction and (not givingCheck) and bestValue > -valueInfinity:
-            newDepth -= futilityReduction(futilityMargin - position.see(move))
+            newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
             if newDepth <= 0:
                 continue
 
