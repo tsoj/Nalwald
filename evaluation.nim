@@ -189,7 +189,8 @@ func evaluatePawn(
         for phase in Phase: result[phase] += evalParameters[phase].bonusPawnAttacksPiece
 
         when gradient isnot Nothing: # TODO: reduce code duplication: "for phase in Phase: ... when gradient isnot ..."
-            for phase in Phase: gradient[phase].bonusPawnAttacksPiece += whiteBlackGradient()
+            for phase in Phase:
+                gradient[phase].bonusPawnAttacksPiece += whiteBlackGradient()
 
 
 #-------------- knight evaluation --------------#
