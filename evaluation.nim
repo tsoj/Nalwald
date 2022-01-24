@@ -183,22 +183,6 @@ func evaluatePawn(
     if position.isPassedPawn(us, enemy, square):
         result += evalParameters.bonusPassedPawn(square, us, gradient)
 
-    # isolated pawn
-    if (position[pawn] and position[us] and adjacentFiles[square]) == 0:
-        for phase in Phase: result[phase] += evalParameters[phase].bonusIsolatedPawn
-
-        when gradient isnot Nothing:
-            for phase in Phase: gradient[phase].bonusIsolatedPawn += whiteBlackGradient()
-
-    # has two neighbors
-    elif (position[us] and position[pawn] and rightFiles[square]) != 0 and
-    (position[us] and position[pawn] and leftFiles[square]) != 0:
-        for phase in Phase: result[phase] += evalParameters[phase].bonusPawnHasTwoNeighbors
-
-        when gradient isnot Nothing:
-            for phase in Phase: gradient[phase].bonusPawnHasTwoNeighbors += whiteBlackGradient()
-
-
     # attacks enemy piece
     let pieces = position[knight] or position[bishop] or position[rook] or position[queen]
     if (position[enemy] and attackTablePawnCapture[us][square] and pieces) != 0:
@@ -463,11 +447,11 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 157.Value,
-        knight: 600.Value,
-        bishop: 601.Value,
-        rook: 814.Value,
-        queen: 1667.Value,
+        pawn: 160.Value,
+        knight: 640.Value,
+        bishop: 640.Value,
+        rook: 860.Value,
+        queen: 1828.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]

@@ -159,8 +159,6 @@ const startingEvalParameters* = block:
                 queen: 900.0,
                 king: 0.0
             ],
-            bonusIsolatedPawn: -10.0.float32,
-            bonusPawnHasTwoNeighbors: 5.0.float32,
             bonusKnightAttackingPiece: 5.0.float32,
             bonusBothBishops: 10.0.float32,
             bonusRookOnOpenFile: 5.0.float32,
