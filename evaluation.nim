@@ -192,7 +192,6 @@ func evaluatePawn(
             for phase in Phase:
                 gradient[phase].bonusPawnAttacksPiece += whiteBlackGradient()
 
-
 #-------------- knight evaluation --------------#
 
 func evaluateKnight(
@@ -282,7 +281,6 @@ func evaluateRook(
         when gradient isnot Nothing:
             for phase in Phase: gradient[phase].bonusRookOnOpenFile += whiteBlackGradient()
 
-
 #-------------- queen evaluation --------------#
 
 func evaluateQueen(
@@ -324,6 +322,13 @@ func evaluateKing(
     when gradient isnot Nothing:
         for phase in Phase:
             gradient[phase].bonusKingSafety.addSmooth(numPossibleQueenAttack, whiteBlackGradient())
+
+    # numbers of attackers near king
+    let numNearAttackers = (position[enemy] and mask5x5[square]).countSetBits
+    for phase in Phase: result[phase] += evalParameters[phase].bonusAttackersNearKing[numNearAttackers]
+
+    when gradient isnot Nothing:
+        for phase in Phase: gradient[phase].bonusAttackersNearKing[numNearAttackers] += whiteBlackGradient()
 
 
 func evaluatePiece(
@@ -449,10 +454,10 @@ func absoluteEvaluate*(position: Position): Value =
 func value*(piece: Piece): Value =
     const table = [
         pawn: 160.Value,
-        knight: 640.Value,
-        bishop: 640.Value,
-        rook: 860.Value,
-        queen: 1828.Value,
+        knight: 632.Value,
+        bishop: 632.Value,
+        rook: 852.Value,
+        queen: 1798.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
