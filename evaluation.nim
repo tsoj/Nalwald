@@ -401,7 +401,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         white: position.kingSquare(white),
         black: position.kingSquare(black)
     ]    
-    let kingSquareMirrored = [
+    let kingSquareMirrored = [ # TODO: is probably not longer needed (originally for performance reasons)
         white: kingSquare[white].mirror,
         black: kingSquare[black]
     ]
@@ -414,7 +414,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         b4, c4, d4, e4, f4, g4,
         b5, c5, d5, e5, f5, g5,
         b6, c6, d6, e6, f6, g6
-    ]: # TODO maybe include king relative position
+    ]:
         if (mask3x3[square] and position[pawn]).countSetBits >= 2:
             value += evalParameters.pawnMaskBonus(
                 position,
