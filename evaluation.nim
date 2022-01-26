@@ -22,11 +22,17 @@ func getPstValue(
     evalParameters: EvalParameters,
     square: Square,
     piece: Piece,
-    us: Color,
-    kingSquare: array[ourKing..enemyKing, Square], # already mirrored accordingly
+    us, enemy: Color,
+    kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    let square = if us == black: square else: square.mirror
+    template pmirror(x: auto, color: Color): auto = (if color == white: x.mirror else: x) 
+    let
+        square = square.pmirror(us)
+        kingSquare = [
+            ourKing: kingSquare[us].pmirror(us),
+            enemyKing: kingSquare[enemy].pmirror(enemy)
+        ]
 
     for phase in Phase:
         result[phase] =
@@ -337,7 +343,6 @@ func evaluatePiece(
     square: Square,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
-    kingSquareMirrored: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -358,8 +363,8 @@ func evaluatePiece(
 
     result += evaluationFunctions[piece](position, square, us, enemy, kingSquare, evalParameters, gradient)
     result += evalParameters.getPstValue(
-        square, piece, us,
-        [ourKing: kingSquareMirrored[us], enemyKing: kingSquareMirrored[enemy]],
+        square, piece, us, enemy,
+        kingSquare,
         gradient
     )
     
@@ -367,7 +372,6 @@ func evaluatePieceType(
     position: Position,
     piece: Piece,
     kingSquare: array[white..black, Square],
-    kingSquareMirrored: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value]  =
@@ -383,7 +387,7 @@ func evaluatePieceType(
         var currentResult: array[Phase, Value] = position.evaluatePiece(
             piece, square,
             currentUs, currentEnemy,
-            kingSquare, kingSquareMirrored,
+            kingSquare,
             evalParameters, gradient
         )
         
@@ -400,14 +404,10 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     let kingSquare = [
         white: position.kingSquare(white),
         black: position.kingSquare(black)
-    ]    
-    let kingSquareMirrored = [ # TODO: is probably not longer needed (originally for performance reasons)
-        white: kingSquare[white].mirror,
-        black: kingSquare[black]
     ]
     
     for piece in pawn..king:
-        value += position.evaluatePieceType(piece, kingSquare, kingSquareMirrored, evalParameters, gradient)
+        value += position.evaluatePieceType(piece, kingSquare, evalParameters, gradient)
 
     for square in [
         b3, c3, d3, e3, f3, g3,
