@@ -9,14 +9,14 @@ import
     algorithm,
     macros
 
-func `+=`[T: Value of float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
         a[phase] += b[phase]
 
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
 
-macro combo(structName, parameter: untyped): untyped =
+macro getParameter(structName, parameter: untyped): untyped =
     parseExpr($toStrLit(quote do: `structName`[phase]) & "." & $toStrLit(quote do: `parameter`))
 
 template addValue(
@@ -27,11 +27,11 @@ template addValue(
     parameter: untyped
 ) =
     for phase {.inject.} in Phase:
-        value[phase] += combo(evalParameters, parameter)
+        value[phase] += getParameter(evalParameters, parameter)
 
     when gradient isnot Nothing:
         for phase {.inject.} in Phase:
-            combo(gradient, parameter) += (if us == black: -1.0 else: 1.0)
+            getParameter(gradient, parameter) += (if us == black: -1.0 else: 1.0)
 
 func getPstValue(
     evalParameters: EvalParameters,
@@ -127,7 +127,7 @@ func mobility(
     evalParameters: EvalParameters,
     position: Position,
     piece: static Piece,
-    us, enemy: Color,
+    us: Color,
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -195,7 +195,7 @@ func evaluateKnight(
     let attackMask = knight.attackMask(square, position.occupancy)
     
     # mobility
-    result += evalParameters.mobility(position, knight, us, enemy, attackMask, gradient)
+    result += evalParameters.mobility(position, knight, us, attackMask, gradient)
 
     # forks
     result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
@@ -218,7 +218,7 @@ func evaluateBishop(
     let attackMask = bishop.attackMask(square, position.occupancy)
 
     # mobility
-    result += evalParameters.mobility(position, bishop, us, enemy, attackMask, gradient)
+    result += evalParameters.mobility(position, bishop, us, attackMask, gradient)
 
     # forks
     result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
@@ -247,7 +247,7 @@ func evaluateRook(
     let attackMask = rook.attackMask(square, position.occupancy)
 
     # mobility
-    result += evalParameters.mobility(position, rook, us, enemy, attackMask, gradient)
+    result += evalParameters.mobility(position, rook, us, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -272,7 +272,7 @@ func evaluateQueen(
     let attackMask = queen.attackMask(square, position.occupancy)
 
     # mobility
-    result += evalParameters.mobility(position, queen, us, enemy, attackMask, gradient)
+    result += evalParameters.mobility(position, queen, us, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -412,11 +412,11 @@ func absoluteEvaluate*(position: Position): Value =
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 160.Value,
-        knight: 632.Value,
-        bishop: 632.Value,
-        rook: 852.Value,
-        queen: 1798.Value,
+        pawn: 158.Value,
+        knight: 609.Value,
+        bishop: 610.Value,
+        rook: 827.Value,
+        queen: 1709.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
