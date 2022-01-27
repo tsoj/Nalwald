@@ -9,15 +9,12 @@ import
     algorithm,
     macros
 
-func `+=`[T](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+func `+=`[T: Value of float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
         a[phase] += b[phase]
 
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
-
-template whiteBlackGradient(): auto =
-    (if us == black: -1.0 else: 1.0)
 
 macro combo(structName, parameter: untyped): untyped =
     parseExpr($toStrLit(quote do: `structName`[phase]) & "." & $toStrLit(quote do: `parameter`))
@@ -61,7 +58,7 @@ func getPstValue(
 
         for whoseKing in ourKing..enemyKing:
             for currentKingSquare in a1..h8:
-                let multiplier = whiteBlackGradient() * (if currentKingSquare == kingSquare[whoseKing]:
+                let multiplier = (if us == black: -1.0 else: 1.0) * (if currentKingSquare == kingSquare[whoseKing]:
                     2.0
                 elif (currentKingSquare.toBitboard and mask3x3[kingSquare[whoseKing]]) != 0:
                     0.3
@@ -126,37 +123,28 @@ func bonusPassedPawn(
         index = 7 - index
     result.addValue(evalParameters, gradient, us, passedPawnTable[index])
 
-func addSmooth(g: var openArray[float32], index: int, a: float32) =
-    for (offset, f) in [(2, 0.1), (1, 0.2), (0, 1.0), (-1, 0.2), (-2, 0.1)]:
-        if index + offset in g.low..g.high:
-            g[index + offset] += a*f
-
 func mobility(
     evalParameters: EvalParameters,
     position: Position,
-    piece: Piece,
+    piece: static Piece,
     us, enemy: Color,
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
     let reachableSquares = (attackMask and not position[us]).countSetBits
-    for phase in Phase: result[phase] += evalParameters[phase].bonusMobility[piece][reachableSquares]
-
-    when gradient isnot Nothing:
-        for phase in Phase:
-            gradient[phase].bonusMobility[piece].addSmooth(reachableSquares, whiteBlackGradient())
+    result.addValue(evalParameters, gradient, us, bonusMobility[piece][reachableSquares])
 
 func targetingKingArea(
     evalParameters: EvalParameters,
     position: Position,
-    piece: Piece,
+    piece: static Piece,
     us, enemy: Color,
     kingSquare: array[white..black, Square],
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
     # knight and pawn are not included, as the king contextual piece square tables are enough in this case
-    assert piece in bishop..queen
+    static: doAssert piece in bishop..queen
     if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
         result.addValue(evalParameters, gradient, us, bonusTargetingKingArea[piece])
     
@@ -183,8 +171,7 @@ func evaluatePawn(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    result = [opening: 0.Value, endgame: 0.Value]
-    
+
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
         result += evalParameters.bonusPassedPawn(square, us, gradient)
@@ -204,7 +191,6 @@ func evaluateKnight(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
-    result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = knight.attackMask(square, position.occupancy)
     
@@ -228,7 +214,6 @@ func evaluateBishop(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
-    result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = bishop.attackMask(square, position.occupancy)
 
@@ -258,7 +243,6 @@ func evaluateRook(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
-    result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = rook.attackMask(square, position.occupancy)
 
@@ -284,7 +268,6 @@ func evaluateQueen(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
-    result = [opening: 0.Value, endgame: 0.Value]
 
     let attackMask = queen.attackMask(square, position.occupancy)
 
@@ -306,15 +289,10 @@ func evaluateKing(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0.} =
-    result = [opening: 0.Value, endgame: 0.Value]
 
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
-    for phase in Phase: result[phase] += evalParameters[phase].bonusKingSafety[numPossibleQueenAttack]
-
-    when gradient isnot Nothing:
-        for phase in Phase:
-            gradient[phase].bonusKingSafety.addSmooth(numPossibleQueenAttack, whiteBlackGradient())
+    result.addValue(evalParameters, gradient, us, bonusKingSafety[numPossibleQueenAttack])
 
     # numbers of attackers near king
     let numNearAttackers = (position[enemy] and mask5x5[square]).countSetBits
@@ -357,7 +335,6 @@ func evaluatePieceType(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value]  =
-    result = [opening: 0.Value, endgame: 0.Value]
     let
         us = position.us
         enemy = position.enemy
