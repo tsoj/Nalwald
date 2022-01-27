@@ -5,6 +5,7 @@ perf.data
 callgrind.out.*
 profile_results.txt
 .vscode
+.metals
 massif.out
 *.profraw
 *.profdata
