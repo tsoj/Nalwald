@@ -365,9 +365,11 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         black: position.kingSquare(black)
     ]
     
+    # evaluating pieces
     for piece in pawn..king:
         value += position.evaluatePieceType(piece, kingSquare, evalParameters, gradient)
 
+    # evaluation pawn patters
     for square in [
         b3, c3, d3, e3, f3, g3,
         b4, c4, d4, e4, f4, g4,
@@ -382,6 +384,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
                 gradient
             )
 
+    # interpolating between opening and endgame values
     let gamePhase = position.gamePhase
 
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
