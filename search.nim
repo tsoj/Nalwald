@@ -49,7 +49,7 @@ type SearchState = object
     evaluation: proc(position: Position): Value {.noSideEffect.}
 
 func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
-    if not state.stop[].load:
+    if bestMove != noMove and not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if bestMove != noMove:
             if nodeType != allNode:

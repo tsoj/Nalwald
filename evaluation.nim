@@ -342,22 +342,7 @@ func evaluatePieceType(
     let
         us = position.us
         enemy = position.enemy
-
-    # for square in position[piece]:
-    #     let currentUs = if (square.toBitboard and position[us]) != 0: us else: enemy
-    #     let currentEnemy = currentUs.opposite
-
-    #     var currentResult: array[Phase, Value] = position.evaluatePiece(
-    #         piece, square,
-    #         currentUs, currentEnemy,
-    #         kingSquare,
-    #         evalParameters, gradient
-    #     )
-        
-    #     if currentUs == enemy:
-    #         for phase in Phase: currentResult[phase] = -currentResult[phase]
-    #     result += currentResult
-
+    
     template evaluatePiece(square: Square, us, enemy: Color): auto =
         position.evaluatePiece(
             piece, square,
