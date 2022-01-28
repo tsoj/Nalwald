@@ -196,7 +196,7 @@ proc uciLoop*() =
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:
-            sleep(5)
+            sleep(5) # TODO try to remove this
             let command = readLine(stdin)
             let params = command.splitWhitespace()
             if params.len == 0 or params[0] == "":
