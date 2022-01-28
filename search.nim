@@ -202,7 +202,6 @@ func search(
 
     let
         staticEval = state.evaluation(position)
-        doFutilityReduction = alpha > -valueInfinity and beta - alpha <= 10.cp and not inCheck
         originalAlpha = alpha
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
@@ -219,19 +218,22 @@ func search(
             newDepth = depth
             newBeta = beta
 
-        # late move reduction
-        if newDepth > 1.Ply and
-        (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
-        (not (move.isTactical or inCheck or givingCheck)) and
-        (not (move.moved == pawn and newPosition.isPassedPawn(position.us, position.enemy, move.target))):
-            newDepth = lmrDepth(newDepth, lmrMoveCounter)
-            lmrMoveCounter += 1
+        # reductions
+        if not (givingCheck or inCheck):
 
-        # futility reduction
-        if doFutilityReduction and (not givingCheck) and bestValue > -valueInfinity:
-            newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
-            if newDepth <= 0:
-                continue
+            # late move reduction
+            if newDepth > 1.Ply and (not move.isTactical) and
+            (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
+            (move.moved != pawn or not newPosition.isPassedPawn(position.us, position.enemy, move.target)):
+                newDepth = lmrDepth(newDepth, lmrMoveCounter)
+                lmrMoveCounter += 1
+
+            # futility reduction
+            if originalAlpha > -valueInfinity and beta - originalAlpha <= 10.cp and
+            (not givingCheck) and moveCounter > 1:
+                newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
+                if newDepth <= 0:
+                    continue
 
         # first explore with null window
         if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.nodeType == allNode or move != hashResult.bestMove):
