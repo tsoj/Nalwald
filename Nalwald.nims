@@ -26,7 +26,21 @@ let name = projectName() & "-" & version()
 task debug, "debug compile":
     --define:debug
     --passC:"-fno-omit-frame-pointer -g -O2"
+    --debugger:native
     switch("o", name & "-debug" & suffix)
+    setCommand "c"
+
+task checks, "checks compile":
+    --define:release
+    switch("o", name & "-checks" & suffix)
+    setCommand "c"
+
+task profile, "profile compile":
+    highPerformance()
+    --passC:"-fno-omit-frame-pointer -g"
+    --passL:"-no-pie"
+    --debugger:native
+    switch("o", name & "-profile" & suffix)
     setCommand "c"
 
 task default, "default compile":

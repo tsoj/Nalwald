@@ -229,7 +229,7 @@ func search(
                 lmrMoveCounter += 1
 
             # futility reduction
-            if originalAlpha > -valueInfinity and beta - originalAlpha <= 10.cp and moveCounter > 1:
+            if beta - originalAlpha <= 10.cp and moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
                     continue

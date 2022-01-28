@@ -13,6 +13,10 @@ func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inl
     for phase in Phase:
         a[phase] += b[phase]
 
+func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+    for phase in Phase:
+        a[phase] -= b[phase]
+
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
 
@@ -339,20 +343,34 @@ func evaluatePieceType(
         us = position.us
         enemy = position.enemy
 
-    for square in position[piece]:
-        let currentUs = if (square.toBitboard and position[us]) != 0: us else: enemy
-        let currentEnemy = currentUs.opposite
+    # for square in position[piece]:
+    #     let currentUs = if (square.toBitboard and position[us]) != 0: us else: enemy
+    #     let currentEnemy = currentUs.opposite
 
-        var currentResult: array[Phase, Value] = position.evaluatePiece(
+    #     var currentResult: array[Phase, Value] = position.evaluatePiece(
+    #         piece, square,
+    #         currentUs, currentEnemy,
+    #         kingSquare,
+    #         evalParameters, gradient
+    #     )
+        
+    #     if currentUs == enemy:
+    #         for phase in Phase: currentResult[phase] = -currentResult[phase]
+    #     result += currentResult
+
+    template evaluatePiece(square: Square, us, enemy: Color): auto =
+        position.evaluatePiece(
             piece, square,
-            currentUs, currentEnemy,
+            us, enemy,
             kingSquare,
             evalParameters, gradient
         )
-        
-        if currentUs == enemy:
-            for phase in Phase: currentResult[phase] = -currentResult[phase]
-        result += currentResult
+     
+    for square in (position[piece] and position[us]):
+        result += evaluatePiece(square, us, enemy)
+
+    for square in (position[piece] and position[enemy]):
+        result -= evaluatePiece(square, enemy, us)
 
 func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
     if position.halfmoveClock >= 100:
