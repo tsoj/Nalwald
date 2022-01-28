@@ -12,8 +12,7 @@ import
     bitops,
     times,
     threadpool,
-    os,
-    math
+    os
 
 static: doAssert pawn.value == 100.cp
 
@@ -32,15 +31,8 @@ func hashResultFutilityMargin(depthDifference: Ply): Value =
     depthDifference.Value * 200.cp
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-    const
-        halfLife = 35.0
-        n = -1.0
-        w = halfLife / (1.0 - pow(0.5, 1.0/n))
-
-    if w > 0.0 and depth.float >= w:
-        return 0.Ply
-    ((depth.float * pow(w - lmrMoveCounter.float, n))/pow(w, n)).Ply
-    #((depth.int * halfLife.int) div (halfLife.int + lmrMoveCounter)).Ply
+    const halfLife = 35
+    ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
 const
     deltaMargin = 150.cp
