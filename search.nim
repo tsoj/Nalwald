@@ -222,15 +222,14 @@ func search(
         if not (givingCheck or inCheck):
 
             # late move reduction
-            if newDepth > 1.Ply and (not move.isTactical) and
+            if (not move.isTactical) and
             (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
             (move.moved != pawn or not newPosition.isPassedPawn(position.us, position.enemy, move.target)):
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
 
             # futility reduction
-            if originalAlpha > -valueInfinity and beta - originalAlpha <= 10.cp and
-            (not givingCheck) and moveCounter > 1:
+            if originalAlpha > -valueInfinity and beta - originalAlpha <= 10.cp and moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
                     continue
