@@ -34,7 +34,7 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
     ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
-func updateBeta(newBeta: var Value, alpha, beta: Value) =
+func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
 
 const
@@ -253,7 +253,7 @@ func search(
 
         # first re-search with increasing window and reduced depth
         while value >= newBeta and newBeta < beta:
-            newBeta.updateBeta(alpha, beta)
+            newBeta.increaseBeta(alpha, beta)
             value = -newPosition.search(
                 state,
                 alpha = -newBeta, beta = -alpha,
