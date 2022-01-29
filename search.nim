@@ -248,11 +248,12 @@ func search(
             previous = move
         )
 
-        # first re-search with full window and reduced depth
-        if value > alpha and newBeta < beta:
+        # first re-search with increasing window and reduced depth
+        while value >= newBeta and newBeta < beta:
+            newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
             value = -newPosition.search(
                 state,
-                alpha = -beta, beta = -alpha,
+                alpha = -newBeta, beta = -alpha,
                 depth = newDepth - 1.Ply, height = height + 1.Ply,
                 previous = move
             )
