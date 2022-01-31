@@ -82,8 +82,11 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     result = tmp.T
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
-    let start = now()
+    const sleepTimeMs = 5
+    let
+        start = now()
+        duration = duration - initDuration(milliseconds = sleepTimeMs)
     while not flag[].load:
-        sleep(5)
         if now() - start >= duration:
             flag[].store(true)
+        sleep(sleepTimeMs)

@@ -43,8 +43,6 @@ proc optimize(
     numThreads = 30
 ): EvalParameters =
 
-    # TODO: try seperate training and test set
-
     echo "-------------------"
     let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
 
