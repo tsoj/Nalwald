@@ -33,8 +33,6 @@ func getLeastValuableAttacker(position: Position, target: Square): (Square, Piec
             return (attack.toSquare, piece)
     (noSquare, noPiece)
 
-const queenPromotionBonus = 300.cp
-
 func see(position: var Position, target: Square, victim: Piece): Value =
 
     let 
@@ -45,7 +43,7 @@ func see(position: var Position, target: Square, victim: Piece): Value =
 
         if attacker == pawn and (target >= a8 or target <= h1):
             position.removePiece(us, attacker, source.toBitboard)
-            result = queenPromotionBonus + queen.value - pawn.value
+            result = queen.value - pawn.value
             currentVictim = queen
         else:
             position.removePiece(us, attacker, source.toBitboard)
@@ -76,8 +74,6 @@ func see*(position: Position, move: Move): Value =
     elif promoted != noPiece:
         position.removePiece(us, moved, source.toBitboard)
         result = promoted.value - pawn.value
-        if promoted == queen:
-            result += queenPromotionBonus
         currentVictim = promoted
     else:
         position.removePiece(us, moved, source.toBitboard)
@@ -97,7 +93,7 @@ proc seeTest*() =
             ("7r/5qpk/p1Qp1b1p/3r3n/BB3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", 0.Value),
             ("6rr/6pk/p1Qp1b1p/2n5/1B3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", -rook.value),
             ("7r/5qpk/2Qp1b1p/1N1r3n/BB3p2/5p2/P1P2P2/4RK1R w - - 0 1", "e1e8", -rook.value),
-            ("6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1", "f7f8q", bishop.value-pawn.value+queenPromotionBonus),
+            ("6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1", "f7f8q", bishop.value-pawn.value),
             ("6RR/4bP2/8/8/5r2/3K4/5p2/4k3 w - - 0 1", "f7f8n", knight.value-pawn.value),
             ("7R/4bP2/8/8/1q6/3K4/5p2/4k3 w - - 0 1", "f7f8r", -pawn.value),
             ("8/4kp2/2npp3/1Nn5/1p2PQP1/7q/1PP1B3/4KR1r b - - 0 1", "h1f1", 0.Value),
@@ -114,7 +110,7 @@ proc seeTest*() =
             ("4q3/1p1pr1k1/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "e6e4", pawn.value-rook.value),
             ("4q3/1p1pr1kb/1B2rp2/6p1/p3PP2/P3R1P1/1P2R1K1/4Q3 b - - 0 1", "h7e4", pawn.value),
             ("r1q1r1k1/pb1nppbp/1p3np1/1Pp1N3/3pNP2/B2P2PP/P3P1B1/2R1QRK1 w - c6 0 11", "b5c6", pawn.value),
-            ("r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q2/PPPB1PpP/R3K2R w QKqk - 0 2", "a6f1", pawn.value - bishop.value - queenPromotionBonus)
+            ("r3k2r/p1ppqpb1/Bn2pnp1/3PN3/1p2P3/2N2Q2/PPPB1PpP/R3K2R w QKqk - 0 2", "a6f1", pawn.value - bishop.value)
         ]
     for (fen, moveString, seeValue) in data:
         var position = fen.toPosition
