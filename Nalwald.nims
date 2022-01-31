@@ -20,27 +20,24 @@ func highPerformance() =
     if defined(windows):
         --passL:"-fuse-ld=lld"
 
+func lowPerformance() =
+    --passC:"-fno-omit-frame-pointer -g -O2"
+    --debugger:native
+
+
 let suffix = if defined(windows): ".exe" else: ""
 let name = projectName() & "-" & version()
 
 task debug, "debug compile":
     --define:debug
-    --passC:"-fno-omit-frame-pointer -g -O2"
-    --debugger:native
+    lowPerformance()
     switch("o", name & "-debug" & suffix)
     setCommand "c"
 
 task checks, "checks compile":
     --define:release
+    lowPerformance()
     switch("o", name & "-checks" & suffix)
-    setCommand "c"
-
-task profile, "profile compile":
-    highPerformance()
-    --passC:"-fno-omit-frame-pointer -g"
-    --passL:"-no-pie"
-    --debugger:native
-    switch("o", name & "-profile" & suffix)
     setCommand "c"
 
 task default, "default compile":

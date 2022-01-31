@@ -61,6 +61,7 @@ nim modern Nalwald.nim
   - hash result futility pruning
   - delta pruning
   - fail-high delta pruning
+- multithreading support
 - supports Chess960/FRC
 - UCI compatible
   - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`. `piecevalues`
