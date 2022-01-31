@@ -74,7 +74,7 @@ chess GUIs, such as Arena or Cute Chess. Nalwald is written in the programming
 language Nim, which is a compiled language with an intuitive and clean syntax.
 
 I began writing chess programs pretty much immediately after my first "Hello world!"
-program in 2016. My first big project was *jht-chess*, a chess playing program with
+in 2016. My first big project was *jht-chess*, a chess playing program with
 a console GUI for Linux. I used C++ but it looked more like messy C. Looking back
 I would say that it is hard to write worse spaghetti code than I did then, but it
 played good enough chess to win against amateur players. Since then, I wrote numerous
@@ -94,12 +94,12 @@ are novelties in the chess programming space:
 - *King contextual PSTs* are piece square tables that are different depending on
 where our own king and the enemy king are located.
 - *Fail-high delta pruning* is an extension to delta pruning, where instead of pruning
-hopelessly bad moves, moves are also pruning, if they are believed to be much better
+hopelessly bad moves, moves are also pruned, if they are believed to be much better
 than beta (by using the SEE function).
 - *Futility reductions* are an improvement to futility pruning. Here not only are moves
-skipped that are likely much worse than alpha, but additionally moves that are likely
-only slightly worse than alpha, are not skipped, but their depth gets reduced accordingly
-to how bad they are expected to be.
+skipped that are likely to be much worse than alpha. Additionally, moves that are likely
+slightly worse than alpha get their depth reduced accordingly to how bad they are
+expected to be.
 - *Hash result futility pruning* uses hash table entries that have not a depth high
 enough to adjust alpha or beta, or to return a value immediately. Rather, depending
 on their depth, the value gets only used, when the margin to alpha or beta is big
