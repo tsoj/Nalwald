@@ -261,6 +261,9 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
 func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool {.inline.} =
     (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
 
+func isPassedPawnMove*(newPosition: Position, move: Move): bool =
+    move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, newPosition.us, move.target)
+
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
 

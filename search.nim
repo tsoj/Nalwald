@@ -227,7 +227,7 @@ func search(
             # late move reduction
             if (not move.isTactical) and
             (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
-            (move.moved != pawn or not newPosition.isPassedPawn(position.us, position.enemy, move.target)):
+            not newPosition.isPassedPawnMove(move):
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
 
