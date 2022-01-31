@@ -183,6 +183,7 @@ proc perft(uciState: UciState, params: seq[string]) =
             echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
     else:
         echo "Missing depth parameter"
+        
 
 proc uciLoop*() =
     echo "---------------- Nalwald ----------------"
@@ -236,7 +237,7 @@ proc uciLoop*() =
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
             of "about":
-                about()
+                about(extra = params.len >= 1 and "extra" in params)
             of "help":
                 help(params[1..^1])
             else:
