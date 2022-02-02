@@ -70,10 +70,8 @@ func quiesce(
 
     state.countedNodes += 1
 
-    if height == Ply.high:
-        return 0.Value
-
-    if position.insufficientMaterial and height > 0:
+    if height == Ply.high or
+    position.insufficientMaterial:
         return 0.Value
 
     let standPat = state.evaluation(position)
