@@ -129,24 +129,21 @@ func search*(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    depth: Ply, height = 0.Ply,
+    depth, height: Ply,
     previous: Move
 ): Value =
     assert alpha < beta
 
     state.countedNodes += 1
 
-    if height == Ply.high:
+    if height > 0 and (
+        height == Ply.high or
+        position.insufficientMaterial or
+        position.halfmoveClock >= 100 or
+        state.gameHistory.checkForRepetition(position, height)
+    ):
         return 0.Value
-
-    if position.insufficientMaterial and height > 0:
-        return 0.Value
-
-    if position.halfmoveClock >= 100:
-        return 0.Value
-
-    if state.gameHistory.checkForRepetition(position, height) and height > 0:
-        return 0.Value
+    
     state.gameHistory.update(position, height)
 
     let
