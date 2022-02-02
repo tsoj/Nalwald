@@ -30,6 +30,9 @@ func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
     depthDifference.Value * 200.cp
 
+func nullMoveDepth(depth: Ply): Ply =
+    depth - 2.Ply - depth div 3.Ply
+
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
     ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
@@ -196,7 +199,7 @@ func search(
         let value = -newPosition.search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
-            depth = depth - 2.Ply - depth div 3.Ply, height = height + 3.Ply,
+            depth = nullMoveDepth(depth), height = height + 3.Ply,
             # height + 3 is not a bug, it somehow improves the performance by ~15 Elo
             previous = noMove
         )
