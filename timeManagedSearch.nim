@@ -3,7 +3,7 @@ import
     move,
     position,
     hashTable,
-    search,
+    rootSearch,
     evaluation,
     utils,
     atomics,
