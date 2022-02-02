@@ -57,11 +57,10 @@ type SearchState = object
 func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
     if bestMove != noMove and not state.stop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
-        if bestMove != noMove:
-            if nodeType != allNode:
-                state.historyTable[].update(bestMove, previous, position.us, depth)
-            if nodeType == cutNode:
-                state.killerTable.update(height, bestMove)                
+        if nodeType != allNode:
+            state.historyTable[].update(bestMove, previous, position.us, depth)
+        if nodeType == cutNode:
+            state.killerTable.update(height, bestMove)                
 
 func quiesce(
     position: Position,
