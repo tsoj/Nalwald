@@ -28,6 +28,7 @@ const
 
 func value*(entry: HashTableEntry): Value =
     (cast[int16](entry.upperZobristKeyAndValue and sixteenBitMask)).Value
+
 func sameUpperZobristKey(a: uint64, b: uint64): bool =
     (a and not sixteenBitMask) == (b and not sixteenBitMask)
 
