@@ -8,7 +8,7 @@ import
 
 type
     HashTableEntry* {.packed.} = object
-        zobristKey: uint64
+        upperZobristKeyAndValue: uint64
         nodeType*: NodeType
         value*: int16
         depth*: Ply
@@ -23,6 +23,13 @@ type
         pvTableMutex: Lock
         randState: Rand
 
+const
+    noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
+    sixteenBitMask = 0b1111_1111_1111_1111'u64
+
+func sameUpperZobristKey(a: uint64, b: uint64): bool =
+    (a and not sixteenBitMask) == (b and not sixteenBitMask)
+
 func newHashTable*(): HashTable =
     result = HashTable(
         nonPvNodes: newSeq[HashTableEntry](0),
@@ -32,8 +39,6 @@ func newHashTable*(): HashTable =
         randState: initRand(0)
     )
     initLock result.pvTableMutex
-
-const noEntry = HashTableEntry(zobristKey: 0, depth: 0.Ply, bestMove: noMove)
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
@@ -64,7 +69,7 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
     if oldEntry.isEmpty:
         return true
     
-    if oldEntry.zobristKey == newEntry.zobristKey:
+    if sameUpperZobristKey(oldEntry.upperZobristKeyAndValue, newEntry.upperZobristKeyAndValue):
         return oldEntry.depth <= newEntry.depth
 
     let probability = if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
@@ -83,7 +88,7 @@ func add*(
     bestMove: Move
 ) =
     let entry = HashTableEntry(
-        zobristKey: zobristKey,
+        upperZobristKeyAndValue: (zobristKey and not sixteenBitMask),
         nodeType: nodeType,
         value: value.int16,
         depth: depth,
@@ -109,7 +114,7 @@ func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
         return ht.pvNodes[zobristKey].entry
 
     let i = zobristKey mod ht.nonPvNodes.len.uint64
-    if not ht.nonPvNodes[i].isEmpty and zobristKey == ht.nonPvNodes[i].zobristKey:
+    if not ht.nonPvNodes[i].isEmpty and sameUpperZobristKey(zobristKey, ht.nonPvNodes[i].upperZobristKeyAndValue):
         return ht.nonPvNodes[i]
 
     noEntry
