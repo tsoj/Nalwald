@@ -10,7 +10,6 @@ type
     HashTableEntry* {.packed.} = object
         upperZobristKeyAndValue: uint64
         nodeType*: NodeType
-        value*: int16
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
@@ -27,6 +26,8 @@ const
     noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
     sixteenBitMask = 0b1111_1111_1111_1111'u64
 
+func value*(entry: HashTableEntry): Value =
+    (cast[int16](entry.upperZobristKeyAndValue and sixteenBitMask)).Value
 func sameUpperZobristKey(a: uint64, b: uint64): bool =
     (a and not sixteenBitMask) == (b and not sixteenBitMask)
 
@@ -88,9 +89,8 @@ func add*(
     bestMove: Move
 ) =
     let entry = HashTableEntry(
-        upperZobristKeyAndValue: (zobristKey and not sixteenBitMask),
+        upperZobristKeyAndValue: (zobristKey and not sixteenBitMask) or (cast[uint64](value.int16) and sixteenBitMask),
         nodeType: nodeType,
-        value: value.int16,
         depth: depth,
         bestMove: bestMove
     )
