@@ -235,8 +235,11 @@ func search*(
                     continue
 
         # first explore with null window
-        if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.nodeType == allNode or move != hashResult.bestMove):
-            newBeta = alpha + 1.Value
+        if alpha > -valueInfinity:
+            if hashResult.nodeType != allNode and move == hashResult.bestMove and not hashResult.isEmpty:
+                newBeta = clamp(hashResult.value + 300.cp, alpha + 1, beta)
+            else:
+                newBeta = alpha + 1
 
         if state.stop[].load:
             return 0.Value
