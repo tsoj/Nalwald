@@ -214,6 +214,9 @@ func search*(
         var
             newDepth = depth
             newBeta = beta
+        
+        if height == 0 and moveCounter > 1:
+            newDepth -= 1.Ply
 
         # reductions
         if not (givingCheck or inCheck):
