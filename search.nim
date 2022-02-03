@@ -1,5 +1,6 @@
 import
     types,
+    bitboard,
     position,
     positionUtils,
     move,
@@ -146,7 +147,10 @@ func search*(
 
     let
         inCheck = position.inCheck(position.us, position.enemy)
-        depth = if inCheck: depth + 1.Ply else: depth
+        depth = if inCheck or (previous.moved == pawn and (previous.target.toBitboard and pawnHomeRank[position.us]) != 0):
+            depth + 1.Ply
+        else:
+            depth
         hashResult = state.hashTable[].get(position.zobristKey)
 
     var
