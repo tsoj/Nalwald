@@ -215,10 +215,10 @@ func search*(
             newDepth = depth
             newBeta = beta
         
+        # root reduction
         if height == 0 and moveCounter > 1:
             newDepth -= 1.Ply
 
-        # reductions
         if not (givingCheck or inCheck):
 
             # late move reduction
