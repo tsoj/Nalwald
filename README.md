@@ -56,6 +56,7 @@ nim modern Nalwald.nim
     - relative and counter move history heuristic
   - check extensions
   - nullmove reduction
+  - root reductions
   - late move reductions
   - futility reductions
   - hash result futility pruning
