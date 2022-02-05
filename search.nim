@@ -227,7 +227,7 @@ func search*(
             not newPosition.isPassedPawnMove(move):
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
-                if depth <= 2.Ply and lmrMoveCounter >= 10:
+                if depth <= 2.Ply and lmrMoveCounter >= 5:
                     continue
 
             # futility reduction
