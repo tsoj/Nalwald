@@ -230,7 +230,7 @@ func search*(
                 if lmrMoveCounter >= 5:
                     if depth <= 2.Ply:
                         continue
-                    if depth <= 6.Ply:
+                    if depth <= 5.Ply:
                         newDepth -= 1.Ply
 
             # futility reduction
