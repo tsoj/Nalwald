@@ -51,7 +51,7 @@ iterator iterativeDeepeningSearch*(
     stop: ptr Atomic[bool],
     numThreads = 1,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
-): tuple[value: Value, pv: seq[Move], nodes: uint64] {.noSideEffect.} =
+): tuple[value: Value, pv: seq[Move], nodes: uint64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
         let
             numThreads = max(1, numThreads)
@@ -110,11 +110,9 @@ iterator iterativeDeepeningSearch*(
 
             let pv = if numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
 
-            yield (value: value, pv: pv, nodes: nodes)
-
-            if numMovesAtRoot == 1:
-                break
-            
-            # todo remove this
-            if abs(value) >= valueCheckmate:
-                break
+            yield (
+                value: value,
+                pv: pv,
+                nodes: nodes,
+                canStop: numMovesAtRoot == 1 or abs(value) >= valueCheckmate
+            )

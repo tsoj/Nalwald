@@ -61,7 +61,7 @@ iterator iterativeTimeManagedSearch*(
         lastNumNodes = uint64.high
 
     var iteration = -1
-    for (value, pv, nodes) in iterativeDeepeningSearch(
+    for (value, pv, nodes, canStop) in iterativeDeepeningSearch(
         position,
         hashTable,
         positionHistory,
@@ -92,6 +92,9 @@ iterator iterativeTimeManagedSearch*(
             initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float * averageBranchingFactor).int64)
         if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
             break;
+
+        if timeLeft[position.us] < initDuration(milliseconds = int64.high) and canStop:
+            break
 
     stop[].store(true)
     discard ^stopwatchResult
