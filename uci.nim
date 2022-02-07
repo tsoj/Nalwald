@@ -1,5 +1,6 @@
 import
     types,
+    move,
     position,
     positionUtils,
     hashTable,
@@ -29,12 +30,14 @@ type UciState = object
     hashTable: HashTable
     stopFlag: Atomic[bool]
     numThreads: int
+    multiPv: int
 
 proc uci() =
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
+    echo "option name MultiPV type spin default 1 min 1 max 1000"
     echo "option name UCI_Chess960 type check default false"
     echo "uciok"
 
@@ -43,21 +46,27 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     if params.len == 4 and
     params[0] == "name" and
     params[2] == "value":
-        case params[1]:
-        of "Hash":
+        case params[1].toLowerAscii:
+        of "Hash".toLowerAscii:
             let newHashSizeMB = params[3].parseInt
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
-        of "UCI_Chess960":
+        of "UCI_Chess960".toLowerAscii:
             discard
-        of "Threads":
+        of "Threads".toLowerAscii:
             let newNumThreads = params[3].parseInt
             if newNumThreads < 1 or newNumThreads > maxNumThreads:
                 echo "Invalid value"
             else:
                 uciState.numThreads = newNumThreads
+        of "MultiPV".toLowerAscii:
+            let newMultiPv = params[3].parseInt
+            if newMultiPv < 1 or newMultiPv > 1000:
+                echo "Invalid value"
+            else:
+                uciState.multiPv = newMultiPv
         else:
             echo "Unknown option: ", params[1]
     else:
@@ -110,34 +119,40 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
 
 proc go(uciState: var UciState, params: seq[string], searchThreadResult: var FlowVar[bool]) =
 
-    var targetDepth = Ply.high
-    var movesToGo: int16 = int16.high
-    var increment = [white: DurationZero, black: DurationZero]
-    var timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
-    var moveTime = initDuration(milliseconds = int64.high)
+    var
+        targetDepth = Ply.high
+        movesToGo: int16 = int16.high
+        increment = [white: DurationZero, black: DurationZero]
+        timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
+        moveTime = initDuration(milliseconds = int64.high)
+        searchMoves: seq[Move]
 
-    for i in countup(0, params.len - 2, 2):
-        case params[i]:
-        of "depth":
-            targetDepth = params[i+1].parseInt.Ply
-        of "movestogo":
-            movesToGo = params[i+1].parseInt.int16
-        of "winc":
-            increment[white] = initDuration(milliseconds = params[i+1].parseInt)
-        of "binc":
-            increment[black] = initDuration(milliseconds = params[i+1].parseInt)
-        of "wtime":
-            timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
-        of "btime":
-            timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
-        of "movetime":
-            moveTime = initDuration(milliseconds = params[i+1].parseInt)
-        else:
-            echo "Unknown parameter: ", params[i]
-            return
+    for i in 0..<params.len:
+        if i+1 < params.len:  
+            case params[i]:
+            of "depth":
+                targetDepth = params[i+1].parseInt.Ply
+            of "movestogo":
+                movesToGo = params[i+1].parseInt.int16
+            of "winc":
+                increment[white] = initDuration(milliseconds = params[i+1].parseInt)
+            of "binc":
+                increment[black] = initDuration(milliseconds = params[i+1].parseInt)
+            of "wtime":
+                timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
+            of "btime":
+                timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
+            of "movetime":
+                moveTime = initDuration(milliseconds = params[i+1].parseInt)
+            else:
+                discard         
+        try:
+            let move = params[i].toMove(uciState.position)
+            searchMoves.add move
+        except: discard
      
     if searchThreadResult.isReady:
-        searchThreadResult = spawn uciSearch(
+        searchThreadResult = spawn uciSearchMultiPv(
             position = uciState.position,
             hashTable = addr uciState.hashTable,
             positionHistory = uciState.history,
@@ -147,6 +162,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             increment = increment,
             timeLeft = timeLeft,
             moveTime = moveTime,
+            multiPv = uciState.multiPv,
+            searchMoves = searchMoves,
             numThreads = uciState.numThreads
         )
 
@@ -192,7 +209,12 @@ proc uciLoop*() =
     echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
     echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
     echo "------------ by Jost Triller ------------"
-    var uciState = UciState(position: startposFen.toPosition, hashtable: newHashTable(), numThreads: defaultNumThreads)
+    var uciState = UciState(
+        position: startposFen.toPosition,
+        hashtable: newHashTable(),
+        numThreads: defaultNumThreads,
+        multiPv: 1
+    )
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:
