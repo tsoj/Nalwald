@@ -14,7 +14,8 @@ import
     strutils,
     strformat,
     atomics,
-    threadpool
+    threadpool,
+    os
 
 const
     startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -29,6 +30,7 @@ type UciState = object
     history: seq[Position]
     hashTable: HashTable
     stopFlag: Atomic[bool]
+    searchRunningFlag: Atomic[bool]
     numThreads: int
     multiPv: int
 
@@ -72,8 +74,10 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     else:
         echo "Unknown parameters"
     
-func stop(uciState: var UciState) =
-    uciState.stopFlag.store(true)
+proc stop(uciState: var UciState) =
+    while uciState.searchRunningFlag.load:
+        uciState.stopFlag.store(true)
+        sleep(1)
 
 proc moves(uciState: var UciState, params: seq[string]) =
     if params.len < 1:
@@ -119,53 +123,57 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
 
 proc go(uciState: var UciState, params: seq[string], searchThreadResult: var FlowVar[bool]) =
 
-    var
-        targetDepth = Ply.high
-        movesToGo: int16 = int16.high
-        increment = [white: DurationZero, black: DurationZero]
-        timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)]
-        moveTime = initDuration(milliseconds = int64.high)
-        searchMoves: seq[Move]
+    var searchInfo = SearchInfo(
+        position: uciState.position,
+        hashTable: addr uciState.hashTable,
+        positionHistory: uciState.history,
+        targetDepth: Ply.high,
+        stop: addr uciState.stopFlag,
+        movesToGo: int16.high,
+        increment: [white: DurationZero, black: DurationZero],
+        timeLeft: [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
+        moveTime: initDuration(milliseconds = int64.high),
+        multiPv: uciState.multiPv,
+        searchMoves: newSeq[Move](0),
+        numThreads: uciState.numThreads
+    )
 
     for i in 0..<params.len:
         if i+1 < params.len:  
             case params[i]:
             of "depth":
-                targetDepth = params[i+1].parseInt.Ply
+                searchInfo.targetDepth = params[i+1].parseInt.Ply
             of "movestogo":
-                movesToGo = params[i+1].parseInt.int16
+                searchInfo.movesToGo = params[i+1].parseInt.int16
             of "winc":
-                increment[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[white] = initDuration(milliseconds = params[i+1].parseInt)
             of "binc":
-                increment[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[black] = initDuration(milliseconds = params[i+1].parseInt)
             of "wtime":
-                timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
             of "btime":
-                timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
             of "movetime":
-                moveTime = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
             else:
                 discard         
         try:
             let move = params[i].toMove(uciState.position)
-            searchMoves.add move
+            searchInfo.searchMoves.add move
         except: discard
      
-    if searchThreadResult.isReady:
-        searchThreadResult = spawn uciSearchMultiPv(
-            position = uciState.position,
-            hashTable = addr uciState.hashTable,
-            positionHistory = uciState.history,
-            targetDepth = targetDepth,
-            stop = addr uciState.stopFlag,
-            movesToGo = movesToGo,
-            increment = increment,
-            timeLeft = timeLeft,
-            moveTime = moveTime,
-            multiPv = uciState.multiPv,
-            searchMoves = searchMoves,
-            numThreads = uciState.numThreads
-        )
+    uciState.stop()
+    discard ^searchThreadResult
+
+    proc runSearch(searchInfo: SearchInfo, searchRunning: ptr Atomic[bool]): bool =
+        searchRunning[].store(true)
+        uciSearch(searchInfo)
+        searchRunning[].store(false)
+
+    searchThreadResult = spawn runSearch(searchInfo, addr uciState.searchRunningFlag)
+    
+    while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
+        sleep(1)
 
 func uciNewGame(uciState: var UciState) =
     uciState.hashTable.clear()
@@ -215,6 +223,7 @@ proc uciLoop*() =
         numThreads: defaultNumThreads,
         multiPv: 1
     )
+    uciState.searchRunningFlag.store(false)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     var searchThreadResult = FlowVar[bool]()
     while true:

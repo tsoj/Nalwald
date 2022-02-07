@@ -21,6 +21,7 @@ func launchSearch(
     position: Position,
     hashTable: ptr HashTable,
     stop: ptr Atomic[bool],
+    threadStop: ptr Atomic[bool],
     historyTable: ptr HistoryTable,
     gameHistory: GameHistory,
     depth: Ply,
@@ -28,6 +29,7 @@ func launchSearch(
 ): SearchThreadResult =
     var state = SearchState(
         stop: stop,
+        threadStop: threadStop,
         hashTable: hashTable,
         historyTable: historyTable,
         gameHistory: gameHistory,
@@ -51,8 +53,9 @@ iterator iterativeDeepeningSearch*(
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move], nodes: uint64] {.noSideEffect.} =
     {.cast(noSideEffect).}:
-        let numThreads = max(1, numThreads)
-        let gameHistory = newGameHistory(positionHistory)
+        let
+            numThreads = max(1, numThreads)
+            gameHistory = newGameHistory(positionHistory)
         var historyTable: seq[HistoryTable]
         for _ in 0..<numThreads:
             historyTable.add newHistoryTable()
@@ -65,11 +68,15 @@ iterator iterativeDeepeningSearch*(
                 nodes = 0'u64
                 value: Value
                 numMovesAtRoot: int
+                threadStop: Atomic[bool]
+            
+            threadStop.store(false)
             
             template launchSearch(i: auto): auto = launchSearch(
                 position,
                 addr hashTable,
                 stop,
+                addr threadStop,
                 addr historyTable[i],
                 gameHistory,
                 depth,
@@ -93,26 +100,21 @@ iterator iterativeDeepeningSearch*(
                             threadSeq.del i
                             break
 
-                let oldStop = stop[].load
-                stop[].store(true)                
+                threadStop.store(true)                
                 for flowVar in threadSeq.mitems:
                     let r = ^flowVar
                     nodes += r.nodes
-                stop[].store(oldStop)
-
 
             if stop[].load:
                 break
 
-            let hashResult = hashTable.get(position.zobristKey)
-
-            doAssert not hashResult.isEmpty
             let pv = if numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
 
             yield (value: value, pv: pv, nodes: nodes)
 
             if numMovesAtRoot == 1:
                 break
-
+            
+            # todo remove this
             if abs(value) >= valueCheckmate:
                 break

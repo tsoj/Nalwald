@@ -44,6 +44,7 @@ const
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
+    threadStop*: ptr Atomic[bool]
     hashTable*: ptr HashTable
     killerTable*: KillerTable
     historyTable*: ptr HistoryTable
@@ -53,7 +54,7 @@ type SearchState* = object
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
-    if bestMove != noMove and not state.stop[].load:
+    if bestMove != noMove and not (state.stop[].load or state.threadStop[].load):
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if nodeType != allNode:
             state.historyTable[].update(bestMove, previous, position.us, depth)
@@ -239,7 +240,7 @@ func search*(
         if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode):
             newBeta = alpha + 1
 
-        if state.stop[].load:
+        if state.stop[].load or state.threadStop[].load:
             return 0.Value
         
         var value = -newPosition.search(

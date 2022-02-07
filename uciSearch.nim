@@ -43,31 +43,34 @@ func infoString(
     result &= scoreString
     result &= " pv " & pv
 
-proc uciSearch*(
-    position: Position,
-    hashTable: ptr HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
-    stop: ptr Atomic[bool],
-    movesToGo: int16,
-    increment, timeLeft: array[white..black, Duration],
-    moveTime: Duration,
-    numThreads: int
-): bool =
+type SearchInfo* = object
+    position*: Position
+    hashTable*: ptr HashTable
+    positionHistory*: seq[Position]
+    targetDepth*: Ply
+    stop*: ptr Atomic[bool]
+    movesToGo*: int16
+    increment*, timeLeft*: array[white..black, Duration]
+    moveTime*: Duration
+    multiPv*: int
+    searchMoves*: seq[Move]
+    numThreads*: int
+
+proc uciSearchSinglePv(searchInfo: SearchInfo) =
     var
         bestMove = noMove
         iteration = 0
 
-    for (value, pv, nodes, passedTime) in position.iterativeTimeManagedSearch(
-        hashTable[],
-        positionHistory,
-        targetDepth,
-        stop,
-        movesToGo = movesToGo,
-        increment = increment,
-        timeLeft = timeLeft,
-        moveTime = moveTime,
-        numThreads = numThreads
+    for (value, pv, nodes, passedTime) in searchInfo.position.iterativeTimeManagedSearch(
+        searchInfo.hashTable[],
+        searchInfo.positionHistory,
+        searchInfo.targetDepth,
+        searchInfo.stop,
+        movesToGo = searchInfo.movesToGo,
+        increment = searchInfo.increment,
+        timeLeft = searchInfo.timeLeft,
+        moveTime = searchInfo.moveTime,
+        numThreads = searchInfo.numThreads
     ):
         doAssert pv.len >= 1
         bestMove = pv[0]
@@ -77,13 +80,13 @@ proc uciSearch*(
             value,
             nodes,
             passedTime,
-            hashTable[].hashFull,
-            pv.notation(position)
+            searchInfo.hashTable[].hashFull,
+            pv.notation(searchInfo.position)
         )
 
         iteration += 1
 
-    echo "bestmove ", bestMove.notation(position)
+    echo "bestmove ", bestMove.notation(searchInfo.position)
 
 type SearchResult = object
     move: Move
@@ -92,66 +95,44 @@ type SearchResult = object
     nodes: uint64
     passedTime: Duration
 
-proc uciSearchMultiPv*(
-    position: Position,
-    hashTable: ptr HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
-    stop: ptr Atomic[bool],
-    movesToGo: int16,
-    increment, timeLeft: array[white..black, Duration],
-    moveTime: Duration,
-    multiPv: int,
-    searchMoves: seq[Move],
-    numThreads: int
-): bool =
+proc uciSearch*(searchInfo: SearchInfo) =
 
-    if multiPv <= 0:
+    if searchInfo.multiPv <= 0:
         return
 
-    if multiPv == 1 and searchMoves.len == 0:
-        return uciSearch(
-            position,
-            hashTable,
-            positionHistory,
-            targetDepth,
-            stop,
-            movesToGo,
-            increment, timeLeft,
-            moveTime,
-            numThreads
-        )
+    if searchInfo.multiPv == 1 and searchInfo.searchMoves.len == 0:
+        searchInfo.uciSearchSinglePv()
+        return
 
-    var searchMoves = searchMoves
+    var searchMoves = searchInfo.searchMoves
     if searchMoves.len == 0:
-        for move in position.legalMoves():
+        for move in searchInfo.position.legalMoves():
             searchMoves.add move
 
     var iterators: seq[iterator (): SearchResult{.closure, gcsafe.}]
 
-    for move in position.legalMoves():
-        if move in searchMoves:
-            var 
-                newPosition = position
-                newPositionHistory = positionHistory
-            newPositionHistory.add position
-            newPosition.doMove(move)
-            proc genIter(newPosition: Position, move: Move): iterator (): SearchResult{.closure, gcsafe.} =
-                return iterator(): SearchResult{.closure, gcsafe.} =
-                    for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
-                        newPosition,
-                        hashTable[],
-                        newPositionHistory,
-                        targetDepth - 1.Ply,
-                        stop,
-                        movesToGo = movesToGo,
-                        increment = increment,
-                        timeLeft = timeLeft,
-                        moveTime = moveTime,
-                        numThreads = numThreads
-                    ):
-                        yield SearchResult(move: move, value: value, pv: pv, nodes: nodes, passedTime: passedTime)
-            iterators.add genIter(newPosition, move)
+    for move in searchMoves:
+        var 
+            newPosition = searchInfo.position
+            newPositionHistory = searchInfo.positionHistory
+        newPositionHistory.add searchInfo.position
+        newPosition.doMove(move)
+        proc genIter(newPosition: Position, move: Move): iterator (): SearchResult{.closure, gcsafe.} =
+            return iterator(): SearchResult{.closure, gcsafe.} =
+                for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
+                    newPosition,
+                    searchInfo.hashTable[],
+                    newPositionHistory,
+                    searchInfo.targetDepth - 1.Ply,
+                    searchInfo.stop,
+                    movesToGo = searchInfo.movesToGo,
+                    increment = searchInfo.increment,
+                    timeLeft = searchInfo.timeLeft,
+                    moveTime = searchInfo.moveTime,
+                    numThreads = searchInfo.numThreads
+                ):
+                    yield SearchResult(move: move, value: value, pv: pv, nodes: nodes, passedTime: passedTime)
+        iterators.add genIter(newPosition, move)
         
     var
         iteration = 1
@@ -167,20 +148,20 @@ proc uciSearchMultiPv*(
         
         for iter in iterators:
             if iter.finished:
-                echo "bestmove ", bestMove.notation(position)
+                echo "bestmove ", bestMove.notation(searchInfo.position)
                 return
 
         searchResults.sort do (x, y: auto) -> int: cmp(y.value, x.value)
 
         for i, searchResult in searchResults.pairs:
-            if i+1 > multiPv:
+            if i+1 > searchInfo.multiPv:
                 break
             echo iteration.infoString(
                 searchResult.value,
                 searchResult.nodes,
                 searchResult.passedTime,
-                hashTable[].hashFull,
-                searchResult.pv.notation(position),
+                searchInfo.hashTable[].hashFull,
+                searchResult.pv.notation(searchInfo.position),
                 i+1,
             )
 
