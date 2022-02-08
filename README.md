@@ -41,7 +41,7 @@ nim modern Nalwald.nim
   - sliding pieces attacking area around king
   - rook on open file
   - both bishops
-  - minor piece forking major piece
+  - minor pieces forking major pieces
   - knight attacking bishop, rook, or queen
   - tapered parameters
   - optimized using gradient descent
@@ -63,6 +63,7 @@ nim modern Nalwald.nim
   - fail-high delta pruning
 - multithreading support
 - supports Chess960/FRC
+- multi PV
 - UCI compatible
   - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`. `piecevalues`
 
