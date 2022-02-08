@@ -110,7 +110,7 @@ enough.
 into this mask. The pawns in that mask can be used to calculate an exact index for
 this structure of pawns in a 3x3 space. This index can be used to access a table,
 which contains values to evaluate this pawn structure. This table can then be
-optimized using a method like gradient descent.n
+optimized using a method like gradient descent.
 
 #### License
 
