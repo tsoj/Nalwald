@@ -6,33 +6,33 @@ type Phase* = enum
 type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
-type Float* = float
-
-type SinglePhaseEvalParametersTemplate*[ValueType: Value or Float] = object
+type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]
+    pawnMaskBonus*: array[3*3*3 * 3*3*3 * 3*3*3, ValueType]
     passedPawnTable*: array[8, ValueType]
-    bonusIsolatedPawn*: ValueType
-    bonusPawnHasTwoNeighbors*: ValueType
+    bonusPawnAttacksPiece*: ValueType
     bonusKnightAttackingPiece*: ValueType
+    bonusPieceForkedMajorPieces*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType
     bonusMobility*: array[knight..queen, array[32, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
     bonusAttackingKing*: array[bishop..queen, ValueType]
     bonusKingSafety*: array[32, ValueType]
+    bonusAttackersNearKing*: array[5*5, ValueType]
 
 type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
-type EvalParametersFloat* = EvalParametersTemplate[Float]
+type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]
 
-func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var Float, b: Float)) =
+func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32)) =
 
     when Out is AtomType:
         static: doAssert In is AtomType, "Transforming types must have the same structure."
-        when Out is Float and In is Float:
+        when Out is float32 and In is float32:
             floatOp(output, input)
         else:
             output = input.Out
@@ -60,10 +60,10 @@ func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var Float,
         static: doAssert false, "Type is not not implemented for transforming"
 
 func transform*[Out, In](output: var Out, input: In) =
-    transform(output, input, proc(a: var Float, b: Float) = a = b)
+    transform(output, input, proc(a: var float32, b: float32) = a = b)
 
-func `*=`*(a: var SinglePhaseEvalParametersTemplate[Float], b: Float) =
-    transform(a, a, proc(x: var Float, y: Float) = x *= b)
+func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
+    transform(a, a, proc(x: var float32, y: float32) = x *= b)
 
 func convert*(a: auto, T: typedesc): T =
     transform(result, a)
@@ -75,11 +75,14 @@ func convert*(a: EvalParametersFloat): EvalParameters =
     a.convert(EvalParameters)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(a: var float, b: float) = a += b)
+    transform(a, b, proc(x: var float32, y: float32) = x += y)
 
 func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(a: var float, b: float) = a *= b)
+    transform(a, b, proc(x: var float32, y: float32) = x *= y)
 
-func `*=`*(a: var EvalParametersFloat, b: float) =
+func `*=`*(a: var EvalParametersFloat, b: float32) =
     for phase in Phase:
         a[phase] *= b
+
+func setAll*(a: var EvalParametersFloat, b: float32) =
+    transform(a, a, proc(x: var float32, y: float32) = x = b)

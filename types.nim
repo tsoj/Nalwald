@@ -27,8 +27,7 @@ type
     NodeType* = enum
         pvNode,
         allNode,
-        cutNode,
-        noNode
+        cutNode
     GamePhase* = 0..32
 
 template isLeftEdge*(square: Square): bool =
@@ -39,6 +38,8 @@ template isUpperEdge*(square: Square): bool =
     square >= a8
 template isLowerEdge*(square: Square): bool =
     square <= h1
+template isEdge*(square: Square): bool =
+    square.isLeftEdge or square.isRightEdge or square.isUpperEdge or square.isLowerEdge
 func color*(square: Square): Color =
     if (square.int8 div 8) mod 2 == (square.int8 mod 8) mod 2:
         return black
@@ -79,7 +80,6 @@ func `-=`*(a: var Ply, b: Ply) =
     a = a - b
 func `+=`*(a: var Ply, b: Ply) =
     a = a + b
-
 
 const valueInfinity* = min(-(int16.low.Value), int16.high.Value)
 static: doAssert -valueInfinity <= valueInfinity

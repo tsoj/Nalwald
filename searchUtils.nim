@@ -4,9 +4,11 @@ import
     position,
     math
 
-type HistoryTable* = object
-    table: array[white..black, array[pawn..king, array[a1..h8, float]]]
-    counterTable: seq[array[pawn..king, array[a1..h8, array[white..black, array[pawn..king, array[a1..h8, float]]]]]]
+type
+    HistoryArray = array[white..black, array[pawn..king, array[a1..h8, float]]]
+    HistoryTable* = object
+        table: HistoryArray
+        counterTable: seq[array[pawn..king, array[a1..h8, HistoryArray]]]
 
 func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
@@ -15,7 +17,7 @@ func newHistoryTable*(): HistoryTable =
 const maxHistoryTableValue = 20000.0
 static: doAssert maxHistoryTableValue < valueInfinity.float
 
-func halve(table: var array[white..black, array[pawn..king, array[a1..h8, float]]]) =
+func halve(table: var HistoryArray) =
     for color in white..black:
         for piece in pawn..king:
             for square in a1..h8:
@@ -26,7 +28,7 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         return
 
     func add(
-        table: var array[white..black, array[pawn..king, array[a1..h8, float]]],
+        table: var HistoryArray,
         color: Color, piece: Piece, target: Square, addition: float
     ) =
         table[color][piece][target] = clamp(

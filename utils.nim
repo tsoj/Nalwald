@@ -59,16 +59,11 @@ func toColoredPiece*(s: char): ColoredPiece =
     let color = if s.isLowerAscii: black else: white
     ColoredPiece(color: color, piece: piece)
 
-const mirrorTable = block:
-    var table: array[Square, Square]
-    for s in a1..h8:
-        table[s] = ((7 - s.int8 div 8) * 8 + s.int8 mod 8).Square
-    table
 func mirror*(square: Square): Square =
-    mirrorTable[square]
+    (square.int8 xor 56).Square
 
 func mirrorVertically*(square: Square): Square =
-    ((square.int8 div 8)*8 + (7 - square.int8 mod 8)).Square
+    (square.int8 xor 7).Square
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 
@@ -87,8 +82,11 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     result = tmp.T
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
-    let start = now()
+    const sleepTimeMs = 5
+    let
+        start = now()
+        duration = duration - initDuration(milliseconds = sleepTimeMs)
     while not flag[].load:
-        sleep(5)
         if now() - start >= duration:
             flag[].store(true)
+        sleep(sleepTimeMs)

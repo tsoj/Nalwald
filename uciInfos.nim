@@ -40,15 +40,16 @@ proc help*(params: openArray[string]) =
                 "Some examples:"
             )
             echo "'setoption name Hash value 512'"
+            echo "'setoption name Threads value 8'"
             echo "'setoption name UCI_Chess960 value true'"
         of "isready":
             echo "Sends a ping to the engine that will be shortly answered with 'readyok' if the engine is still alive."
         of "position":
             echo "position [fen <fenstring> | startpos] moves <move_1> ... <move_i>"
             echo(
-                "Sets up the position described in fenstring on the internal board and ",
+                "Sets up the position described in by <fenstring> on the internal board and ",
                 "plays the moves <move_1> to <move_i> on the internal chess board. ",
-                "To start from the start position the string 'startpos' must be sent instead of 'fen <fenstring>. ",
+                "To start from the start position the string 'startpos' must be sent instead of 'fen <fenstring>'. ",
                 "If this position is from a different game than ",
                 "the last position sent to the engine, the command 'ucinewgame' should be sent inbetween."
             )
@@ -128,7 +129,7 @@ proc help*(params: openArray[string]) =
             echo "Example:"
             echo "'test 100000 nozobrist nointernal'"
             echo(
-                "Runs perft only up to 100000 nodes per positions, doens't do zobrist key test and only ",
+                "Runs perft only up to 100000 nodes per positions, doesn't do zobrist key test and only ",
                 "uses positions from 'perft_test.txt'."
             )
         of "eval":
@@ -136,7 +137,8 @@ proc help*(params: openArray[string]) =
         of "piecevalues":
             echo "Prints the values for each piece type."
         of "about":
-            echo "Just some info about Nalwald. Also, feel free to take a look at my gitlab repos: gitlab.com/tsoj :)"
+            echo "about [extra]"
+            echo "Prints some info about the program. When 'extra' is added, additional information will be provided."
         of "help":
             echo "help [<command>]"
             echo "Prints all possible commands, or if <command> is given, then help about <command> is printed."
@@ -146,54 +148,13 @@ proc help*(params: openArray[string]) =
         echo "-----------------------------------------"
 
 
-proc about*() =
-    echo(
-        "-----------------------------------------\n",
-        "Nalwald ", version(), "\n",
-        "Compiled at ", compileDate(), "\n",
-        "Copyright (c) 2016-", compileYear() , " by Jost Triller\n",
-        "\n",
-        "Nalwald is a Super GM level chess engine\n",
-        "for classical and fischer random chess.\n",
-        "It supports the UCI, so it can be used in\n",
-        "most chess GUIs (e.g. Cutechess, Arena).\n",
-        "Nalwald is written in the programming\n",
-        "language Nim, which is a compiled\n",
-        "language with an intuitive and clean\n",
-        "syntax.\n",
-        "I started programming in 2016. After the\n",
-        "well-known \"Hello World\" program, my\n",
-        "first big project was jht-chess, a chess\n",
-        "playing program with a console GUI. I\n",
-        "used C++ but it looked more like messy C.\n",
-        "In hindsight I would say that it is hard\n",
-        "to write worse spaghetti code than I did\n",
-        "then, but it played well enough to win\n",
-        "against amateur chess players. Since then\n",
-        "I wrote multiple chess engines, most in\n",
-        "C++ (jht-chess, zebra-chess, jht-chess 2,\n",
-        "squared-chess, Googleplex Starthinker)\n",
-        "but also one in Rust (Hactar) and now\n",
-        "also in Nim. While my first engine could\n",
-        "barely beat me (and I am not a very\n",
-        "good chess player, and much less in\n",
-        "2016), today Nalwald could probably beat\n",
-        "Magnus Carlsen most of the time.\n",
-        "On this way from a at best mediocre chess\n",
-        "program to a chess engine that can win\n",
-        "against the best human players, the\n",
-        "chessprogamming.org wiki was of great\n",
-        "help many times. From there I got most\n",
-        "ideas for search improvements (move\n",
-        "ordering, transposition table, LMR, etc.).\n",
-        "At the beginning the Wikipedia article\n",
-        "\"Schachprogramm\" was really important\n",
-        "for my understanding of chess programming.\n",
-        "During the development of Nalwald I also\n",
-        "introduced some techniques that I believe\n",
-        "are novelties (king contextual PSTs,\n",
-        "fail-high delta pruning, futility\n",
-        "reductions, hash result futility pruning).\n",
-        "Anyway, have fun using Nalwald!\n",
-        "-----------------------------------------"
-    )
+proc about*(extra = true) =
+    const s = readFile("README.md")
+    echo "-----------------------------------------"
+    echo "Nalwald ", version()
+    echo "Compiled at ", compileDate()
+    echo "Copyright © 2016-", compileYear() , " by Jost Triller"
+    echo "-----------------------------------------"
+    if extra:
+        echo s
+        echo "-----------------------------------------"

@@ -34,11 +34,13 @@ func error*(evalParameters: EvalParameters, entry: Entry, k: float): float =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability(k)
     error(entry.outcome, estimate)*entry.weight
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float): float =
-    result = 0.0
-    
-    var summedWeight: float = 0.0
+func errorTuple*(evalParameters: EvalParameters, data: openArray[Entry], k: float): tuple[error, summedWeight: float] =
+    result.error = 0.0    
+    result.summedWeight = 0.0
     for entry in data:
-        result += evalParameters.error(entry, k)
-        summedWeight += entry.weight
-    result /= summedWeight
+        result.error += evalParameters.error(entry, k)
+        result.summedWeight += entry.weight
+
+func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float): float =
+    let (error, summedWeight) = evalParameters.errorTuple(data, k)
+    error / summedWeight

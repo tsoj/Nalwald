@@ -150,35 +150,33 @@ const startingEvalParameters* = block:
     let pst = pst # workaround for https://github.com/nim-lang/Nim/issues/19075
     var startingEvalParameters: EvalParametersFloat
     for phase in Phase:
-        startingEvalParameters[phase] = SinglePhaseEvalParametersTemplate[float](
+        startingEvalParameters[phase] = SinglePhaseEvalParametersTemplate[float32](
             pieceValues: [
-                pawn: 100.0,
+                pawn: 100.0.float32,
                 knight: 300.0,
                 bishop: 300.0,
                 rook: 500.0,
                 queen: 900.0,
                 king: 0.0
             ],
-            bonusIsolatedPawn: -10.0,
-            bonusPawnHasTwoNeighbors: 5.0,
-            bonusKnightAttackingPiece: 5.0,
-            bonusBothBishops: 10.0,
-            bonusRookOnOpenFile: 5.0,
-            bonusTargetingKingArea: [bishop: 5.0, rook: 5.0, queen: 8.0],
-            bonusAttackingKing: [bishop: 5.0, rook: 5.0, queen: 8.0]
+            bonusKnightAttackingPiece: 5.0.float32,
+            bonusBothBishops: 10.0.float32,
+            bonusRookOnOpenFile: 5.0.float32,
+            bonusTargetingKingArea: [bishop: 5.0.float32, rook: 5.0, queen: 8.0],
+            bonusAttackingKing: [bishop: 5.0.float32, rook: 5.0, queen: 8.0]
         )
         for i in 0..<32:
-            startingEvalParameters[phase].bonusMobility[knight][i] = i.float * 2.0
-            startingEvalParameters[phase].bonusMobility[bishop][i] = i.float * 3.0
-            startingEvalParameters[phase].bonusMobility[rook][i] = i.float * 4.0
-            startingEvalParameters[phase].bonusMobility[queen][i] = i.float * 2.0
-            startingEvalParameters[phase].bonusKingSafety[i] = i.float * -2.5
+            startingEvalParameters[phase].bonusMobility[knight][i] = i.float32 * 2.0.float32
+            startingEvalParameters[phase].bonusMobility[bishop][i] = i.float32 * 3.0.float32
+            startingEvalParameters[phase].bonusMobility[rook][i] = i.float32 * 4.0.float32
+            startingEvalParameters[phase].bonusMobility[queen][i] = i.float32 * 2.0.float32
+            startingEvalParameters[phase].bonusKingSafety[i] = i.float32 * -2.5.float32
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for piece in pawn..king:
                     for square in a1..h8:
                         startingEvalParameters[phase].pst[whoseKing][kingSquare][piece][square] =
-                            pst[phase][piece][square].float
+                            pst[phase][piece][square].float32
         for i in 0..7:
-            startingEvalParameters[phase].passedPawnTable[i] = passedPawnTable[phase][i].float
+            startingEvalParameters[phase].passedPawnTable[i] = passedPawnTable[phase][i].float32
     startingEvalParameters

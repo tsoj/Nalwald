@@ -4,9 +4,11 @@ import
     ../positionUtils,
     ../evaluation,
     ../bitboard,
-    ../defaultParameters,
     ../evalParameters,
     dataUtils
+
+when isMainModule:
+    import ../defaultParameters
 
 func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry]): Value =
     var sum: int64 = 0

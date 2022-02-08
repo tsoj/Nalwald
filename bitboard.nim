@@ -2,7 +2,8 @@ import
     types,
     utils,
     options,
-    bitops
+    bitops,
+    endians
 
 type Bitboard* = uint64
 
@@ -21,18 +22,15 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
     while tmp != 0:
         yield tmp.removeTrailingOneBit
 
+func mirror*(bitboard: Bitboard): Bitboard =
+    swapEndian64(addr result, unsafeAddr bitboard)
+
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
         if (square.toBitboard and bitboard) != 0:
             return some("●")
         none(string)
     )
-
-func mirror*(bitboard: Bitboard): Bitboard =
-    result = 0
-    for square in a1..h8:
-        if (square.toBitboard and bitboard) != 0:
-            result = result or square.mirror.toBitboard
 
 const ranks*: array[a1..h8, Bitboard] = block:
     var ranks: array[a1..h8, Bitboard]
@@ -218,6 +216,19 @@ const adjacentFiles*: array[a1..h8, Bitboard] = block:
     for square in a1..h8:
         adjacentFiles[square] = rightFiles[square] or leftFiles[square]
     adjacentFiles
+
+const mask3x3*: array[a1..h8, Bitboard] = block:
+    var mask3x3: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        mask3x3[square] = kingAttackTable[square] or square.toBitboard
+    mask3x3
+
+const mask5x5*: array[a1..h8, Bitboard] = block:
+    var mask5x5: array[a1..h8, Bitboard]
+    for square in a1..h8:
+        for a in mask3x3[square]:
+            mask5x5[square] = mask5x5[square] or mask3x3[a]
+    mask5x5
 
 const homeRank*: array[white..black, Bitboard] = [white: ranks[a1], black: ranks[a8]]
 

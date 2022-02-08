@@ -10,7 +10,8 @@ import
     times,
     strformat,
     strutils,
-    math
+    math,
+    algorithm
 
 func infoString(
     iteration: int,
@@ -18,7 +19,8 @@ func infoString(
     nodes: uint64,
     time: Duration,
     hashFull: int,
-    pv: string
+    pv: string,
+    multiPvIndex = -1
 ): string =
     var scoreString = " score cp " & fmt"{value.toCp:>4}"
     if abs(value) >= valueCheckmate:
@@ -31,6 +33,8 @@ func infoString(
     let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
 
     result = "info"
+    if multiPvIndex != -1:
+        result &= " multipv " & fmt"{multiPvIndex:>2}"
     result &= " depth " & fmt"{iteration+1:>2}"
     result &= " time " & fmt"{time.inMilliseconds:>6}"
     result &= " nodes " & fmt"{nodes:>9}"
@@ -39,27 +43,34 @@ func infoString(
     result &= scoreString
     result &= " pv " & pv
 
-proc uciSearch*(
-    position: Position,
-    hashTable: ptr HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
-    stop: ptr Atomic[bool],
-    movesToGo: int16,
-    increment, timeLeft: array[white..black, Duration],
-    moveTime: Duration
-): bool =
-    var bestMove = noMove    
-    var iteration = 0
-    for (value, pv, nodes, passedTime) in position.iterativeTimeManagedSearch(
-        hashTable[],
-        positionHistory,
-        targetDepth,
-        stop,
-        movesToGo = movesToGo,
-        increment = increment,
-        timeLeft = timeLeft,
-        moveTime = moveTime
+type SearchInfo* = object
+    position*: Position
+    hashTable*: ptr HashTable
+    positionHistory*: seq[Position]
+    targetDepth*: Ply
+    stop*: ptr Atomic[bool]
+    movesToGo*: int16
+    increment*, timeLeft*: array[white..black, Duration]
+    moveTime*: Duration
+    multiPv*: int
+    searchMoves*: seq[Move]
+    numThreads*: int
+
+proc uciSearchSinglePv(searchInfo: SearchInfo) =
+    var
+        bestMove = noMove
+        iteration = 0
+
+    for (value, pv, nodes, passedTime) in searchInfo.position.iterativeTimeManagedSearch(
+        searchInfo.hashTable[],
+        searchInfo.positionHistory,
+        searchInfo.targetDepth,
+        searchInfo.stop,
+        movesToGo = searchInfo.movesToGo,
+        increment = searchInfo.increment,
+        timeLeft = searchInfo.timeLeft,
+        moveTime = searchInfo.moveTime,
+        numThreads = searchInfo.numThreads
     ):
         doAssert pv.len >= 1
         bestMove = pv[0]
@@ -69,10 +80,95 @@ proc uciSearch*(
             value,
             nodes,
             passedTime,
-            hashTable[].hashFull,
-            pv.notation(position)
+            searchInfo.hashTable[].hashFull,
+            pv.notation(searchInfo.position)
         )
 
         iteration += 1
 
-    echo "bestmove ", bestMove.notation(position)
+    echo "bestmove ", bestMove.notation(searchInfo.position)
+
+type SearchResult = object
+    move: Move
+    value: Value
+    pv: seq[Move]
+    nodes: uint64
+    passedTime: Duration
+
+proc uciSearch*(searchInfo: SearchInfo) =
+
+    if searchInfo.multiPv <= 0:
+        return
+
+    if searchInfo.multiPv == 1 and searchInfo.searchMoves.len == 0:
+        searchInfo.uciSearchSinglePv()
+        return
+
+    var searchMoves = searchInfo.searchMoves
+    if searchMoves.len == 0:
+        for move in searchInfo.position.legalMoves():
+            searchMoves.add move
+
+    var iterators: seq[iterator (): SearchResult{.closure, gcsafe.}]
+
+    for move in searchMoves:
+        var 
+            newPosition = searchInfo.position
+            newPositionHistory = searchInfo.positionHistory
+        newPositionHistory.add searchInfo.position
+        newPosition.doMove(move)
+        proc genIter(newPosition: Position, move: Move): iterator (): SearchResult{.closure, gcsafe.} =
+            return iterator(): SearchResult{.closure, gcsafe.} =
+                for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
+                    newPosition,
+                    searchInfo.hashTable[],
+                    newPositionHistory,
+                    searchInfo.targetDepth - 1.Ply,
+                    searchInfo.stop,
+                    movesToGo = searchInfo.movesToGo,
+                    increment = searchInfo.increment,
+                    timeLeft = searchInfo.timeLeft,
+                    moveTime = searchInfo.moveTime,
+                    numThreads = searchInfo.numThreads
+                ):
+                    yield SearchResult(move: move, value: value, pv: pv, nodes: nodes, passedTime: passedTime)
+        iterators.add genIter(newPosition, move)
+        
+    var
+        iteration = 1
+        bestMove = noMove
+
+    while true:
+        
+        var searchResults: seq[SearchResult]
+        for iter in iterators:
+            searchResults.add iter()
+            searchResults[^1].value *= -1
+            searchResults[^1].pv.insert(searchResults[^1].move, 0)
+        
+        for iter in iterators:
+            if iter.finished:
+                echo "bestmove ", bestMove.notation(searchInfo.position)
+                return
+
+        searchResults.sort do (x, y: auto) -> int: cmp(y.value, x.value)
+
+        for i, searchResult in searchResults.pairs:
+            if i+1 > searchInfo.multiPv:
+                break
+            echo iteration.infoString(
+                searchResult.value,
+                searchResult.nodes,
+                searchResult.passedTime,
+                searchInfo.hashTable[].hashFull,
+                searchResult.pv.notation(searchInfo.position),
+                i+1,
+            )
+
+        doAssert searchResults.len > 0
+        let bestPv = searchResults[0].pv
+        doAssert bestPv.len >= 1
+        bestMove = bestPv[0]
+
+        iteration += 1
+

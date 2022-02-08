@@ -3,29 +3,50 @@ import
     move,
     position,
     tables,
-    random
+    random,
+    locks
 
 type
     HashTableEntry* {.packed.} = object
-        zobristKey: uint64
+        upperZobristKeyAndValue: uint64
         nodeType*: NodeType
-        value*: int16
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
         entry: HashTableEntry
         lookupCounter: uint32
-    HashTable* = object
+    HashTable* {.requiresInit.} = object
         nonPvNodes: seq[HashTableEntry]
         hashFullCounter: int
         pvNodes: Table[uint64, CountedHashTableEntry]
+        pvTableMutex: Lock
+        randState: Rand
 
-const noEntry = HashTableEntry(zobristKey: 0, nodeType: noNode, depth: 0.Ply, bestMove: noMove)
+const
+    noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
+    sixteenBitMask = 0b1111_1111_1111_1111'u64
+
+func value*(entry: HashTableEntry): Value =
+    (cast[int16](entry.upperZobristKeyAndValue and sixteenBitMask)).Value
+
+func sameUpperZobristKey(a: uint64, b: uint64): bool =
+    (a and not sixteenBitMask) == (b and not sixteenBitMask)
+
+func newHashTable*(): HashTable =
+    result = HashTable(
+        nonPvNodes: newSeq[HashTableEntry](0),
+        hashFullCounter: 0,
+        pvNodes: Table[uint64, CountedHashTableEntry](),
+        pvTableMutex: Lock(),
+        randState: initRand(0)
+    )
+    initLock result.pvTableMutex
 
 template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
 
 func clear*(ht: var HashTable) =
+    ht.randState = initRand(0)
     ht.pvNodes.clear
     ht.hashFullCounter = 0
     for entry in ht.nonPvNodes.mitems:
@@ -46,11 +67,11 @@ func age*(ht: var HashTable) =
     for key in deleteQueue:
         ht.pvNodes.del(key)
 
-func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
+func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool =
     if oldEntry.isEmpty:
         return true
     
-    if oldEntry.zobristKey == newEntry.zobristKey:
+    if sameUpperZobristKey(oldEntry.upperZobristKeyAndValue, newEntry.upperZobristKeyAndValue):
         return oldEntry.depth <= newEntry.depth
 
     let probability = if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
@@ -58,8 +79,7 @@ func shouldReplace(newEntry, oldEntry: HashTableEntry): bool =
     else:
         1.0
     
-    {.cast(noSideEffect).}:
-        rand(1.0) < probability
+    ht.randState.rand(1.0) < probability
 
 func add*(
     ht: var HashTable,
@@ -70,21 +90,20 @@ func add*(
     bestMove: Move
 ) =
     let entry = HashTableEntry(
-        zobristKey: zobristKey,
+        upperZobristKeyAndValue: (zobristKey and not sixteenBitMask) or (cast[uint64](value.int16) and sixteenBitMask),
         nodeType: nodeType,
-        value: value.int16,
         depth: depth,
         bestMove: bestMove
     )
     static: doAssert (valueInfinity <= int16.high.Value and -valueInfinity >= int16.low.Value)
 
     if nodeType == pvNode:
-        if (not ht.pvNodes.hasKey(zobristKey)) or
-        ht.pvNodes[zobristKey].entry.depth <= depth:
-            ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
+        withLock ht.pvTableMutex:
+            if (not ht.pvNodes.hasKey(zobristKey)) or ht.pvNodes[zobristKey].entry.depth <= depth:
+                ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
     else:
         let i = zobristKey mod ht.nonPvNodes.len.uint64
-        if entry.shouldReplace(ht.nonPvNodes[i]):
+        if ht.shouldReplace(entry, ht.nonPvNodes[i]):
             if ht.nonPvNodes[i].isEmpty:
                 ht.hashFullCounter += 1
             ht.nonPvNodes[i] = entry
@@ -96,7 +115,7 @@ func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
         return ht.pvNodes[zobristKey].entry
 
     let i = zobristKey mod ht.nonPvNodes.len.uint64
-    if not ht.nonPvNodes[i].isEmpty and zobristKey == ht.nonPvNodes[i].zobristKey:
+    if not ht.nonPvNodes[i].isEmpty and sameUpperZobristKey(zobristKey, ht.nonPvNodes[i].upperZobristKeyAndValue):
         return ht.nonPvNodes[i]
 
     noEntry

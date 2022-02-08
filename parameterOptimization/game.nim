@@ -74,6 +74,7 @@ func newGame*(
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
     result = Game(
+        hashTable: newHashTable(),
         positionHistory: @[startingPosition],
         moveTime: moveTime,
         earlyResignMargin: earlyResignMargin,
