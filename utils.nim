@@ -31,7 +31,7 @@ func notation*(coloredPiece: ColoredPiece): string =
 
 func `$`*(coloredPiece: ColoredPiece): string =
     const t = [
-        white: [pawn: "♟︎", knight: "♞", bishop: "♝", rook: "♜", queen: "♛", king: "♚"],
+        white: [pawn: "♟", knight: "♞", bishop: "♝", rook: "♜", queen: "♛", king: "♚"],
         black: [pawn: "♙", knight: "♘", bishop: "♗", rook: "♖", queen: "♕", king: "♔"]
         ]
     if coloredPiece.piece == noPiece or coloredPiece.color == noColor:
