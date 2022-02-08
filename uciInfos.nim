@@ -47,9 +47,9 @@ proc help*(params: openArray[string]) =
         of "position":
             echo "position [fen <fenstring> | startpos] moves <move_1> ... <move_i>"
             echo(
-                "Sets up the position described in fenstring on the internal board and ",
+                "Sets up the position described in by <fenstring> on the internal board and ",
                 "plays the moves <move_1> to <move_i> on the internal chess board. ",
-                "To start from the start position the string 'startpos' must be sent instead of 'fen <fenstring>. ",
+                "To start from the start position the string 'startpos' must be sent instead of 'fen <fenstring>'. ",
                 "If this position is from a different game than ",
                 "the last position sent to the engine, the command 'ucinewgame' should be sent inbetween."
             )
@@ -129,7 +129,7 @@ proc help*(params: openArray[string]) =
             echo "Example:"
             echo "'test 100000 nozobrist nointernal'"
             echo(
-                "Runs perft only up to 100000 nodes per positions, doens't do zobrist key test and only ",
+                "Runs perft only up to 100000 nodes per positions, doesn't do zobrist key test and only ",
                 "uses positions from 'perft_test.txt'."
             )
         of "eval":
