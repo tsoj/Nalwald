@@ -368,9 +368,6 @@ func evaluatePieceType(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value]  =
-    let
-        us = position.us
-        enemy = position.enemy
     
     template evaluatePiece(square: Square, us, enemy: Color): auto =
         position.evaluatePiece(
