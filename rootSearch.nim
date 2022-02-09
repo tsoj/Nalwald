@@ -1,6 +1,7 @@
 import
     types,
     position,
+    positionUtils,
     move,
     search,
     hashTable,
@@ -15,7 +16,6 @@ import
 type SearchThreadResult = tuple
     value: Value
     nodes: uint64
-    numMovesAtRoot: int
 
 func launchSearch(
     position: Position,
@@ -41,7 +41,7 @@ func launchSearch(
         depth = depth, height = 0,
         previous = noMove
     )
-    (value: value, nodes: state.countedNodes, numMovesAtRoot: state.numMovesAtRoot)
+    (value: value, nodes: state.countedNodes)
 
 iterator iterativeDeepeningSearch*(
     position: Position,
@@ -53,66 +53,73 @@ iterator iterativeDeepeningSearch*(
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move], nodes: uint64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
-        let
-            numThreads = max(1, numThreads)
-            gameHistory = newGameHistory(positionHistory)
-        var historyTable: seq[HistoryTable]
-        for _ in 0..<numThreads:
-            historyTable.add newHistoryTable()
 
-        hashTable.age()        
+        let legalMoves = position.legalMoves
 
-        let start = now()
-        for depth in 1.Ply..targetDepth:
-            var
-                nodes = 0'u64
-                value: Value
-                numMovesAtRoot: int
-                threadStop: Atomic[bool]
-            
-            threadStop.store(false)
-            
-            template launchSearch(i: auto): auto = launchSearch(
-                position,
-                addr hashTable,
-                stop,
-                addr threadStop,
-                addr historyTable[i],
-                gameHistory,
-                depth,
-                evaluation
-            )
+        if legalMoves.len == 0:
+            yield (value: 0.Value, pv: @[noMove], nodes: 0'u64, canStop: true)
+        else:
 
-            if numThreads == 1 or (now() - start).inMilliseconds < 100:
-                # don't use multithreading too early or when only one thread allowed
-                (value, nodes, numMovesAtRoot) = launchSearch(0)
-            else:
-                var threadSeq: seq[FlowVar[SearchThreadResult]]
-                for i in 0..<numThreads:
-                    if i > 0: sleep(1)
-                    threadSeq.add spawn launchSearch(i)
+            let
+                numThreads = max(1, numThreads)
+                gameHistory = newGameHistory(positionHistory)
+            var historyTable: seq[HistoryTable]
+            for _ in 0..<numThreads:
+                historyTable.add newHistoryTable()
 
-                while threadSeq.len == numThreads:
-                    sleep(1)
-                    for i, flowVar in threadSeq.mpairs:
-                        if flowVar.isReady:
-                            (value, nodes, numMovesAtRoot) = ^flowVar
-                            threadSeq.del i
-                            break
+            hashTable.age()        
 
-                threadStop.store(true)                
-                for flowVar in threadSeq.mitems:
-                    let r = ^flowVar
-                    nodes += r.nodes
+            let start = now()
+            for depth in 1.Ply..targetDepth:
+                var
+                    nodes = 0'u64
+                    value: Value
+                    threadStop: Atomic[bool]
+                
+                threadStop.store(false)
+                
+                template launchSearch(i: auto): auto = launchSearch(
+                    position,
+                    addr hashTable,
+                    stop,
+                    addr threadStop,
+                    addr historyTable[i],
+                    gameHistory,
+                    depth,
+                    evaluation
+                )
 
-            if stop[].load:
-                break
+                if numThreads == 1 or (now() - start).inMilliseconds < 100:
+                    # don't use multithreading too early or when only one thread allowed
+                    (value, nodes) = launchSearch(0)
+                else:
+                    var threadSeq: seq[FlowVar[SearchThreadResult]]
+                    for i in 0..<numThreads:
+                        if i > 0: sleep(1)
+                        threadSeq.add spawn launchSearch(i)
 
-            let pv = if numMovesAtRoot >= 1: hashTable.getPv(position) else: @[noMove]
+                    while threadSeq.len == numThreads:
+                        sleep(1)
+                        for i, flowVar in threadSeq.mpairs:
+                            if flowVar.isReady:
+                                (value, nodes) = ^flowVar
+                                threadSeq.del i
+                                break
 
-            yield (
-                value: value,
-                pv: pv,
-                nodes: nodes,
-                canStop: numMovesAtRoot == 1 or abs(value) >= valueCheckmate
-            )
+                    threadStop.store(true)                
+                    for flowVar in threadSeq.mitems:
+                        let r = ^flowVar
+                        nodes += r.nodes
+
+                if stop[].load:
+                    break
+
+                let pv = hashTable.getPv(position)
+                doAssert pv.len >= 1
+
+                yield (
+                    value: value,
+                    pv: pv,
+                    nodes: nodes,
+                    canStop: legalMoves.len == 1 or abs(value) >= valueCheckmate
+                )

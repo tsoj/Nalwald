@@ -50,7 +50,6 @@ type SearchState* = object
     historyTable*: ptr HistoryTable
     gameHistory*: GameHistory
     countedNodes*: uint64
-    numMovesAtRoot*: int
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
@@ -291,8 +290,6 @@ func search*(
         # stalemate
         else:
             bestValue = 0.Value
-    if height == 0:
-        state.numMovesAtRoot = moveCounter
     
     state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
     bestValue
