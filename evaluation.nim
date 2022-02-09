@@ -425,16 +425,6 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
     doAssert valueCheckmate > result.abs
 
-    # add bonus for uncertainty introduced by having many pieces on the board
-    when gradient is Nothing:
-        const manyPiecesBonus = 30.cp
-        if result < 0:
-            result += (position[us].countSetBits * manyPiecesBonus).Value div 16 - (manyPiecesBonus div 2)
-            result = min(result, -1.Value)
-        if result > 0:
-            result -= (position[enemy].countSetBits * manyPiecesBonus).Value div 16 - (manyPiecesBonus div 2)
-            result = max(result, 1.Value)
-
     when gradient isnot Nothing:
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
