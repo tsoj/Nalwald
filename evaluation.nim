@@ -9,6 +9,35 @@ import
     algorithm,
     macros
 
+func value*(piece: Piece): Value =
+    const table = [
+        pawn: 158.Value,
+        knight: 609.Value,
+        bishop: 610.Value,
+        rook: 827.Value,
+        queen: 1709.Value,
+        king: 1000000.Value,
+        noPiece: 0.Value
+    ]
+    table[piece]
+
+func cp*(cp: int): Value =
+    (pawn.value * cp.Value) div 100.Value
+
+func toCp*(value: Value): int =
+    (100 * value.int) div pawn.value.int
+
+func material*(position: Position): Value =
+    result = 0
+    for piece in pawn..king:
+        result += (position[piece] and position[position.us]).countSetBits.Value * piece.value
+        result -= (position[piece] and position[position.enemy]).countSetBits.Value * piece.value
+
+func absoluteMaterial*(position: Position): Value =
+    result = position.material
+    if position.us == black:
+        result = -result
+
 func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
         a[phase] += b[phase]
@@ -363,10 +392,13 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     var value = [opening: 0.Value, endgame: 0.Value]
 
-    let kingSquare = [
-        white: position.kingSquare(white),
-        black: position.kingSquare(black)
-    ]
+    let
+        us = position.us
+        enemy = position.enemy
+        kingSquare = [
+            white: position.kingSquare(white),
+            black: position.kingSquare(black)
+        ]
     
     # evaluating pieces
     for piece in pawn..king:
@@ -393,6 +425,15 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
     doAssert valueCheckmate > result.abs
 
+    # add bonus for uncertainty introduced by having many pieces on the board
+    const manyPiecesBonus = 30.cp
+    if result < 0:
+        result += (position[us].countSetBits * manyPiecesBonus).Value div 16 - (manyPiecesBonus div 2)
+        result = min(result, -1.Value)
+    if result > 0:
+        result -= (position[enemy].countSetBits * manyPiecesBonus).Value div 16 - (manyPiecesBonus div 2)
+        result = max(result, 1.Value)
+
     when gradient isnot Nothing:
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
@@ -415,32 +456,3 @@ func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Valu
 func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.absoluteEvaluate(defaultEvalParameters, gradient)
-
-func value*(piece: Piece): Value =
-    const table = [
-        pawn: 158.Value,
-        knight: 609.Value,
-        bishop: 610.Value,
-        rook: 827.Value,
-        queen: 1709.Value,
-        king: 1000000.Value,
-        noPiece: 0.Value
-    ]
-    table[piece]
-
-func cp*(cp: int): Value =
-    (pawn.value * cp.Value) div 100.Value
-
-func toCp*(value: Value): int =
-    (100 * value.int) div pawn.value.int
-
-func material*(position: Position): Value =
-    result = 0
-    for piece in pawn..king:
-        result += (position[piece] and position[position.us]).countSetBits.Value * piece.value
-        result -= (position[piece] and position[position.enemy]).countSetBits.Value * piece.value
-
-func absoluteMaterial*(position: Position): Value =
-    result = position.material
-    if position.us == black:
-        result = -result
