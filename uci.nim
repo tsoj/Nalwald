@@ -211,12 +211,12 @@ proc perft(uciState: UciState, params: seq[string]) =
         
 
 proc uciLoop*() =
-    echo "---------------- Nalwald ----------------"
-    echo "       __,      o     n_n_n   ooooo    + "
-    echo " o    /  o\\    ( )    \\   /    \\ /    \\ /"
-    echo "( )   \\  \\_>   / \\    |   |    / \\    ( )"
-    echo "|_|   /__\\    /___\\   /___\\   /___\\   /_\\"
-    echo "------------ by Jost Triller ------------"
+    echo fmt"---------------- Nalwald ----------------"
+    echo fmt"       __,      o     n_n_n   ooooo    + "
+    echo fmt" o    // o\    ( )    \   /    \ /    \ /"
+    echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
+    echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
+    echo fmt"------------ by Jost Triller ------------"
     var uciState = UciState(
         position: startposFen.toPosition,
         hashtable: newHashTable(),
