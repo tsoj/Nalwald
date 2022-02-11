@@ -106,10 +106,11 @@ func getPstValue(
                 ]:
                     for phase in Phase: gradient[phase].pst[whoseKing][kingSquare][piece][pieceSquare] += multiplier
 
-func pawnMaskIndex(
+func pawnMaskIndex*(
     position: Position,
     square: Square,
-    us, enemy: Color
+    us, enemy: Color,
+    doChecks: static bool = false
 ): int =
     template pmirror(x: auto): auto = (if us == black: x.mirror else: x)
 
@@ -117,6 +118,10 @@ func pawnMaskIndex(
 
     assert not square.isEdge
     assert square >= b2
+
+    when doChecks:
+        if square.isEdge: # includes cases qhen square < b2
+            raise newException(ValueError, "Can't calculate pawn mask index of edge square")
 
     let
         ourPawns = (position[us] and position[pawn]).pmirror shr (square.int8 - b2.int8)

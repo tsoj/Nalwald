@@ -1,14 +1,18 @@
 import
     types,
+    bitboard,
     move,
     position,
     positionUtils,
     hashTable,
     uciSearch,
     uciInfos,
+    utils,
     perft,
     see,
     evaluation,
+    evalParameters,
+    defaultParameters,
     version,
     times,
     strutils,
@@ -208,7 +212,26 @@ proc perft(uciState: UciState, params: seq[string]) =
             echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
     else:
         echo "Missing depth parameter"
-        
+
+proc pawnStructureMaskValue(uciState: UciState, params: seq[string]) =
+    if params.len < 1:
+        echo "Need at least one parameter"
+    else:
+        let
+            square = parseEnum[Square](params[0])
+            index = uciState.position.pawnMaskIndex(square, white, black, doChecks = true)
+            value = uciState.position.gamePhase.interpolate(
+                forOpening = defaultEvalParameters[opening].pawnMaskBonus[index],
+                forEndgame = defaultEvalParameters[endgame].pawnMaskBonus[index]
+            ).toCp
+        var position = uciState.position
+        for color in white..black:
+            position[color] = position[color] and mask3x3[square] and position[pawn]
+        for piece in knight..king:
+            position[piece] = 0
+        position[pawn] = position[pawn] and mask3x3[square]
+        echo position
+        echo "Value: ", value, " cp"
 
 proc uciLoop*() =
     echo fmt"---------------- Nalwald ----------------"
@@ -267,6 +290,8 @@ proc uciLoop*() =
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
+            of "pawnmask":
+                uciState.pawnStructureMaskValue(params[1..^1])
             of "about":
                 about(extra = params.len >= 1 and "extra" in params)
             of "help":
