@@ -120,7 +120,7 @@ func pawnMaskIndex*(
     assert square >= b2
 
     when doChecks:
-        if square.isEdge: # includes cases qhen square < b2
+        if square.isEdge: # includes cases when square < b2
             raise newException(ValueError, "Can't calculate pawn mask index of edge square")
 
     let
