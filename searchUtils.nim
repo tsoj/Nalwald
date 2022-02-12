@@ -53,7 +53,6 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
-    counterTable: array[white..black, array[pawn..king, array[a1..h8, array[2, Move]]]]
 
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
