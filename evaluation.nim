@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 158.Value,
-        knight: 609.Value,
-        bishop: 610.Value,
-        rook: 827.Value,
-        queen: 1709.Value,
+        pawn: 160.Value,
+        knight: 632.Value,
+        bishop: 632.Value,
+        rook: 853.Value,
+        queen: 1802.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -199,6 +199,17 @@ func forkingMajorPieces(
     if (attackMask and position[enemy] and (position[queen] or position[rook])).countSetBits >= 2:
         result.addValue(evalParameters, gradient, us, bonusPieceForkedMajorPieces)
 
+func attackedByPawn(
+    evalParameters: EvalParameters,
+    position: Position,
+    square: Square,
+    us, enemy: Color,
+    gradient: var GradientOrNothing
+): array[Phase, Value] =
+    if (position[enemy] and position[pawn] and attackTablePawnCapture[us][square]) != 0:
+        result.addValue(evalParameters, gradient, us, bonusPieceAttackedByPawn)
+
+
 #-------------- pawn evaluation --------------#
 
 func evaluatePawn(
@@ -213,11 +224,6 @@ func evaluatePawn(
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
         result += evalParameters.bonusPassedPawn(square, us, gradient)
-
-    # attacks enemy piece
-    let pieces = position[knight] or position[bishop] or position[rook] or position[queen]
-    if (position[enemy] and attackTablePawnCapture[us][square] and pieces) != 0:
-        result.addValue(evalParameters, gradient, us, bonusPawnAttacksPiece)
 
 #-------------- knight evaluation --------------#
 
@@ -237,6 +243,9 @@ func evaluateKnight(
 
     # forks
     result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
+
+    # attacked by pawn
+    result += evalParameters.attackedByPawn(position, square, us, enemy, gradient)
 
     # attacking bishop, rook, or queen
     if (attackMask and position[enemy] and (position[bishop] or position[rook] or position[queen])) != 0:
@@ -260,6 +269,9 @@ func evaluateBishop(
 
     # forks
     result += evalParameters.forkingMajorPieces(position, us, enemy, attackMask, gradient)
+
+    # attacked by pawn
+    result += evalParameters.attackedByPawn(position, square, us, enemy, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -286,6 +298,9 @@ func evaluateRook(
 
     # mobility
     result += evalParameters.mobility(position, rook, us, attackMask, gradient)
+
+    # attacked by pawn
+    result += evalParameters.attackedByPawn(position, square, us, enemy, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -311,6 +326,9 @@ func evaluateQueen(
 
     # mobility
     result += evalParameters.mobility(position, queen, us, attackMask, gradient)
+
+    # attacked by pawn
+    result += evalParameters.attackedByPawn(position, square, us, enemy, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
