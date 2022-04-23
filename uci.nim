@@ -255,6 +255,7 @@ proc uciLoop*() =
     echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
     echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
     echo fmt"------------ by Jost Triller ------------"
+
     var uciState = UciState(
         position: startposFen.toPosition,
         hashtable: newHashTable(),
@@ -263,6 +264,7 @@ proc uciLoop*() =
     )
     uciState.searchRunningFlag.store(false)
     uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
+    
     var searchThreadResult = FlowVar[bool]()
     while true:
         try:
