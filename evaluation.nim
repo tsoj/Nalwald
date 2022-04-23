@@ -21,10 +21,10 @@ func value*(piece: Piece): Value =
     ]
     table[piece]
 
-func cp*(cp: int): Value =
+func cp*(cp: int): Value {.inline.} =
     (pawn.value * cp.Value) div 100.Value
 
-func toCp*(value: Value): int =
+func toCp*(value: Value): int {.inline.} =
     (100 * value.int) div pawn.value.int
 
 func material*(position: Position): Value =
@@ -73,7 +73,7 @@ func getPstValue(
     us, enemy: Color,
     kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.inline.} =
     template pmirror(x: auto, color: Color): auto = (if color == white: x.mirror else: x) 
     let
         square = square.pmirror(us)
@@ -108,7 +108,7 @@ func getPstValue(
 
 func pawnMaskIndex*(
     position: Position,
-    square: Square,
+    square: static Square,
     us, enemy: Color,
     doChecks: static bool = false
 ): int =
@@ -142,7 +142,7 @@ func pawnMaskIndex*(
 func pawnMaskBonus(
     evalParameters: EvalParameters,
     position: Position,
-    square: Square,
+    square: static Square,
     us, enemy: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
@@ -219,7 +219,7 @@ func evaluatePawn(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
@@ -234,7 +234,7 @@ func evaluateKnight(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     let attackMask = knight.attackMask(square, position.occupancy)
     
@@ -260,7 +260,7 @@ func evaluateBishop(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     let attackMask = bishop.attackMask(square, position.occupancy)
 
@@ -292,7 +292,7 @@ func evaluateRook(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     let attackMask = rook.attackMask(square, position.occupancy)
 
@@ -320,7 +320,7 @@ func evaluateQueen(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     let attackMask = queen.attackMask(square, position.occupancy)
 
@@ -344,7 +344,7 @@ func evaluateKing(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] {.locks: 0.} =
+): array[Phase, Value] {.locks: 0, inline.} =
 
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
@@ -363,7 +363,7 @@ func evaluatePiece(
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value] =
+): array[Phase, Value] {.inline.} =
     const evaluationFunctions = [
         pawn: evaluatePawn[GradientOrNothing],
         knight: evaluateKnight[GradientOrNothing],
@@ -386,11 +386,11 @@ func evaluatePiece(
     
 func evaluatePieceType(
     position: Position,
-    piece: Piece,
+    piece: static Piece,
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
-): array[Phase, Value]  =
+): array[Phase, Value] {.inline.}  =
     let
         us = position.us
         enemy = position.enemy
@@ -421,16 +421,16 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     ]
     
     # evaluating pieces
-    for piece in pawn..king:
+    for piece in (pawn, knight, bishop, rook, queen, king).fields:
         value += position.evaluatePieceType(piece, kingSquare, evalParameters, gradient)
 
     # evaluation pawn patters
-    for square in [
+    for square in (
         b3, c3, d3, e3, f3, g3,
         b4, c4, d4, e4, f4, g4,
         b5, c5, d5, e5, f5, g5,
         b6, c6, d6, e6, f6, g6
-    ]:
+    ).fields:
         if (mask3x3[square] and position[pawn]).countSetBits >= 2:
             value += evalParameters.pawnMaskBonus(
                 position,
