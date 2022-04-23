@@ -359,7 +359,7 @@ func evaluatePiece(
     position: Position,
     piece: Piece,
     square: Square,
-    us, enemy: Color,
+    us, enemy: static Color,
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
@@ -387,13 +387,11 @@ func evaluatePiece(
 func evaluatePieceType(
     position: Position,
     piece: static Piece,
+    us, enemy: static Color,
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.}  =
-    let
-        us = position.us
-        enemy = position.enemy
     
     template evaluatePiece(square: Square, us, enemy: Color): auto =
         position.evaluatePiece(
@@ -422,7 +420,10 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     
     # evaluating pieces
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
-        value += position.evaluatePieceType(piece, kingSquare, evalParameters, gradient)
+        if position.us == white:
+            value += position.evaluatePieceType(piece, white, black, kingSquare, evalParameters, gradient)
+        else:
+            value += position.evaluatePieceType(piece, black, white, kingSquare, evalParameters, gradient)
 
     # evaluation pawn patters
     for square in (
