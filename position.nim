@@ -143,7 +143,7 @@ func calculateZobristKey*(position: Position): uint64 =
             )
     result = result xor position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
 
-func doMove*(position: var Position, move: Move) =
+func doMove*(position: var Position, move: Move) {.inline.} =
     assert position.isPseudoLegal(move)
     let
         target = move.target

@@ -373,7 +373,6 @@ func evaluatePiece(
         king: evaluateKing[GradientOrNothing]
     ]
     assert piece != noPiece
-    
 
     result.addValue(evalParameters, gradient, us, pieceValues[piece])
 
@@ -407,7 +406,7 @@ func evaluatePieceType(
     for square in (position[piece] and position[enemy]):
         result -= evaluatePiece(square, enemy, us)
 
-func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
+func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value {.inline.} =
     if position.halfmoveClock >= 100:
         return 0.Value
 
