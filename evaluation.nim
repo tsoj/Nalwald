@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 160.Value,
-        knight: 632.Value,
-        bishop: 632.Value,
-        rook: 853.Value,
-        queen: 1802.Value,
+        pawn: 177.Value,
+        knight: 708.Value,
+        bishop: 708.Value,
+        rook: 952.Value,
+        queen: 2031.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -150,17 +150,6 @@ func pawnMaskBonus(
     let index = position.pawnMaskIndex(square, us, enemy)
     result.addValue(evalParameters, gradient, us, pawnMaskBonus[index])
 
-func bonusPassedPawn(
-    evalParameters: EvalParameters,
-    square: Square,
-    us: Color,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-    var index = square.int8 div 8
-    if us == black:
-        index = 7 - index
-    result.addValue(evalParameters, gradient, us, passedPawnTable[index])
-
 func mobility(
     evalParameters: EvalParameters,
     position: Position,
@@ -223,7 +212,12 @@ func evaluatePawn(
 
     # passed pawn
     if position.isPassedPawn(us, enemy, square):
-        result += evalParameters.bonusPassedPawn(square, us, gradient)
+        result += evalParameters.getPstValue(
+            square, noPiece, # noPiece stands for passed pawn
+            us, enemy,
+            kingSquare,
+            gradient
+        )
 
 #-------------- knight evaluation --------------#
 

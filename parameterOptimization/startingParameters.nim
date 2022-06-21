@@ -173,10 +173,15 @@ const startingEvalParameters* = block:
             startingEvalParameters[phase].bonusKingSafety[i] = i.float32 * -2.5.float32
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
-                for piece in pawn..king:
-                    for square in a1..h8:
+                for square in a1..h8:
+                    # TODO: maybe try only adding half of pst / passed pawn table, because they get added for each king
+                    for piece in pawn..king:
                         startingEvalParameters[phase].pst[whoseKing][kingSquare][piece][square] =
                             pst[phase][piece][square].float32
-        for i in 0..7:
-            startingEvalParameters[phase].passedPawnTable[i] = passedPawnTable[phase][i].float32
+                    
+                    # noPiece stands for passed pawns here
+                    startingEvalParameters[phase].pst[whoseKing][kingSquare][noPiece][square] =
+                        passedPawnTable[phase][7 - (square.int div 8)].float32
+
+    doAssert startingEvalParameters[endgame].pst[ourKing][a1][noPiece][e2] == 120.0
     startingEvalParameters
