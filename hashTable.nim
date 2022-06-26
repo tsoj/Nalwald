@@ -3,7 +3,6 @@ import
     move,
     position,
     tables,
-    random,
     locks
 
 type
@@ -20,7 +19,6 @@ type
         hashFullCounter: int
         pvNodes: Table[uint64, CountedHashTableEntry]
         pvTableMutex: Lock
-        randState: Rand
 
 const
     noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
@@ -37,8 +35,7 @@ func newHashTable*(): HashTable =
         nonPvNodes: newSeq[HashTableEntry](0),
         hashFullCounter: 0,
         pvNodes: Table[uint64, CountedHashTableEntry](),
-        pvTableMutex: Lock(),
-        randState: initRand(0)
+        pvTableMutex: Lock()
     )
     initLock result.pvTableMutex
 
@@ -46,7 +43,6 @@ template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
 
 func clear*(ht: var HashTable) =
-    ht.randState = initRand(0)
     ht.pvNodes.clear
     ht.hashFullCounter = 0
     for entry in ht.nonPvNodes.mitems:
@@ -74,12 +70,7 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
     if sameUpperZobristKey(oldEntry.upperZobristKeyAndValue, newEntry.upperZobristKeyAndValue):
         return oldEntry.depth <= newEntry.depth
 
-    let probability = if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
-        0.5
-    else:
-        1.0
-    
-    ht.randState.rand(1.0) < probability
+    true
 
 func add*(
     ht: var HashTable,
