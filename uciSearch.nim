@@ -43,6 +43,18 @@ func infoString(
     result &= scoreString
     result &= " pv " & pv
 
+func bestMoveString(move: Move, position: Position): string =
+    let moveNotation = move.notation(position)
+    if move in position.legalMoves:
+        return "bestmove " & moveNotation
+    else:
+        result = "info string found illegal move: " & moveNotation & "\n"
+        if position.legalMoves.len > 0:
+            result &= "bestmove "  & position.legalMoves[0].notation(position)
+        else:
+            result &= "info string no legal move available"
+        
+
 type SearchInfo* = object
     position*: Position
     hashTable*: ptr HashTable
@@ -86,7 +98,7 @@ proc uciSearchSinglePv(searchInfo: SearchInfo) =
 
         iteration += 1
 
-    echo "bestmove ", bestMove.notation(searchInfo.position)
+    echo bestMove.bestMoveString(searchInfo.position)
 
 type SearchResult = object
     move: Move
@@ -148,7 +160,7 @@ proc uciSearch*(searchInfo: SearchInfo) =
         
         for iter in iterators:
             if iter.finished:
-                echo "bestmove ", bestMove.notation(searchInfo.position)
+                echo bestMove.bestMoveString(searchInfo.position)
                 return
 
         searchResults.sort do (x, y: auto) -> int: cmp(y.value, x.value)

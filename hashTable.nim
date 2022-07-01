@@ -23,6 +23,7 @@ type
 const
     noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
     sixteenBitMask = 0b1111_1111_1111_1111'u64
+    minHashSize = sixteenBitMask.int + 1
 
 func value*(entry: HashTableEntry): Value =
     (cast[int16](entry.upperZobristKeyAndValue and sixteenBitMask)).Value
@@ -50,7 +51,7 @@ func clear*(ht: var HashTable) =
 
 func setSize*(ht: var HashTable, sizeInBytes: int) =
     let numEntries = sizeInBytes div sizeof(HashTableEntry)
-    ht.nonPvNodes.setLen(max(numEntries, 1))
+    ht.nonPvNodes.setLen(max(numEntries, minHashSize))
     ht.clear
 
 func age*(ht: var HashTable) =

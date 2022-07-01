@@ -1,7 +1,7 @@
 Nalwald*
 !Nalwald.nim
 !Nalwald.nims
-perf.data
+perf.data*
 callgrind.out.*
 profile_results.txt
 .vscode

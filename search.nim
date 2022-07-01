@@ -8,9 +8,12 @@ import
     moveIterator,
     hashTable,
     evaluation,
-    see,
+    see
+
+import std/[
     atomics,
     bitops
+]
 
 static: doAssert pawn.value == 100.cp
 
@@ -52,7 +55,14 @@ type SearchState* = object
     countedNodes*: uint64
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
-func update(state: var SearchState, position: Position, bestMove, previous: Move, depth, height: Ply, nodeType: NodeType, value: Value) =
+func update(
+    state: var SearchState,
+    position: Position,
+    bestMove, previous: Move,
+    depth, height: Ply,
+    nodeType: NodeType,
+    value: Value
+) =
     if bestMove != noMove and not (state.stop[].load or state.threadStop[].load):
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if nodeType != allNode:
@@ -177,7 +187,7 @@ func search*(
             if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
                 return hashResult.value - margin
             if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
-                return hashResult.value + margin   
+                return hashResult.value + margin
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
