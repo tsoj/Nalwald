@@ -159,6 +159,7 @@ func search*(
         inCheck = position.inCheck(position.us, position.enemy)
         depth = if inCheck or previous.isPawnMoveToSecondRank: depth + 1.Ply else: depth
         hashResult = state.hashTable[].get(position.zobristKey)
+        originalAlpha = alpha
 
     var
         alpha = alpha
@@ -207,10 +208,12 @@ func search*(
         if value >= beta:
             return value
 
-    let
-        staticEval = state.evaluation(position) # TODO: try only calculate staticEval on demand
-        originalAlpha = alpha
-
+    var valueStaticEval = valueInfinity # will be calculated on demand
+    template staticEval(): auto =
+        if valueStaticEval == valueInfinity:
+            valueStaticEval = state.evaluation(position)
+        valueStaticEval
+        
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         var newPosition = position
@@ -243,7 +246,7 @@ func search*(
             if beta - originalAlpha <= 1 and moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
-                    continue # TODO: try breaking
+                    continue
 
         # first explore with null window
         if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode):
