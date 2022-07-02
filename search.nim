@@ -208,7 +208,7 @@ func search*(
             return value
 
     let
-        staticEval = state.evaluation(position)
+        staticEval = state.evaluation(position) # TODO: try only calculate staticEval on demand
         originalAlpha = alpha
 
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
@@ -243,7 +243,7 @@ func search*(
             if beta - originalAlpha <= 1 and moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
-                    continue
+                    continue # TODO: try breaking
 
         # first explore with null window
         if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode):

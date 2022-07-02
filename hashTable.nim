@@ -7,8 +7,7 @@ import
 
 type
     HashTableEntry* {.packed.} = object
-        upperZobristKeyAndValue: uint64
-        nodeType*: NodeType
+        upperZobristKeyAndNodeTypeAndValue: uint64
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
@@ -21,15 +20,21 @@ type
         pvTableMutex: Lock
 
 const
-    noEntry = HashTableEntry(upperZobristKeyAndValue: 0, depth: 0.Ply, bestMove: noMove)
-    sixteenBitMask = 0b1111_1111_1111_1111'u64
-    minHashSize = sixteenBitMask.int + 1
+    noEntry = HashTableEntry(upperZobristKeyAndNodeTypeAndValue: 0, depth: 0.Ply, bestMove: noMove)
+    sixteenBitMask  =    0b1111_1111_1111_1111'u64
+    eighteenBitMask = 0b11_1111_1111_1111_1111'u64
+    minHashSize = eighteenBitMask.int + 1
+
+static: doAssert minHashSize * sizeof(HashTableEntry) <= 16_000_000 # 16 MB
 
 func value*(entry: HashTableEntry): Value =
-    (cast[int16](entry.upperZobristKeyAndValue and sixteenBitMask)).Value
+    cast[int16](entry.upperZobristKeyAndNodeTypeAndValue and sixteenBitMask).Value
+
+func nodeType*(entry: HashTableEntry): NodeType =
+    cast[int8]((entry.upperZobristKeyAndNodeTypeAndValue and eighteenBitMask) shr 16).NodeType
 
 func sameUpperZobristKey(a: uint64, b: uint64): bool =
-    (a and not sixteenBitMask) == (b and not sixteenBitMask)
+    (a and not eighteenBitMask) == (b and not eighteenBitMask)
 
 func newHashTable*(): HashTable =
     result = HashTable(
@@ -68,7 +73,7 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
     if oldEntry.isEmpty:
         return true
     
-    if sameUpperZobristKey(oldEntry.upperZobristKeyAndValue, newEntry.upperZobristKeyAndValue):
+    if sameUpperZobristKey(oldEntry.upperZobristKeyAndNodeTypeAndValue, newEntry.upperZobristKeyAndNodeTypeAndValue):
         return oldEntry.depth <= newEntry.depth
 
     true
@@ -82,11 +87,18 @@ func add*(
     bestMove: Move
 ) =
     let entry = HashTableEntry(
-        upperZobristKeyAndValue: (zobristKey and not sixteenBitMask) or (cast[uint64](value.int16) and sixteenBitMask),
-        nodeType: nodeType,
+        upperZobristKeyAndNodeTypeAndValue:(
+            (zobristKey and not eighteenBitMask) or
+            ((cast[uint64](nodeType.int8) shl 16) and eighteenBitMask and not sixteenBitMask) or
+            (cast[uint64](value.int16) and sixteenBitMask)
+        ),
         depth: depth,
         bestMove: bestMove
     )
+    doAssert entry.value == value
+    doAssert entry.nodeType == nodeType
+    doAssert sameUpperZobristKey(entry.upperZobristKeyAndNodeTypeAndValue, zobristKey)
+
     static: doAssert (valueInfinity <= int16.high.Value and -valueInfinity >= int16.low.Value)
 
     if nodeType == pvNode:
@@ -107,7 +119,7 @@ func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
         return ht.pvNodes[zobristKey].entry
 
     let i = zobristKey mod ht.nonPvNodes.len.uint64
-    if not ht.nonPvNodes[i].isEmpty and sameUpperZobristKey(zobristKey, ht.nonPvNodes[i].upperZobristKeyAndValue):
+    if not ht.nonPvNodes[i].isEmpty and sameUpperZobristKey(zobristKey, ht.nonPvNodes[i].upperZobristKeyAndNodeTypeAndValue):
         return ht.nonPvNodes[i]
 
     noEntry
@@ -129,5 +141,3 @@ func getPv*(ht: var HashTable, position: Position): seq[Move] =
             return result
         result.add(entry.bestMove)
         currentPosition.doMove(entry.bestMove)
-
-
