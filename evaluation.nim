@@ -21,13 +21,6 @@ func value*(piece: Piece): Value =
     ]
     table[piece]
 
-# values for optimizationResult_2022-07-05-19-16-58_weight0.8CCRL_0638648.txt
-# pawn: 175
-# knight: 658
-# bishop: 668
-# rook: 905
-# queen: 1858
-
 func cp*(cp: int): Value {.inline.} =
     (pawn.value * cp.Value) div 100.Value
 
