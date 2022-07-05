@@ -1,12 +1,14 @@
 import
     ../search,
-    ../position,
     ../positionUtils,
-    ../evaluation,
-    ../movegen
+    ../evaluation
 
 let f = open("unlabeledNonQuietSetNalwald.epd")
 let g = open("unlabeledQuietSetNalwald.epd", fmWrite)
+
+# let f = open("unlabeledNonQuietSmallNalwaldCCRL4040.epd")
+# let g = open("unlabeledQuietSmallNalwaldCCRL4040.epd", fmWrite)
+
 var line: string
 var i = 0
 while f.readLine(line):

@@ -11,15 +11,22 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 177.Value,
-        knight: 708.Value,
-        bishop: 708.Value,
-        rook: 952.Value,
-        queen: 2031.Value,
+        pawn: 175.Value,
+        knight: 664.Value,
+        bishop: 672.Value,
+        rook: 910.Value,
+        queen: 1880.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
     table[piece]
+
+# values for optimizationResult_2022-07-05-19-16-58_weight0.8CCRL_0638648.txt
+# pawn: 175
+# knight: 658
+# bishop: 668
+# rook: 905
+# queen: 1858
 
 func cp*(cp: int): Value {.inline.} =
     (pawn.value * cp.Value) div 100.Value
@@ -339,6 +346,8 @@ func evaluateKing(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0, inline.} =
+
+    # TODO: think about non linear king safety
 
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits

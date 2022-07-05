@@ -12,8 +12,11 @@ massif.out
 *.log
 *.epd
 *.epd.backup
+*.fen
 !parameterOptimization/quietSetZuri.epd
 !parameterOptimization/quietSetNalwald.epd
+!parameterOptimization/quietSetCombinedCCRL4040.epd
+!parameterOptimization/quietSmallNalwaldCCRL4040.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 *.txt
@@ -27,3 +30,4 @@ generatePositions
 labelPositions
 generateSmallerSet
 calculatePieceValue
+processStuff.nim
