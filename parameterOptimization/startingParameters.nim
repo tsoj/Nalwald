@@ -174,7 +174,6 @@ const startingEvalParameters* = block:
         for whoseKing in ourKing..enemyKing:
             for kingSquare in a1..h8:
                 for square in a1..h8:
-                    # TODO: maybe try only adding half of pst / passed pawn table, because they get added for each king
                     for piece in pawn..king:
                         startingEvalParameters[phase].pst[whoseKing][kingSquare][piece][square] =
                             pst[phase][piece][square].float32
