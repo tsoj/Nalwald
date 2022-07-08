@@ -1,13 +1,17 @@
 import
     types,
     move,
-    position,
+    position
+
+import std/[
     tables,
-    locks
+    locks,
+    random
+]
 
 type
     HashTableEntry* {.packed.} = object
-        upperZobristKeyAndNodeTypeAndValue: uint64
+        upperZobristKeyAndNodeTypeAndValue: uint64 # TODO: i probably can put depth in there too
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
@@ -18,6 +22,7 @@ type
         hashFullCounter: int
         pvNodes: Table[uint64, CountedHashTableEntry]
         pvTableMutex: Lock
+        randState: Rand
 
 const
     noEntry = HashTableEntry(upperZobristKeyAndNodeTypeAndValue: 0, depth: 0.Ply, bestMove: noMove)
@@ -41,7 +46,8 @@ func newHashTable*(): HashTable =
         nonPvNodes: newSeq[HashTableEntry](0),
         hashFullCounter: 0,
         pvNodes: Table[uint64, CountedHashTableEntry](),
-        pvTableMutex: Lock()
+        pvTableMutex: Lock(),
+        randState: initRand(0)
     )
     initLock result.pvTableMutex
 
@@ -49,6 +55,7 @@ template isEmpty*(entry: HashTableEntry): bool =
     entry == noEntry
 
 func clear*(ht: var HashTable) =
+    ht.randState = initRand(0)
     ht.pvNodes.clear
     ht.hashFullCounter = 0
     for entry in ht.nonPvNodes.mitems:
@@ -76,7 +83,15 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
     if sameUpperZobristKey(oldEntry.upperZobristKeyAndNodeTypeAndValue, newEntry.upperZobristKeyAndNodeTypeAndValue):
         return oldEntry.depth <= newEntry.depth
 
-    true
+    var probability = 1.0
+    
+    if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
+        probability *= 0.5
+    
+    if newEntry.depth + 2.Ply < oldEntry.depth:
+        probability *= 0.5
+    
+    ht.randState.rand(1.0) < probability
 
 func add*(
     ht: var HashTable,
