@@ -11,7 +11,7 @@ import std/[
 
 type
     HashTableEntry* {.packed.} = object
-        upperZobristKeyAndNodeTypeAndValue: uint64 # TODO: i probably can put depth in there too
+        upperZobristKeyAndNodeTypeAndValue: uint64
         depth*: Ply
         bestMove*: Move
     CountedHashTableEntry = object
