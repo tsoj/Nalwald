@@ -226,6 +226,8 @@ func doNullMove*(position: var Position) =
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
 
+    position.halfmoveClock = 0
+
     position.enemy = position.us
     position.us = position.us.opposite
 

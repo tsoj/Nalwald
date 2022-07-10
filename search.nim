@@ -201,10 +201,15 @@ func search*(
         let value = -newPosition.search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
-            depth = nullMoveDepth(depth), height = height + 3.Ply,
+            depth = nullMoveDepth(depth), height = height + 1.Ply,
             # height + 3 is not a bug, it somehow improves the performance by ~15 Elo
+            # TODO: finally work this out, it's probably one of this:
+            # - killertable
+            # - repetition check
+            # - checkmate value
             previous = noMove
         )
+        
         if value >= beta:
             return value
 

@@ -84,14 +84,14 @@ func checkForRepetition*(gameHistory: GameHistory, position: Position, height: P
 
     var count: int16 = position.halfmoveClock
     for i in countdown(height-1.Ply, 0.Ply):
-        if count < 0:
+        if count <= 0:
             return false
         if position.zobristKey == gameHistory.dynamicHistory[i]:
             return true
         count -= 1
     
     for i in countdown(gameHistory.staticHistory.len - 1, 0):
-        if count < 0:
+        if count <= 0:
             return false
         if position.zobristKey == gameHistory.staticHistory[i]:
             return true
