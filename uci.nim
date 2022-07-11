@@ -160,7 +160,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "movetime":
                 searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
             else:
-                discard         
+                echo "info string Unknown parameter: ", $params[i]
         try:
             let move = params[i].toMove(uciState.position)
             searchInfo.searchMoves.add move
