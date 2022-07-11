@@ -340,8 +340,6 @@ func evaluateKing(
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.locks: 0, inline.} =
 
-    # TODO: think about non linear king safety
-
     # kingsafety by pawn shielding
     let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
     result.addValue(evalParameters, gradient, us, bonusKingSafety[numPossibleQueenAttack])

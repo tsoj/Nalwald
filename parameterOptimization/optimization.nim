@@ -170,9 +170,9 @@ data.loadData("quietSetZuri.epd", weight = 1.0)
 # Elements in quietSetZuri are weighed more, because it brings better results.
 # quietSetZuri is probably of higher quality
 data.loadData("quietSetNalwald.epd", weight = 0.6)
-data.loadData("quietSetCombinedCCRL4040.epd", weight = 0.6)#TODO newest is 1.0
+data.loadData("quietSetCombinedCCRL4040.epd", weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 
-let ep = startingEvalParametersFloat.optimize(data)#, maxIterations = 10)
+let ep = startingEvalParametersFloat.optimize(data)
 printPieceValues(ep)

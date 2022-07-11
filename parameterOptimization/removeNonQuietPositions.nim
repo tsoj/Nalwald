@@ -3,11 +3,12 @@ import
     ../positionUtils,
     ../evaluation
 
-let f = open("unlabeledNonQuietSetNalwald.epd")
-let g = open("unlabeledQuietSetNalwald.epd", fmWrite)
+const
+    readFilename = "unlabeledNonQuietSetNalwald.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "unlabeledQuietSetNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
 
-# let f = open("unlabeledNonQuietSmallNalwaldCCRL4040.epd")
-# let g = open("unlabeledQuietSmallNalwaldCCRL4040.epd", fmWrite)
+let f = open(readFilename)
+let g = open(writeFilename, fmWrite)
 
 var line: string
 var i = 0

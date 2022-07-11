@@ -22,15 +22,15 @@ proc playGame(fen: string): (string, float) =
         echo getCurrentExceptionMsg()
         return ("", -1.0)
 
-const maxLoadPercentageCPU = 70.0
-
-# TODO: make names of files easier maintainable (also for other parameter optimization programs)
+const
+    maxLoadPercentageCPU = 70.0
+    writeFilename = "quietSetNalwald.epd"#"quietSmallNalwaldCCRL4040.epd"
+    readFilename = "unlabeledQuietSetNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
 
 proc labelPositions() =
     var alreadyLabeled = block:
         var r: Table[string, int8]
-        # let g = open("quietSetNalwald.epd")
-        let g = open("quietSmallNalwaldCCRL4040.epd")
+        let g = open(writeFilename)
         var line: string
         while g.readLine(line):
             if line == "":
@@ -42,11 +42,8 @@ proc labelPositions() =
         g.close
         r
 
-    # let f = open("unlabeledQuietSetNalwald.epd")
-    # let g = open("quietSetNalwald.epd", fmAppend)
-
-    let f = open("unlabeledQuietSmallNalwaldCCRL4040.epd")
-    let g = open("quietSmallNalwaldCCRL4040.epd", fmAppend)
+    let f = open(readFilename)
+    let g = open(writeFilename, fmAppend)
 
     var line: string
     var i = 0
