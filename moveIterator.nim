@@ -15,7 +15,7 @@ iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: HistoryTable = zeroHistoryTable,
-    killers = [noMove, noMove],
+    killers = [noMove, noMove, noMove],
     previous = noMove,
     doQuiets = true
 ): Move =
@@ -34,15 +34,10 @@ iterator moveIterator*(
                     bestIndex = i
             if bestIndex != moveList.numMoves:
                 moveList.movePriorities[bestIndex] = Value.low
-                
-                var isDuplicate = false
-                for j in killers.low..killers.high:
-                    if moveList.moves[bestIndex] == killers[j]:
-                        isDuplicate = true
-                        break
+                let move = moveList.moves[bestIndex]
 
-                if moveList.moves[bestIndex] != tryFirstMove and not isDuplicate:
-                    yield moveList.moves[bestIndex]
+                if move != tryFirstMove and move notin killers:
+                    yield move
             else:
                 break
 
