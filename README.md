@@ -132,6 +132,8 @@ optimized using a method like gradient descent.
 | 1.3.0   |      2045 |       2090 |             − |
 | 1.2.0   |      1979 |       1998 |             − |
 | 1.1.0   |         − |       1987 |             − |
+| **Hactar** |
+| 0.9.0   |         − |       1411 |             − |
 
 #### License
 
