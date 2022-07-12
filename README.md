@@ -112,6 +112,27 @@ this structure of pawns in a 3x3 space. This index can be used to access a table
 which contains values to evaluate this pawn structure. This table can then be
 optimized using a method like gradient descent.
 
+#### Rating
+
+| Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC |
+| :------ | ---------: | --------: | ------------: |
+| **Nalwald** |
+| 16      |          − |         − |          2995 |
+| 15      |       2878 |      2902 |          2923 |
+| 14      |       2826 |         − |          2826 |
+| 1.12    |          − |         − |          2736 |
+| 1.11    |          − |      2781 |             − |
+| 1.9     |       2602 |      2637 |             − |
+| 1.8.1   |          − |      2518 |             − |
+| 1.8     |          − |      2449 |             − |
+| **Googleplex Starthinker** |
+| 1.6     |      2390 |       2391 |             − |
+| 1.4     |      2321 |       2289 |             − |
+| **Squared-Chess** |
+| 1.3.0   |      2045 |       2090 |             − |
+| 1.2.0   |      1979 |       1998 |             − |
+| 1.1.0   |         − |       1987 |             − |
+
 #### License
 
 Copyright © Jost Triller
