@@ -117,7 +117,7 @@ optimized using a method like gradient descent.
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 16      |          − |         − |        2995 |  July 11, 2022 |
+| 16      |          − |         − |        2993 |  July 11, 2022 |
 | 15      |       2878 |      2902 |        2923 |    Feb 8, 2022 |
 | 14      |       2826 |         − |        2826 |   Sep 16, 2021 |
 | 1.12    |          − |         − |        2736 |    Aug 9, 2021 |
