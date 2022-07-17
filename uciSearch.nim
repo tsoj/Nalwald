@@ -67,6 +67,7 @@ type SearchInfo* = object
     multiPv*: int
     searchMoves*: seq[Move]
     numThreads*: int
+    nodes*: uint64
 
 proc uciSearchSinglePv(searchInfo: SearchInfo) =
     var
@@ -82,7 +83,8 @@ proc uciSearchSinglePv(searchInfo: SearchInfo) =
         increment = searchInfo.increment,
         timeLeft = searchInfo.timeLeft,
         moveTime = searchInfo.moveTime,
-        numThreads = searchInfo.numThreads
+        numThreads = searchInfo.numThreads,
+        maxNodes = searchInfo.nodes
     ):
         doAssert pv.len >= 1
         bestMove = pv[0]
@@ -141,7 +143,8 @@ proc uciSearch*(searchInfo: SearchInfo) =
                     increment = searchInfo.increment,
                     timeLeft = searchInfo.timeLeft,
                     moveTime = searchInfo.moveTime,
-                    numThreads = searchInfo.numThreads
+                    numThreads = searchInfo.numThreads,
+                    maxNodes = searchInfo.nodes
                 ):
                     yield SearchResult(move: move, value: value, pv: pv, nodes: nodes, passedTime: passedTime)
         iterators.add genIter(newPosition, move)

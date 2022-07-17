@@ -12,10 +12,7 @@ import
     os,
     atomics
 
-
-type SearchThreadResult = tuple
-    value: Value
-    nodes: uint64
+# TODO: create one big search info object
 
 func launchSearch(
     position: Position,
@@ -25,23 +22,25 @@ func launchSearch(
     historyTable: ptr HistoryTable,
     gameHistory: GameHistory,
     depth: Ply,
+    maxNodes: uint64,
     evaluation: proc(position: Position): Value {.noSideEffect.}
-): SearchThreadResult =
+): uint64 =
     var state = SearchState(
         stop: stop,
         threadStop: threadStop,
         hashTable: hashTable,
         historyTable: historyTable,
         gameHistory: gameHistory,
-        evaluation: evaluation
+        evaluation: evaluation,
+        maxNodes: maxNodes
     )
-    let value = position.search(
+    discard position.search(
         state,
         alpha = -valueInfinity, beta = valueInfinity,
         depth = depth, height = 0,
         previous = noMove
     )
-    (value: value, nodes: state.countedNodes)
+    state.countedNodes
 
 iterator iterativeDeepeningSearch*(
     position: Position,
@@ -50,6 +49,7 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply,
     stop: ptr Atomic[bool],
     numThreads = 1,
+    maxNodes = uint64.high,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move], nodes: uint64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
@@ -63,7 +63,9 @@ iterator iterativeDeepeningSearch*(
             let
                 numThreads = max(1, numThreads)
                 gameHistory = newGameHistory(positionHistory)
-            var historyTable: seq[HistoryTable]
+            var
+                totalNodes = 0'u64
+                historyTable: seq[HistoryTable]
             for _ in 0..<numThreads:
                 historyTable.add newHistoryTable()
 
@@ -73,7 +75,6 @@ iterator iterativeDeepeningSearch*(
             for depth in 1.Ply..targetDepth:
                 var
                     nodes = 0'u64
-                    value: Value
                     threadStop: Atomic[bool]
                 
                 threadStop.store(false)
@@ -86,14 +87,15 @@ iterator iterativeDeepeningSearch*(
                     addr historyTable[i],
                     gameHistory,
                     depth,
+                    (maxNodes - totalNodes) div numThreads.uint64,
                     evaluation
                 )
 
                 if numThreads == 1 or (now() - start).inMilliseconds < 100:
                     # don't use multithreading too early or when only one thread allowed
-                    (value, nodes) = launchSearch(0)
+                    nodes = launchSearch(0)
                 else:
-                    var threadSeq: seq[FlowVar[SearchThreadResult]]
+                    var threadSeq: seq[FlowVar[uint64]]
                     for i in 0..<numThreads:
                         if i > 0: sleep(1)
                         threadSeq.add spawn launchSearch(i)
@@ -102,19 +104,22 @@ iterator iterativeDeepeningSearch*(
                         sleep(1)
                         for i, flowVar in threadSeq.mpairs:
                             if flowVar.isReady:
-                                (value, nodes) = ^flowVar
+                                nodes = ^flowVar
                                 threadSeq.del i
                                 break
 
                     threadStop.store(true)                
                     for flowVar in threadSeq.mitems:
-                        let r = ^flowVar
-                        nodes += r.nodes
+                        nodes += ^flowVar
 
-                if stop[].load:
+                totalNodes += nodes
+
+                if stop[].load or totalNodes >= maxNodes:
                     break
 
-                let pv = hashTable.getPv(position)
+                let
+                    pv = hashTable.getPv(position)
+                    value = hashTable.get(position.zobristKey).value
                 doAssert pv.len >= 1
 
                 yield (

@@ -42,6 +42,7 @@ iterator iterativeTimeManagedSearch*(
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
     numThreads: int,
+    maxNodes: uint64 = uint64.high,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move], nodes: uint64, passedTime: Duration] =
 
@@ -67,7 +68,8 @@ iterator iterativeTimeManagedSearch*(
         positionHistory,
         targetDepth,
         stop,
-        numThreads,
+        numThreads = numThreads,
+        maxNodes = maxNodes,
         evaluation
     ):
         iteration += 1
@@ -110,6 +112,7 @@ proc timeManagedSearch*(
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
     numThreads = 1,
+    maxNodes: uint64 = uint64.high,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move]] =
     for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
@@ -123,6 +126,7 @@ proc timeManagedSearch*(
         timeLeft = timeLeft,
         moveTime = moveTime,
         numThreads = numThreads,
+        maxNodes = maxNodes,
         evaluation
     ):
         result = (value: value, pv: pv)

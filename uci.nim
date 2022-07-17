@@ -139,7 +139,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         moveTime: initDuration(milliseconds = int64.high),
         multiPv: uciState.multiPv,
         searchMoves: newSeq[Move](0),
-        numThreads: uciState.numThreads
+        numThreads: uciState.numThreads,
+        nodes: uint64.high
     )
 
     for i in 0..<params.len:
@@ -159,6 +160,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
                 searchInfo.timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
             of "movetime":
                 searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
+            of "nodes":
+                searchInfo.nodes = params[i+1].parseUInt
             else:
                 echo "info string Unknown parameter: ", $params[i]
         try:

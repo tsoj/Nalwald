@@ -53,6 +53,7 @@ type SearchState* = object
     historyTable*: ptr HistoryTable
     gameHistory*: GameHistory
     countedNodes*: uint64
+    maxNodes*: uint64
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func update(
@@ -252,7 +253,7 @@ func search*(
         if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode):
             newBeta = alpha + 1
 
-        if state.stop[].load or state.threadStop[].load:
+        if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
             return 0.Value
         
         var value = -newPosition.search(
