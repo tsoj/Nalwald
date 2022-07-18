@@ -114,9 +114,6 @@ iterator iterativeDeepeningSearch*(
 
                 totalNodes += nodes
 
-                if stop[].load or totalNodes >= maxNodes:
-                    break
-
                 let
                     pv = hashTable.getPv(position)
                     value = hashTable.get(position.zobristKey).value
@@ -128,3 +125,6 @@ iterator iterativeDeepeningSearch*(
                     nodes: nodes,
                     canStop: legalMoves.len == 1 or abs(value) >= valueCheckmate
                 )
+
+                if stop[].load or totalNodes >= maxNodes:
+                    break
