@@ -9,35 +9,42 @@ import
 --threads:on
 --styleCheck:hint
 
-func highPerformance() =
-    --panics:on
-    
-    --define:danger
-    
+func lto() =    
     --passC:"-flto"
     --passL:"-flto"
 
     if defined(windows):
         --passL:"-fuse-ld=lld"
 
-func lowPerformance() =
-    --passC:"-fno-omit-frame-pointer -g -O2"
-    --debugger:native
+func highPerformance() =
+    --panics:on    
+    --define:danger
+    lto()
 
+func debuggerProfilerInfo() =
+    --passC:"-fno-omit-frame-pointer -g"
+    --debugger:native
 
 let suffix = if defined(windows): ".exe" else: ""
 let name = projectName() & "-" & version()
 
 task debug, "debug compile":
     --define:debug
-    lowPerformance()
+    --passC:"-O2"
+    debuggerProfilerInfo()
     switch("o", name & "-debug" & suffix)
     setCommand "c"
 
 task checks, "checks compile":
     --define:release
-    lowPerformance()
+    debuggerProfilerInfo()
     switch("o", name & "-checks" & suffix)
+    setCommand "c"
+
+task profile, "profile compile":
+    highPerformance()
+    debuggerProfilerInfo()
+    switch("o", name & "-profile" & suffix)
     setCommand "c"
 
 task default, "default compile":

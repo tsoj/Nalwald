@@ -1,5 +1,6 @@
 import
     position,
+    positionUtils,
     types,
     bitboard,
     bitops,
@@ -45,6 +46,32 @@ func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inl
 func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
     for phase in Phase:
         a[phase] -= b[phase]
+
+func isLikelyDraw(position: Position): bool =
+    if position[pawn] != 0 or position[queen] != 0:
+        return false
+
+    if position.insufficientMaterial:
+        return true
+
+    if position[rook] == 0:
+        if position[bishop] == 0:
+            return true
+        for color in white..black:
+            if (position[color] and position[bishop]).countSetBits == 1:
+                return true
+    else:
+        for color in white..black:
+            let bishopsAndKnights = position[bishop] or position[knight]
+
+            if (position[color] and bishopsAndKnights) == 0 and
+            (position[color.opposite] and position[rook]) == 0 and
+            (position[color] and position[rook]).countSetBits == 1 and
+            (position[color.opposite] and bishopsAndKnights).countSetBits == 1:
+                return true
+    false
+
+    
 
 type Nothing = enum nothing
 type GradientOrNothing = EvalParametersFloat or Nothing
@@ -437,11 +464,22 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     let gamePhase = position.gamePhase
 
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
-    doAssert valueCheckmate > result.abs
+
+    const likelyDrawnDivider = 8
 
     when gradient isnot Nothing:
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
+
+        if position.isLikelyDraw:
+            gradient[opening] /= likelyDrawnDivider.float32
+            gradient[endgame] /= likelyDrawnDivider.float32
+    
+    if position.isLikelyDraw:
+        result = result div likelyDrawnDivider
+
+    doAssert valueCheckmate > result.abs
+
 
 #-------------- sugar functions --------------#
 

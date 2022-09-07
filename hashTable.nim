@@ -104,8 +104,8 @@ func add*(
     let entry = HashTableEntry(
         upperZobristKeyAndNodeTypeAndValue:(
             (zobristKey and not eighteenBitMask) or
-            ((cast[uint64](nodeType.int8) shl 16) and eighteenBitMask and not sixteenBitMask) or
-            (cast[uint64](value.int16) and sixteenBitMask)
+            ((cast[uint64](nodeType.int64) shl 16) and eighteenBitMask and not sixteenBitMask) or
+            (cast[uint64](value.int64) and sixteenBitMask)
         ),
         depth: depth,
         bestMove: bestMove
