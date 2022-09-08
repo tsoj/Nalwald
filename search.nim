@@ -32,7 +32,7 @@ func hashResultFutilityMargin(depthDifference: Ply): Value =
     depthDifference.Value * 200.cp
 
 func nullMoveDepth(depth: Ply): Ply =
-    depth - 2.Ply - depth div 3.Ply
+    depth - 3.Ply - depth div 4.Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
