@@ -11,7 +11,7 @@ import
     bitops
 
 func legalMoves*(position: Position): seq[Move] =
-    var moveArray: array[256, Move]
+    var moveArray: array[maxNumMoves, Move]
     let numMoves = position.generateMoves(moveArray)
     for i in 0..<numMoves:
         var newPosition = position

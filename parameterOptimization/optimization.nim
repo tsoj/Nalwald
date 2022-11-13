@@ -40,7 +40,7 @@ proc optimize(
     maxIterations = int.high,
     minTries = 10,
     discount = 0.9,
-    numThreads = 30
+    numThreads = 40
 ): EvalParameters =
 
     echo "-------------------"
