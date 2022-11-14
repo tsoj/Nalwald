@@ -108,7 +108,7 @@ const possibleFileOccupancy: array[64, Bitboard] = block:
 func generateSlidingAttackTable[F](
     possibleOccupancy: array[64, Bitboard],
     directions: array[2, array[2, F]],
-    hashkeyFunction: proc(square: Square, occupancy: Bitboard): uint8
+    hashkeyFunction: proc(square: Square, occupancy: Bitboard): uint8 {.noSideEffect.}
     ): array[a1..h8, array[64, Bitboard]] =
     for square in a1..h8:
         for occupancy in possibleOccupancy:

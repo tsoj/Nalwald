@@ -7,7 +7,7 @@ import
     os
 
 
-func boardString*(f: proc(square: Square): Option[string]): string =
+func boardString*(f: proc(square: Square): Option[string] {.noSideEffect.}): string =
     result = " _ _ _ _ _ _ _ _\n"
     for rank in countdown(7, 0):
         for file in 0..7:
