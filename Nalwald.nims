@@ -1,8 +1,6 @@
-import
-    version,
-    distros
+import version
 
---gc:arc
+--mm:arc
 --define:useMalloc
 --passL:"-static"
 --cc:clang

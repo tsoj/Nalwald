@@ -167,7 +167,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         try:
             let move = params[i].toMove(uciState.position)
             searchInfo.searchMoves.add move
-        except: discard
+        except CatchableError: discard
      
     uciState.stop()
     discard ^searchThreadResult
@@ -192,7 +192,7 @@ proc test(params: seq[string]) =
     else:
         let numNodes = try:
             params[0].parseInt.uint64
-        except:
+        except CatchableError:
             uint64.high
 
         perftTest(
@@ -319,10 +319,10 @@ proc uciLoop*() =
             else:
                 try:
                     uciState.moves(params)
-                except:
+                except CatchableError:
                     echo "Unknown command: ", params[0]
                     echo "Use 'help'"
-        except:
+        except CatchableError:
             echo "info string ", getCurrentExceptionMsg()
 
 
