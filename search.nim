@@ -64,9 +64,7 @@ func update(
     nodeType: NodeType,
     value: Value
 ) =
-    {.cast(noSideEffect).}:
-        let stopped = state.stop[].load or state.threadStop[].load
-    if bestMove != noMove and not stopped:
+    if bestMove != noMove and not (state.stop[].load or state.threadStop[].load):
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if nodeType != allNode:
             state.historyTable[].update(bestMove, previous, position.us, depth)

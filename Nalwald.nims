@@ -6,7 +6,6 @@ import version
 --cc:clang
 --threads:on
 --styleCheck:hint
---experimental:strictFuncs
 
 func lto() =    
     --passC:"-flto"
