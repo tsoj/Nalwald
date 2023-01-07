@@ -63,3 +63,7 @@ task modern, "BMI2 and POPCNT compile":
     --passC:"-mpopcnt"
     switch("o", name & "-modern" & suffix)
     setCommand "c"
+
+# TODO try adding pawn mobility
+# 6 +/-6 with gamePhase in lmr numbers, but all the same
+# TODO with gamePhase in lmr numbers, endgame 0.8 times smaller

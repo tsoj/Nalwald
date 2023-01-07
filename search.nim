@@ -8,7 +8,8 @@ import
     moveIterator,
     hashTable,
     evaluation,
-    see
+    see,
+    utils
 
 import std/[
     atomics,
@@ -17,14 +18,14 @@ import std/[
 
 static: doAssert pawn.value == 100.cp
 
-func futilityReduction(value: Value): Ply =
-    if value < 150.cp: return 0.Ply
-    if value < 200.cp: return 1.Ply
-    if value < 300.cp: return 2.Ply
-    if value < 500.cp: return 3.Ply
-    if value < 750.cp: return 4.Ply
-    if value < 1050.cp: return 5.Ply
-    if value < 1400.cp: return 6.Ply
+func futilityReduction(gamePhase: GamePhase, value: Value): Ply =
+    if value < gamePhase(150.cp, 150.cp) : return 0.Ply
+    if value < gamePhase(200.cp, 200.cp) : return 1.Ply
+    if value < gamePhase(300.cp, 300.cp) : return 2.Ply
+    if value < gamePhase(500.cp, 500.cp) : return 3.Ply
+    if value < gamePhase(750.cp, 750.cp) : return 4.Ply
+    if value < gamePhase(1050.cp, 1050.cp) : return 5.Ply
+    if value < gamePhase(1400.cp, 1400.cp) : return 6.Ply
     Ply.high
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
@@ -161,6 +162,7 @@ func search*(
         depth = if inCheck or previous.isPawnMoveToSecondRank: depth + 1.Ply else: depth
         hashResult = state.hashTable[].get(position.zobristKey)
         originalAlpha = alpha
+        gamePhase = position.gamePhase
 
     var
         alpha = alpha
@@ -245,7 +247,7 @@ func search*(
 
             # futility reduction
             if beta - originalAlpha <= 1 and moveCounter > 1:
-                newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
+                newDepth -= gamePhase.futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
                     continue
 
