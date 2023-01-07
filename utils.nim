@@ -70,20 +70,16 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
     type I = (when T is SomeInteger: BiggestInt else: float)
 
     var tmp: I
-    tmp = forOpening.I*(gamePhase.int - GamePhase.low.int).I + forEndgame.I*(GamePhase.high.int - gamePhase.int).I
+    tmp = forOpening.I*(gamePhase - GamePhase.low).I + forEndgame.I*(GamePhase.high - gamePhase).I
     when T is SomeInteger:
-        tmp = tmp div (GamePhase.high.int - GamePhase.low.int).I
+        tmp = tmp div (GamePhase.high - GamePhase.low).I
         static: doAssert(
-            GamePhase.high.int - GamePhase.low.int == 32,
+            GamePhase.high - GamePhase.low == 32,
             "This makes sure that this division can be done using bitshifts")
     else:
-        tmp = tmp / (GamePhase.high.int - GamePhase.low.int).T
+        tmp = tmp / (GamePhase.high - GamePhase.low).T
 
     result = tmp.T
-
-{.experimental: "callOperator".}
-func `()`*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
-    gamePhase.interpolate(forOpening = forOpening, forEndgame = forEndgame)
 
 proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
     const sleepTimeMs = 5

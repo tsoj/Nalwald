@@ -63,10 +63,3 @@ task modern, "BMI2 and POPCNT compile":
     --passC:"-mpopcnt"
     switch("o", name & "-modern" & suffix)
     setCommand "c"
-
-# TODO try adding pawn mobility
-# 6 +/-6 with gamePhase in lmr numbers, but all the same
-# 11 +/-6 with gamePhase in lmr numbers, opening bigger
-# TODO with gamePhase in lmr numbers, endgame bigger
-# TODO tune
-# TODO put likelyDrawn back in?
