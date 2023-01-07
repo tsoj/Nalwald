@@ -66,4 +66,7 @@ task modern, "BMI2 and POPCNT compile":
 
 # TODO try adding pawn mobility
 # 6 +/-6 with gamePhase in lmr numbers, but all the same
-# TODO with gamePhase in lmr numbers, endgame 0.8 times smaller
+# 11 +/-6 with gamePhase in lmr numbers, opening bigger
+# TODO with gamePhase in lmr numbers, endgame bigger
+# TODO tune
+# TODO put likelyDrawn back in?

@@ -19,13 +19,13 @@ import std/[
 static: doAssert pawn.value == 100.cp
 
 func futilityReduction(gamePhase: GamePhase, value: Value): Ply =
-    if value < gamePhase(150.cp, 150.cp) : return 0.Ply
-    if value < gamePhase(200.cp, 200.cp) : return 1.Ply
-    if value < gamePhase(300.cp, 300.cp) : return 2.Ply
-    if value < gamePhase(500.cp, 500.cp) : return 3.Ply
-    if value < gamePhase(750.cp, 750.cp) : return 4.Ply
-    if value < gamePhase(1050.cp, 1050.cp) : return 5.Ply
-    if value < gamePhase(1400.cp, 1400.cp) : return 6.Ply
+    if value < gamePhase(180.cp, 75.cp) : return 0.Ply
+    if value < gamePhase(240.cp, 100.cp) : return 1.Ply
+    if value < gamePhase(350.cp, 150.cp) : return 2.Ply
+    if value < gamePhase(580.cp, 250.cp) : return 3.Ply
+    if value < gamePhase(800.cp, 400.cp) : return 4.Ply
+    if value < gamePhase(1200.cp, 500.cp) : return 5.Ply
+    if value < gamePhase(1500.cp, 700.cp) : return 6.Ply
     Ply.high
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
