@@ -40,7 +40,7 @@ proc optimize(
     maxIterations = int.high,
     minTries = 10,
     discount = 0.9,
-    numThreads = 40
+    numThreads = 31
 ): EvalParameters =
 
     echo "-------------------"
@@ -168,9 +168,10 @@ proc optimize(
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd", weight = 1.0)
 # Elements in quietSetZuri are weighed more, because it brings better results.
-# quietSetZuri is probably of higher quality
+# quietSetZuri is probably of higher quality # TODO chec again
 data.loadData("quietSetNalwald.epd", weight = 0.6)
 data.loadData("quietSetCombinedCCRL4040.epd", weight = 0.6)
+data.loadData("CCRL404FRC.epd", weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 

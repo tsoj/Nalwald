@@ -1,12 +1,18 @@
 ##### Generate positions
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run generatePositions.nim
+nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run generatePositions.nim
 ```
 
 ##### Remove non-quiet positions
 
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run removeNonQuietPositions.nim
+nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run removeNonQuietPositions.nim
+```
+
+##### Merge and select positions
+
+```
+nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run mergeDuplicateAndSelectFENs.nim
 ```
 ##### Label positions
 
@@ -26,17 +32,17 @@ nimble install psutil
 Label positions.
 
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run labelPositions.nim
+nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run labelPositions.nim
 ```
 
 ##### Run optimization
 ```
-nim c -d:danger --gc:arc -d:lto --passL:"-static" --cc:clang --threads:on --run optimization.nim
+nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run optimization.nim
 ```
 
 ##### Get piece values
 ```
-nim c -d:release --gc:arc -d:lto --passL:"-static" --cc:clang --run calculatePieceValue.nim
+nim c -d:release --mm:arc -d:lto --passL:"-static" --cc:clang --run calculatePieceValue.nim
 ```
 
 ##### How data sets are generated
@@ -62,3 +68,8 @@ nim c -d:release --gc:arc -d:lto --passL:"-static" --cc:clang --run calculatePie
 ###### quietSetCombinedCCRL4040.epd
 
 - the target value of the positions of `quietSmallNalwaldCCRL4040.epd` will be averaged over the results of the respective CCRL4040 games (of players with Elo 2700 and higher) and the games that Nalwald played
+
+###### CCRL404FRC.epd
+
+- just some randomly selected positions from CCRL games of engines over 2900 Elo
+- no preprocessing
