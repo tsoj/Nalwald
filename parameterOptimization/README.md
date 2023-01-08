@@ -1,18 +1,18 @@
-##### Generate positions
+cd d##### Generate positions
 ```
-nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run generatePositions.nim
+nim c --run generatePositions.nim
 ```
 
 ##### Remove non-quiet positions
 
 ```
-nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run removeNonQuietPositions.nim
+nim c --run removeNonQuietPositions.nim
 ```
 
 ##### Merge and select positions
 
 ```
-nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run mergeDuplicateAndSelectFENs.nim
+nim c --run mergeDuplicateAndSelectFENs.nim
 ```
 ##### Label positions
 
@@ -32,17 +32,17 @@ nimble install psutil
 Label positions.
 
 ```
-nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run labelPositions.nim
+nim c --run labelPositions.nim
 ```
 
 ##### Run optimization
 ```
-nim c -d:danger --mm:arc -d:lto --passL:"-static" --cc:clang --threads:on --run optimization.nim
+nim c --run optimization.nim
 ```
 
 ##### Get piece values
 ```
-nim c -d:release --mm:arc -d:lto --passL:"-static" --cc:clang --run calculatePieceValue.nim
+nim c --run calculatePieceValue.nim
 ```
 
 ##### How data sets are generated

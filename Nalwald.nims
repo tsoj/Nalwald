@@ -7,7 +7,7 @@ import version
 --threads:on
 --styleCheck:hint
 
-func lto() =    
+func lto() =
     --passC:"-flto"
     --passL:"-flto"
 

@@ -171,7 +171,7 @@ data.loadData("quietSetZuri.epd", weight = 1.0)
 # quietSetZuri is probably of higher quality # TODO chec again
 data.loadData("quietSetNalwald.epd", weight = 0.6)
 data.loadData("quietSetCombinedCCRL4040.epd", weight = 0.6)
-data.loadData("CCRL404FRC.epd", weight = 0.6)
+data.loadData("quietSmallCCRL404FRC.epd", weight = 0.6)
 
 let startingEvalParametersFloat = startingEvalParameters
 

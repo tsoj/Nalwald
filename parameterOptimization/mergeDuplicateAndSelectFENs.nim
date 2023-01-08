@@ -7,9 +7,9 @@ import std/
 ]
 
 const
-    readFilename = "CCRL404FRC.epd"
-    writeFilename = "smallCCRL404FRC.epd"
-    approxMaxNumLines = 1_500_000
+    readFilename = "quietCCRL404FRC.epd"
+    writeFilename = "quietSmallCCRL404FRC.epd"
+    approxMaxNumLines = 1_800_000
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

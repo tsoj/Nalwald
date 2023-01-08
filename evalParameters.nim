@@ -27,7 +27,7 @@ type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]
 
-func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
+func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
 
     when Out is AtomType:
         static: doAssert In is AtomType, "Transforming types must have the same structure."
@@ -58,7 +58,7 @@ func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float3
     else:
         static: doAssert false, "Type is not not implemented for transforming"
 
-func transform*[Out, In](output: var Out, input: In) =
+func transform[Out, In](output: var Out, input: In) =
     transform(output, input, proc(a: var float32, b: float32) = a = b)
 
 func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =

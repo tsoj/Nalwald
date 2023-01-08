@@ -36,8 +36,10 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry
 
 proc printPieceValues*(evalParameters: EvalParameters) =
     var data: seq[Entry]
-    data.loadData("quietSetZuri.epd", 1.0)
-    data.loadData("quietSetNalwald.epd", 1.0)
+    data.loadData("quietSetZuri.epd")
+    data.loadData("quietSetNalwald.epd")
+    data.loadData("quietSetCombinedCCRL4040.epd")
+    data.loadData("quietSmallCCRL404FRC.epd")
     echo "Piece values:"
     for piece in pawn..queen:
         echo piece, ": ", getPieceValue(piece, evalParameters, data)
