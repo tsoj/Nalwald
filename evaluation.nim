@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 166.Value,
-        knight: 587.Value,
-        bishop: 611.Value,
-        rook: 842.Value,
-        queen: 1761.Value,
+        pawn: 181.Value,
+        knight: 692.Value,
+        bishop: 703.Value,
+        rook: 946.Value,
+        queen: 1939.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -218,6 +218,11 @@ func evaluatePawn(
             kingSquare,
             gradient
         )
+
+    # can move forward
+    if (position.occupancy and attackTablePawnQuiet[us][square]) == 0:
+        result.addValue(evalParameters, gradient, us, bonusPawnCanMove)
+
 
 #-------------- knight evaluation --------------#
 
