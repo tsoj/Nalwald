@@ -161,6 +161,7 @@ func search*(
         depth = if inCheck or previous.isPawnMoveToSecondRank: depth + 1.Ply else: depth
         hashResult = state.hashTable[].get(position.zobristKey)
         originalAlpha = alpha
+        originalBeta = beta
 
     var
         alpha = alpha
@@ -306,4 +307,23 @@ func search*(
             bestValue = 0.Value
     
     state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
+
+    if nodeType == pvNode and
+    (not hashResult.isEmpty) and
+    hashResult.nodeType == pvNode and
+    hashResult.depth == depth - 1.Ply and
+    bestMove == hashResult.bestMove and
+    bestValue.abs <= 100.cp and
+    abs(bestValue - hashResult.value) >= 20.cp:
+        let value = position.search(
+            state,
+            alpha = originalAlpha, beta = originalBeta,
+            depth = depth + 1.Ply, height = height,
+            previous = previous
+        )
+        # debugEcho "--------------"
+        # debugEcho hashResult.value.toCp, ", ", bestValue.toCp, ", ", value.toCp
+        # debugEcho (hashResult.value - bestValue).toCp, ", ", (bestValue - value).toCp
+        return value
+
     bestValue
