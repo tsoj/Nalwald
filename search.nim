@@ -312,7 +312,7 @@ func search*(
     nodeType == pvNode and
     hashResult.nodeType == nodeType and
     hashResult.depth == depth - 1.Ply and
-    # bestMove != hashResult.bestMove and
+    bestMove != hashResult.bestMove and
     bestValue.abs <= 100.cp and
     abs(bestValue - hashResult.value) >= 20.cp:
         let value = position.search(

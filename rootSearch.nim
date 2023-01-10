@@ -34,12 +34,7 @@ func launchSearch(
         evaluation: evaluation,
         maxNodes: maxNodes
     )
-    discard position.search(
-        state,
-        alpha = -valueInfinity, beta = valueInfinity,
-        depth = depth, height = 0,
-        previous = noMove
-    )
+    discard position.search(state, depth = depth)
     state.countedNodes
 
 iterator iterativeDeepeningSearch*(
