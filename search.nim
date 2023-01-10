@@ -135,7 +135,7 @@ func materialQuiesce*(position: Position): Value =
     )
     position.quiesce(state = state, alpha = -valueInfinity, beta = valueInfinity, height = 0.Ply, doPruning = false)
 
-func search*(
+func search(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
@@ -310,11 +310,10 @@ func search*(
 
     if (not hashResult.isEmpty) and
     nodeType == pvNode and
+    (not height == 0) and
     hashResult.nodeType == nodeType and
     hashResult.depth == depth - 1.Ply and
-    bestMove != hashResult.bestMove and
-    bestValue.abs <= 100.cp and
-    abs(bestValue - hashResult.value) >= 20.cp:
+    bestMove != hashResult.bestMove:
         let value = position.search(
             state,
             alpha = originalAlpha, beta = originalBeta,
@@ -327,3 +326,15 @@ func search*(
         return value
 
     bestValue
+
+func search*(
+    position: Position,
+    state: var SearchState,
+    depth: Ply
+): Value =
+    position.search(
+        state,
+        alpha = -valueInfinity, beta = valueInfinity,
+        depth = depth, height = 0,
+        previous = noMove
+    )
