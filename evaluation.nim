@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 181.Value,
-        knight: 692.Value,
-        bishop: 703.Value,
-        rook: 946.Value,
-        queen: 1939.Value,
+        pawn: 179.Value,
+        knight: 688.Value,
+        bishop: 698.Value,
+        rook: 941.Value,
+        queen: 1917.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -211,7 +211,8 @@ func evaluatePawn(
 ): array[Phase, Value] {.inline.} =
 
     # passed pawn
-    if position.isPassedPawn(us, enemy, square):
+    let isPassed = position.isPassedPawn(us, enemy, square)
+    if isPassed:
         result += evalParameters.getPstValue(
             square, noPiece, # noPiece stands for passed pawn
             us, enemy,
@@ -221,7 +222,14 @@ func evaluatePawn(
 
     # can move forward
     if (position.occupancy and attackTablePawnQuiet[us][square]) == 0:
-        result.addValue(evalParameters, gradient, us, bonusPawnCanMove)
+        if isPassed:
+            var index = square.int div 8
+            if us == black:
+                index = 7 - index
+            result.addValue(evalParameters, gradient, us, bonusPassedPawnCanMove[index])
+        else:
+            result.addValue(evalParameters, gradient, us, bonusPawnCanMove)
+    
 
 
 #-------------- knight evaluation --------------#
