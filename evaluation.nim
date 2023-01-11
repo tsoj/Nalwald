@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 179.Value,
-        knight: 688.Value,
-        bishop: 698.Value,
-        rook: 941.Value,
-        queen: 1917.Value,
+        pawn: 294.Value,
+        knight: 1158.Value,
+        bishop: 1174.Value,
+        rook: 1582.Value,
+        queen: 3356.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -395,6 +395,7 @@ func evaluatePieceType(
     piece: static Piece,
     us, enemy: static Color,
     kingSquare: array[white..black, Square],
+    pieceSpread: var array[white..black, Bitboard],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.}  =
@@ -408,9 +409,15 @@ func evaluatePieceType(
         )
      
     for square in (position[piece] and position[us]):
+        when piece != pawn:
+            pieceSpread[us] = pieceSpread[us] or mask3x3[square]
+        
         result += evaluatePiece(square, us, enemy)
 
     for square in (position[piece] and position[enemy]):
+        when piece != pawn:
+            pieceSpread[enemy] = pieceSpread[enemy] or mask3x3[square]
+        
         result -= evaluatePiece(square, enemy, us)
 
 func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value {.inline.} =
@@ -419,17 +426,34 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     var value = [opening: 0.Value, endgame: 0.Value]
 
-    let kingSquare = [
-        white: position.kingSquare(white),
-        black: position.kingSquare(black)
-    ]
+    let
+        kingSquare = [
+            white: position.kingSquare(white),
+            black: position.kingSquare(black)
+        ]
+        us = position.us
+        enemy = position.enemy
     
     # evaluating pieces
+    var pieceSpread = [white: 0.Bitboard, black: 0.Bitboard]
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
-        if position.us == white:
-            value += position.evaluatePieceType(piece, white, black, kingSquare, evalParameters, gradient)
+        if us == white:
+            value += position.evaluatePieceType(piece, white, black, kingSquare, pieceSpread, evalParameters, gradient)
         else:
-            value += position.evaluatePieceType(piece, black, white, kingSquare, evalParameters, gradient)
+            value += position.evaluatePieceType(piece, black, white, kingSquare, pieceSpread, evalParameters, gradient)
+
+    # piece spread bonus
+    let
+        pieceSpreadIndexEnemy = pieceSpread[enemy].countSetBits
+        pieceSpreadIndexUs = pieceSpread[us].countSetBits
+    var
+        pieceSpreadBonusEnemy = [opening: 0.Value, endgame: 0.Value]
+        pieceSpreadBonusUs = [opening: 0.Value, endgame: 0.Value]
+    pieceSpreadBonusEnemy.addValue(evalParameters, gradient, enemy, pieceSpreadBonus[pieceSpreadIndexEnemy])
+    pieceSpreadBonusUs.addValue(evalParameters, gradient, us, pieceSpreadBonus[pieceSpreadIndexUs])
+
+    value -= pieceSpreadBonusEnemy
+    value += pieceSpreadBonusUs
 
     # evaluation pawn patters
     for square in (
@@ -442,7 +466,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
             value += evalParameters.pawnMaskBonus(
                 position,
                 square,
-                position.us, position.enemy,
+                us, enemy,
                 gradient
             )
 

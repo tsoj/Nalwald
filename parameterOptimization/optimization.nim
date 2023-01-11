@@ -44,7 +44,7 @@ proc optimize(
 ): EvalParameters =
 
     echo "-------------------"
-    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
+    let k = 0.5#optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
 
     var bestSolution: EvalParametersFloat = start
 
