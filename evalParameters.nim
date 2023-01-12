@@ -10,7 +10,6 @@ type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
     pawnMaskBonus*: array[3*3*3 * 3*3*3 * 3*3*3, ValueType]
-    pieceSpreadBonus*: array[64, ValueType]
     bonusPawnCanMove*: ValueType
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
