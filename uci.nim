@@ -49,6 +49,10 @@ proc uci() =
 
 proc setOption(uciState: var UciState, params: seq[string]) =
 
+    if uciState.searchRunningFlag.load:
+        echo "Can't set options when search is running"
+        return
+
     if params.len == 4 and
     params[0] == "name" and
     params[2] == "value":
@@ -182,8 +186,11 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
     while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
         sleep(1)
 
-func uciNewGame(uciState: var UciState) =
-    uciState.hashTable.clear()
+proc uciNewGame(uciState: var UciState) =
+    if uciState.searchRunningFlag.load:
+        echo "Can't start new UCI game when search is still running"
+    else:
+        uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
     seeTest()
