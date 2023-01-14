@@ -1,9 +1,14 @@
 import
     types,
-    utils,
+    utils
+
+import std/[
     options,
     bitops,
     endians
+]
+
+export bitops
 
 type Bitboard* = uint64
 
