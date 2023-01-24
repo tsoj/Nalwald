@@ -9,6 +9,11 @@ nim c --run generatePositions.nim
 nim c --run removeNonQuietPositions.nim
 ```
 
+##### Merge duplicates and select random subset
+```
+nim c --run mergeDuplicateAndSelect.nim
+```
+
 ##### Label positions
 
 Create an empty file called `quietSetNalwald.epd`.
