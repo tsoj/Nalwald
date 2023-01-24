@@ -33,4 +33,5 @@ generateSmallerSet
 calculatePieceValue
 mergeDuplicateAndSelectFENs
 processStuff.nim
+mergeDuplicateAndSelect
 *.pgn
