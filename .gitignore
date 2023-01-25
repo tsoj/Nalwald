@@ -19,6 +19,7 @@ massif.out
 !parameterOptimization/quietSmallNalwaldCCRL4040.epd
 !parameterOptimization/quietSmallCCRL404FRC.epd
 !parameterOptimization/quietSmallPoolGamesNalwald.epd
+!parameterOptimization/quietSetNalwald2.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 *.txt

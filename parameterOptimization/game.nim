@@ -5,21 +5,20 @@ import
     ../timeManagedSearch,
     ../hashTable,
     ../move,
-    ../evaluation,
-    times
+    ../evaluation
 
 type
     Game* = object
         hashTable: HashTable
         positionHistory: seq[Position]
-        moveTime: Duration
+        maxNodes: uint64
         earlyResignMargin: Value
         earlyAdjudicationPly: Ply
         evaluation: proc(position: Position): Value {.noSideEffect.}
-    GameStatus = enum
+    GameStatus* = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
 
-func gameStatus(positionHistory: openArray[Position]): GameStatus =
+func gameStatus*(positionHistory: openArray[Position]): GameStatus =
     doAssert positionHistory.len >= 1
     let position = positionHistory[^1]
     if position.legalMoves.len == 0:
@@ -39,16 +38,16 @@ func gameStatus(positionHistory: openArray[Position]): GameStatus =
         return threefoldRepetition
     running
 
-proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
+proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
     try:
-        doAssert game.positionHistory.gameStatus == running
+        doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
         let position = game.positionHistory[^1]
         let (value, pv) = position.timeManagedSearch(
             hashTable = game.hashTable,
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
-            moveTime = game.moveTime
+            maxNodes = game.maxNodes
         )
         doAssert pv.len >= 1
         doAssert pv[0] != noMove
@@ -56,7 +55,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
         game.positionHistory[^1].doMove(pv[0])
         return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
         
-    except:
+    except CatchableError:
         var s = getCurrentExceptionMsg() & "\n"
         s &= game.positionHistory[^1].fen & "\n"
         s &= $game.positionHistory[^1] & "\n"
@@ -67,7 +66,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
 
 func newGame*(
     startingPosition: Position,
-    moveTime = initDuration(milliseconds = 10),
+    maxNodes = 20_000'u64,
     earlyResignMargin = 800.Value,
     earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000,
@@ -76,7 +75,7 @@ func newGame*(
     result = Game(
         hashTable: newHashTable(),
         positionHistory: @[startingPosition],
-        moveTime: moveTime,
+        maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
         earlyAdjudicationPly: earlyAdjudicationPly,
         evaluation: evaluation

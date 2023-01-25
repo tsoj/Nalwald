@@ -14,18 +14,18 @@ proc playGame(fen: string): (string, float) =
         
         var game = newGame(
             startingPosition = fen.toPosition,
-            moveTime = initDuration(milliseconds = 80),
+            maxNodes = 50_000,
         )
         return (fen, game.playGame(suppressOutput = true))
         
-    except:
+    except CatchableError:
         echo getCurrentExceptionMsg()
         return ("", -1.0)
 
 const
     maxLoadPercentageCPU = 70.0
-    writeFilename = "quietSetNalwald.epd"#"quietSmallNalwaldCCRL4040.epd"
-    readFilename = "unlabeledQuietSetNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    readFilename = "unlabeledQuietSetNalwald2.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietSetNalwald2.epd"#"quietSmallNalwaldCCRL4040.epd"
 
 proc labelPositions() =
     var alreadyLabeled = block:
@@ -68,8 +68,6 @@ proc labelPositions() =
         let fen = line.toPosition.fen 
         if fen in alreadyLabeled and alreadyLabeled[fen] == 1:
             alreadyLabeled[fen] = 0
-            continue
-        if i < 1614000:
             continue
         writeResults()
         while cpu_percent() >= maxLoadPercentageCPU:

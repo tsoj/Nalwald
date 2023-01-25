@@ -12,10 +12,10 @@ import
 func value*(piece: Piece): Value =
     const table = [
         pawn: 181.Value,
-        knight: 677.Value,
-        bishop: 693.Value,
-        rook: 937.Value,
-        queen: 1945.Value,
+        knight: 674.Value,
+        bishop: 690.Value,
+        rook: 936.Value,
+        queen: 1922.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]

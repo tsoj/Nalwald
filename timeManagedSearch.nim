@@ -65,9 +65,9 @@ iterator iterativeTimeManagedSearch*(
     for (value, pv, nodes, canStop) in iterativeDeepeningSearch(
         position,
         hashTable,
+        stop,
         positionHistory,
         targetDepth,
-        stop,
         numThreads = numThreads,
         maxNodes = maxNodes,
         evaluation

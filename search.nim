@@ -254,7 +254,7 @@ func search(
             newBeta = alpha + 1
 
         if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
-            return 0.Value
+            break
         
         var value = -newPosition.search(
             state,

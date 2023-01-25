@@ -7,10 +7,14 @@ import
     hashTable,
     searchUtils,
     evaluation,
-    times,
+    times
+
+import std/[
     threadpool,
     os,
-    atomics
+    atomics,
+    strformat
+]
 
 # TODO: create one big search info object
 
@@ -40,9 +44,9 @@ func launchSearch(
 iterator iterativeDeepeningSearch*(
     position: Position,
     hashTable: var HashTable,
-    positionHistory: seq[Position],
-    targetDepth: Ply,
     stop: ptr Atomic[bool],
+    positionHistory: seq[Position] = @[],
+    targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = uint64.high,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
@@ -112,7 +116,8 @@ iterator iterativeDeepeningSearch*(
                 let
                     pv = hashTable.getPv(position)
                     value = hashTable.get(position.zobristKey).value
-                doAssert pv.len >= 1
+                doAssert pv.len >= 1, &"\n{position.fen = }\n{positionHistory = }\n{depth = }"
+
 
                 yield (
                     value: value,

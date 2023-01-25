@@ -167,11 +167,10 @@ proc optimize(
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
-# Elements in quietSetZuri are weighed more, because it brings better results.
-# quietSetZuri is probably of higher quality # TODO chec again
 data.loadData("quietSetNalwald.epd")
 data.loadData("quietSetCombinedCCRL4040.epd")
 data.loadData("quietSmallPoolGamesNalwald.epd")
+data.loadData("quietSetNalwald2.epd")
 
 let startingEvalParametersFloat = startingEvalParameters
 
