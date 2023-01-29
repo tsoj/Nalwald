@@ -22,7 +22,6 @@ import
     os
 
 const
-    startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
@@ -267,7 +266,7 @@ proc uciLoop*() =
     echo fmt"------------ by Jost Triller ------------"
 
     var uciState = UciState(
-        position: startposFen.toPosition,
+        position: startpos,
         hashtable: newHashTable(),
         numThreads: defaultNumThreads,
         multiPv: 1

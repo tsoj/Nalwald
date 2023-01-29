@@ -14,8 +14,13 @@ import std/[
     sugar
 ]
 
+## Here the code may at times be less beautiful than it could be.
+## The reason for that is, that I want to avoid string copies as much as possible
+## to make this PGN parser fast enough.
+
 func validSANMove(position: Position, move: Move, san: string): bool =
 
+    # TODO optimize (avoid string copies)
 
     if san == "O-O":
         return move.castled and files[move.target] == files[kingTarget[white][kingside]]
@@ -70,42 +75,36 @@ func moveFromSANMove(position: Position, sanMove: string): Move =
             doAssert result == noMove, fmt"Ambiguous SAN move notation: {sanMove} (possible moves: {result}, {move}"
             result = move
 
-func popFront(s: var string): char =
-    doAssert s.len >= 1
-    result = s[0]
-    if s.len == 1:
-        s = ""
-    else:
-        s = s[1..^1]
-
-func parseTags(pgn: string): tuple[pgn: string, tags: Table[string, string]] =
+func parseTags(pgn: var string): Table[string, string] =
     var
-        pgn = pgn
+        pngIndex = 0
         insideTag = false
         insideQuote = false
         currentKey = ""
         currentValue = ""
 
-    while pgn.len >= 1:
-        var c = pgn.popFront
+    while pngIndex < pgn.len:
+        var c = pgn[pngIndex]
+        pngIndex += 1
 
         if insideQuote:
             if c == '"':
 
                 while currentKey.len > 0 and currentKey[0].isSpaceAscii:
-                    discard currentKey.popFront
+                    currentKey = currentKey[1..^1]
                 while currentKey.len > 0 and currentKey[^1].isSpaceAscii:
                     currentKey.setLen currentKey.len - 1
-                doAssert currentKey notin result.tags, "Trying to add tag multiple times: " & currentKey
-                result.tags[currentKey] = currentValue
+                doAssert currentKey notin result, "Trying to add tag multiple times: " & currentKey
+                result[currentKey] = currentValue
                 
                 currentKey = ""
                 currentValue = ""
                 insideQuote = false
                 continue
 
-            if c == '\\' and pgn.len >= 1 and pgn[0] in ['\\', '"']:
-                c = pgn.popFront
+            if c == '\\' and pngIndex < pgn.len and pgn[pngIndex] in ['\\', '"']:
+                c = pgn[pngIndex]
+                pngIndex += 1
                 doAssert c in ['\\', '"']
             currentValue &= c
 
@@ -120,13 +119,15 @@ func parseTags(pgn: string): tuple[pgn: string, tags: Table[string, string]] =
         elif c == '[':
             insideTag = true
         else:
-            result.pgn &= c
+            continue
 
-func removeComments(pgn: string): string =
+        pgn[pngIndex] = ' '
+
+func removeComments(pgn: var string) =
     var
         insideBraceComment = false
         insideLineComment = false
-    for c in pgn:
+    for c in pgn.mitems:
         if insideLineComment:
             insideLineComment = c != '\n'
         elif insideBraceComment:
@@ -136,8 +137,45 @@ func removeComments(pgn: string): string =
         elif c == '{':
             insideBraceComment = true
         else:
-            result &= c
+            continue
+
+        c = ' '
+
+func removeNumbering(pgn: var string) =
+    for i in 0..<pgn.len:
+        if pgn[i] == '.':
+            pgn[i] = ' '
+            var j = i - 1
+            while j > 0 and pgn[j].isDigit:
+                pgn[j] = ' '
+                j -= 1
             
-func parsePGN(pgn: string): tuple[tags: Table[string, string], startPosition: Position, moves: seq[Move]] =
+proc parsePGN(pgn: string): tuple[tags: Table[string, string], startPosition: Position, moves: seq[Move]] =
+    var pgn = pgn
+    result.tags = pgn.parseTags
+    pgn.removeComments
+    pgn.removeNumbering
+
+    var position: Position
+    if "FEN" in result.tags:
+        position = result.tags["FEN"].toPosition
+    else:
+        position = startpos
+
+    
+    var indexStartOfMoveString = 0
+    while indexStartOfMoveString < pgn.len:
+        if not pgn[indexStartOfMoveString].isSpaceAscii:
+            var indexAfterEndOfMoveString = indexStartOfMoveString
+            while indexAfterEndOfMoveString < pgn.len and not pgn[indexAfterEndOfMoveString].isSpaceAscii:
+                indexAfterEndOfMoveString += 1
+            doAssert indexStartOfMoveString > indexAfterEndOfMoveString + 1
+            let move = moveFromSANMove(position, pgn[indexStartOfMoveString ..< indexAfterEndOfMoveString])
+            result.moves.add move
+            position.doMove(move)
+    
+
+    result.startPosition = position
+
     
     discard

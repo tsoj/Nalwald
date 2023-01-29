@@ -10,6 +10,8 @@ import
     options,
     bitops
 
+
+
 func legalMoves*(position: Position): seq[Move] =
     var moveArray: array[maxNumMoves, Move]
     let numMoves = position.generateMoves(moveArray)
@@ -220,3 +222,5 @@ func notation*(pv: seq[Move], position: Position): string =
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+
+const startpos* = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition
