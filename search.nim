@@ -254,7 +254,10 @@ func search(
             newBeta = alpha + 1
 
         if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
-            break
+            if state.hashTable[].get(position.zobristKey).isEmpty:
+                break
+            else:
+                return 0.Value
         
         var value = -newPosition.search(
             state,
