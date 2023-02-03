@@ -126,11 +126,9 @@ proc uciSearch*(searchInfo: SearchInfo) =
     var iterators: seq[iterator (): SearchResult{.closure, gcsafe.}]
 
     for move in searchMoves:
-        var 
-            newPosition = searchInfo.position
-            newPositionHistory = searchInfo.positionHistory
+        var newPositionHistory = searchInfo.positionHistory
         newPositionHistory.add searchInfo.position
-        newPosition.doMove(move)
+        let newPosition = searchInfo.position.doMove(move)
         proc genIter(newPosition: Position, move: Move): iterator (): SearchResult{.closure, gcsafe.} =
             return iterator(): SearchResult{.closure, gcsafe.} =
                 for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(

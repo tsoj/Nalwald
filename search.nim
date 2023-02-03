@@ -98,8 +98,7 @@ func quiesce(
         alpha = standPat
 
     for move in position.moveIterator(doQuiets = false):
-        var newPosition = position
-        newPosition.doMove(move)
+        let newPosition = position.doMove(move)
         
         let seeEval = standPat + position.see(move)
         
@@ -217,8 +216,7 @@ func search(
         
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
-        var newPosition = position
-        newPosition.doMove(move)
+        let newPosition = position.doMove(move)
         if newPosition.inCheck(position.us, position.enemy):
             continue
         moveCounter += 1

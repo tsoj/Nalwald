@@ -95,7 +95,7 @@ proc moves(uciState: var UciState, params: seq[string]) =
     
     for i in 0..<params.len:
         history.add(position)
-        position.doMove(params[i].toMove(position))
+        position = position.doMove(params[i].toMove(position))
 
     uciState.history = history
     uciState.position = position
@@ -104,11 +104,11 @@ proc moves(uciState: var UciState, params: seq[string]) =
 proc setPosition(uciState: var UciState, params: seq[string]) =
 
     var index = 0
-    var fen: string
     if params.len >= 1 and params[0] == "startpos":
-        fen = startposFen
+        uciState.position = startpos
         index = 1
     elif params.len >= 1 and params[0] == "fen":
+        var fen: string
         index = 1
         var numFenWords = 0
         while params.len > index and params[index] != "moves":
@@ -116,11 +116,11 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
                 numFenWords += 1
                 fen &= " " & params[index]
             index += 1
+        uciState.position = fen.toPosition
     else:
         echo "Unknown parameters"
         return
 
-    uciState.position = fen.toPosition
 
     uciState.history.setLen(0)
 

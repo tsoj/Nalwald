@@ -155,4 +155,4 @@ func getPv*(ht: var HashTable, position: Position): seq[Move] =
         if entry.isEmpty or not currentPosition.isLegal(entry.bestMove):
             return result
         result.add(entry.bestMove)
-        currentPosition.doMove(entry.bestMove)
+        currentPosition = currentPosition.doMove(entry.bestMove)

@@ -143,7 +143,7 @@ func calculateZobristKey*(position: Position): uint64 =
             )
     result = result xor position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
 
-func doMove*(position: var Position, move: Move) {.inline.} =
+func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
     assert position.isPseudoLegal(move)
     let
         target = move.target
@@ -218,6 +218,10 @@ func doMove*(position: var Position, move: Move) {.inline.} =
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
 
+func doMove*(position: Position, move: Move): Position {.inline.} =
+    result = position
+    result.doMoveInPlace(move)
+
 func doNullMove*(position: var Position) =
     position.zobristKey = position.zobristKey xor position.enPassantCastling
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
@@ -241,8 +245,7 @@ func inCheck*(position: Position, us, enemy: Color): bool =
 func isLegal*(position: Position, move: Move): bool =
     if not position.isPseudoLegal(move):
         return false
-    var newPosition = position
-    newPosition.doMove(move)
+    let newPosition = position.doMove(move)
     return not newPosition.inCheck(position.us, position.enemy)
 
 func coloredPiece*(position: Position, square: Square): ColoredPiece =

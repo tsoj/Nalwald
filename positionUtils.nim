@@ -16,8 +16,7 @@ func legalMoves*(position: Position): seq[Move] =
     var moveArray: array[maxNumMoves, Move]
     let numMoves = position.generateMoves(moveArray)
     for i in 0..<numMoves:
-        var newPosition = position
-        newPosition.doMove(moveArray[i])
+        let newPosition = position.doMove(moveArray[i])
         if newPosition.inCheck(position.us, position.enemy):
             continue
         result.add(moveArray[i])
@@ -218,7 +217,7 @@ func notation*(pv: seq[Move], position: Position): string =
     var currentPosition = position
     for move in pv:
         result &= move.notation(currentPosition) & " "
-        currentPosition.doMove(move)
+        currentPosition = currentPosition.doMove(move)
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
