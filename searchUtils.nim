@@ -1,8 +1,11 @@
 import
     types,
     move,
-    position,
+    position
+
+import std/[
     math
+]
 
 type
     HistoryArray = array[white..black, array[pawn..king, array[a1..h8, float]]]
