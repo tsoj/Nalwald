@@ -18,7 +18,6 @@ func newHistoryTable*(): HistoryTable =
     result.counterTable.setLen(1)
 
 const maxHistoryTableValue = 20000.0
-static: doAssert maxHistoryTableValue < valueInfinity.float
 
 func halve(table: var HistoryArray) =
     for color in white..black:
@@ -49,10 +48,10 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         doAssert historyTable.counterTable.len == 1
         historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
 
-func get*(historyTable: HistoryTable, move, previous: Move, color: Color): Value =
-    result = historyTable.table[color][move.moved][move.target].Value
+func get*(historyTable: HistoryTable, move, previous: Move, color: Color): float =
+    result = historyTable.table[color][move.moved][move.target]
     if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
-        result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target].Value
+        result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target]
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]

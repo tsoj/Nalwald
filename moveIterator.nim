@@ -21,10 +21,10 @@ iterator moveIterator*(
 ): Move =
     type OrderedMoveList = object
         moves: array[maxNumMoves, Move]
-        movePriorities: array[maxNumMoves, Value]
+        movePriorities: array[maxNumMoves, float]
         numMoves: int
 
-    template findBestMoves(moveList: var OrderedMoveList, minValue = Value.low) =
+    template findBestMoves(moveList: var OrderedMoveList, minValue = float.low) =
         while true:
             var bestIndex = moveList.numMoves
             var bestValue = minValue
@@ -33,7 +33,7 @@ iterator moveIterator*(
                     bestValue = moveList.movePriorities[i]
                     bestIndex = i
             if bestIndex != moveList.numMoves:
-                moveList.movePriorities[bestIndex] = Value.low
+                moveList.movePriorities[bestIndex] = float.low
                 let move = moveList.moves[bestIndex]
 
                 if move != tryFirstMove and move notin killers:
@@ -49,10 +49,10 @@ iterator moveIterator*(
     var captureList {.noinit.}: OrderedMoveList
     captureList.numMoves = position.generateCaptures(captureList.moves)
     for i in 0..<captureList.numMoves:
-        captureList.movePriorities[i] = position.see(captureList.moves[i])
+        captureList.movePriorities[i] = position.see(captureList.moves[i]).float
 
     # winning captures
-    captureList.findBestMoves(minValue = -2*pawn.value)
+    captureList.findBestMoves(minValue = -2*pawn.value.float)
 
     # killers
     if doQuiets:
