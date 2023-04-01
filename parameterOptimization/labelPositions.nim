@@ -73,7 +73,6 @@ proc labelPositions() =
         if fen in alreadyLabeled and alreadyLabeled[fen] == 1:
             alreadyLabeled[fen] = 0
             continue
-        
         while true:
             writeResults()
             if threadResults.len < maxNumThreads:

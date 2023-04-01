@@ -4,8 +4,8 @@ import
     ../evaluation
 
 const
-    readFilename = "quietBitSmallerLichessGamesSet.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "realQuietBitSmallerLichessGamesSet.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    readFilename = "quietSmallLichessGamesSet1.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietSmallLichessGamesSet.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)
@@ -19,6 +19,8 @@ while f.readLine(line):
     if position.material != position.materialQuiesce:
         continue
     if position.legalMoves.len == 0:
+        continue
+    if position.halfmoveClock >= 100:
         continue
     g.writeLine(line)
     i += 1
