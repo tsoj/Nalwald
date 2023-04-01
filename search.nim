@@ -27,6 +27,9 @@ type
 func toPhaseType[T](t: T): PhaseType[T] =
     PhaseType[T](forOpening: t, forEndgame: t)
 
+func pt[T](forOpening, forEndgame: T): PhaseType[T] =
+    PhaseType[T](forOpening: forOpening, forEndgame: forEndgame)
+
 func get(phaseValue: PhaseType, gamePhase: GamePhase): auto =
     gamePhase.interpolate(forOpening = phaseValue.forOpening, forEndgame = phaseValue.forEndgame)
 
@@ -41,13 +44,13 @@ type SearchParameters = object
 
 const defaultSearchParams = SearchParameters(
     futilityMargins: [
-        0.Ply: 100.cp.toPhaseType,
-        1.Ply: 150.cp.toPhaseType,
-        2.Ply: 250.cp.toPhaseType,
-        3.Ply: 400.cp.toPhaseType,
-        4.Ply: 650.cp.toPhaseType,
-        5.Ply: 900.cp.toPhaseType,
-        6.Ply: 1200.cp.toPhaseType
+        0.Ply: pt(100.cp, 70.cp),
+        1.Ply: pt(150.cp, 100.cp),
+        2.Ply: pt(250.cp, 170.cp),
+        3.Ply: pt(400.cp, 280.cp),
+        4.Ply: pt(650.cp, 450.cp),
+        5.Ply: pt(900.cp, 630.cp),
+        6.Ply: pt(1200.cp, 840.cp)
     ],
     hashResultFutilityMargin: 200.cp.toPhaseType,
     nullMoveSubtractor: 3.Ply.toPhaseType,
