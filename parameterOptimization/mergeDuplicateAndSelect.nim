@@ -7,9 +7,9 @@ import std/
 ]
 
 const
-    readFilename = "quietPoolGamesNalwald.epd"
-    writeFilename = "quietSmallPoolGamesNalwald.epd"
-    approxMaxNumLines = 1_800_000
+    readFilename = "quietBitSmallerLichessGamesSet.epd"
+    writeFilename = "quietSmallLichessGamesSet.epd"
+    approxMaxNumLines = 1_000_000
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

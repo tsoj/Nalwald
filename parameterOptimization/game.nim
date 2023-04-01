@@ -51,8 +51,7 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
         )
         doAssert pv.len >= 1
         doAssert pv[0] != noMove
-        game.positionHistory.add(position)
-        game.positionHistory[^1].doMove(pv[0])
+        game.positionHistory.add position.doMove(pv[0])
         return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
         
     except CatchableError:

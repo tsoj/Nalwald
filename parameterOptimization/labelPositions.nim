@@ -1,13 +1,16 @@
 import
     ../position,
     ../positionUtils,
-    game,
+    game
+
+import std/[
     times,
     threadpool,
+    cpuinfo,
     os,
-    psutil,
     tables,
     strutils
+]
 
 proc playGame(fen: string): (string, float) =
     try:
@@ -23,9 +26,10 @@ proc playGame(fen: string): (string, float) =
         return ("", -1.0)
 
 const
-    maxLoadPercentageCPU = 70.0
-    readFilename = "unlabeledQuietSetNalwald2.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "quietSetNalwald2.epd"#"quietSmallNalwaldCCRL4040.epd"
+    readFilename = "quietSmallLichessGamesSet.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietSmallLichessGamesNalwaldLabelSet.epd"#"quietSmallNalwaldCCRL4040.epd"
+
+let maxNumThreads = countProcessors() div 2
 
 proc labelPositions() =
     var alreadyLabeled = block:
@@ -65,12 +69,15 @@ proc labelPositions() =
         i += 1
         if (i mod 1000) == 0:
             echo i
-        let fen = line.toPosition.fen 
+        let fen = line.toPosition(suppressWarnings = true).fen 
         if fen in alreadyLabeled and alreadyLabeled[fen] == 1:
             alreadyLabeled[fen] = 0
             continue
-        writeResults()
-        while cpu_percent() >= maxLoadPercentageCPU:
+        
+        while true:
+            writeResults()
+            if threadResults.len < maxNumThreads:
+                break
             sleep(10)
         threadResults.add(spawn playGame(fen))
         sleep(10)

@@ -23,12 +23,6 @@ mv quietSetNalwald.epd quietSetNalwald.epd.backup
 touch quietSetNalwald.epd
 ```
 
-Install [Psutil-Nim](https://github.com/johnscillieri/psutil-nim).
-
-```
-nimble install psutil
-```
-
 Label positions.
 
 ```
