@@ -29,6 +29,8 @@ type
         allNode,
         cutNode
     GamePhase* = 0..32
+    Phase* = enum
+        opening, endgame
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0
