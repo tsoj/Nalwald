@@ -7,7 +7,8 @@ import
     hashTable,
     searchUtils,
     evaluation,
-    times
+    times,
+    searchParameters
 
 import std/[
     threadpool,
@@ -27,7 +28,8 @@ func launchSearch(
     gameHistory: GameHistory,
     depth: Ply,
     maxNodes: uint64,
-    evaluation: proc(position: Position): Value {.noSideEffect.}
+    evaluation: proc(position: Position): Value {.noSideEffect.},
+    searchParams: SearchParameters
 ): uint64 =
     var state = SearchState(
         stop: stop,
@@ -36,7 +38,8 @@ func launchSearch(
         historyTable: historyTable,
         gameHistory: gameHistory,
         evaluation: evaluation,
-        maxNodes: maxNodes
+        maxNodes: maxNodes,
+        sp: searchParams
     )
     discard position.search(state, depth = depth)
     state.countedNodes
@@ -49,7 +52,8 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = uint64.high,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    searchParams: SearchParameters = defaultSearchParams
 ): tuple[value: Value, pv: seq[Move], nodes: uint64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
 
@@ -87,7 +91,8 @@ iterator iterativeDeepeningSearch*(
                     gameHistory,
                     depth,
                     (maxNodes - totalNodes) div numThreads.uint64,
-                    evaluation
+                    evaluation,
+                    searchParams
                 )
 
                 if numThreads == 1 or (now() - start).inMilliseconds < 100:

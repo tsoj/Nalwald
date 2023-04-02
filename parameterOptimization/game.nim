@@ -5,11 +5,13 @@ import
     ../timeManagedSearch,
     ../hashTable,
     ../move,
-    ../evaluation
+    ../evaluation,
+    ../searchParameters
 
 type
     Game* = object
-        hashTable: HashTable
+        hashTable: array[white..black, HashTable]
+        searchParams: array[white..black, SearchParameters]
         positionHistory: seq[Position]
         maxNodes: uint64
         earlyResignMargin: Value
@@ -44,10 +46,11 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
         doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
         let position = game.positionHistory[^1]
         let (value, pv) = position.timeManagedSearch(
-            hashTable = game.hashTable,
+            hashTable = game.hashTable[position.us],
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
-            maxNodes = game.maxNodes
+            maxNodes = game.maxNodes,
+            searchParams = game.searchParams[position.us]
         )
         doAssert pv.len >= 1
         doAssert pv[0] != noMove
@@ -61,25 +64,26 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
         s &= game.positionHistory[^1].debugString & "\n"
         raise newException(AssertionDefect, s)
 
-
-
 func newGame*(
     startingPosition: Position,
     maxNodes = 20_000'u64,
     earlyResignMargin = 800.Value,
     earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    searchParams: array[white..black, SearchParameters] = [defaultSearchParams, defaultSearchParams]
 ): Game =
     result = Game(
-        hashTable: newHashTable(),
+        hashTable: [newHashTable(), newHashTable()],
+        searchParams: searchParams,
         positionHistory: @[startingPosition],
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
         earlyAdjudicationPly: earlyAdjudicationPly,
         evaluation: evaluation
     )
-    result.hashTable.setSize(hashSize)
+    result.hashTable[white].setSize(hashSize)
+    result.hashTable[black].setSize(hashSize)
 
 proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1

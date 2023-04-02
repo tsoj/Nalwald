@@ -18,35 +18,35 @@ import std/[
 ]
 
 
-func futilityReduction(gamePhase: GamePhase, value: Value): Ply =
-    if value < defaultSearchParams.futilityMargins[0.Ply].get(gamePhase): return 0.Ply
-    if value < defaultSearchParams.futilityMargins[1.Ply].get(gamePhase): return 1.Ply
-    if value < defaultSearchParams.futilityMargins[2.Ply].get(gamePhase): return 2.Ply
-    if value < defaultSearchParams.futilityMargins[3.Ply].get(gamePhase): return 3.Ply
-    if value < defaultSearchParams.futilityMargins[4.Ply].get(gamePhase): return 4.Ply
-    if value < defaultSearchParams.futilityMargins[5.Ply].get(gamePhase): return 5.Ply
-    if value < defaultSearchParams.futilityMargins[6.Ply].get(gamePhase): return 6.Ply
+func futilityReduction(sp: SearchParameters, gamePhase: GamePhase, value: Value): Ply =
+    if value < sp.futilityMargins[0.Ply].get(gamePhase): return 0.Ply
+    if value < sp.futilityMargins[1.Ply].get(gamePhase): return 1.Ply
+    if value < sp.futilityMargins[2.Ply].get(gamePhase): return 2.Ply
+    if value < sp.futilityMargins[3.Ply].get(gamePhase): return 3.Ply
+    if value < sp.futilityMargins[4.Ply].get(gamePhase): return 4.Ply
+    if value < sp.futilityMargins[5.Ply].get(gamePhase): return 5.Ply
+    if value < sp.futilityMargins[6.Ply].get(gamePhase): return 6.Ply
     Ply.high
 
-func hashResultFutilityMargin(gamePhase: GamePhase, depthDifference: Ply): Value =
+func hashResultFutilityMargin(sp: SearchParameters, gamePhase: GamePhase, depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
-    depthDifference.Value * defaultSearchParams.hashResultFutilityMargin.get(gamePhase)
+    depthDifference.Value * sp.hashResultFutilityMargin.get(gamePhase)
 
-func nullMoveDepth(gamePhase: GamePhase, depth: Ply): Ply =
-    depth - defaultSearchParams.nullMoveSubtractor.get(gamePhase) - depth div defaultSearchParams.nullMoveDivider.get(gamePhase)
+func nullMoveDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply): Ply =
+    depth - sp.nullMoveSubtractor.get(gamePhase) - depth div sp.nullMoveDivider.get(gamePhase)
 
-func lmrDepth(gamePhase: GamePhase, depth: Ply, lmrMoveCounter: int): Ply =
-    let halfLife = defaultSearchParams.lmrHalfLife.get(gamePhase)
+func lmrDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply, lmrMoveCounter: int): Ply =
+    let halfLife = sp.lmrHalfLife.get(gamePhase)
     ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
 func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
 
-func deltaMargin(gamePhase: GamePhase): Value =
-    defaultSearchParams.deltaMargin.get(gamePhase)
+func deltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
+    sp.deltaMargin.get(gamePhase)
 
-func failHighDeltaMargin(gamePhase: GamePhase): Value =
-    defaultSearchParams.failHighDeltaMargin.get(gamePhase)
+func failHighDeltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
+    sp.failHighDeltaMargin.get(gamePhase)
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
@@ -58,6 +58,7 @@ type SearchState* = object
     countedNodes*: uint64
     maxNodes*: uint64
     evaluation*: proc(position: Position): Value {.noSideEffect.}
+    sp*: SearchParameters
 
 func update(
     state: var SearchState,
@@ -108,7 +109,7 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + gamePhase.deltaMargin < alpha and doPruning:
+        if seeEval + state.sp.deltaMargin(gamePhase) < alpha and doPruning:
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
 
@@ -116,8 +117,8 @@ func quiesce(
             continue
         
         # fail-high delta pruning
-        if seeEval - gamePhase.failHighDeltaMargin >= beta and doPruning:
-            return seeEval - gamePhase.failHighDeltaMargin
+        if seeEval - state.sp.failHighDeltaMargin(gamePhase) >= beta and doPruning:
+            return seeEval - state.sp.failHighDeltaMargin(gamePhase)
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -190,7 +191,7 @@ func search(
                 return alpha
         else:
             # hash result futility pruning
-            let margin = gamePhase.hashResultFutilityMargin(depth - hashResult.depth)
+            let margin = state.sp.hashResultFutilityMargin(gamePhase, depth - hashResult.depth)
             if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
                 return hashResult.value - margin
             if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
@@ -207,7 +208,7 @@ func search(
         let value = -newPosition.search(
             state,
             alpha = -beta, beta = -beta + 1.Value,
-            depth = gamePhase.nullMoveDepth(depth), height = height + 1.Ply,
+            depth = state.sp.nullMoveDepth(gamePhase, depth), height = height + 1.Ply,
             previous = noMove
         )
         
@@ -239,7 +240,7 @@ func search(
             if (not move.isTactical) and
             (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)) and
             not newPosition.isPassedPawnMove(move):
-                newDepth = gamePhase.lmrDepth(newDepth, lmrMoveCounter)
+                newDepth = state.sp.lmrDepth(gamePhase, newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
                 if lmrMoveCounter >= 5:
                     if depth <= 2.Ply:
@@ -249,7 +250,7 @@ func search(
 
             # futility reduction
             if beta - originalAlpha <= 1 and moveCounter > 1:
-                newDepth -= gamePhase.futilityReduction(originalAlpha - staticEval - position.see(move))
+                newDepth -= state.sp.futilityReduction(gamePhase, originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
                     continue
 
