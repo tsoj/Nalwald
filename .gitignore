@@ -37,3 +37,4 @@ mergeDuplicateAndSelectFENs
 processStuff.nim
 mergeDuplicateAndSelect
 *.pgn
+optimizeSearchParams

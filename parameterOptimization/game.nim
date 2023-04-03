@@ -16,6 +16,7 @@ type
         maxNodes: uint64
         earlyResignMargin: Value
         earlyAdjudicationPly: Ply
+        maxMovesInGameBeforeDraw: int
         evaluation: proc(position: Position): Value {.noSideEffect.}
     GameStatus* = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
@@ -67,9 +68,10 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
 func newGame*(
     startingPosition: Position,
     maxNodes = 20_000'u64,
-    earlyResignMargin = 800.Value,
+    earlyResignMargin = 600.cp,
     earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000,
+    maxMovesInGameBeforeDraw = int.high,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     searchParams: array[white..black, SearchParameters] = [defaultSearchParams, defaultSearchParams]
 ): Game =
@@ -80,6 +82,7 @@ func newGame*(
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
         earlyAdjudicationPly: earlyAdjudicationPly,
+        maxMovesInGameBeforeDraw: maxMovesInGameBeforeDraw,
         evaluation: evaluation
     )
     result.hashTable[white].setSize(hashSize)
@@ -130,6 +133,8 @@ proc playGame*(game: var Game, suppressOutput = false): float =
             else:
                 doAssert false
 
+        if game.maxMovesInGameBeforeDraw*2 < game.positionHistory.len:
+            return 0.5
         if drawPlies >= game.earlyAdjudicationPly:
             return 0.5
         if whiteResignPlies >= game.earlyAdjudicationPly:

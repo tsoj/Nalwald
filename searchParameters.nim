@@ -22,7 +22,7 @@ func toPhaseType*[T](t: T): PhaseType[T] =
 func pt*[T](forOpening, forEndgame: T): PhaseType[T] =
     [opening: forOpening, endgame: forEndgame]
 
-func get*(phaseValue: PhaseType, gamePhase: GamePhase): auto =
+func get*[T](phaseValue: PhaseType[T], gamePhase: GamePhase): T =
     gamePhase.interpolate(forOpening = phaseValue[opening], forEndgame = phaseValue[endgame])
 
 type SearchParameters* = object
@@ -123,13 +123,13 @@ func getChangesFailHighDeltaMargin(searchParams: SearchParameters): seq[SearchPa
 func getChanges*(searchParams: SearchParameters): seq[SearchParameters] =
 
     const specializedFunctions = {
-        # "futilityMargins": getChangesFutilityMargins,
-        # "hashResultFutilityMargin": getChangesHashResultFutilityMargin,
-        # "nullMoveSubtractor": getChangesNullMoveSubtractor,
+        "futilityMargins": getChangesFutilityMargins,
+        "hashResultFutilityMargin": getChangesHashResultFutilityMargin,
+        "nullMoveSubtractor": getChangesNullMoveSubtractor,
         "nullMoveDivider": getChangesNullMoveDivider,
-        # "lmrHalfLife": getChangesLmrHalfLife,
-        # "deltaMargin": getChangesDeltaMargin,
-        # "failHighDeltaMargin": getChangesFailHighDeltaMargin
+        "lmrHalfLife": getChangesLmrHalfLife,
+        "deltaMargin": getChangesDeltaMargin,
+        "failHighDeltaMargin": getChangesFailHighDeltaMargin
     }.toTable
 
     for name, field in fieldPairs(searchParams):

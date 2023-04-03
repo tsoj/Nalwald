@@ -3,6 +3,7 @@ import
     ../types,
     ../position,
     ../positionUtils,
+    ../evaluation,
     game
 
 import std/[
@@ -26,7 +27,10 @@ proc playGame(spA, spB: SearchParameters, startingPosition: Position, nodesPerMo
         var game = newGame(
             startingPosition = startingPosition,
             maxNodes = nodesPerMove.uint64,
-            searchParams = sp
+            searchParams = sp,
+            maxMovesInGameBeforeDraw = 200,
+            hashSize = nodesPerMove*2,
+            earlyResignMargin = 500.cp
         )
 
         let outcome = game.playGame(suppressOutput = true)
@@ -40,7 +44,7 @@ proc playGame(spA, spB: SearchParameters, startingPosition: Position, nodesPerMo
 
 const
     numNodesPerMove = 100_000
-    maxNumThreads = 20
+    maxNumThreads = 30
     maxRunningTime = initDuration(hours = 24)
 
 # setMaxPoolSize maxNumThreads
@@ -75,7 +79,6 @@ proc findNextSearchParams(startParams: SearchParameters, openings: openArray[Pos
 
     for a in 0 ..< candidateSearchParams.len-1:
         for b in a+1 ..< candidateSearchParams.len:
-            echo "ab, ", a, ", ", b
             collectThreadResults()
             gameThreads[(a,b)] = spawn playGame(candidateSearchParams[a], candidateSearchParams[b], openings[rand(0..<openings.len)], numNodesPerMove)
     collectThreadResults()
@@ -95,14 +98,22 @@ var
 
 let openings = positionsFromFile "blitzTesting-4moves-openings.epd"
 
+echo "------------------------------------"
+echo "defaultSearchParams: ", defaultSearchParams
+echo "------------------------------------"
+
+echo "Starting optimization"
+
 let start = now()
 while now() - start < maxRunningTime:
     iteration += 1
-    echo "Starting ", iteration
     currentSearchParams = currentSearchParams.findNextSearchParams(openings)
 
     if (iteration mod 1) == 0:
         echo "Finished ", iteration, " iterations"
+        echo "------------------------------------"
+        echo "currentSearchParams: ", currentSearchParams
+        echo "------------------------------------"
 
 echo currentSearchParams
 
