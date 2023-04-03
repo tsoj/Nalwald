@@ -120,23 +120,22 @@ func getChangesDeltaMargin(searchParams: SearchParameters): seq[SearchParameters
 func getChangesFailHighDeltaMargin(searchParams: SearchParameters): seq[SearchParameters] =
     searchParams.getChanges(1.1, failHighDeltaMargin)
 
-func getChanges(searchParams: SearchParameters): seq[SearchParameters] =
+func getChanges*(searchParams: SearchParameters): seq[SearchParameters] =
 
     const specializedFunctions = {
-        "futilityMargins": getChangesFutilityMargins,
-        "hashResultFutilityMargin": getChangesHashResultFutilityMargin,
-        "nullMoveSubtractor": getChangesNullMoveSubtractor,
+        # "futilityMargins": getChangesFutilityMargins,
+        # "hashResultFutilityMargin": getChangesHashResultFutilityMargin,
+        # "nullMoveSubtractor": getChangesNullMoveSubtractor,
         "nullMoveDivider": getChangesNullMoveDivider,
-        "lmrHalfLife": getChangesLmrHalfLife,
-        "deltaMargin": getChangesDeltaMargin,
-        "failHighDeltaMargin": getChangesFailHighDeltaMargin
+        # "lmrHalfLife": getChangesLmrHalfLife,
+        # "deltaMargin": getChangesDeltaMargin,
+        # "failHighDeltaMargin": getChangesFailHighDeltaMargin
     }.toTable
 
     for name, field in fieldPairs(searchParams):
-        static: doAssert(
-            name in specializedFunctions,
-            "Need to have a function for every field in SearchParameters. This is just to make sure that you didn't forget soemthing."
-        )
-        result.add specializedFunctions[name](searchParams)
-
-# echo defaultSearchParams.getChanges.len
+        when name in specializedFunctions:
+            static: doAssert(
+                name in specializedFunctions,
+                "Need to have a function for every field in SearchParameters. This is just to make sure that no search param has been forgotten."
+            )
+            result.add specializedFunctions[name](searchParams)

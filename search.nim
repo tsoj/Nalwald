@@ -28,11 +28,15 @@ func futilityReduction(sp: SearchParameters, gamePhase: GamePhase, value: Value)
     if value < sp.futilityMargins[6.Ply].get(gamePhase): return 6.Ply
     Ply.high
 
-func hashResultFutilityMargin(sp: SearchParameters, gamePhase: GamePhase, depthDifference: Ply): Value =
+func getHashResultFutilityMargin(sp: SearchParameters, gamePhase: GamePhase, depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
     depthDifference.Value * sp.hashResultFutilityMargin.get(gamePhase)
 
 func nullMoveDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply): Ply =
+
+    # debugEcho sp.nullMoveSubtractor.get(gamePhase)
+    # debugEcho sp.nullMoveDivider.get(gamePhase)
+    # debugEcho depth
     depth - sp.nullMoveSubtractor.get(gamePhase) - depth div sp.nullMoveDivider.get(gamePhase)
 
 func lmrDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply, lmrMoveCounter: int): Ply =
@@ -42,10 +46,10 @@ func lmrDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply, lmrMoveCou
 func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
 
-func deltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
+func getDeltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
     sp.deltaMargin.get(gamePhase)
 
-func failHighDeltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
+func getFailHighDeltaMargin(sp: SearchParameters, gamePhase: GamePhase): Value =
     sp.failHighDeltaMargin.get(gamePhase)
 
 type SearchState* = object
@@ -109,7 +113,7 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + state.sp.deltaMargin(gamePhase) < alpha and doPruning:
+        if seeEval + state.sp.getDeltaMargin(gamePhase) < alpha and doPruning:
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
 
@@ -117,8 +121,8 @@ func quiesce(
             continue
         
         # fail-high delta pruning
-        if seeEval - state.sp.failHighDeltaMargin(gamePhase) >= beta and doPruning:
-            return seeEval - state.sp.failHighDeltaMargin(gamePhase)
+        if seeEval - state.sp.getFailHighDeltaMargin(gamePhase) >= beta and doPruning:
+            return seeEval - state.sp.getFailHighDeltaMargin(gamePhase)
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -191,7 +195,7 @@ func search(
                 return alpha
         else:
             # hash result futility pruning
-            let margin = state.sp.hashResultFutilityMargin(gamePhase, depth - hashResult.depth)
+            let margin = state.sp.getHashResultFutilityMargin(gamePhase, depth - hashResult.depth)
             if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
                 return hashResult.value - margin
             if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:

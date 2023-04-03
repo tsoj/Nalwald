@@ -194,6 +194,17 @@ func `$`*(position: Position): string =
     for i in 1..<fenWords.len:
         result &= fenWords[i] & " "
 
+proc positionsFromFile*(fileName: string): seq[Position] =
+    let f = open(filename)
+    var line: string
+    while f.readLine(line):
+        let words = line.splitWhitespace()
+        if words.len == 0 or words[0] == "LICENSE:":
+            continue
+        doAssert words.len >= 6, "FEN must contain at least 6 words"
+        result.add line.toPosition(suppressWarnings = true)
+    f.close()
+
 func debugString*(position: Position): string =    
     for piece in pawn..king:
         result &= $piece & ":\n"
