@@ -21,7 +21,6 @@ massif.out
 !parameterOptimization/quietSmallPoolGamesNalwald.epd
 !parameterOptimization/quietSetNalwald2.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
-# !parameterOptimization/quietSmallLichessGamesNalwaldLabelSet.epd
 optimization
 *.txt
 *.sh
@@ -37,4 +36,3 @@ mergeDuplicateAndSelectFENs
 processStuff.nim
 mergeDuplicateAndSelect
 *.pgn
-optimizeSearchParams

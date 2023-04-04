@@ -39,7 +39,6 @@ func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32
         static: doAssert In is (tuple or object), "Transforming types must have the same structure."
         for inName, inValue in fieldPairs(input):
             var found = false
-            # TODO could use this instead: https://nim-lang.org/docs/iterators.html#fieldPairs.i%2CS%2CT
             for outName, outValue in fieldPairs(output):
                 when inName == outName:
                     transform(outValue, inValue, floatOp)

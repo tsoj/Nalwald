@@ -6,13 +6,9 @@ import
     rootSearch,
     evaluation,
     utils,
-    searchParameters
-
-import std/[
     atomics,
     threadpool,
     times
-]
 
 type MoveTime = object
     maxTime, approxTime: Duration
@@ -47,8 +43,7 @@ iterator iterativeTimeManagedSearch*(
     moveTime = initDuration(milliseconds = int64.high),
     numThreads: int,
     maxNodes: uint64 = uint64.high,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    searchParams: SearchParameters = defaultSearchParams
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move], nodes: uint64, passedTime: Duration] =
 
     var stopFlag: Atomic[bool]
@@ -75,8 +70,7 @@ iterator iterativeTimeManagedSearch*(
         targetDepth,
         numThreads = numThreads,
         maxNodes = maxNodes,
-        evaluation,
-        searchParams
+        evaluation
     ):
         iteration += 1
         let totalPassedTime = now() - start
@@ -119,8 +113,7 @@ proc timeManagedSearch*(
     moveTime = initDuration(milliseconds = int64.high),
     numThreads = 1,
     maxNodes: uint64 = uint64.high,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    searchParams: SearchParameters = defaultSearchParams
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[value: Value, pv: seq[Move]] =
     for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
         position,
@@ -134,7 +127,6 @@ proc timeManagedSearch*(
         moveTime = moveTime,
         numThreads = numThreads,
         maxNodes = maxNodes,
-        evaluation,
-        searchParams
+        evaluation
     ):
         result = (value: value, pv: pv)

@@ -175,4 +175,4 @@ data.loadData("quietSetNalwald2.epd")
 let startingEvalParametersFloat = startingEvalParameters
 
 let ep = startingEvalParametersFloat.optimize(data)
-printPieceValues(ep, data)
+printPieceValues(ep)

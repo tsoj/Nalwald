@@ -5,18 +5,15 @@ import
     ../timeManagedSearch,
     ../hashTable,
     ../move,
-    ../evaluation,
-    ../searchParameters
+    ../evaluation
 
 type
     Game* = object
-        hashTable: array[white..black, HashTable]
-        searchParams: array[white..black, SearchParameters]
+        hashTable: HashTable
         positionHistory: seq[Position]
         maxNodes: uint64
         earlyResignMargin: Value
         earlyAdjudicationPly: Ply
-        maxMovesInGameBeforeDraw: int
         evaluation: proc(position: Position): Value {.noSideEffect.}
     GameStatus* = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
@@ -47,11 +44,10 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
         doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
         let position = game.positionHistory[^1]
         let (value, pv) = position.timeManagedSearch(
-            hashTable = game.hashTable[position.us],
+            hashTable = game.hashTable,
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
-            maxNodes = game.maxNodes,
-            searchParams = game.searchParams[position.us]
+            maxNodes = game.maxNodes
         )
         doAssert pv.len >= 1
         doAssert pv[0] != noMove
@@ -65,28 +61,25 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
         s &= game.positionHistory[^1].debugString & "\n"
         raise newException(AssertionDefect, s)
 
+
+
 func newGame*(
     startingPosition: Position,
     maxNodes = 20_000'u64,
-    earlyResignMargin = 600.cp,
+    earlyResignMargin = 800.Value,
     earlyAdjudicationPly = 8.Ply,
     hashSize = 4_000_000,
-    maxMovesInGameBeforeDraw = int.high,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    searchParams: array[white..black, SearchParameters] = [defaultSearchParams, defaultSearchParams]
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
     result = Game(
-        hashTable: [newHashTable(), newHashTable()],
-        searchParams: searchParams,
+        hashTable: newHashTable(),
         positionHistory: @[startingPosition],
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
         earlyAdjudicationPly: earlyAdjudicationPly,
-        maxMovesInGameBeforeDraw: maxMovesInGameBeforeDraw,
         evaluation: evaluation
     )
-    result.hashTable[white].setSize(hashSize)
-    result.hashTable[black].setSize(hashSize)
+    result.hashTable.setSize(hashSize)
 
 proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
@@ -133,8 +126,6 @@ proc playGame*(game: var Game, suppressOutput = false): float =
             else:
                 doAssert false
 
-        if game.maxMovesInGameBeforeDraw*2 < game.positionHistory.len:
-            return 0.5
         if drawPlies >= game.earlyAdjudicationPly:
             return 0.5
         if whiteResignPlies >= game.earlyAdjudicationPly:

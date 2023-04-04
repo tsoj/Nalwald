@@ -34,16 +34,16 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry
             numPieceEvals += 1
     (sum div numPieceEvals).Value
 
-proc printPieceValues*(evalParameters: EvalParameters, data: seq[Entry]) =
-    echo "Piece values:"
-    for piece in pawn..queen:
-        echo piece, ": ", getPieceValue(piece, evalParameters, data)
-
-when isMainModule:
+proc printPieceValues*(evalParameters: EvalParameters) =
     var data: seq[Entry]
     data.loadData("quietSetZuri.epd")
     data.loadData("quietSetNalwald.epd")
     data.loadData("quietSetCombinedCCRL4040.epd")
     data.loadData("quietSmallPoolGamesNalwald.epd")
     data.loadData("quietSetNalwald2.epd")
-    printPieceValues(defaultEvalParameters, data)
+    echo "Piece values:"
+    for piece in pawn..queen:
+        echo piece, ": ", getPieceValue(piece, evalParameters, data)
+
+when isMainModule:
+    printPieceValues(defaultEvalParameters)
