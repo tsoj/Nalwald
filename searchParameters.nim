@@ -36,7 +36,7 @@ type SearchParameters* = object
 
 static: doAssert pawn.value == 100.cp
 
-const defaultSearchParams* = SearchParameters(
+const originalDefaultSearchParams* = SearchParameters(
     futilityMargins: [
         0.Ply: pt(100.cp, 70.cp),
         1.Ply: pt(150.cp, 100.cp),
@@ -45,6 +45,24 @@ const defaultSearchParams* = SearchParameters(
         4.Ply: pt(650.cp, 450.cp),
         5.Ply: pt(900.cp, 630.cp),
         6.Ply: pt(1200.cp, 840.cp)
+    ],
+    hashResultFutilityMargin: 200.cp.toPhaseType,
+    nullMoveSubtractor: 3.Ply.toPhaseType,
+    nullMoveDivider: 4.Ply.toPhaseType,
+    lmrHalfLife: 35.toPhaseType,
+    deltaMargin: 150.cp.toPhaseType,
+    failHighDeltaMargin: 50.cp.toPhaseType
+)
+
+const defaultSearchParams* = SearchParameters(
+    futilityMargins: [
+        0.Ply: pt(100.cp, 50.cp),
+        1.Ply: pt(150.cp, 70.cp),
+        2.Ply: pt(250.cp, 120.cp),
+        3.Ply: pt(400.cp, 200.cp),
+        4.Ply: pt(650.cp, 300.cp),
+        5.Ply: pt(900.cp, 450.cp),
+        6.Ply: pt(1200.cp, 600.cp)
     ],
     hashResultFutilityMargin: 200.cp.toPhaseType,
     nullMoveSubtractor: 3.Ply.toPhaseType,

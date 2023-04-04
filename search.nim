@@ -33,11 +33,10 @@ func getHashResultFutilityMargin(sp: SearchParameters, gamePhase: GamePhase, dep
     depthDifference.Value * sp.hashResultFutilityMargin.get(gamePhase)
 
 func nullMoveDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply): Ply =
-
-    # debugEcho sp.nullMoveSubtractor.get(gamePhase)
-    # debugEcho sp.nullMoveDivider.get(gamePhase)
-    # debugEcho depth
-    depth - sp.nullMoveSubtractor.get(gamePhase) - depth div sp.nullMoveDivider.get(gamePhase)
+    let divider = sp.nullMoveDivider.get(gamePhase)
+    if divider == 0.Ply:
+        return 0.Ply
+    depth - sp.nullMoveSubtractor.get(gamePhase) - depth div divider
 
 func lmrDepth(sp: SearchParameters, gamePhase: GamePhase, depth: Ply, lmrMoveCounter: int): Ply =
     let halfLife = sp.lmrHalfLife.get(gamePhase)

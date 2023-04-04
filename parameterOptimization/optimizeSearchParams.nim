@@ -11,7 +11,8 @@ import std/[
     random,
     times,
     tables,
-    os
+    os,
+    cpuinfo
 ]
 
 proc playGame(spA, spB: SearchParameters, startingPosition: Position, nodesPerMove: int): float =
@@ -40,12 +41,16 @@ proc playGame(spA, spB: SearchParameters, startingPosition: Position, nodesPerMo
         else:
             result += 1.0 - outcome
 
-    result /= numGames.float
+    if numGames == 0:
+        echo "WARNING: Zero games happened: ", startingPosition.fen
+    else:
+        result /= numGames.float
 
 const
     numNodesPerMove = 100_000
-    maxNumThreads = 30
     maxRunningTime = initDuration(hours = 24)
+
+let maxNumThreads = 30#countProcessors() div 2 - 1
 
 # setMaxPoolSize maxNumThreads
 
@@ -114,6 +119,8 @@ while now() - start < maxRunningTime:
         echo "------------------------------------"
         echo "currentSearchParams: ", currentSearchParams
         echo "------------------------------------"
+# TODO check if deltMargin and failHighDeltaMargin actually work
+# TODO final result should be the average of the last maybe 10 versions        
 
 echo currentSearchParams
 
