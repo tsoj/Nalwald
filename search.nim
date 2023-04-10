@@ -157,7 +157,12 @@ func search(
 
     let
         inCheck = position.inCheck(position.us, position.enemy)
-        depth = if inCheck or previous.isPawnMoveToSecondRank: depth + 1.Ply else: depth
+        depth = if inCheck and depth <= 0:
+            1.Ply
+        elif previous.isPawnMoveToSecondRank:
+            depth + 1.Ply
+        else:
+            depth
         hashResult = state.hashTable[].get(position.zobristKey)
         originalAlpha = alpha
 
