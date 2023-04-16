@@ -242,7 +242,7 @@ proc pawnStructureMaskValue(uciState: UciState, params: seq[string]) =
                     a8, b8, c8, d8, e8, f8, g8, h8
                 ).fields:
                     if s == square:
-                        index = uciState.position.pawnMaskIndex(s, white, black, doChecks = true)
+                        index = uciState.position.pawnMaskIndex(s, white, doChecks = true)
                 index
             value = uciState.position.gamePhase.interpolate(
                 forOpening = defaultEvalParameters[opening].pawnMaskBonus[index],

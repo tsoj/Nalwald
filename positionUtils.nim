@@ -17,7 +17,7 @@ func legalMoves*(position: Position): seq[Move] =
     let numMoves = position.generateMoves(moveArray)
     for i in 0..<numMoves:
         let newPosition = position.doMove(moveArray[i])
-        if newPosition.inCheck(position.us, position.enemy):
+        if newPosition.inCheck(position.us):
             continue
         result.add(moveArray[i])
 

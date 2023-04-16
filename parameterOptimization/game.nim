@@ -22,7 +22,7 @@ func gameStatus*(positionHistory: openArray[Position]): GameStatus =
     doAssert positionHistory.len >= 1
     let position = positionHistory[^1]
     if position.legalMoves.len == 0:
-        if position.inCheck(position.us, position.enemy):
+        if position.inCheck(position.us):
             return (if position.enemy == black: checkmateBlack else: checkmateWhite)
         else:
             return stalemate

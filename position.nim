@@ -48,8 +48,10 @@ func castlingSide*(position: Position, move: Move): CastlingSide =
 func occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
-func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
-    let occupancy = position.occupancy
+func attackers(position: Position, us: Color, target: Square): Bitboard =
+    let
+        enemy = us.opposite
+        occupancy = position.occupancy
     (
         (bishop.attackMask(target, occupancy) and (position[bishop] or position[queen])) or
         (rook.attackMask(target, occupancy) and (position[rook] or position[queen])) or
@@ -58,8 +60,8 @@ func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
         (attackTablePawnCapture[us][target] and position[pawn])
     ) and position[enemy]
 
-func isAttacked*(position: Position, us, enemy: Color, target: Square): bool =
-    position.attackers(us, enemy, target) != 0
+func isAttacked*(position: Position, us: Color, target: Square): bool =
+    position.attackers(us, target) != 0
 
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:
@@ -128,7 +130,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
             return false
 
         for checkSquare in checkSensitive[us][castlingSide][kingSource]:
-            if position.isAttacked(us, enemy, checkSquare):
+            if position.isAttacked(us, checkSquare):
                 return false
     true
 
@@ -239,14 +241,14 @@ func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1
     (position[king] and position[color]).toSquare
 
-func inCheck*(position: Position, us, enemy: Color): bool =
-    position.isAttacked(us, enemy, position.kingSquare(us))
+func inCheck*(position: Position, us: Color): bool =
+    position.isAttacked(us, position.kingSquare(us))
 
 func isLegal*(position: Position, move: Move): bool =
     if not position.isPseudoLegal(move):
         return false
     let newPosition = position.doMove(move)
-    return not newPosition.inCheck(position.us, position.enemy)
+    return not newPosition.inCheck(position.us)
 
 func coloredPiece*(position: Position, square: Square): ColoredPiece =
     for color in white..black:
@@ -263,11 +265,11 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, square.toBitboard)
 
-func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool {.inline.} =
-    (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
+func isPassedPawn*(position: Position, us: Color, square: Square): bool {.inline.} =
+    (isPassedMask[us][square] and position[pawn] and position[us.opposite]) == 0
 
 func isPassedPawnMove*(newPosition: Position, move: Move): bool =
-    move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, newPosition.us, move.target)
+    move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, move.target)
 
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase

@@ -124,7 +124,7 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
         # king will never be in check
         var kingInCheck = false
         for checkSquare in checkSensitive[us][castlingSide][kingSource]:
-            if position.isAttacked(us, enemy, checkSquare):
+            if position.isAttacked(us, checkSquare):
                 kingInCheck = true
                 break
         if kingInCheck:

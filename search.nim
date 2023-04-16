@@ -107,7 +107,7 @@ func quiesce(
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
 
-        if newPosition.inCheck(position.us, position.enemy):
+        if newPosition.inCheck(position.us):
             continue
         
         # fail-high delta pruning
@@ -156,7 +156,7 @@ func search(
     state.gameHistory.update(position, height)
 
     let
-        inCheck = position.inCheck(position.us, position.enemy)
+        inCheck = position.inCheck(position.us)
         depth = if inCheck and depth <= 0:
             1.Ply
         elif previous.isPawnMoveToSecondRank:
@@ -222,11 +222,11 @@ func search(
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         let newPosition = position.doMove(move)
-        if newPosition.inCheck(position.us, position.enemy):
+        if newPosition.inCheck(position.us):
             continue
         moveCounter += 1
 
-        let givingCheck = newPosition.inCheck(newPosition.us, newPosition.enemy)
+        let givingCheck = newPosition.inCheck(newPosition.us)
 
         var
             newDepth = depth
