@@ -40,7 +40,7 @@ proc optimize(
     maxIterations = int.high,
     minTries = 10,
     discount = 0.9,
-    numThreads = 31
+    numThreads = 30
 ): EvalParameters =
 
     echo "-------------------"
@@ -171,6 +171,9 @@ data.loadData("quietSetNalwald.epd")
 data.loadData("quietSetCombinedCCRL4040.epd")
 data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
+data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
+
+echo "Total number of entires: ", data.len
 
 let startingEvalParametersFloat = startingEvalParameters
 

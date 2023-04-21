@@ -3,13 +3,16 @@ import std/
 [
     tables,
     strutils,
-    random
+    random,
+    times
 ]
 
+randomize(epochTime().int64 mod 500_000)
+
 const
-    readFilename = "quietBitSmallerLichessGamesSet.epd"
-    writeFilename = "quietSmallLichessGamesSet.epd"
-    approxMaxNumLines = 1_000_000
+    readFilename = "poolGamesNalwald.epd"
+    writeFilename = "smallPoolGamesNalwald.epd"
+    approxMaxNumLines = 2_500_000
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

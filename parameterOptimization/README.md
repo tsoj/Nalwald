@@ -63,7 +63,8 @@ nim c --run calculatePieceValue.nim
 
 - the target value of the positions of `quietSmallNalwaldCCRL4040.epd` will be averaged over the results of the respective CCRL4040 games (of players with Elo 2700 and higher) and the games that Nalwald played
 
-###### CCRL404FRC.epd
-
-- just some randomly selected positions from CCRL games of engines over 2900 Elo
-- no preprocessing
+###### quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd
+- randomly selected number of positions from games between Nalwald and other engines
+- for each position made a search with 5000 nodes and selected ~2 leave node positions
+- removed all non-quiet positions
+- label positions with result of Nalwald search with TODOx nodes

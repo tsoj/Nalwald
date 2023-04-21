@@ -1,6 +1,10 @@
 import
     ../position,
     ../positionUtils,
+    ../timeManagedSearch,
+    ../hashTable,
+    ../types,
+    winningProbability,
     game
 
 import std/[
@@ -12,24 +16,44 @@ import std/[
     strutils
 ]
 
-proc playGame(fen: string): (string, float) =
-    try:
-        
-        var game = newGame(
-            startingPosition = fen.toPosition,
-            maxNodes = 50_000,
-        )
-        return (fen, game.playGame(suppressOutput = true))
-        
-    except CatchableError:
-        echo getCurrentExceptionMsg()
-        return ("", -1.0)
+type EvalMode = enum
+    playout, search
 
 const
-    readFilename = "quietSmallLichessGamesSet.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "quietSmallLichessGamesNalwaldLabelSet.epd"#"quietSmallNalwaldCCRL4040.epd"
+    evalMode = search
+    readFilename = "quietLeavesSmallPoolGamesNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"#"quietSmallNalwaldCCRL4040.epd"
 
 let maxNumThreads = countProcessors() div 2
+
+proc playGame(fen: string): (string, float) =
+    case evalMode:
+    of playout:
+        try:
+            
+            var game = newGame(
+                startingPosition = fen.toPosition,
+                maxNodes = 50_000,
+            )
+            return (fen, game.playGame(suppressOutput = true))
+            
+        except CatchableError:
+            echo getCurrentExceptionMsg()
+            return ("", -1.0)
+    of search:
+
+        const maxNodes = 2_000_000
+        
+        var hashTable: HashTable = newHashTable()
+        hashTable.setSize(maxNodes * sizeof HashTableEntry)
+        let position = fen.toPosition
+        var value = position.timeManagedSearch(
+            hashTable = hashTable,
+            maxNodes = maxNodes
+        ).value
+        if position.us == black:
+            value = -value
+        return (fen, value.winningProbability(0.75)) # 0.75 is what k is usually during optimization
 
 proc labelPositions() =
     var alreadyLabeled = block:

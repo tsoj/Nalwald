@@ -107,7 +107,6 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
 func generateCastlingMoves(position: Position, moves: var openArray[Move]): int =
     let
         us = position.us
-        enemy = position.enemy
         occupancy = position.occupancy
         kingSource = (position[us] and position[king]).toSquare
 

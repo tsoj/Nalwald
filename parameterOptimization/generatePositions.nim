@@ -11,10 +11,11 @@ import
 import std/[atomics]
 
 const 
-    openingFilename = "quietSmallPoolGamesNalwald.epd"#"blitzTesting-4moves-openings.epd"
-    writeFilename = "unlabeledNonQuietSetNalwald2.epd"#"unlabeledNonQuietSetNalwald.epd"
+    openingFilename = "smallPoolGamesNalwald.epd"#"blitzTesting-4moves-openings.epd"
+    writeFilename = "leavesSmallPoolGamesNalwald.epd"#"unlabeledNonQuietSetNalwald.epd"
     playWholeGame = false
-    maxNumNodes = 2_000
+    maxNumNodes = 5_000
+    approxNumOutPositionsPerSearch = 2.0
 
 var numEvaluatedPositions: uint64 = 0
 let g = open(writeFilename, fmWrite)
@@ -22,7 +23,7 @@ let g = open(writeFilename, fmWrite)
 func evaluationWriteToFile(position: Position): Value =
     result = position.evaluate
     {.cast(noSideEffect).}:
-        if rand(3_000_000) <= 3300:
+        if rand(3_000_000.0) <= approxNumOutPositionsPerSearch * 6600000.0 / maxNumNodes.float:
             numEvaluatedPositions += 1
             g.writeLine(position.fen)
 
