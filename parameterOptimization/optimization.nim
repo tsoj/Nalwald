@@ -167,13 +167,13 @@ proc optimize(
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
-data.loadData("quietSetNalwald.epd")
+# data.loadData("quietSetNalwald.epd")
 data.loadData("quietSetCombinedCCRL4040.epd")
-data.loadData("quietSmallPoolGamesNalwald.epd")
+# data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 
-echo "Total number of entires: ", data.len
+echo "Total number of entries: ", data.len
 
 let startingEvalParametersFloat = startingEvalParameters
 
