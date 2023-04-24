@@ -17,13 +17,13 @@ func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
     result.counterTable.setLen(1)
 
-const maxHistoryTableValue = 20000.0
+const maxHistoryTableValue = 200000.0
 
 func halve(table: var HistoryArray) =
     for color in white..black:
         for piece in pawn..king:
             for square in a1..h8:
-                table[color][piece][square] = table[color][piece][square] / 2.0
+                table[color][piece][square] /= 2.0
 
 func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
     if move.isTactical:
