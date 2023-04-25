@@ -40,7 +40,7 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         if table[color][piece][target].abs >= maxHistoryTableValue:
             table.halve
 
-    let addition = (if weakMove: -1.0/25.0 else: 1.0) * depth.float^2
+    let addition = (if weakMove: -1.0/15.0 else: 1.0) * depth.float^2
 
     historyTable.table.add(color, move.moved, move.target, addition)
 
