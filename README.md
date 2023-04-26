@@ -79,10 +79,10 @@ in 2016. My first big project was *jht-chess*, a chess playing program with
 a console GUI for Linux. I used C++ but it looked more like messy C. Looking back
 I would say that it is hard to write worse spaghetti code than I did then, but it
 played good enough chess to win against amateur players. Since then, I wrote numerous
-chess engine, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *square-chess*,
+chess engine, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *squared-chess*,
 and *Googleplex Starthinker*) but also one in Rust (*Hactar*) and now in Nim as well.
 While my first chess engine could barely beat me (I am not a very good chess
-player, and much less so in 2016), today Nalwald could beat Magnus Carlsen most
+player, and was much less so in 2016), today Nalwald could beat Magnus Carlsen most
 of the time.
 
 On this journey from an at best mediocre chess program to a chess engine that can
@@ -94,9 +94,6 @@ During the development of Nalwald I also introduced some methods that I believe
 are novelties in the chess programming space:
 - *King contextual PSTs* are piece square tables that are different depending on
 where our own king and the enemy king are located.
-- *Fail-high delta pruning* is an extension to delta pruning, where instead of pruning
-hopelessly bad moves, moves are also pruned, if they are believed to be much better
-than beta (by using the SEE function).
 - *Futility reductions* are an improvement to futility pruning. Here not only are moves
 skipped that are likely to be much worse than alpha. Additionally, moves that are likely
 slightly worse than alpha get their depth reduced accordingly to how bad they are
