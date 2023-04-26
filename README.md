@@ -81,7 +81,7 @@ I would say that it is hard to write worse spaghetti code than I did then, but i
 played good enough chess to win against amateur players. Since then, I wrote numerous
 chess engine, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *squared-chess*,
 and *Googleplex Starthinker*) but also one in Rust (*Hactar*) and now in Nim as well.
-While my first chess engine could barely beat me (I am not a very good chess
+While my first chess engine could barely beat me (and I am not a very good chess
 player, and was much less so in 2016), today Nalwald could beat Magnus Carlsen most
 of the time.
 
