@@ -247,7 +247,7 @@ func search(
                         newDepth -= 1.Ply
 
             # futility reduction
-            if beta - originalAlpha <= 1 and moveCounter > 1:
+            if moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
                 if newDepth <= 0:
                     continue
