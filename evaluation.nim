@@ -177,8 +177,17 @@ func targetingKingArea(
     if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
         result.addValue(evalParameters, gradient, us, bonusTargetingKingArea[piece])
     
-    if (attackMask and kingSquare[enemy].toBitboard) != 0:
-        result.addValue(evalParameters, gradient, us, bonusAttackingKing[piece])
+func attackingPiece(
+    evalParameters: EvalParameters,
+    position: Position,
+    piece: static Piece,
+    us: Color,
+    attackMask: Bitboard,
+    gradient: var GradientOrNothing
+): array[Phase, Value] =
+    for attackedPiece in pawn..king:
+        if (attackMask and position[us.opposite] and position[attackedPiece]) != 0:
+            result.addValue(evalParameters, gradient, us, bonusAttackingPiece[piece][attackedPiece])
 
 func forkingMajorPieces(
     evalParameters: EvalParameters,
@@ -256,6 +265,9 @@ func evaluateKnight(
     # attacked by pawn
     result += evalParameters.attackedByPawn(position, square, us, gradient)
 
+    # attacking pieces
+    result += evalParameters.attackingPiece(position, knight, us, attackMask, gradient)
+
     # attacking bishop, rook, or queen
     if (attackMask and position[us.opposite] and (position[bishop] or position[rook] or position[queen])) != 0:
         result.addValue(evalParameters, gradient, us, bonusKnightAttackingPiece)
@@ -281,6 +293,9 @@ func evaluateBishop(
 
     # attacked by pawn
     result += evalParameters.attackedByPawn(position, square, us, gradient)
+
+    # attacking pieces
+    result += evalParameters.attackingPiece(position, bishop, us, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -310,6 +325,9 @@ func evaluateRook(
 
     # attacked by pawn
     result += evalParameters.attackedByPawn(position, square, us, gradient)
+
+    # attacking pieces
+    result += evalParameters.attackingPiece(position, rook, us, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(
@@ -338,6 +356,9 @@ func evaluateQueen(
 
     # attacked by pawn
     result += evalParameters.attackedByPawn(position, square, us, gradient)
+
+    # attacking pieces
+    result += evalParameters.attackingPiece(position, queen, us, attackMask, gradient)
     
     # targeting enemy king area
     result += evalParameters.targetingKingArea(

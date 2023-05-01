@@ -15,8 +15,8 @@ type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     bonusRookOnOpenFile*: ValueType
     bonusPieceAttackedByPawn*: ValueType
     bonusMobility*: array[knight..queen, array[32, ValueType]]
+    bonusAttackingPiece*: array[bishop..queen, array[pawn..king, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
-    bonusAttackingKing*: array[bishop..queen, ValueType]
     bonusKingSafety*: array[32, ValueType]
     bonusAttackersNearKing*: array[5*5, ValueType]
 
