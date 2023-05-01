@@ -7,6 +7,8 @@ import std/[
     math
 ]
 
+#-------------- history heuristic --------------#
+
 type
     HistoryArray = array[white..black, array[pawn..king, array[a1..h8, float]]]
     HistoryTable* = object
@@ -15,6 +17,7 @@ type
 
 func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
+    # TODO make this nicer
     result.counterTable.setLen(1)
 
 const maxHistoryTableValue = 100000.0
@@ -53,6 +56,8 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): float
     if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
         result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target]
 
+#-------------- killer heuristic --------------#
+
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
     goodMove: array[2, Move]
@@ -77,6 +82,8 @@ func get*(killerTable: KillerTable, height: Ply): array[3, Move] =
     
     if killerTable.goodMove[height mod 2] notin result:
         result[2] = killerTable.goodMove[height mod 2]
+
+#-------------- repetition detection --------------#
 
 type GameHistory* = object
     staticHistory: seq[uint64]
