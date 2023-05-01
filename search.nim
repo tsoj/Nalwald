@@ -12,7 +12,7 @@ import
 
 import std/[
     atomics,
-    bitops
+    options
 ]
 
 static: doAssert pawn.value == 100.cp
@@ -214,11 +214,11 @@ func search(
         if value >= beta:
             return value
 
-    var valueStaticEval = valueInfinity # will be calculated on demand
+    var detailStaticEval = none Value # will be calculated on demand
     template staticEval(): auto =
-        if valueStaticEval == valueInfinity:
-            valueStaticEval = state.evaluation(position)
-        valueStaticEval
+        if detailStaticEval.isNone:
+            detailStaticEval = some state.evaluation(position)
+        detailStaticEval.get
         
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
