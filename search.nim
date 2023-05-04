@@ -320,9 +320,35 @@ func search*(
     state: var SearchState,
     depth: Ply
 ): Value =
-    position.search(
-        state,
-        alpha = -valueInfinity, beta = valueInfinity,
-        depth = depth, height = 0,
-        previous = noMove
-    )
+
+    let
+        hashResult = state.hashTable[].get(position.zobristKey)
+        estimatedValue = if hashResult.isEmpty: 0.Value else: hashResult.value
+
+    const margins = [10.cp, 30.cp, 90.cp, 150.cp, valueInfinity]
+    var
+        alphaIndex = 0
+        betaIndex = 0
+
+    # growing alpha beta window
+    while true:
+        let
+            alpha =  max(estimatedValue - margins[alphaIndex], -valueInfinity)
+            beta = min(estimatedValue + margins[betaIndex], valueInfinity)
+
+        result = position.search(
+            state,
+            alpha = alpha, beta = beta,
+            depth = depth, height = 0,
+            previous = noMove
+        )
+
+        if result <= alpha:
+            alphaIndex += 1
+        elif result >= beta:
+            betaIndex += 1
+        else:
+            break
+
+        doAssert alphaIndex in margins.low..margins.high
+        doAssert betaIndex in margins.low..margins.high
