@@ -60,7 +60,7 @@ nim modern Nalwald.nim
   - futility reductions
   - hash result futility pruning
   - delta pruning
-  - fail-high delta pruning
+  - aspiration windows
 - multithreading support
 - supports Chess960/FRC
 - multi PV
@@ -114,7 +114,7 @@ optimized using a method like gradient descent.
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 16      |       2948 |      3014 |        2991 |  July 11, 2022 |
+| 16      |       2948 |      3012 |        2991 |  July 11, 2022 |
 | 15      |       2881 |      2932 |        2921 |    Feb 8, 2022 |
 | 14      |       2826 |         – |        2825 |   Sep 16, 2021 |
 | 1.12    |          – |         – |        2736 |    Aug 9, 2021 |
