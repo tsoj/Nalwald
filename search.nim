@@ -323,18 +323,21 @@ func search*(
 
     let
         hashResult = state.hashTable[].get(position.zobristKey)
-        estimatedValue = if hashResult.isEmpty: 0.Value else: hashResult.value
+        estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
 
-    const margins = [10.cp, 30.cp, 90.cp, 150.cp, valueInfinity]
+    const
+        startingOffset = 10.cp.float
+        multiplier = 3.0
+
     var
-        alphaIndex = 0
-        betaIndex = 0
+        alphaOffset = startingOffset
+        betaOffset = startingOffset
 
     # growing alpha beta window
     while true:
         let
-            alpha =  max(estimatedValue - margins[alphaIndex], -valueInfinity)
-            beta = min(estimatedValue + margins[betaIndex], valueInfinity)
+            alpha =  max(estimatedValue - alphaOffset, -valueInfinity.float).Value
+            beta = min(estimatedValue + betaOffset, valueInfinity.float).Value
 
         result = position.search(
             state,
@@ -344,11 +347,8 @@ func search*(
         )
 
         if result <= alpha:
-            alphaIndex += 1
+            alphaOffset *= multiplier
         elif result >= beta:
-            betaIndex += 1
+            betaOffset *= multiplier
         else:
             break
-
-        doAssert alphaIndex in margins.low..margins.high
-        doAssert betaIndex in margins.low..margins.high
