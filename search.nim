@@ -176,7 +176,7 @@ func search(
         lmrMoveCounter = 0
 
     # update alpha, beta or value based on hash table result
-    if (not hashResult.isEmpty) and height > 0 and (alpha > -valueInfinity or beta < valueInfinity):
+    if height > 0 and not hashResult.isEmpty:
         if hashResult.depth >= depth:
             case hashResult.nodeType:
             of exact:
@@ -199,8 +199,7 @@ func search(
         return position.quiesce(state, alpha = alpha, beta = beta, height)
 
     # null move reduction
-    if height > 0 and (not inCheck) and alpha > -valueInfinity and beta < valueInfinity and
-    (hashResult.isEmpty or hashResult.nodeType == cutNode) and
+    if height > 0 and (not inCheck) and (hashResult.isEmpty or hashResult.nodeType == cutNode) and
     ((position[knight] or position[bishop] or position[rook] or position[queen]) and position[position.us]).countSetBits >= 1:
         var newPosition = position
         newPosition.doNullMove
@@ -253,7 +252,7 @@ func search(
                     continue
 
         # first explore with null window
-        if alpha > -valueInfinity and (hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode):
+        if hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode:
             newBeta = alpha + 1
 
         if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
