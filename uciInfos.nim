@@ -1,5 +1,10 @@
 import version
 
+import std/[
+    terminal,
+    strformat
+]
+
 proc help*(params: openArray[string]) =
     if params.len == 0:
         echo "Possible commands:"
@@ -152,6 +157,20 @@ proc help*(params: openArray[string]) =
         
         echo "-----------------------------------------"
 
+proc printLogo*() =
+
+    stdout.styledWrite {styleDim}, "---------------- "
+    stdout.styledWrite {styleItalic, styleBright}, "Nalwald"
+    stdout.styledWrite {styleDim}, " ----------------\n"
+
+    echo fmt"       __,      o     n_n_n   ooooo    + "
+    echo fmt" o    // o\    ( )    \   /    \ /    \ /"
+    echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
+    echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
+
+    stdout.styledWrite {styleDim}, "------------ "
+    stdout.styledWrite {styleDim}, "by Jost Triller"
+    stdout.styledWrite {styleDim}, " ------------\n"
 
 proc about*(extra = true) =
     const s = readFile("README.md")

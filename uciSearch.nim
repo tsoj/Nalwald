@@ -31,27 +31,17 @@ func printInfoString(
             stdout.styledWrite {styleItalic}, " " & key & " "
             stdout.styledWrite valueColor, style, value
 
-
-
-
         stdout.styledWrite {styleDim}, "info"
-
-
 
         if multiPvIndex != -1:
             printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
-            # stdout.styledWrite fgYellow, " multipv " & fmt"{multiPvIndex:>2}"
-        # stdout.styledWrite fgYellow, " depth " & fmt"{iteration+1:>2}"
         printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
-        # stdout.styledWrite fgYellow, " time " & fmt"{time.inMilliseconds:>6}"
         printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
-        # stdout.styledWrite fgYellow, " nodes " & fmt"{nodes:>9}"
         printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
-        # stdout.styledWrite fgYellow, " nps " & fmt"{nps:>7}"
 
         let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
-        # stdout.styledWrite fgYellow, " hashfull " & fmt"{hashFull:>5}"
+        
         printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
 
 

@@ -258,12 +258,8 @@ proc pawnStructureMaskValue(uciState: UciState, params: seq[string]) =
         echo "Value: ", value, " cp"
 
 proc uciLoop*() =
-    echo fmt"---------------- Nalwald ----------------"
-    echo fmt"       __,      o     n_n_n   ooooo    + "
-    echo fmt" o    // o\    ( )    \   /    \ /    \ /"
-    echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
-    echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
-    echo fmt"------------ by Jost Triller ------------"
+
+    printLogo()
 
     var uciState = UciState(
         position: startpos,

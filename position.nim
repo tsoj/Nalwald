@@ -224,7 +224,7 @@ func doMove*(position: Position, move: Move): Position {.inline.} =
     result = position
     result.doMoveInPlace(move)
 
-func doNullMove*(position: var Position) =
+func doNullMoveInPlace*(position: var Position) =
     position.zobristKey = position.zobristKey xor position.enPassantCastling
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
     position.zobristKey = position.zobristKey xor position.enPassantCastling
@@ -236,6 +236,10 @@ func doNullMove*(position: var Position) =
 
     position.enemy = position.us
     position.us = position.us.opposite
+
+func doNullMove*(position: Position): Position =
+    result = position
+    result.doNullMoveInPlace()
 
 func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1
