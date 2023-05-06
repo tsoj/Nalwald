@@ -5,15 +5,19 @@ import
     positionUtils,
     timeManagedSearch,
     hashTable,
-    evaluation,
+    evaluation
+
+import std/[
+    terminal,
     atomics,
     times,
     strformat,
     strutils,
     math,
     algorithm
+]
 
-func infoString(
+func printInfoString(
     iteration: int,
     value: Value,
     nodes: uint64,
@@ -21,27 +25,62 @@ func infoString(
     hashFull: int,
     pv: string,
     multiPvIndex = -1
-): string =
-    var scoreString = " score cp " & fmt"{value.toCp:>4}"
-    if abs(value) >= valueCheckmate:
-        if value < 0:
-            scoreString = " score mate -"
+) =
+    {.cast(noSideEffect).}:
+        proc printKeyValue(key, value: string, valueColor: ForegroundColor, style: set[Style] = {}) =
+            stdout.styledWrite {styleItalic}, " " & key & " "
+            stdout.styledWrite valueColor, style, value
+
+
+
+
+        stdout.styledWrite {styleDim}, "info"
+
+
+
+        if multiPvIndex != -1:
+            printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
+            # stdout.styledWrite fgYellow, " multipv " & fmt"{multiPvIndex:>2}"
+        # stdout.styledWrite fgYellow, " depth " & fmt"{iteration+1:>2}"
+        printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
+        # stdout.styledWrite fgYellow, " time " & fmt"{time.inMilliseconds:>6}"
+        printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
+        # stdout.styledWrite fgYellow, " nodes " & fmt"{nodes:>9}"
+        printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
+        # stdout.styledWrite fgYellow, " nps " & fmt"{nps:>7}"
+
+        let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
+        printKeyValue("nps", fmt"{nps:>7}", fgGreen)
+        # stdout.styledWrite fgYellow, " hashfull " & fmt"{hashFull:>5}"
+        printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
+
+
+        if abs(value) >= valueCheckmate:
+            
+            stdout.styledWrite {styleItalic}, " score "
+            let
+                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).ceil.int
+                color = if value > 0: fgGreen else: fgRed
+
+            stdout.styledWrite {styleBright}, color, valueString
+
         else:
-            scoreString = " score mate "
-        scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
+            let
+                valueString = fmt"{value.toCp:>4}"
+                style: set[Style] = if value.abs < 100.cp: {styleDim} else: {}
 
-    let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
+            stdout.styledWrite {styleItalic}, " score cp "
+            if value.abs <= 10.cp:
+                stdout.styledWrite style, valueString
+            else:
+                let color = if value > 0: fgGreen else: fgRed
+                stdout.styledWrite style, color, valueString
+                
 
-    result = "info"
-    if multiPvIndex != -1:
-        result &= " multipv " & fmt"{multiPvIndex:>2}"
-    result &= " depth " & fmt"{iteration+1:>2}"
-    result &= " time " & fmt"{time.inMilliseconds:>6}"
-    result &= " nodes " & fmt"{nodes:>9}"
-    result &= " nps " & fmt"{nps:>7}"
-    result &= " hashfull " & fmt"{hashFull:>5}"
-    result &= scoreString
-    result &= " pv " & pv
+
+            printKeyValue("pv", pv, fgBlue, {styleBright})
+
+        echo ""
 
 func bestMoveString(move: Move, position: Position): string =
     let moveNotation = move.notation(position)
@@ -90,7 +129,8 @@ proc uciSearchSinglePv(searchInfo: SearchInfo) =
         bestMove = pv[0]
 
         # uci info
-        echo iteration.infoString(
+        printInfoString(
+            iteration,
             value,
             nodes,
             passedTime,
@@ -169,7 +209,8 @@ proc uciSearch*(searchInfo: SearchInfo) =
         for i, searchResult in searchResults.pairs:
             if i+1 > searchInfo.multiPv:
                 break
-            echo iteration.infoString(
+            printInfoString(
+                iteration,
                 searchResult.value,
                 searchResult.nodes,
                 searchResult.passedTime,
