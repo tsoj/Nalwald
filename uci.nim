@@ -39,8 +39,10 @@ type UciState = object
     searchRunningFlag: Atomic[bool]
     numThreads: int
     multiPv: int
+    uciCompatibleOutput: bool = false
 
-proc uci() =
+proc uci(uciState: var UciState) =
+    uciState.uciCompatibleOutput = true
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
@@ -146,7 +148,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         multiPv: uciState.multiPv,
         searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
-        nodes: uint64.high
+        nodes: uint64.high,
+        uciCompatibleOutput: uciState.uciCompatibleOutput
     )
 
     for i in 0..<params.len:
@@ -282,7 +285,7 @@ proc uciLoop*() =
                 continue
             case params[0]
             of "uci":
-                uci()
+                uciState.uci()
             of "setoption":
                 uciState.setOption(params[1..^1])
             of "isready":

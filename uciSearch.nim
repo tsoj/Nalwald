@@ -24,14 +24,21 @@ func printInfoString(
     time: Duration,
     hashFull: int,
     pv: string,
+    beautiful: bool,
     multiPvIndex = -1
 ) =
     {.cast(noSideEffect).}:
-        proc printKeyValue(key, value: string, valueColor: ForegroundColor, style: set[Style] = {}) =
-            stdout.styledWrite {styleItalic}, " " & key & " "
-            stdout.styledWrite valueColor, style, value
+        proc print(text: string, style: set[Style] = {}, color = fgDefault) =
+            if beautiful:
+                stdout.styledWrite color, style, text
+            else:
+                stdout.write text
 
-        stdout.styledWrite {styleDim}, "info"
+        proc printKeyValue(key, value: string, valueColor: ForegroundColor, style: set[Style] = {}) =
+            print " " & key & " ", {styleItalic}
+            print value, style, valueColor
+
+        print "info", {styleDim}
 
         if multiPvIndex != -1:
             printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
@@ -47,24 +54,24 @@ func printInfoString(
 
         if abs(value) >= valueCheckmate:
             
-            stdout.styledWrite {styleItalic}, " score "
+            print " score ", {styleItalic}
             let
                 valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).ceil.int
                 color = if value > 0: fgGreen else: fgRed
 
-            stdout.styledWrite {styleBright}, color, valueString
+            print valueString, {styleBright}, color
 
         else:
             let
                 valueString = fmt"{value.toCp:>4}"
                 style: set[Style] = if value.abs < 100.cp: {styleDim} else: {}
 
-            stdout.styledWrite {styleItalic}, " score cp "
+            print " score cp ", {styleItalic}
             if value.abs <= 10.cp:
-                stdout.styledWrite style, valueString
+                print valueString, style
             else:
                 let color = if value > 0: fgGreen else: fgRed
-                stdout.styledWrite style, color, valueString
+                print valueString, style, color
                 
 
 
@@ -97,6 +104,7 @@ type SearchInfo* = object
     searchMoves*: seq[Move]
     numThreads*: int
     nodes*: uint64
+    uciCompatibleOutput*: bool
 
 proc uciSearchSinglePv(searchInfo: SearchInfo) =
     var
@@ -125,7 +133,8 @@ proc uciSearchSinglePv(searchInfo: SearchInfo) =
             nodes,
             passedTime,
             searchInfo.hashTable[].hashFull,
-            pv.notation(searchInfo.position)
+            pv.notation(searchInfo.position),
+            beautiful = not searchInfo.uciCompatibleOutput
         )
 
         iteration += 1
@@ -206,6 +215,7 @@ proc uciSearch*(searchInfo: SearchInfo) =
                 searchResult.passedTime,
                 searchInfo.hashTable[].hashFull,
                 searchResult.pv.notation(searchInfo.position),
+                beautiful = not searchInfo.uciCompatibleOutput,
                 i+1,
             )
 
