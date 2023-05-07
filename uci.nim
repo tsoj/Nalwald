@@ -13,13 +13,16 @@ import
     evaluation,
     evalParameters,
     defaultParameters,
-    version,
+    version
+
+import std/[
     times,
     strutils,
     strformat,
     atomics,
     threadpool,
     os
+]
 
 const
     megaByteToByte = 1_048_576
@@ -166,7 +169,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "nodes":
                 searchInfo.nodes = params[i+1].parseUInt
             else:
-                echo "info string Unknown parameter: ", $params[i]
+                discard
         try:
             let move = params[i].toMove(uciState.position)
             searchInfo.searchMoves.add move

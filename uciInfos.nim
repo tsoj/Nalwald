@@ -5,6 +5,9 @@ import std/[
     strformat
 ]
 
+proc printSeperatorLine() =
+    styledEcho {styleDim}, "-----------------------------------------"
+
 proc help*(params: openArray[string]) =
     if params.len == 0:
         echo "Possible commands:"
@@ -29,7 +32,7 @@ proc help*(params: openArray[string]) =
         echo "* help"
         echo "Use 'help <command>' to get info about a specific command"
     else:
-        echo "-----------------------------------------"
+        printSeperatorLine()
         case params[0]:
         of "uci":
             echo(
@@ -155,7 +158,7 @@ proc help*(params: openArray[string]) =
         else:
             echo "Unknown command: ", params[0]
         
-        echo "-----------------------------------------"
+        printSeperatorLine()
 
 proc printLogo*() =
 
@@ -170,15 +173,16 @@ proc printLogo*() =
 
     stdout.styledWrite {styleDim}, "------------ "
     stdout.styledWrite {styleDim}, "by Jost Triller"
-    stdout.styledWrite {styleDim}, " ------------\n"
+    stdout.styledWrite {styleDim}, " ------------"
+    echo ""
 
 proc about*(extra = true) =
     const s = readFile("README.md")
-    echo "-----------------------------------------"
+    printSeperatorLine()
     echo "Nalwald ", version()
     echo "Compiled at ", compileDate()
     echo "Copyright © 2016-", compileYear() , " by Jost Triller"
-    echo "-----------------------------------------"
+    printSeperatorLine()
     if extra:
         echo s
-        echo "-----------------------------------------"
+        printSeperatorLine()
