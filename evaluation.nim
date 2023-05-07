@@ -185,6 +185,7 @@ func attackingPiece(
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
+    static: doAssert piece in knight..queen
     for attackedPiece in pawn..king:
         if (attackMask and position[us.opposite] and position[attackedPiece]) != 0:
             result.addValue(evalParameters, gradient, us, bonusAttackingPiece[piece][attackedPiece])
