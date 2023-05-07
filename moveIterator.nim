@@ -52,7 +52,7 @@ iterator moveIterator*(
         captureList.movePriorities[i] = position.see(captureList.moves[i]).float
 
     # winning captures
-    captureList.findBestMoves(minValue = -2*pawn.value.float)
+    captureList.findBestMoves(minValue = -1*pawn.value.float)
 
     # killers
     if doQuiets:
