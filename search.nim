@@ -168,7 +168,6 @@ func search(
 
     var
         alpha = alpha
-        beta = beta
         nodeType = allNode
         bestMove = noMove
         bestValue = -valueInfinity
@@ -176,24 +175,27 @@ func search(
         lmrMoveCounter = 0
 
     # update alpha, beta or value based on hash table result
-    if height > 0 and not hashResult.isEmpty:
-        if hashResult.depth >= depth:
-            case hashResult.nodeType:
-            of exact:
-                return hashResult.value
-            of lowerBound:
-                alpha = max(alpha, hashResult.value)
-            of upperBound:
-                beta = min(beta, hashResult.value)
-            if alpha >= beta:
-                return alpha
-        else:
-            # hash result futility pruning
-            let margin = hashResultFutilityMargin(depth - hashResult.depth)
-            if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
-                return hashResult.value - margin
-            if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
-                return hashResult.value + margin
+    let beta = block:
+        var beta = beta
+        if height > 0 and not hashResult.isEmpty:
+            if hashResult.depth >= depth:
+                case hashResult.nodeType:
+                of exact:
+                    return hashResult.value
+                of lowerBound:
+                    alpha = max(alpha, hashResult.value)
+                of upperBound:
+                    beta = min(beta, hashResult.value)
+                if alpha >= beta:
+                    return alpha
+            else:
+                # hash result futility pruning
+                let margin = hashResultFutilityMargin(depth - hashResult.depth)
+                if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
+                    return hashResult.value - margin
+                if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
+                    return hashResult.value + margin
+        beta
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
