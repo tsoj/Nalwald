@@ -121,6 +121,7 @@ func add*(
             if (not ht.pvNodes.hasKey(zobristKey)) or ht.pvNodes[zobristKey].entry.depth <= depth:
                 ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
     else:
+        doAssert ht.nonPvNodes.len > 0
         let i = zobristKey mod ht.nonPvNodes.len.uint64
         if ht.shouldReplace(entry, ht.nonPvNodes[i]):
             if ht.nonPvNodes[i].isEmpty:
@@ -133,6 +134,7 @@ func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
         ht.pvNodes[zobristKey].lookupCounter += 1
         return ht.pvNodes[zobristKey].entry
 
+    doAssert ht.nonPvNodes.len > 0
     let i = zobristKey mod ht.nonPvNodes.len.uint64
     if not ht.nonPvNodes[i].isEmpty and sameUpperZobristKey(zobristKey, ht.nonPvNodes[i].upperZobristKeyAndNodeTypeAndValue):
         return ht.nonPvNodes[i]

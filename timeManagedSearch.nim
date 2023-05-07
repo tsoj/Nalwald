@@ -15,14 +15,16 @@ type MoveTime = object
 func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
 
     doAssert movesToGo >= 0
-    let estimatedGameLength = 70
-    let estimatedMovesToGo = max(10, estimatedGameLength - halfmovesPlayed div 2)
-    var newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
+    let
+        estimatedGameLength = 70
+        estimatedMovesToGo = max(10, estimatedGameLength - halfmovesPlayed div 2)
+        newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
     result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), moveTime)
-    result.approxTime = initDuration(milliseconds = clamp(
-        timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
-        clamp(incPerMove.inMilliseconds, 0, int.high div 2))
+    result.approxTime = initDuration(milliseconds =
+        clamp(timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
+        clamp(incPerMove.inMilliseconds, 0, int.high div 2)
+    )
 
     if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 2):
         result.approxTime = (15 * result.approxTime) div 10
