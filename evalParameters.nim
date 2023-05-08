@@ -30,10 +30,9 @@ func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32
 
     when Out is AtomType:
         static: doAssert In is AtomType, "Transforming types must have the same structure."
-        when Out is float32 and In is float32:
-            floatOp(output, input)
-        else:
-            output = input.Out
+        var tmp = output.float32
+        floatOp(tmp, input.float32)
+        output = tmp.Out
         
     elif Out is (tuple or object):
         static: doAssert In is (tuple or object), "Transforming types must have the same structure."
