@@ -46,7 +46,7 @@ func printInfoString(
         printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
         printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-        let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
+        let nps = 1000*(nodes div max(1, time.inMilliseconds).uint64)
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
         
         printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})

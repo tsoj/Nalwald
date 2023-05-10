@@ -1,5 +1,7 @@
 import types
 
+import std/random
+
 type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
@@ -83,3 +85,9 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
 
 func setAll*(a: var EvalParametersFloat, b: float32) =
     transform(a, a, proc(x: var float32, y: float32) = x = b)
+
+proc addRand*(a: var EvalParametersFloat, amplitude: float32) =
+    func floatOp(x: var float32, y: float32) =
+        {.cast(noSideEffect).}:
+            x += rand(-amplitude..amplitude)
+    transform(a, a, floatOp)

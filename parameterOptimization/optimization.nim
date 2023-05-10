@@ -35,20 +35,16 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 6400.0,
+    k: float,
+    lr = 25600.0, # TODO try 51200.0 (12800.0 is 0.0455499, 25600.0 is 0.0454596 (this is what is currently running on gruenau1))
     minLearningRate = 80.0,
     maxIterations = int.high,
     minTries = 10,
     discount = 0.9,
     numThreads = 30
-): EvalParameters =
-
-    echo "-------------------"
-    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
+): (EvalParametersFloat, float) =
 
     var bestSolution: EvalParametersFloat = start
-
-    echo "-------------------"
 
     var lr = lr
     var decreaseLr = true
@@ -158,12 +154,8 @@ proc optimize(
 
         if lr < minLearningRate:
             break
-
-    let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-    echo "filename: ", filename
-    writeFile(filename, $bestSolution.convert)
         
-    return bestSolution.convert
+    return (bestSolution, bestError)
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
@@ -175,7 +167,44 @@ data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 
 echo "Total number of entries: ", data.len
 
-let startingEvalParametersFloat = startingEvalParameters
 
-let ep = startingEvalParametersFloat.optimize(data)
-printPieceValues(ep)
+echo "-------------------"
+let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
+echo "-------------------"
+
+var
+    bestEvalParams = startingEvalParameters
+    bestEvalParamsError = float.high
+    bestFileName = "What?"
+
+
+
+const maxNumHyperIterations = 10
+
+
+
+# we need to be very careful with stack size and the number of instances of EvalParameter
+# otherwise we might crash
+for i in 1..maxNumHyperIterations:
+    echo "-------------------"
+    echo "Hyper iteration ", i
+    var withRand = startingEvalParameters
+    if i > 1:
+        withRand.addRand(10.0)
+    let (ep, error) = withRand.optimize(data, k)
+
+    if error < bestEvalParamsError:
+
+        let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+        echo "filename: ", filename
+        writeFile(filename, $ep.convert)
+        printPieceValues(ep.convert)
+
+        bestEvalParamsError = error
+        bestEvalParams = ep
+        bestFileName = filename
+
+echo "-----------------------"
+echo "Final best is: ", bestFileName
+printPieceValues(bestEvalParams.convert)
+
