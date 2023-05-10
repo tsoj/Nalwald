@@ -172,39 +172,10 @@ echo "-------------------"
 let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
-var
-    bestEvalParams = startingEvalParameters
-    bestEvalParamsError = float.high
-    bestFileName = "What?"
+let (ep, _) = startingEvalParameters.optimize(data, k)
 
-
-
-const maxNumHyperIterations = 10
-
-
-
-# we need to be very careful with stack size and the number of instances of EvalParameter
-# otherwise we might crash
-for i in 1..maxNumHyperIterations:
-    echo "-------------------"
-    echo "Hyper iteration ", i
-    var withRand = startingEvalParameters
-    if i > 1:
-        withRand.addRand(10.0)
-    let (ep, error) = withRand.optimize(data, k)
-
-    if error < bestEvalParamsError:
-
-        let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-        echo "filename: ", filename
-        writeFile(filename, $ep.convert)
-        printPieceValues(ep.convert)
-
-        bestEvalParamsError = error
-        bestEvalParams = ep
-        bestFileName = filename
-
-echo "-----------------------"
-echo "Final best is: ", bestFileName
-printPieceValues(bestEvalParams.convert)
+let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+echo "filename: ", filename
+writeFile(filename, $ep.convert)
+printPieceValues(ep.convert)
 
