@@ -52,13 +52,15 @@ iterator moveIterator*(
         captureList.movePriorities[i] = position.see(captureList.moves[i]).float
 
     # winning captures
-    captureList.findBestMoves(minValue = -1*pawn.value.float)
+    captureList.findBestMoves(minValue = -50.cp.float)
 
     # killers
     if doQuiets:
         for i in killers.low..killers.high:
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
+
+    captureList.findBestMoves(minValue = -150.cp.float)
 
     # quiet moves
     if doQuiets:
