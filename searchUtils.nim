@@ -22,11 +22,10 @@ func newHistoryTable*(): HistoryTable =
 
 const maxHistoryTableValue = 100000.0
 
-func halve(table: var HistoryArray) =
-    for color in white..black:
-        for piece in pawn..king:
-            for square in a1..h8:
-                table[color][piece][square] /= 2.0
+func halve(table: var HistoryArray, color: Color) =
+    for piece in pawn..king:
+        for square in a1..h8:
+            table[color][piece][square] /= 2.0
 
 func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
     if move.isTactical:
@@ -34,27 +33,31 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
 
     func add(
         table: var HistoryArray,
-        color: Color, piece: Piece, target: Square, addition: float
+        color: Color, piece: Piece, target: Square, captured: Piece, addition: float
     ) =
-        table[color][piece][target] = clamp(
-            table[color][piece][target] + addition,
+        template entry(): auto = table[color][piece][target]
+        entry = clamp(
+            entry + addition,
             -maxHistoryTableValue, maxHistoryTableValue
         )    
-        if table[color][piece][target].abs >= maxHistoryTableValue:
-            table.halve
+        if entry.abs >= maxHistoryTableValue:
+            table.halve(color)
 
     let addition = (if weakMove: -1.0/15.0 else: 1.0) * depth.float^2
 
-    historyTable.table.add(color, move.moved, move.target, addition)
+    historyTable.table.add(color, move.moved, move.target, move.captured, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
         doAssert historyTable.counterTable.len == 1
-        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, addition * 50.0)        
+        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, move.captured, addition * 50.0)        
 
-func get*(historyTable: HistoryTable, move, previous: Move, color: Color): float =
-    result = historyTable.table[color][move.moved][move.target]
+func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0..1.0 =
+    var sum = historyTable.table[color][move.moved][move.target]
     if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
-        result += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target]
+        sum += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target]
+
+    sum / (2*maxHistoryTableValue)
+
 
 #-------------- killer heuristic --------------#
 
