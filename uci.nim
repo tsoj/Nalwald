@@ -294,7 +294,6 @@ proc uciLoop*() =
                 uciState.setPosition(params[1..^1])
             of "go":
                 uciState.go(params[1..^1], searchThreadResult)
-                # discard ^searchThreadResult # TODO check if adding this improves elo
             of "stop":
                 uciState.stop()
             of "quit":
