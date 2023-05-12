@@ -60,13 +60,10 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): float
 
 type KillerTable* = object
     table: array[Ply, array[2, Move]]
-    goodMove: array[2, Move]
 
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
-
-    killerTable.goodMove[height mod 2] = move
     
     func add(list: var array[2, Move], move: Move) =
         if list[0] != move:
@@ -75,13 +72,10 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
             
     killerTable.table[height].add(move)
 
-func get*(killerTable: KillerTable, height: Ply): array[3, Move] =
+func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
 
     result[0] = killerTable.table[height][0]
     result[1] = killerTable.table[height][1]
-    
-    if killerTable.goodMove[height mod 2] notin result:
-        result[2] = killerTable.goodMove[height mod 2]
 
 #-------------- repetition detection --------------#
 

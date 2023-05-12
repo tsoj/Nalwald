@@ -15,7 +15,7 @@ iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: HistoryTable = zeroHistoryTable,
-    killers = [noMove, noMove, noMove],
+    killers = [noMove, noMove],
     previous = noMove,
     doQuiets = true
 ): Move =
