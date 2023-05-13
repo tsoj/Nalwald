@@ -163,7 +163,7 @@ proc help*(params: openArray[string]) =
 proc printLogo*() =
 
     stdout.styledWrite {styleDim}, "---------------- "
-    stdout.styledWrite {styleItalic, styleBright}, "Nalwald"
+    stdout.styledWrite {styleItalic, styleBright}, fgCyan, "Nalwald"
     stdout.styledWrite {styleDim}, " ----------------\n"
 
     echo fmt"       __,      o     n_n_n   ooooo    + "
@@ -172,7 +172,7 @@ proc printLogo*() =
     echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
 
     stdout.styledWrite {styleDim}, "------------ "
-    stdout.styledWrite {styleDim}, "by Jost Triller"
+    stdout.styledWrite fgBlue, "by Jost Triller"
     stdout.styledWrite {styleDim}, " ------------"
     echo ""
 

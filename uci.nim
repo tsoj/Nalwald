@@ -331,7 +331,7 @@ proc uciLoop*() =
                     echo "Unknown command: ", params[0]
                     echo "Use 'help'"
         except CatchableError:
-            echo "info string ", getCurrentExceptionMsg()
+            echo "Error: ", getCurrentExceptionMsg()
 
 
     discard ^searchThreadResult
