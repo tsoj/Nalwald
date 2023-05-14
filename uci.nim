@@ -81,6 +81,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 echo "Invalid value"
             else:
                 uciState.multiPv = newMultiPv
+                uciState.hashTable.clear()
         else:
             echo "Unknown option: ", params[1]
     else:

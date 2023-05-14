@@ -56,6 +56,7 @@ type SearchState* = object
     gameHistory*: GameHistory
     countedNodes*: uint64
     maxNodes*: uint64
+    skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func update(
@@ -223,6 +224,9 @@ func search(
         detailStaticEval.get
         
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
+
+        if height == 0.Ply and move in state.skipMovesAtRoot:
+            continue
 
         let newPosition = position.doMove(move)
         if newPosition.inCheck(position.us):

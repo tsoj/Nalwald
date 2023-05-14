@@ -162,19 +162,12 @@ proc help*(params: openArray[string]) =
 
 proc printLogo*() =
 
-    stdout.styledWrite {styleDim}, "---------------- "
-    stdout.styledWrite {styleItalic, styleBright}, fgCyan, "Nalwald"
-    stdout.styledWrite {styleDim}, " ----------------\n"
-
+    echo fmt"---------------- Nalwald ----------------"
     echo fmt"       __,      o     n_n_n   ooooo    + "
     echo fmt" o    // o\    ( )    \   /    \ /    \ /"
     echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
     echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
-
-    stdout.styledWrite {styleDim}, "------------ "
-    stdout.styledWrite fgBlue, "by Jost Triller"
-    stdout.styledWrite {styleDim}, " ------------"
-    echo ""
+    echo fmt"------------ by Jost Triller ------------"
 
 proc about*(extra = true) =
     const s = readFile("README.md")
