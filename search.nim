@@ -160,12 +160,6 @@ func search(
 
     let
         inCheck = position.inCheck(position.us)
-        depth = if inCheck and depth <= 0:
-            1.Ply
-        elif previous.isPawnMoveToSecondRank:
-            depth + 1.Ply
-        else:
-            depth
         hashResult = state.hashTable[].get(position.zobristKey)
         originalAlpha = alpha
 
@@ -176,6 +170,13 @@ func search(
         bestValue = -valueInfinity
         moveCounter = 0
         lmrMoveCounter = 0
+
+    var depth = if inCheck and depth <= 0:
+        1.Ply
+    elif previous.isPawnMoveToSecondRank:
+        depth + 1.Ply
+    else:
+        depth
 
     # update alpha, beta or value based on hash table result
     let beta = block:
@@ -202,6 +203,10 @@ func search(
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
+
+    # internal iterative reduction
+    if hashResult.isEmpty and depth >= 4.Ply:
+        depth -= 1.Ply
 
     # null move reduction
     if height > 0 and (not inCheck) and (hashResult.isEmpty or hashResult.nodeType == cutNode) and
