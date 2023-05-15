@@ -205,7 +205,7 @@ func search(
         return position.quiesce(state, alpha = alpha, beta = beta, height)
 
     # internal iterative reduction
-    if hashResult.isEmpty and depth >= 4.Ply:
+    if hashResult.isEmpty and depth >= 6.Ply:
         depth -= 1.Ply
 
     # null move reduction
