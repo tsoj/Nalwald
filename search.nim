@@ -36,9 +36,7 @@ func nullMoveDepth(depth: Ply): Ply =
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
-    let d = (halfLife + lmrMoveCounter)
-    doAssert d > 0
-    ((depth.int * halfLife) div d).Ply
+    ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
 
 func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
@@ -61,6 +59,9 @@ type SearchState* = object
     skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
+func shouldStop(state: SearchState): bool =
+    state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes
+
 func update(
     state: var SearchState,
     position: Position,
@@ -72,9 +73,9 @@ func update(
     if bestMove != noMove and not (state.stop[].load or state.threadStop[].load):
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if nodeType != allNode:
-            state.historyTable[].update(bestMove, previous, position.us, depth)
+            state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)
         if nodeType == cutNode:
-            state.killerTable.update(height, bestMove)                
+            state.killerTable.update(height, bestMove)
 
 func quiesce(
     position: Position,
@@ -182,7 +183,7 @@ func search(
             depth += 1.Ply
 
         # passed pawn extension
-        if previous.isPawnMoveToSecondRank: # TODO if this doesn't work, try again with elif
+        if previous.isPawnMoveToSecondRank:
             depth += 1.Ply
 
         # internal iterative reduction
@@ -211,7 +212,6 @@ func search(
                     return hashResult.value + margin
         
         (beta, depth)
-
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
@@ -278,11 +278,8 @@ func search(
             newBeta = alpha + 1
 
         # stop search if we exceded maximum nodes or we got a stop signal from outside
-        if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
-            if state.hashTable[].get(position.zobristKey).isEmpty:
-                break
-            else:
-                return 0.Value
+        if state.shouldStop and moveCounter > 1:
+            break
         
         # search new position
         var value = -newPosition.search(
@@ -353,7 +350,7 @@ func search*(
         betaOffset = aspirationWindowStartingOffset
 
     # growing alpha beta window
-    while true:
+    while not state.shouldStop:
         let
             alpha = max(estimatedValue - alphaOffset, -valueInfinity.float).Value
             beta = min(estimatedValue + betaOffset, valueInfinity.float).Value
@@ -364,6 +361,7 @@ func search*(
             depth = depth, height = 0,
             previous = noMove
         )
+        doAssert result.abs < valueInfinity
 
         if result <= alpha:
             alphaOffset *= aspirationWindowMultiplier

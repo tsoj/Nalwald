@@ -13,12 +13,11 @@ type
     HistoryArray = array[white..black, array[pawn..king, array[a1..h8, float]]]
     HistoryTable* = object
         table: HistoryArray
-        counterTable: seq[array[pawn..king, array[a1..h8, HistoryArray]]]
+        counterTable: ref array[pawn..king, array[a1..h8, HistoryArray]]
 
 func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
-    # TODO make this nicer
-    result.counterTable.setLen(1)
+    result.counterTable = new array[pawn..king, array[a1..h8, HistoryArray]]
 
 const maxHistoryTableValue = 100000.0
 
@@ -27,7 +26,7 @@ func halve(table: var HistoryArray, color: Color) =
         for square in a1..h8:
             table[color][piece][square] /= 2.0
 
-func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha = true) =
+func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
     if move.isTactical:
         return
 
@@ -48,13 +47,12 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     historyTable.table.add(color, move.moved, move.target, move.captured, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        doAssert historyTable.counterTable.len == 1
-        historyTable.counterTable[0][previous.moved][previous.target].add(color, move.moved, move.target, move.captured, addition * 50.0)        
+        historyTable.counterTable[][previous.moved][previous.target].add(color, move.moved, move.target, move.captured, addition * 50.0)        
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0..1.0 =
     var sum = historyTable.table[color][move.moved][move.target]
-    if previous.moved in pawn..king and previous.target in a1..h8 and historyTable.counterTable.len == 1:
-        sum += historyTable.counterTable[0][previous.moved][previous.target][color][move.moved][move.target]
+    if previous.moved in pawn..king and previous.target in a1..h8:
+        sum += historyTable.counterTable[][previous.moved][previous.target][color][move.moved][move.target]
 
     sum / (2*maxHistoryTableValue)
 

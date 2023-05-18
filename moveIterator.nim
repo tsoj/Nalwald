@@ -1,5 +1,4 @@
 import
-    types,
     move,
     position,
     movegen,
@@ -7,14 +6,10 @@ import
     evaluation,
     searchUtils
 
-const zeroHistoryTable = block:
-    var h: HistoryTable
-    h
-
 iterator moveIterator*(
     position: Position,
     tryFirstMove = noMove,
-    historyTable: HistoryTable = zeroHistoryTable,
+    historyTable: HistoryTable or tuple[] = (),
     killers = [noMove, noMove],
     previous = noMove,
     doQuiets = true
@@ -51,7 +46,7 @@ iterator moveIterator*(
     for i in 0..<captureList.numMoves:
         captureList.movePriorities[i] = position.see(captureList.moves[i]).float
 
-    # winning captures
+    # mostly winning captures
     captureList.findBestMoves(minValue = -50.cp.float)
 
     # killers
@@ -60,14 +55,16 @@ iterator moveIterator*(
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
 
+    # slightly losing captures
     captureList.findBestMoves(minValue = -150.cp.float)
 
     # quiet moves
     if doQuiets:
         var quietList {.noinit.}: OrderedMoveList
         quietList.numMoves = position.generateQuiets(quietList.moves)
-        for i in 0..<quietList.numMoves:
-            quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
+        when historyTable is HistoryTable:
+            for i in 0..<quietList.numMoves:
+                quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
                 
         quietList.findBestMoves()
     

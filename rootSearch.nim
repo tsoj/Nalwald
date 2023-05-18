@@ -105,7 +105,7 @@ iterator iterativeDeepeningSearch*(
                     
                     threadStop.store(false)
                     
-                    template launchSearch(i: auto): auto = launchSearch(
+                    template launchSearch(i: int): uint64 = launchSearch(
                         position,
                         addr hashTable,
                         stop,
