@@ -27,7 +27,7 @@ func halve(table: var HistoryArray, color: Color) =
         for square in a1..h8:
             table[color][piece][square] /= 2.0
 
-func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, weakMove = false) =
+func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha = true) =
     if move.isTactical:
         return
 
@@ -43,7 +43,7 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         if entry.abs >= maxHistoryTableValue:
             table.halve(color)
 
-    let addition = (if weakMove: -1.0/15.0 else: 1.0) * depth.float^2
+    let addition = (if raisedAlpha: 1.0 else: -1.0/15.0) * depth.float^2
 
     historyTable.table.add(color, move.moved, move.target, move.captured, addition)
 

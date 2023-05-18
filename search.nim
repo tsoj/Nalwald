@@ -46,6 +46,8 @@ func increaseBeta(newBeta: var Value, alpha, beta: Value) =
 const
     deltaMargin = 150.cp
     failHighDeltaMargin = 50.cp
+    aspirationWindowStartingOffset = 10.cp.float
+    aspirationWindowMultiplier = 3.0
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
@@ -171,15 +173,23 @@ func search(
         moveCounter = 0
         lmrMoveCounter = 0
 
-    var depth = if inCheck and depth <= 0:
-        1.Ply
-    elif previous.isPawnMoveToSecondRank:
-        depth + 1.Ply
-    else:
-        depth
+    let (beta, depth) = block:
 
-    # update alpha, beta or value based on hash table result
-    let beta = block:
+        var depth = depth
+
+        # check extension
+        if inCheck and depth <= 0:
+            depth += 1.Ply
+
+        # passed pawn extension
+        if previous.isPawnMoveToSecondRank: # TODO if this doesn't work, try again with elif
+            depth += 1.Ply
+
+        # internal iterative reduction
+        if hashResult.isEmpty and depth >= 6.Ply:
+            depth -= 1.Ply
+        
+        # update alpha, beta or value based on hash table result
         var beta = beta
         if height > 0 and not hashResult.isEmpty:
             if hashResult.depth >= depth:
@@ -199,14 +209,12 @@ func search(
                     return hashResult.value - margin
                 if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
                     return hashResult.value + margin
-        beta
+        
+        (beta, depth)
+
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
-
-    # internal iterative reduction
-    if hashResult.isEmpty and depth >= 6.Ply:
-        depth -= 1.Ply
 
     # null move reduction
     if height > 0 and (not inCheck) and (hashResult.isEmpty or hashResult.nodeType == cutNode) and
@@ -222,12 +230,14 @@ func search(
         if value >= beta:
             return value
 
-    var detailStaticEval = none Value # will be calculated on demand
+    # get static eval of current position, but only when necessary
+    var detailStaticEval = none Value
     template staticEval(): auto =
         if detailStaticEval.isNone:
             detailStaticEval = some state.evaluation(position)
         detailStaticEval.get
-        
+
+    # iterate over all moves and recursively search the new positions
     for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
@@ -267,12 +277,14 @@ func search(
         if hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode:
             newBeta = alpha + 1
 
+        # stop search if we exceded maximum nodes or we got a stop signal from outside
         if state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes:
             if state.hashTable[].get(position.zobristKey).isEmpty:
                 break
             else:
                 return 0.Value
         
+        # search new position
         var value = -newPosition.search(
             state,
             alpha = -newBeta, beta = -alpha,
@@ -312,7 +324,7 @@ func search(
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable[].update(move, previous, position.us, newDepth, weakMove = true)
+            state.historyTable[].update(move, previous, position.us, newDepth, raisedAlpha = false)
 
     if moveCounter == 0:
         # checkmate
@@ -336,18 +348,14 @@ func search*(
         hashResult = state.hashTable[].get(position.zobristKey)
         estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
 
-    const
-        startingOffset = 10.cp.float
-        multiplier = 3.0
-
     var
-        alphaOffset = startingOffset
-        betaOffset = startingOffset
+        alphaOffset = aspirationWindowStartingOffset
+        betaOffset = aspirationWindowStartingOffset
 
     # growing alpha beta window
     while true:
         let
-            alpha =  max(estimatedValue - alphaOffset, -valueInfinity.float).Value
+            alpha = max(estimatedValue - alphaOffset, -valueInfinity.float).Value
             beta = min(estimatedValue + betaOffset, valueInfinity.float).Value
 
         result = position.search(
@@ -358,8 +366,8 @@ func search*(
         )
 
         if result <= alpha:
-            alphaOffset *= multiplier
+            alphaOffset *= aspirationWindowMultiplier
         elif result >= beta:
-            betaOffset *= multiplier
+            betaOffset *= aspirationWindowMultiplier
         else:
             break
