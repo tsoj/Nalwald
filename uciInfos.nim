@@ -1,4 +1,6 @@
-import version
+import
+    version,
+    printMarkdownSubset
 
 import std/[
     terminal,
@@ -176,12 +178,12 @@ proc printLogo*() =
     echo fmt"------------ by Jost Triller ------------"
 
 proc about*(extra = true) =
-    const s = readFile("README.md")
+    const readme = readFile("README.md")
     printSeperatorLine()
     echo "Nalwald ", version()
     echo "Compiled at ", compileDate()
     echo "Copyright © 2016-", compileYear() , " by Jost Triller"
     printSeperatorLine()
     if extra:
-        echo s
+        printMarkdownSubset readme
         printSeperatorLine()
