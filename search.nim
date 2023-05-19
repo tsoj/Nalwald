@@ -184,12 +184,8 @@ func search(
 
         var depth = depth
 
-        # check extension
-        if inCheck and depth <= 0:
-            depth += 1.Ply
-
-        # passed pawn extension
-        if previous.isPawnMoveToSecondRank:
+        # check and passed pawn extension
+        if (inCheck and depth <= 0) or previous.isPawnMoveToSecondRank:
             depth += 1.Ply
 
         # internal iterative reduction
