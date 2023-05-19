@@ -35,8 +35,16 @@ func nullMoveDepth(depth: Ply): Ply =
     depth - 3.Ply - depth div 4.Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-    const halfLife = 35
-    ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
+    const
+        halfLife = 35.0'f32
+        m = 20.0'f32
+        i = 0.2'f32
+    let slider = clamp(depth.float32/m, 0.0'f32, 1.0'f32)
+    clamp(
+        ((depth.float32 * halfLife) / (halfLife + lmrMoveCounter.float32)) * slider +
+        (depth.float32 - lmrMoveCounter.float32 * i) * (1.0'f32 - slider),
+        Ply.low.float32, Ply.high.float32
+    ).Ply
 
 func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
@@ -261,12 +269,9 @@ func search(
             (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)):
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
-                if lmrMoveCounter >= 5:
-                    if depth <= 2.Ply:
-                        continue
-                    if depth <= 8.Ply:
-                        newDepth -= 1.Ply
-
+                if lmrMoveCounter >= 5 and newDepth <= 0.Ply:
+                    continue
+            
             # futility reduction
             if moveCounter > 1:
                 newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))

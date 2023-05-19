@@ -8,29 +8,35 @@ import std/[
 proc printSeperatorLine() =
     styledEcho {styleDim}, "-----------------------------------------"
 
+proc printCommandBulletPoint(command: string) =
+    styledEcho {styleDim}, "* ", resetStyle, {styleItalic}, command
+
+
 proc help*(params: openArray[string]) =
     if params.len == 0:
+        printSeperatorLine()
         echo "Possible commands:"
-        echo "* uci"
-        echo "* setoption"
-        echo "* isready"
-        echo "* position"
-        echo "* go"
-        echo "* stop"
-        echo "* quit"
-        echo "* ucinewgame"
-        echo "* moves"
-        echo "* print"
-        echo "* printdebug"
-        echo "* fen"
-        echo "* perft"
-        echo "* test"
-        echo "* eval"
-        echo "* piecevalues"
-        echo "* pawnmask"
-        echo "* about"
-        echo "* help"
-        echo "Use 'help <command>' to get info about a specific command"
+        printCommandBulletPoint "uci"
+        printCommandBulletPoint "setoption"
+        printCommandBulletPoint "isready"
+        printCommandBulletPoint "position"
+        printCommandBulletPoint "go"
+        printCommandBulletPoint "stop"
+        printCommandBulletPoint "quit"
+        printCommandBulletPoint "ucinewgame"
+        printCommandBulletPoint "moves"
+        printCommandBulletPoint "print"
+        printCommandBulletPoint "printdebug"
+        printCommandBulletPoint "fen"
+        printCommandBulletPoint "perft"
+        printCommandBulletPoint "test"
+        printCommandBulletPoint "eval"
+        printCommandBulletPoint "piecevalues"
+        printCommandBulletPoint "pawnmask"
+        printCommandBulletPoint "about"
+        printCommandBulletPoint "help"
+        styledEcho "Use '", {styleItalic}, "help <command>", resetStyle, "' to get info about a specific command"
+        printSeperatorLine() 
     else:
         printSeperatorLine()
         case params[0]:
@@ -42,7 +48,7 @@ proc help*(params: openArray[string]) =
                 "After that the engine will sent 'uciok' to acknowledge the uci mode."
             )
         of "setoption":
-            echo "setoption name <id> [value <x>]"
+            styledEcho {styleBright}, "setoption name <id> [value <x>]"
             echo(
                 "This can be used to change the internal setting <id> to ",
                 "the value <x>. For a setting with the 'button' type no value is needed. ",
@@ -54,7 +60,7 @@ proc help*(params: openArray[string]) =
         of "isready":
             echo "Sends a ping to the engine that will be shortly answered with 'readyok' if the engine is still alive."
         of "position":
-            echo "position [fen <fenstring> | startpos] moves <move_1> ... <move_i>"
+            styledEcho {styleBright}, "position [fen <fenstring> | startpos] moves <move_1> ... <move_i>"
             echo(
                 "Sets up the position described in by <fenstring> on the internal board and ",
                 "plays the moves <move_1> to <move_i> on the internal chess board. ",
@@ -63,29 +69,29 @@ proc help*(params: openArray[string]) =
                 "the last position sent to the engine, the command 'ucinewgame' should be sent inbetween."
             )
         of "go":
-            echo "go [wtime|btime|winc|binc|movestogo|movetime|depth|infinite [<x>]]..."
+            styledEcho {styleBright}, "go [wtime|btime|winc|binc|movestogo|movetime|depth|infinite [<x>]]..."
             echo(
                 "Starts calculating on the current position set up with the 'position' command. ",
                 "There are a number of commands that can follow this command, all will be sent as arguments ",
                 "of the same command. ",
                 "If one command is not sent its value will not influence the search."
             )
-            echo "* wtime <x>"
-            echo "White has <x> msec left on the clock."
-            echo "* btime <x>"
-            echo "Black has <x> msec left on the clock."
-            echo "* winc <x>"
-            echo "White has <x> msec increment per move."
-            echo "* binc <x>"
-            echo "Black has <x> msec increment per move."
-            echo "* movestogo <x>"
-            echo "There are <x> moves to the next time control. If this is not sent sudden death is assumed."
-            echo "* depth <x>"
-            echo "Search to <x> plies only."
-            echo "* movetime <x>"
-            echo "Search for exactly <x> msec."
-            echo "* infinite"
-            echo "Search until the 'stop' or 'quit' command."
+            printCommandBulletPoint "wtime <x>"
+            echo "    White has <x> msec left on the clock."
+            printCommandBulletPoint "btime <x>"
+            echo "    Black has <x> msec left on the clock."
+            printCommandBulletPoint "winc <x>"
+            echo "    White has <x> msec increment per move."
+            printCommandBulletPoint "binc <x>"
+            echo "    Black has <x> msec increment per move."
+            printCommandBulletPoint "movestogo <x>"
+            echo "    There are <x> moves to the next time control. If this is not sent sudden death is assumed."
+            printCommandBulletPoint "depth <x>"
+            echo "    Search to <x> plies only."
+            printCommandBulletPoint "movetime <x>"
+            echo "    Search for exactly <x> msec."
+            printCommandBulletPoint "infinite"
+            echo "    Search until the 'stop' or 'quit' command."
             echo "Example:"
             echo "'go depth 35 wtime 60000 btime 60000 winc 1000 binc 1000'"
             echo(
@@ -99,7 +105,7 @@ proc help*(params: openArray[string]) =
         of "ucinewgame":
             echo "This is sent to the engine when the next search should be assumed to be from a different game."
         of "moves":
-            echo "moves <move_1> ... <move_i>"
+            styledEcho {styleBright}, "moves <move_1> ... <move_i>"
             echo(
                 "Plays the moves <move_1> to <move_i> on the internal chess board. The keyword 'moves' can also be",
                 " omitted: If all moves are detected to be legal they will be played on the internal board."
@@ -113,28 +119,28 @@ proc help*(params: openArray[string]) =
         of "fen":
             echo "Prints the FEN notation of the current internal board."    
         of "perft":
-            echo "perft <x> [fast]"
+            styledEcho {styleBright}, "perft <x> [fast]"
             echo(
                 "Calculates the perft of the current position to depth <x>. ",
                 "If 'fast' is added, no node counts for root moves are printed. ",
                 "Instead printed will be final node count and time needed for the most optimized perft function."
             )
         of "test":
-            echo "test [<x>] [nozobrist|pseudo|onlytxt]..."
+            styledEcho {styleBright}, "test [<x>] [nozobrist|pseudo|onlytxt]..."
             echo(
                 "Runs SEE and perft tests. ",
                 "If a file 'perft_test.txt' exists then the positions from that file will be included."
             )
-            echo "* <x>"
-            echo "Run perft test only to a maximum of <x> nodes per position."
-            echo "* nozobrist"
-            echo "Don't do zobrist key tests."
-            echo "* pseudo"
-            echo "Do tests for the pseudo legality function."
-            echo "* nointernal"
-            echo "Don't use the internal test positions."
-            echo "* noexternal"
-            echo "Don't use the positions given in 'perft_test.txt'."
+            printCommandBulletPoint "<x>"
+            echo "    Run perft test only to a maximum of <x> nodes per position."
+            printCommandBulletPoint "nozobrist"
+            echo "    Don't do zobrist key tests."
+            printCommandBulletPoint "pseudo"
+            echo "    Do tests for the pseudo legality function."
+            printCommandBulletPoint "nointernal"
+            echo "    Don't use the internal test positions."
+            printCommandBulletPoint "noexternal"
+            echo "    Don't use the positions given in 'perft_test.txt'."
             echo "Example:"
             echo "'test 100000 nozobrist nointernal'"
             echo(
@@ -146,14 +152,14 @@ proc help*(params: openArray[string]) =
         of "piecevalues":
             echo "Prints the values for each piece type."
         of "pawnmask":
-            echo "pawnmask <square>"
+            styledEcho {styleBright}, "pawnmask <square>"
             echo "Prints the value of a 3x3 pawn structure of the current position. "
             echo "The center of the 3x3 mask will be at <square>."
         of "about":
-            echo "about [extra]"
+            styledEcho {styleBright}, "about [extra]"
             echo "Prints some info about the program. When 'extra' is added, additional information will be provided."
         of "help":
-            echo "help [<command>]"
+            styledEcho {styleBright}, "help [<command>]"
             echo "Prints all possible commands, or if <command> is given, then help about <command> is printed."
         else:
             echo "Unknown command: ", params[0]
