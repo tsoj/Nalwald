@@ -38,11 +38,11 @@ func absoluteMaterial*(position: Position): Value =
     if position.us == black:
         result = -result
 
-func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] += b[phase]
 
-func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) {.inline.} =
+func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] -= b[phase]    
 
@@ -241,8 +241,6 @@ func evaluatePawn(
             result.addValue(evalParameters, gradient, us, bonusPassedPawnCanMove[index])
         else:
             result.addValue(evalParameters, gradient, us, bonusPawnCanMove)
-    
-
 
 #-------------- knight evaluation --------------#
 
@@ -306,7 +304,6 @@ func evaluateBishop(
     # both bishops
     if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
         result.addValue(evalParameters, gradient, us, bonusBothBishops)
-
 
 #-------------- rook evaluation --------------#
 
@@ -384,7 +381,6 @@ func evaluateKing(
     # numbers of attackers near king
     let numNearAttackers = (position[us.opposite] and mask5x5[square]).countSetBits
     result.addValue(evalParameters, gradient, us, bonusAttackersNearKing[numNearAttackers])
-
 
 func evaluatePiece(
     position: Position,
@@ -479,7 +475,6 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     when gradient isnot Nothing:
         gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
         gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
-
 
 #-------------- sugar functions --------------#
 

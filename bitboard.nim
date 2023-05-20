@@ -12,7 +12,7 @@ export bitops
 
 type Bitboard* = uint64
 
-func toSquare*(x: Bitboard): Square {.inline.} =
+func toSquare*(x: Bitboard): Square =
     assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
 
