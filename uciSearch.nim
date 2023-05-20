@@ -15,7 +15,8 @@ import std/[
     strutils,
     math,
     algorithm,
-    sugar
+    sugar,
+    random
 ]
 
 func printInfoString(
@@ -103,7 +104,16 @@ func printInfoString(
             multiPvIndex = if pvList.len > 1: i + 1 else: -1
         )
 
-func bestMoveString(move: Move, position: Position): string =
+proc bestMoveString(move: Move, position: Position): string =
+
+    # king's gambit
+    var r = initRand(epochTime().int64)
+    if r.rand(1.0) < 0.5:
+        if "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition == position:
+            return "e2e4"
+        if "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2".toPosition == position:
+            return "f2f4"
+
     let moveNotation = move.notation(position)
     if move in position.legalMoves:
         return "bestmove " & moveNotation
