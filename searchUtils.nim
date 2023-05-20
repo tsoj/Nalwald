@@ -1,7 +1,8 @@
 import
     types,
     move,
-    position
+    position,
+    bitboard
 
 import std/[
     math
@@ -11,13 +12,16 @@ import std/[
 
 type
     HistoryArray = array[white..black, array[pawn..king, array[a1..h8, float]]]
+    PositionContextualHistoryArray = array[white..black, array[knight..king, array[a1..h8, HistoryArray]]]
     HistoryTable* = object
         table: HistoryArray
+        pcTable: ref PositionContextualHistoryArray
         counterTable: ref array[pawn..king, array[a1..h8, HistoryArray]]
 
 func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
     result.counterTable = new array[pawn..king, array[a1..h8, HistoryArray]]
+    result.pcTable = new PositionContextualHistoryArray
 
 const maxHistoryTableValue = 100000.0
 
@@ -26,15 +30,18 @@ func halve(table: var HistoryArray, color: Color) =
         for square in a1..h8:
             table[color][piece][square] /= 2.0
 
-func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
+func update*(historyTable: var HistoryTable, position: Position, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
     if move.isTactical:
         return
 
+    doAssert historyTable.pcTable != nil
+    doAssert historyTable.counterTable != nil
+
     func add(
         table: var HistoryArray,
-        color: Color, piece: Piece, target: Square, captured: Piece, addition: float
+        color: Color, move: Move, addition: float
     ) =
-        template entry(): auto = table[color][piece][target]
+        template entry(): auto = table[color][move.moved][move.target]
         entry = clamp(
             entry + addition,
             -maxHistoryTableValue, maxHistoryTableValue
@@ -42,19 +49,47 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         if entry.abs >= maxHistoryTableValue:
             table.halve(color)
 
+    func add(
+        pcTable: var PositionContextualHistoryArray,
+        position: Position,
+        color: Color, move: Move, addition: float
+    ) =
+        let addition = addition / position.occupancy.countSetBits.float
+        for pieceColor in white..black:
+            for piece in knight..king:
+                for pieceSquare in position[pieceColor] and position[piece]:
+                    pcTable[pieceColor][piece][pieceSquare].add(color, move, addition)
+
     let addition = (if raisedAlpha: 1.0 else: -1.0/15.0) * depth.float^2
 
-    historyTable.table.add(color, move.moved, move.target, move.captured, addition)
+    historyTable.table.add(color, move, addition)
+    historyTable.pcTable[].add(position, color, move, addition * 2.5)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        historyTable.counterTable[][previous.moved][previous.target].add(color, move.moved, move.target, move.captured, addition * 50.0)        
+        historyTable.counterTable[][previous.moved][previous.target].add(color, move, addition * 50.0)
 
-func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0..1.0 =
+var f: float = 1.0
+var i = 1.0
+
+func get*(historyTable: HistoryTable, position: Position, move, previous: Move, color: Color): -1.0..1.0 =
     var sum = historyTable.table[color][move.moved][move.target]
+
+    var pcTableSum = 0.0
+    for pieceColor in [position.enemy]:
+        for piece in knight..king:
+            for pieceSquare in position[pieceColor] and position[piece]:
+                pcTableSum += historyTable.pcTable[pieceColor][piece][pieceSquare][color][move.moved][move.target]
+
+    # {.cast(noSideEffect).}:
+    #     if pcTableSum.abs > 0.0:
+    #         f += sum/pcTableSum
+    #         i += 1.0
+    #         debugEcho "f/i: ", f/i
+    sum += pcTableSum
     if previous.moved in pawn..king and previous.target in a1..h8:
         sum += historyTable.counterTable[][previous.moved][previous.target][color][move.moved][move.target]
 
-    sum / (2*maxHistoryTableValue)
+    sum / (3*maxHistoryTableValue)
 
 
 #-------------- killer heuristic --------------#
