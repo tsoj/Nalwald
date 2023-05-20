@@ -64,7 +64,7 @@ iterator moveIterator*(
         quietList.numMoves = position.generateQuiets(quietList.moves)
         when historyTable is HistoryTable:
             for i in 0..<quietList.numMoves:
-                quietList.movePriorities[i] = historyTable.get(position, quietList.moves[i], previous, position.us)
+                quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
                 
         quietList.findBestMoves()
     

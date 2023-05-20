@@ -1,8 +1,7 @@
 import
     types,
     move,
-    position,
-    bitboard
+    position
 
 import std/[
     math
@@ -27,7 +26,7 @@ func halve(table: var HistoryArray, color: Color) =
         for square in a1..h8:
             table[color][piece][square] /= 2.0
 
-func update*(historyTable: var HistoryTable, position: Position, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
+func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
     if move.isTactical:
         return
 
@@ -53,7 +52,7 @@ func update*(historyTable: var HistoryTable, position: Position, move, previous:
     if previous.moved in pawn..king and previous.target in a1..h8:
         historyTable.counterTable[][previous.moved][previous.target].add(color, move, addition * 50.0)
 
-func get*(historyTable: HistoryTable, position: Position, move, previous: Move, color: Color): -1.0..1.0 =
+func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0..1.0 =
     var sum = historyTable.table[color][move.moved][move.target]
 
     if previous.moved in pawn..king and previous.target in a1..h8:
