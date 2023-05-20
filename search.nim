@@ -37,12 +37,13 @@ func nullMoveDepth(depth: Ply): Ply =
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 35
     result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
-
     if lmrMoveCounter >= 4:
-        if depth <= 2.Ply:
-            result = 0.Ply
         if depth <= 8.Ply:
             result -= 1.Ply
+        if depth <= 2.Ply:
+            result -= 1.Ply    
+    if lmrMoveCounter >= 16:
+        result -= 1.Ply
 
 func increaseBeta(newBeta: var Value, alpha, beta: Value) =
     newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
