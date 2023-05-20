@@ -37,7 +37,7 @@ proc help*(params: openArray[string]) =
         printCommandBulletPoint "pawnmask"
         printCommandBulletPoint "about"
         printCommandBulletPoint "help"
-        styledEcho "Use '", {styleItalic}, "help <command>", resetStyle, "' to get info about a specific command"
+        echo "Use 'help <command>' to get info about a specific command"
         printSeperatorLine() 
     else:
         printSeperatorLine()
