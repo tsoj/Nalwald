@@ -260,8 +260,7 @@ func search(
         if not (givingCheck or inCheck):
 
             # late move reduction
-            if (not move.isTactical) and
-            (moveCounter > 3 or (moveCounter > 2 and hashResult.isEmpty)):
+            if moveCounter > 3 and not move.isTactical:
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
 
