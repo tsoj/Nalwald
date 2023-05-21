@@ -70,12 +70,11 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     if move.isTactical:
         return
     
-    func add(list: var array[2, Move], move: Move) =
-        if list[0] != move:
-            list[1] = list[0]
-            list[0] = move
-            
-    killerTable.table[height].add(move)
+    template list(): auto = killerTable.table[height]
+
+    if list[0] != move:
+        list[1] = list[0]
+        list[0] = move
 
 func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
 
