@@ -77,7 +77,7 @@ func update(
     nodeType: NodeType,
     value: Value
 ) =
-    if bestMove != noMove and not (state.stop[].load or state.threadStop[].load):
+    if bestMove != noMove and value.abs != valueInfinity:
         state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
         if nodeType != allNode:
             state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)
@@ -277,7 +277,7 @@ func search(
             newBeta = alpha + 1
 
         # stop search if we exceded maximum nodes or we got a stop signal from outside
-        if state.shouldStop and moveCounter > 1:
+        if state.shouldStop:
             break
         
         # search new position
@@ -360,7 +360,7 @@ func search*(
             depth = depth, height = 0,
             previous = noMove
         )
-        doAssert result.abs < valueInfinity
+        doAssert result.abs <= valueInfinity
 
         if result <= alpha:
             alphaOffset *= aspirationWindowMultiplier

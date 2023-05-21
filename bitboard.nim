@@ -82,13 +82,13 @@ const antiDiagonals: array[a1..h8, Bitboard] = block:
             antiDiagonals[square] = currentAntiDiagonal
     antiDiagonals
 
-func hashkeyRank(square: Square, occupancy: Bitboard): uint8 {.inline.} =
+func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
     (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
-func hashkeyFile(square: Square, occupancy: Bitboard): uint8 {.inline.} =
+func hashkeyFile(square: Square, occupancy: Bitboard): uint8 =
     ((((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1) and 0b111111).uint8
-func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 {.inline.} =
+func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
     (((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
-func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 {.inline.} =
+func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
     (((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
 
 const possibleRankOccupancy: array[64, Bitboard] = block:
@@ -113,7 +113,7 @@ const possibleFileOccupancy: array[64, Bitboard] = block:
 func generateSlidingAttackTable[F](
     possibleOccupancy: array[64, Bitboard],
     directions: array[2, array[2, F]],
-    hashkeyFunction: proc(square: Square, occupancy: Bitboard): uint8 {.noSideEffect inline.}
+    hashkeyFunction: proc(square: Square, occupancy: Bitboard): uint8 {.noSideEffect.}
     ): array[a1..h8, array[64, Bitboard]] =
     for square in a1..h8:
         for occupancy in possibleOccupancy:
