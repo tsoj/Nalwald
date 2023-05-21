@@ -77,9 +77,7 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
         list[0] = move
 
 func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
-
-    result[0] = killerTable.table[height][0]
-    result[1] = killerTable.table[height][1]
+    killerTable.table[height]
 
 #-------------- repetition detection --------------#
 
