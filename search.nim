@@ -20,7 +20,7 @@ static: doAssert pawn.value == 100.cp
 
 func futilityReduction(value: Value): Ply =
     clamp(
-        sqrt(value.toCp.float - 90.0)/4.0,
+        sqrt(value.toCp.float - 90.0)/5.0,
         Ply.low.float, Ply.high.float
     ).Ply
 
