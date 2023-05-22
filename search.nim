@@ -12,20 +12,17 @@ import
 
 import std/[
     atomics,
-    options
+    options,
+    math
 ]
 
 static: doAssert pawn.value == 100.cp
 
 func futilityReduction(value: Value): Ply =
-    if value < 100.cp: return 0.Ply
-    if value < 150.cp: return 1.Ply
-    if value < 250.cp: return 2.Ply
-    if value < 400.cp: return 3.Ply
-    if value < 650.cp: return 4.Ply
-    if value < 900.cp: return 5.Ply
-    if value < 1200.cp: return 6.Ply
-    Ply.high
+    clamp(
+        sqrt(value.toCp.float - 90.0)/4.0,
+        Ply.low.float, Ply.high.float
+    ).Ply
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     if depthDifference >= 5.Ply: return valueInfinity
