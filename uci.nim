@@ -29,7 +29,7 @@ const
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1
-    maxNumThreads = 512
+    maxNumThreads = MaxThreadPoolSize
 
 type UciState = object
     position: Position

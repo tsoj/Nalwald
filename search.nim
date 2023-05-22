@@ -12,8 +12,7 @@ import
 
 import std/[
     atomics,
-    options,
-    math
+    options
 ]
 
 static: doAssert pawn.value == 100.cp
