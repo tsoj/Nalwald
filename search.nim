@@ -41,9 +41,6 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     if lmrMoveCounter >= 16:
         result -= 1.Ply
 
-func increaseBeta(newBeta: var Value, alpha, beta: Value) =
-    newBeta = min(beta, newBeta + 10.cp + (newBeta - alpha)*2)
-
 const
     deltaMargin = 150.cp
     failHighDeltaMargin = 50.cp
@@ -283,12 +280,11 @@ func search(
             previous = move
         )
 
-        # first re-search with increasing window and reduced depth
-        while value >= newBeta and newBeta < beta:
-            newBeta.increaseBeta(alpha, beta)
+        # first re-search with full window and reduced depth
+        if value >= newBeta and newBeta < beta:
             value = -newPosition.search(
                 state,
-                alpha = -newBeta, beta = -alpha,
+                alpha = -beta, beta = -alpha,
                 depth = newDepth - 1.Ply, height = height + 1.Ply,
                 previous = move
             )
