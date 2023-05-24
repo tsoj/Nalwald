@@ -162,7 +162,8 @@ func search(
     state.gameHistory.update(position, height)
 
     let
-        inCheck = position.inCheck(position.us)
+        us = position.us
+        inCheck = position.inCheck(us)
         hashResult = state.hashTable[].get(position.zobristKey)
         originalAlpha = alpha
 
@@ -214,7 +215,7 @@ func search(
 
     # null move reduction
     if height > 0 and (hashResult.isEmpty or hashResult.nodeType == cutNode) and not inCheck and
-    ((position[knight] or position[bishop] or position[rook] or position[queen]) and position[position.us]).countSetBits >= 1:
+    ((position[king] or position[pawn]) and position[us]) != position[us]:
         let newPosition = position.doNullMove
         let value = -newPosition.search(
             state,
@@ -240,7 +241,7 @@ func search(
             continue
 
         let newPosition = position.doMove(move)
-        if newPosition.inCheck(position.us):
+        if newPosition.inCheck(us):
             continue
         moveCounter += 1
 
@@ -302,7 +303,7 @@ func search(
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable[].update(move, previous = previous, position.us, newDepth, raisedAlpha = false)
+            state.historyTable[].update(move, previous = previous, us, newDepth, raisedAlpha = false)
 
     if moveCounter == 0:
         # checkmate
