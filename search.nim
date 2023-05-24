@@ -17,6 +17,12 @@ import std/[
 
 static: doAssert pawn.value == 100.cp
 
+const
+    deltaMargin = 150.cp
+    failHighDeltaMargin = 50.cp
+    aspirationWindowStartingOffset = 10.cp
+    aspirationWindowMultiplier = 3.0
+
 func futilityReduction(value: Value): Ply =
     clamp(
         value.toCp div 100,
@@ -41,12 +47,6 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     if lmrMoveCounter >= 16:
         result -= 1.Ply
 
-const
-    deltaMargin = 150.cp
-    failHighDeltaMargin = 50.cp
-    aspirationWindowStartingOffset = 10.cp.float
-    aspirationWindowMultiplier = 3.0
-
 type SearchState* = object
     stop*: ptr Atomic[bool]
     threadStop*: ptr Atomic[bool]
@@ -68,10 +68,10 @@ func update(
     bestMove, previous: Move,
     depth, height: Ply,
     nodeType: NodeType,
-    value: Value
+    bestValue: Value
 ) =
-    if bestMove != noMove and value.abs != valueInfinity:
-        state.hashTable[].add(position.zobristKey, nodeType, value, depth, bestMove)
+    if bestMove != noMove and bestValue.abs < valueInfinity:
+        state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
         if nodeType != allNode:
             state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)
         if nodeType == cutNode:
@@ -280,17 +280,8 @@ func search(
             previous = move
         )
 
-        # first re-search with full window and reduced depth
-        if value >= newBeta and newBeta < beta:
-            value = -newPosition.search(
-                state,
-                alpha = -beta, beta = -alpha,
-                depth = newDepth - 1.Ply, height = height + 1.Ply,
-                previous = move
-            )
-
         # re-search with full window and full depth
-        if value > alpha and newDepth < depth:
+        if value > alpha and (newDepth < depth or newBeta < beta):
             newDepth = depth
             value = -newPosition.search(
                 state,
@@ -304,14 +295,14 @@ func search(
             bestMove = move
 
         if value >= beta:
-            state.update(position, bestMove, previous, depth = depth, height = height, cutNode, value)
+            state.update(position, bestMove, previous = previous, depth = depth, height = height, cutNode, value)
             return bestValue
 
         if value > alpha:
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable[].update(move, previous, position.us, newDepth, raisedAlpha = false)
+            state.historyTable[].update(move, previous = previous, position.us, newDepth, raisedAlpha = false)
 
     if moveCounter == 0:
         # checkmate
@@ -321,7 +312,7 @@ func search(
         else:
             bestValue = 0.Value
     
-    state.update(position, bestMove, previous, depth = depth, height = height, nodeType, bestValue)
+    state.update(position, bestMove, previous = previous, depth = depth, height = height, nodeType, bestValue)
 
     bestValue
 
@@ -336,8 +327,8 @@ func search*(
         estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
 
     var
-        alphaOffset = aspirationWindowStartingOffset
-        betaOffset = aspirationWindowStartingOffset
+        alphaOffset = aspirationWindowStartingOffset.float
+        betaOffset = aspirationWindowStartingOffset.float
 
     # growing alpha beta window
     while not state.shouldStop:
