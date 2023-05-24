@@ -229,41 +229,6 @@ proc perft(uciState: UciState, params: seq[string]) =
     else:
         echo "Missing depth parameter"
 
-proc pawnStructureMaskValue(uciState: UciState, params: seq[string]) =
-    if params.len < 1:
-        echo "Need at least one parameter"
-    else:
-        let
-            square = parseEnum[Square](params[0])
-            index = block:
-                var index: int
-                # hack to call function with static argument with dynamic argument
-                for s in (
-                    a1, b1, c1, d1, e1, f1, g1, h1,
-                    a2, b2, c2, d2, e2, f2, g2, h2,
-                    a3, b3, c3, d3, e3, f3, g3, h3,
-                    a4, b4, c4, d4, e4, f4, g4, h4,
-                    a5, b5, c5, d5, e5, f5, g5, h5,
-                    a6, b6, c6, d6, e6, f6, g6, h6,
-                    a7, b7, c7, d7, e7, f7, g7, h7,
-                    a8, b8, c8, d8, e8, f8, g8, h8
-                ).fields:
-                    if s == square:
-                        index = uciState.position.pawnMaskIndex(s, white, doChecks = true)
-                index
-            value = uciState.position.gamePhase.interpolate(
-                forOpening = defaultEvalParameters[opening].pawnMaskBonus[index],
-                forEndgame = defaultEvalParameters[endgame].pawnMaskBonus[index]
-            ).toCp
-        var position = uciState.position
-        for color in white..black:
-            position[color] = position[color] and mask3x3[square] and position[pawn]
-        for piece in knight..king:
-            position[piece] = 0
-        position[pawn] = position[pawn] and mask3x3[square]
-        echo position
-        echo "Value: ", value, " cp"
-
 proc uciLoop*() =
 
     printLogo()
@@ -319,8 +284,6 @@ proc uciLoop*() =
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
-            of "pawnmask":
-                uciState.pawnStructureMaskValue(params[1..^1])
             of "about":
                 about(extra = params.len >= 1 and "extra" in params)
             of "help":

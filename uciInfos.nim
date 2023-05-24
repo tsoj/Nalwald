@@ -34,7 +34,6 @@ proc help*(params: openArray[string]) =
         printCommandBulletPoint "test"
         printCommandBulletPoint "eval"
         printCommandBulletPoint "piecevalues"
-        printCommandBulletPoint "pawnmask"
         printCommandBulletPoint "about"
         printCommandBulletPoint "help"
         echo "Use 'help <command>' to get info about a specific command"
@@ -153,10 +152,6 @@ proc help*(params: openArray[string]) =
             echo "Prints the static evaluation value for the current internal position."
         of "piecevalues":
             echo "Prints the values for each piece type."
-        of "pawnmask":
-            styledEcho {styleBright}, "pawnmask <square>"
-            echo "Prints the value of a 3x3 pawn structure of the current position. "
-            echo "The center of the 3x3 mask will be at <square>."
         of "about":
             styledEcho {styleBright}, "about [extra]"
             echo "Prints some info about the program. When 'extra' is added, additional information will be provided."
