@@ -197,9 +197,9 @@ const isPassedMask*: array[white..black, array[a1..h8, Bitboard]] = block:
 
         for j in 0..7:
             if j <= (square.int8 div 8):
-                isPassedMask[white][square] = isPassedMask[white][square] and (not ranks[(j*8).Square])
+                isPassedMask[white][square] = isPassedMask[white][square] and not ranks[(j*8).Square]
             if j >= (square.int8 div 8):
-                isPassedMask[black][square] = isPassedMask[black][square] and (not ranks[(j*8).Square])
+                isPassedMask[black][square] = isPassedMask[black][square] and not ranks[(j*8).Square]
     isPassedMask
 
 const leftFiles*: array[a1..h8, Bitboard] = block:

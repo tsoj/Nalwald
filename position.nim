@@ -33,8 +33,8 @@ func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitbo
     position[color] = position[color] or target
 
 func removePiece*(position: var Position, color: Color, piece: Piece, source: Bitboard) {.inline.} =
-    position[piece] = position[piece] and (not source)
-    position[color] = position[color] and (not source)
+    position[piece] = position[piece] and not source
+    position[color] = position[color] and not source
 
 func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) {.inline.} =
     position.removePiece(color, piece, source)
@@ -159,7 +159,7 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
 
     position.zobristKey = position.zobristKey xor cast[uint64](position.enPassantCastling)
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
-    position.enPassantCastling = position.enPassantCastling and (not (source.toBitboard or target.toBitboard))
+    position.enPassantCastling = position.enPassantCastling and not (source.toBitboard or target.toBitboard)
     if enPassantTarget != noSquare:
         position.enPassantCastling = position.enPassantCastling or enPassantTarget.toBitboard
     if moved == king:
@@ -263,9 +263,9 @@ func coloredPiece*(position: Position, square: Square): ColoredPiece =
 
 func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square: Square) =
     for color in [white, black]:
-        position[color] = position[color] and (not square.toBitboard)
+        position[color] = position[color] and not square.toBitboard
     for piece in pawn..king:
-        position[piece] = position[piece] and (not square.toBitboard)
+        position[piece] = position[piece] and not square.toBitboard
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, square.toBitboard)
 

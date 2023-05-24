@@ -23,7 +23,7 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
     let occupancy = position.occupancy
     result = 0
     for source in position[position.us] and position[piece]:
-        for target in piece.attackMask(source, occupancy) and (not occupancy):
+        for target in piece.attackMask(source, occupancy) and not occupancy:
             moves[result].create(
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = piece, captured = noPiece, promoted = noPiece,

@@ -302,7 +302,7 @@ func evaluateBishop(
     )
     
     # both bishops
-    if (position[us] and position[bishop] and (not square.toBitboard)) != 0:
+    if (position[us] and position[bishop] and not square.toBitboard) != 0:
         result.addValue(evalParameters, gradient, us, bonusBothBishops)
 
 #-------------- rook evaluation --------------#
