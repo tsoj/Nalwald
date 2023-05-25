@@ -4,15 +4,19 @@ import
     winningProbability,
     gradient,
     dataUtils,
-    calculatePieceValue,
+    calculatePieceValue
+
+import std/[
     times,
     strformat,
     terminal,
-    threadpool
+    threadpool,
+    random
+]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
-proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
+proc calculateGradient(data: openArray[Entry], currentSolution: ptr EvalParameters, k: float, suppressOutput = false): ThreadResult =
     const numProgressBarPoints = 100
     if not suppressOutput:
         eraseLine()
@@ -30,41 +34,47 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
             stdout.flushFile
         
         result.weight += entry.weight
-        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
+        result.gradient.addGradient(currentSolution[], entry.position, entry.outcome, k = k, weight = entry.weight)
 
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
     k: float,
-    lr = 25600.0, # TODO try 51200.0 (12800.0 is 0.0455499, 25600.0 is 0.0454596 (this is what is currently running on gruenau1))
+    lr = 25600.0,
     minLearningRate = 80.0,
     maxIterations = int.high,
-    minTries = 10,
+    minTries = 2,
     discount = 0.9,
-    numThreads = 30
+    numThreads = 30,
+    startBatchSize = 100_000
 ): (EvalParametersFloat, float) =
 
-    var bestSolution: EvalParametersFloat = start
+    var
+        bestSolution = start
+        lr = lr
+        decreaseLr = true
+        bestError = bestSolution.convert[].error(data, k)
+        data = data
+        batchSize = startBatchSize
 
-    var lr = lr
-    var decreaseLr = true
-    var bestError = bestSolution.convert.error(data, k)
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
     var previousGradient: EvalParametersFloat 
     for j in 0..<maxIterations:
+        data.shuffle
+        let batchData = data[0..<min(data.len, batchSize)]
         let startTime = now()
         var currentSolution = bestSolution
-        let batchSize = data.len div numThreads
 
-        template batchSlize(i: int): auto =
+        func batchSlize(i: int, data: openArray[Entry]): auto =
             let
-                b = data.len mod numThreads + (i+1)*batchSize
-                a = if i == 0: 0 else: b - batchSize
+                batchSlizeSize = data.len div numThreads
+                b = data.len mod numThreads + (i+1)*batchSlizeSize
+                a = if i == 0: 0 else: b - batchSlizeSize
             doAssert b > a
             doAssert i < numThreads - 1 or b == data.len
-            doAssert i == 0 or b - a == batchSize
-            doAssert i > 0 or b - a == batchSize + data.len mod numThreads
+            doAssert i == 0 or b - a == batchSlizeSize
+            doAssert i > 0 or b - a == batchSlizeSize + data.len mod numThreads
             doAssert b <= data.len
             data[a..<b]
 
@@ -73,8 +83,8 @@ proc optimize(
         let bestSolutionConverted = bestSolution.convert
         for i, flowVar in threadSeq.mpairs:
             flowVar = spawn calculateGradient(
-                i.batchSlize,
-                bestSolutionConverted,
+                i.batchSlize(batchData),
+                bestSolutionConverted[].addr,
                 k, i > 0
             )    
 
@@ -110,7 +120,7 @@ proc optimize(
             let currentSolutionConverted = currentSolution.convert
             var errors = newSeq[FlowVar[tuple[error, summedWeight: float]]](numThreads)
             for i, error in errors.mpairs:
-                error = spawn errorTuple(currentSolutionConverted, i.batchSlize, k)
+                error = spawn errorTuple(currentSolutionConverted[], i.batchSlize(data), k)
             var
                 error: float = 0.0
                 summedWeight: float = 0.0
@@ -122,7 +132,8 @@ proc optimize(
 
             tries += 1                    
             if error < bestError:
-                leftTries += 1
+                if leftTries <= 10:
+                    leftTries += 1
                 successes += 1
 
                 bestError = error
@@ -145,6 +156,7 @@ proc optimize(
 
         if oldBestError <= bestError and lr >= minLearningRate:
             previousGradient *= 0.5
+            batchSize *= 2
             if decreaseLr:
                 lr /= 2.0
             else:
@@ -169,13 +181,16 @@ echo "Total number of entries: ", data.len
 
 
 echo "-------------------"
-let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
+let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert[].error(data, k))
 echo "-------------------"
 
 let (ep, _) = startingEvalParameters.optimize(data, k)
 
 let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 echo "filename: ", filename
-writeFile(filename, $ep.convert)
-printPieceValues(ep.convert)
+writeFile(
+    filename,
+    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert[]}.convert(EvalParameters)\n"
+)
+printPieceValues(ep.convert[])
 

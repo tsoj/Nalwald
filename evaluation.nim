@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 171.Value,
-        knight: 600.Value,
-        bishop: 627.Value,
-        rook: 861.Value,
-        queen: 1722.Value,
+        pawn: 168.Value,
+        knight: 580.Value,
+        bishop: 609.Value,
+        rook: 837.Value,
+        queen: 1647.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -144,12 +144,14 @@ func pawnMaskBonus(
     evalParameters: EvalParameters,
     position: Position,
     square: static Square,
+    rank: static int,
     us: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
+    static: doAssert rank in 0..<4
     
     let index = position.pawnMaskIndex(square, us)
-    result.addValue(evalParameters, gradient, us, pawnMaskBonus[index])
+    result.addValue(evalParameters, gradient, us, pawnMaskBonus[rank][index])
 
 func mobility(
     evalParameters: EvalParameters,
@@ -452,19 +454,22 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
             value += position.evaluatePieceType(piece, black, kingSquare, evalParameters, gradient)
 
     # evaluation pawn patters
-    for square in (
-        b3, c3, d3, e3, f3, g3,
-        b4, c4, d4, e4, f4, g4,
-        b5, c5, d5, e5, f5, g5,
-        b6, c6, d6, e6, f6, g6
+    for rankAndSquareList in (
+        (0, (b3, c3, d3, e3, f3, g3)),
+        (1, (b4, c4, d4, e4, f4, g4)),
+        (2, (b5, c5, d5, e5, f5, g5)),
+        (3, (b6, c6, d6, e6, f6, g6))
     ).fields:
-        if (mask3x3[square] and position[pawn]).countSetBits >= 2:
-            value += evalParameters.pawnMaskBonus(
-                position,
-                square,
-                position.us,
-                gradient
-            )
+        const (rank, squareList) = rankAndSquareList
+        for square in squareList.fields:
+            if (mask3x3[square] and position[pawn]).countSetBits >= 2:
+                value += evalParameters.pawnMaskBonus(
+                    position,
+                    square,
+                    rank,
+                    position.us,
+                    gradient
+                )
 
     # interpolating between opening and endgame values
     let gamePhase = position.gamePhase

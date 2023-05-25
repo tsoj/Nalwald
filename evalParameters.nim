@@ -8,7 +8,7 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnMaskBonus*: array[3*3*3 * 3*3*3 * 3*3*3, ValueType]
+    pawnMaskBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
     bonusPawnCanMove*: ValueType
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
@@ -67,11 +67,15 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
 func convert*(a: auto, T: typedesc): T =
     transform(result, a)
 
-func convert*(a: EvalParameters): EvalParametersFloat =
-    a.convert(EvalParametersFloat)
+func convertRef*(a: auto, T: typedesc): ref T =
+    result = new T
+    transform(result[], a)
 
-func convert*(a: EvalParametersFloat): EvalParameters =
-    a.convert(EvalParameters)
+func convert*(a: EvalParameters): ref EvalParametersFloat =
+    a.convertRef(EvalParametersFloat)
+
+func convert*(a: EvalParametersFloat): ref EvalParameters =
+    a.convertRef(EvalParameters)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     transform(a, b, proc(x: var float32, y: float32) = x += y)
