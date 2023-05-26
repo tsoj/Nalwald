@@ -10,8 +10,7 @@ import std/[
     times,
     strformat,
     terminal,
-    threadpool,
-    random
+    threadpool
 ]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
@@ -41,12 +40,11 @@ proc optimize(
     data: seq[Entry],
     k: float,
     lr = 25600.0,
-    minLearningRate = 80.0,
+    minLearningRate = 500.0,
     maxIterations = int.high,
     minTries = 2,
     discount = 0.9,
-    numThreads = 30,
-    startBatchSize = 100_000
+    numThreads = 30
 ): (EvalParametersFloat, float) =
 
     var
@@ -54,15 +52,11 @@ proc optimize(
         lr = lr
         decreaseLr = true
         bestError = bestSolution.convert[].error(data, k)
-        data = data
-        batchSize = startBatchSize
 
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
     var previousGradient: EvalParametersFloat 
     for j in 0..<maxIterations:
-        data.shuffle
-        let batchData = data[0..<min(data.len, batchSize)]
         let startTime = now()
         var currentSolution = bestSolution
 
@@ -83,7 +77,7 @@ proc optimize(
         let bestSolutionConverted = bestSolution.convert
         for i, flowVar in threadSeq.mpairs:
             flowVar = spawn calculateGradient(
-                i.batchSlize(batchData),
+                i.batchSlize(data),
                 bestSolutionConverted[].addr,
                 k, i > 0
             )    
@@ -156,7 +150,6 @@ proc optimize(
 
         if oldBestError <= bestError and lr >= minLearningRate:
             previousGradient *= 0.5
-            batchSize *= 2
             if decreaseLr:
                 lr /= 2.0
             else:
@@ -171,9 +164,9 @@ proc optimize(
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
-# data.loadData("quietSetNalwald.epd")
+data.loadData("quietSetNalwald.epd")
 data.loadData("quietSetCombinedCCRL4040.epd")
-# data.loadData("quietSmallPoolGamesNalwald.epd")
+data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 

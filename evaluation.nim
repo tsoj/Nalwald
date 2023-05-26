@@ -12,10 +12,10 @@ import
 func value*(piece: Piece): Value =
     const table = [
         pawn: 168.Value,
-        knight: 580.Value,
-        bishop: 609.Value,
-        rook: 837.Value,
-        queen: 1647.Value,
+        knight: 564.Value,
+        bishop: 592.Value,
+        rook: 812.Value,
+        queen: 1571.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -148,7 +148,8 @@ func pawnMaskBonus(
     us: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    static: doAssert rank in 0..<4
+    static: doAssert rank in 0..3
+    let rank = if us == white: rank else: 3 - rank
     
     let index = position.pawnMaskIndex(square, us)
     result.addValue(evalParameters, gradient, us, pawnMaskBonus[rank][index])
