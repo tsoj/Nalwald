@@ -110,7 +110,7 @@ func getPstValue(
                     (currentKingSquare, square),
                     (currentKingSquare.mirrorVertically, square.mirrorVertically)
                 ]:
-                    let f = (if us == black: -1.0 else: 1.0) * gradient.g * multiplier
+                    let f = gradient.g * multiplier
                     gradient.evalParams[][opening].pst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
                     gradient.evalParams[][endgame].pst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
