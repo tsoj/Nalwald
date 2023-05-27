@@ -177,7 +177,7 @@ echo "Total number of entries: ", data.len
 
 
 echo "-------------------"
-let k = 0.73#optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
+let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
 let (ep, _) = startingEvalParameters.optimize(data, k)

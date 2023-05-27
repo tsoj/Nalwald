@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 176.Value,
-        knight: 625.Value,
-        bishop: 647.Value,
-        rook: 885.Value,
-        queen: 1795.Value,
+        pawn: 174.Value,
+        knight: 614.Value,
+        bishop: 637.Value,
+        rook: 872.Value,
+        queen: 1755.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -152,16 +152,16 @@ func pawnMaskBonus(
     position: Position,
     square: static Square,
     rank: static int,
-    # fileStatus: static int,
+    fileStatus: static int,
     us: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    # static: doAssert fileStatus in 0..2
+    static: doAssert fileStatus in 0..2
     static: doAssert rank in 0..3
     let rank = if us == white: rank else: 3 - rank
     
     let index = position.pawnMaskIndex(square, us)
-    result.addValue(evalParameters, gradient, us, pawnMaskBonus[0][rank][index])
+    result.addValue(evalParameters, gradient, us, pawnMaskBonus[fileStatus][rank][index])
 
 func mobility(
     evalParameters: EvalParameters,
@@ -473,19 +473,19 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         const (rank, squareList) = rankAndSquareList
         for square in squareList.fields:
 
-            # const fileStatus = when (square.toBitboard and files[b1]) != 0:
-            #     0
-            # elif (square.toBitboard and files[g1]) != 0:
-            #     1
-            # else:
-            #     2
+            const fileStatus = when (square.toBitboard and files[b1]) != 0:
+                0
+            elif (square.toBitboard and files[g1]) != 0:
+                1
+            else:
+                2
 
             if (mask3x3[square] and position[pawn]).countSetBits >= 2:
                 value += evalParameters.pawnMaskBonus(
                     position,
                     square,
                     rank,
-                    # fileStatus,
+                    fileStatus,
                     position.us,
                     gradient
                 )
