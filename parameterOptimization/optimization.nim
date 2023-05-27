@@ -16,6 +16,7 @@ import std/[
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
 proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
+    result.gradient.init()
     const numProgressBarPoints = 100
     if not suppressOutput:
         eraseLine()
@@ -176,7 +177,7 @@ echo "Total number of entries: ", data.len
 
 
 echo "-------------------"
-let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
+let k = 0.73#optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
 let (ep, _) = startingEvalParameters.optimize(data, k)

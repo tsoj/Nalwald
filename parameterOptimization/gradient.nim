@@ -5,7 +5,8 @@ import
     ../types,
     winningProbability,
     error,
-    ../bitboard
+    ../bitboard,
+    ../utils
 
 
 func addGradient*(
@@ -15,11 +16,11 @@ func addGradient*(
     k: float,
     weight: float
 ) =
-    var currentGradient: EvalParametersFloat
-    currentGradient.init()
-    let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
-    var g = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
-    currentGradient *= g
-    gradient += currentGradient
+    var currentGradient: Gradient
+    currentGradient.gamePhaseFactor = position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
+    let currentValue = position.absoluteEvaluate(currentSolution)
+    currentGradient.g = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
+    currentGradient.evalParams = addr gradient
+    discard position.absoluteEvaluate(currentSolution, currentGradient)
 
 

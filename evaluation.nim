@@ -47,10 +47,14 @@ func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
         a[phase] -= b[phase]    
 
 type Nothing = enum nothing
-type GradientOrNothing = EvalParametersFloat or Nothing
+type Gradient* = object
+    gamePhaseFactor*: float32
+    g*: float32
+    evalParams*: ptr EvalParametersFloat
+type GradientOrNothing = Gradient or Nothing
 
-macro getParameter(structName, parameter: untyped): untyped =
-    parseExpr($toStrLit(quote do: `structName`[phase]) & "." & $toStrLit(quote do: `parameter`))
+macro getParameter(phase, structName, parameter: untyped): untyped =
+    parseExpr($toStrLit(quote do: `structName`[`phase`]) & "." & $toStrLit(quote do: `parameter`))
 
 template addValue(
     value: var array[Phase, Value],
@@ -60,11 +64,12 @@ template addValue(
     parameter: untyped
 ) =
     for phase {.inject.} in Phase:
-        value[phase] += getParameter(evalParameters, parameter)
+        value[phase] += getParameter(phase, evalParameters, parameter)
 
     when gradient isnot Nothing:
-        for phase {.inject.} in Phase:
-            getParameter(gradient, parameter) += (if us == black: -1.0 else: 1.0)
+        let f = (if us == black: -1.0 else: 1.0) * gradient.g
+        getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
+        getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
 
 func getPstValue(
     evalParameters: EvalParameters,
@@ -105,7 +110,9 @@ func getPstValue(
                     (currentKingSquare, square),
                     (currentKingSquare.mirrorVertically, square.mirrorVertically)
                 ]:
-                    for phase in Phase: gradient[phase].pst[whoseKing][kingSquare][piece][pieceSquare] += multiplier
+                    let f = (if us == black: -1.0 else: 1.0) * gradient.g * multiplier
+                    gradient.evalParams[][opening].pst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                    gradient.evalParams[][endgame].pst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pawnMaskIndex*(
     position: Position,
@@ -145,16 +152,16 @@ func pawnMaskBonus(
     position: Position,
     square: static Square,
     rank: static int,
-    fileStatus: static int,
+    # fileStatus: static int,
     us: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    static: doAssert fileStatus in 0..2
+    # static: doAssert fileStatus in 0..2
     static: doAssert rank in 0..3
     let rank = if us == white: rank else: 3 - rank
     
     let index = position.pawnMaskIndex(square, us)
-    result.addValue(evalParameters, gradient, us, pawnMaskBonus[fileStatus][rank][index])
+    result.addValue(evalParameters, gradient, us, pawnMaskBonus[0][rank][index])
 
 func mobility(
     evalParameters: EvalParameters,
@@ -466,19 +473,19 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
         const (rank, squareList) = rankAndSquareList
         for square in squareList.fields:
 
-            const fileStatus = when (square.toBitboard and files[b1]) != 0:
-                0
-            elif (square.toBitboard and files[g1]) != 0:
-                1
-            else:
-                2
+            # const fileStatus = when (square.toBitboard and files[b1]) != 0:
+            #     0
+            # elif (square.toBitboard and files[g1]) != 0:
+            #     1
+            # else:
+            #     2
 
             if (mask3x3[square] and position[pawn]).countSetBits >= 2:
                 value += evalParameters.pawnMaskBonus(
                     position,
                     square,
                     rank,
-                    fileStatus,
+                    # fileStatus,
                     position.us,
                     gradient
                 )
@@ -489,9 +496,9 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
     doAssert valueCheckmate > result.abs
 
-    when gradient isnot Nothing:
-        gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
-        gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
+    # when gradient isnot Nothing:
+    #     gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
+    #     gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
 
 #-------------- sugar functions --------------#
 
