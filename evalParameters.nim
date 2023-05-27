@@ -8,7 +8,7 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnMaskBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
+    pawnMaskBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 3 (is too big for the stack)
     bonusPawnCanMove*: ValueType
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
@@ -27,6 +27,10 @@ type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParameters
 type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]
+
+func init*(ep: var EvalParametersTemplate) =
+    for phase in Phase:
+        ep[phase].pawnMaskBonus.setLen 3
 
 func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
 
@@ -54,6 +58,12 @@ func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32
             var outputIndex = (typeof(output.low))((output.low.int + i))
             var inputIndex = (typeof(input.low))((input.low.int + i))
             transform(output[outputIndex], input[inputIndex], floatOp)
+
+    elif Out is seq:
+        static: doAssert In is seq, "Transforming types must have the same structure."
+        output.setLen input.len
+        for i in 0..<input.len:
+            transform(output[i], input[i], floatOp)
     
     else:
         static: doAssert false, "Type is not not implemented for transforming"
@@ -67,15 +77,12 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
 func convert*(a: auto, T: typedesc): T =
     transform(result, a)
 
-func convertRef*(a: auto, T: typedesc): ref T =
-    result = new T
-    transform(result[], a)
 
-func convert*(a: EvalParameters): ref EvalParametersFloat =
-    a.convertRef(EvalParametersFloat)
+func convert*(a: EvalParameters): EvalParametersFloat =
+    a.convert(EvalParametersFloat)
 
-func convert*(a: EvalParametersFloat): ref EvalParameters =
-    a.convertRef(EvalParameters)
+func convert*(a: EvalParametersFloat): EvalParameters =
+    a.convert(EvalParameters)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     transform(a, b, proc(x: var float32, y: float32) = x += y)

@@ -163,7 +163,9 @@ const startingEvalParameters* = block:
             bonusBothBishops: 10.0.float32,
             bonusRookOnOpenFile: 5.0.float32,
             bonusTargetingKingArea: [bishop: 5.0.float32, rook: 5.0, queen: 8.0],
+            pawnMaskBonus: @[]
         )
+        startingEvalParameters[phase].pawnMaskBonus.setLen 3
         for i in 0..<32:
             startingEvalParameters[phase].bonusMobility[knight][i] = i.float32 * 2.0.float32
             startingEvalParameters[phase].bonusMobility[bishop][i] = i.float32 * 3.0.float32

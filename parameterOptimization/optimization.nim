@@ -15,7 +15,7 @@ import std/[
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
-proc calculateGradient(data: openArray[Entry], currentSolution: ptr EvalParameters, k: float, suppressOutput = false): ThreadResult =
+proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
     const numProgressBarPoints = 100
     if not suppressOutput:
         eraseLine()
@@ -33,7 +33,7 @@ proc calculateGradient(data: openArray[Entry], currentSolution: ptr EvalParamete
             stdout.flushFile
         
         result.weight += entry.weight
-        result.gradient.addGradient(currentSolution[], entry.position, entry.outcome, k = k, weight = entry.weight)
+        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
 
 proc optimize(
     start: EvalParametersFloat,
@@ -51,11 +51,12 @@ proc optimize(
         bestSolution = start
         lr = lr
         decreaseLr = true
-        bestError = bestSolution.convert[].error(data, k)
+        bestError = bestSolution.convert.error(data, k)
 
     echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
 
-    var previousGradient: EvalParametersFloat 
+    var previousGradient: EvalParametersFloat
+    previousGradient.init()
     for j in 0..<maxIterations:
         let startTime = now()
         var currentSolution = bestSolution
@@ -78,11 +79,12 @@ proc optimize(
         for i, flowVar in threadSeq.mpairs:
             flowVar = spawn calculateGradient(
                 i.batchSlize(data),
-                bestSolutionConverted[].addr,
+                bestSolutionConverted,
                 k, i > 0
             )    
 
         var gradient: EvalParametersFloat
+        gradient.init()
         var totalWeight: float = 0.0
         for flowVar in threadSeq.mitems:
             let (threadWeight, threadGradient) = ^flowVar
@@ -114,7 +116,7 @@ proc optimize(
             let currentSolutionConverted = currentSolution.convert
             var errors = newSeq[FlowVar[tuple[error, summedWeight: float]]](numThreads)
             for i, error in errors.mpairs:
-                error = spawn errorTuple(currentSolutionConverted[], i.batchSlize(data), k)
+                error = spawn errorTuple(currentSolutionConverted, i.batchSlize(data), k)
             var
                 error: float = 0.0
                 summedWeight: float = 0.0
@@ -174,7 +176,7 @@ echo "Total number of entries: ", data.len
 
 
 echo "-------------------"
-let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert[].error(data, k))
+let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
 let (ep, _) = startingEvalParameters.optimize(data, k)
@@ -183,7 +185,7 @@ let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".t
 echo "filename: ", filename
 writeFile(
     filename,
-    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert[]}.convert(EvalParameters)\n"
+    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
 )
-printPieceValues(ep.convert[])
+printPieceValues(ep.convert)
 

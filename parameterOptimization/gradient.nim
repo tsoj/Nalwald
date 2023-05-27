@@ -16,6 +16,7 @@ func addGradient*(
     weight: float
 ) =
     var currentGradient: EvalParametersFloat
+    currentGradient.init()
     let currentValue = position.absoluteEvaluate(currentSolution, currentGradient)
     var g = weight * errorDerivative(outcome, currentValue.winningProbability(k)) * currentValue.winningProbabilityDerivative(k)
     currentGradient *= g
