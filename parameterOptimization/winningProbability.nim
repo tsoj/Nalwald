@@ -15,7 +15,7 @@ proc optimizeK*(getError: proc(k: float): float, suppressOutput = false): float 
     var k = 1.0
     result = k
     var bestError = getError(k)
-    while change.abs >= 0.000001:
+    while change.abs >= 0.001:
         k += change
         let currentError = getError(k)
         if currentError < bestError:
