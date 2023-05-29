@@ -8,7 +8,7 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnMaskBonus*{.requiresInit.}: seq[array[a1..h8, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
+    pawnMaskBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
     bonusPawnCanMove*: ValueType
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
