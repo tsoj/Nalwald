@@ -10,29 +10,15 @@ import std/[
     times,
     strformat,
     terminal,
-    threadpool
+    threadpool,
+    random
 ]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
 proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
     result.gradient.init()
-    const numProgressBarPoints = 100
-    if not suppressOutput:
-        eraseLine()
-        stdout.write("[")
-        for p in 1..numProgressBarPoints:
-            stdout.write("-")
-        stdout.write("]")
-        setCursorXPos(1)
-        stdout.flushFile
-    var p = 0
-    for entry in data:
-        p += 1
-        if p mod (data.len div numProgressBarPoints) == 0 and not suppressOutput:
-            stdout.write("#")
-            stdout.flushFile
-        
+    for entry in data:        
         result.weight += entry.weight
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
 
@@ -40,130 +26,80 @@ proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
     k: float,
-    lr = 25600.0,
+    lr = 51200.0,
+    lrDecay = 0.98,
     minLearningRate = 500.0,
-    maxIterations = int.high,
-    minTries = 2,
+    maxNumEpochs = 300,
     discount = 0.9,
-    numThreads = 30
-): (EvalParametersFloat, float) =
+    numThreads = 30,
+    batchSize = 50_000
+): EvalParametersFloat =
 
     var
-        bestSolution = start
+        solution = start
         lr = lr
-        decreaseLr = true
-        bestError = bestSolution.convert.error(data, k)
+        data = data
 
-    echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
+    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
     var previousGradient: EvalParametersFloat
     previousGradient.init()
-    for j in 0..<maxIterations:
+
+    for epoch in 1..maxNumEpochs:
         let startTime = now()
-        var currentSolution = bestSolution
+        data.shuffle
+        for batchId in 0..<data.len div batchSize:
+            let data = data[batchId*batchSize..<min(data.len, (batchId+1)*batchSize)]
 
-        func batchSlize(i: int, data: openArray[Entry]): auto =
-            let
-                batchSlizeSize = data.len div numThreads
-                b = data.len mod numThreads + (i+1)*batchSlizeSize
-                a = if i == 0: 0 else: b - batchSlizeSize
-            doAssert b > a
-            doAssert i < numThreads - 1 or b == data.len
-            doAssert i == 0 or b - a == batchSlizeSize
-            doAssert i > 0 or b - a == batchSlizeSize + data.len mod numThreads
-            doAssert b <= data.len
-            data[a..<b]
+            func batchSlize(data: openArray[Entry], i: int, numThreads: int): auto =
+                let
+                    batchSlizeSize = data.len div numThreads
+                    b = data.len mod numThreads + (i+1)*batchSlizeSize
+                    a = if i == 0: 0 else: b - batchSlizeSize
+                doAssert b > a
+                doAssert i < numThreads - 1 or b == data.len
+                doAssert i == 0 or b - a == batchSlizeSize
+                doAssert i > 0 or b - a == batchSlizeSize + data.len mod numThreads
+                doAssert b <= data.len
+                data[a..<b]
 
-        var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
-        
-        let bestSolutionConverted = bestSolution.convert
-        for i, flowVar in threadSeq.mpairs:
-            flowVar = spawn calculateGradient(
-                i.batchSlize(data),
-                bestSolutionConverted,
-                k, i > 0
-            )    
-
-        var gradient: EvalParametersFloat
-        gradient.init()
-        var totalWeight: float = 0.0
-        for flowVar in threadSeq.mitems:
-            let (threadWeight, threadGradient) = ^flowVar
-            totalWeight += threadWeight
-            gradient += threadGradient
-        # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
-        # result is better
-        gradient *= (1.0/totalWeight)
-        gradient *= 1.0 - discount
-        previousGradient *= discount
-        gradient += previousGradient
-        previousGradient = gradient
-
-        gradient *= lr
-
-        let oldBestError = bestError
-        
-        eraseLine()
-        stdout.write("iteration: " & fmt"{j:>3}")
-        stdout.flushFile
-
-        var leftTries = minTries
-        var successes = 0
-        var tries = 0
-        while leftTries > 0:
-
-            currentSolution += gradient
-
-            let currentSolutionConverted = currentSolution.convert
-            var errors = newSeq[FlowVar[tuple[error, summedWeight: float]]](numThreads)
-            for i, error in errors.mpairs:
-                error = spawn errorTuple(currentSolutionConverted, i.batchSlize(data), k)
-            var
-                error: float = 0.0
-                summedWeight: float = 0.0
-            for e in errors.mitems:
-                let r = ^e
-                error += r.error
-                summedWeight += r.summedWeight
-            error /= summedWeight
-
-            tries += 1                    
-            if error < bestError:
-                if leftTries <= 10:
-                    leftTries += 1
-                successes += 1
-
-                bestError = error
-                bestSolution = currentSolution
-            else:
-                leftTries -= 1
+            var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
             
-            # print info
-            eraseLine()
-            let s = $successes & "/" & $tries
-            let passedTime = now() - startTime
-            stdout.write(
-                "iteration: ", fmt"{j:>3}", ", successes: ", fmt"{s:>9}",
-                ", error: ", fmt"{bestError:>9.7f}", ", lr: ", lr, ", time: ", $passedTime.inSeconds, " s"
-            )
-            stdout.flushFile
-        
-        stdout.write("\n")
-        stdout.flushFile
+            let solutionConverted = solution.convert
+            for i, flowVar in threadSeq.mpairs:
+                flowVar = spawn calculateGradient(
+                    data.batchSlize(i, numThreads),
+                    solutionConverted,
+                    k, i > 0
+                )    
 
-        if oldBestError <= bestError and lr >= minLearningRate:
-            previousGradient *= 0.5
-            if decreaseLr:
-                lr /= 2.0
-            else:
-                decreaseLr = true
-        else:
-            decreaseLr = false
+            var gradient: EvalParametersFloat
+            gradient.init()
+            var totalWeight: float = 0.0
+            for flowVar in threadSeq.mitems:
+                let (threadWeight, threadGradient) = ^flowVar
+                totalWeight += threadWeight
+                gradient += threadGradient
+            # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
+            # result is better
+            gradient *= (1.0/totalWeight)
+            gradient *= 1.0 - discount
+            previousGradient *= discount
+            gradient += previousGradient
+            previousGradient = gradient
+
+            gradient *= lr
+
+            solution += gradient
+
+        let passedTime = now() - startTime
+        echo fmt"Epoch {epoch}, error: {solution.convert.error(data, k):>9.7f}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
+        lr *= lrDecay
 
         if lr < minLearningRate:
             break
         
-    return (bestSolution, bestError)
+    return solution
 
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
@@ -180,7 +116,7 @@ echo "-------------------"
 let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
-let (ep, _) = startingEvalParameters.optimize(data, k)
+let ep = startingEvalParameters.optimize(data, k)
 
 let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 echo "filename: ", filename
