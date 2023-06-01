@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 188.Value,
-        knight: 725.Value,
-        bishop: 740.Value,
-        rook: 1005.Value,
-        queen: 2196.Value,
+        pawn: 187.Value,
+        knight: 724.Value,
+        bishop: 739.Value,
+        rook: 1004.Value,
+        queen: 2194.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -100,11 +100,11 @@ func getPstValue(
                 let multiplier = (if us == black: -1.0 else: 1.0) * (if currentKingSquare == kingSquare[whoseKing]:
                     2.0
                 elif (currentKingSquare.toBitboard and mask3x3[kingSquare[whoseKing]]) != 0:
-                    0.3
+                    0.5
                 elif (currentKingSquare.toBitboard and mask5x5[kingSquare[whoseKing]]) != 0:
-                    0.2
+                    0.1
                 else:
-                    0.1)
+                    continue)
 
                 for (kingSquare, pieceSquare) in [
                     (currentKingSquare, square),

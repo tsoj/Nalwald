@@ -9,7 +9,6 @@ import
 import std/[
     times,
     strformat,
-    terminal,
     threadpool,
     random
 ]
@@ -101,6 +100,8 @@ proc optimize(
         
     return solution
 
+let startTime = now()
+
 var data: seq[Entry]
 data.loadData("quietSetZuri.epd")
 data.loadData("quietSetNalwald.epd")
@@ -125,4 +126,6 @@ writeFile(
     &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
 )
 printPieceValues(ep.convert)
+
+echo "Total time: ", now() - startTime
 
