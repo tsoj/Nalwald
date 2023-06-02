@@ -480,14 +480,8 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
                 )
 
     # interpolating between opening and endgame values
-    let gamePhase = position.gamePhase
-
-    result = gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
-    doAssert valueCheckmate > result.abs
-
-    # when gradient isnot Nothing:
-    #     gradient[opening] *= gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0)
-    #     gradient[endgame] *= gamePhase.interpolate(forOpening = 0.0, forEndgame = 1.0)
+    result = position.gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
+    doAssert result.abs < valueCheckmate
 
 #-------------- sugar functions --------------#
 
