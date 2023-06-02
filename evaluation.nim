@@ -74,7 +74,7 @@ template addValue(
 func getPstValue(
     evalParameters: EvalParameters,
     square: Square,
-    piece: Piece,
+    piece: static Piece,
     us: Color,
     kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
@@ -394,7 +394,7 @@ func evaluateKing(
 
 func evaluatePiece(
     position: Position,
-    piece: Piece,
+    piece: static Piece,
     square: Square,
     us: static Color,
     kingSquare: array[white..black, Square],
@@ -409,7 +409,7 @@ func evaluatePiece(
         queen: evaluateQueen[GradientOrNothing],
         king: evaluateKing[GradientOrNothing]
     ]
-    assert piece != noPiece
+    static: doAssert piece != noPiece
 
     result.addValue(evalParameters, gradient, us, pieceValues[piece])
 
