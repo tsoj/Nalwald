@@ -81,10 +81,8 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     case activeColor
     of "w", "W":
         result.us = white
-        result.enemy = black
     of "b", "B":
         result.us = black
-        result.enemy = white
     else:
         raise newException(ValueError, "FEN active color notation does not exist: " & activeColor)
 

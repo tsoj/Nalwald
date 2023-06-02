@@ -12,9 +12,12 @@ type Position* = object
     enPassantCastling*: Bitboard
     rookSource*: array[white..black, array[CastlingSide, Square]]
     zobristKey*: uint64
-    us*, enemy*: Color
+    us*: Color
     halfmovesPlayed*: int16
     halfmoveClock*: int16
+
+func enemy*(position: Position): Color =
+    position.us.opposite
 
 func `[]`*(position: Position, piece: Piece): Bitboard {.inline.} =
     position.pieces[piece]
@@ -213,8 +216,7 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
     position.halfmoveClock += 1
     if moved == pawn or captured != noPiece:
         position.halfmoveClock = 0
-
-    position.enemy = position.us
+    
     position.us = position.us.opposite
     
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
@@ -234,7 +236,6 @@ func doNullMoveInPlace*(position: var Position) =
 
     position.halfmoveClock = 0
 
-    position.enemy = position.us
     position.us = position.us.opposite
 
 func doNullMove*(position: Position): Position =
