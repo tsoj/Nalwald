@@ -1,6 +1,5 @@
 import
     ../evalParameters,
-    startingParameters,
     winningProbability,
     gradient,
     dataUtils,
@@ -114,10 +113,13 @@ echo "Total number of entries: ", data.len
 
 
 echo "-------------------"
-let k = optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
+let k = 0.75#optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
 echo "-------------------"
 
-let ep = startingEvalParameters.optimize(data, k)
+var emptyStartParams: EvalParametersFloat
+emptyStartParams.init()
+
+let ep = emptyStartParams.optimize(data, k)
 
 let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 echo "filename: ", filename
