@@ -1,6 +1,5 @@
 import
     ../evalParameters,
-    winningProbability,
     gradient,
     dataUtils,
     calculatePieceValue
@@ -29,7 +28,7 @@ proc optimize(
     minLearningRate = 500.0,
     maxNumEpochs = 300,
     discount = 0.9,
-    numThreads = 30,
+    numThreads = 8,
     batchSize = 50_000
 ): EvalParametersFloat =
 
@@ -90,8 +89,10 @@ proc optimize(
 
             solution += gradient
 
-        let passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {solution.convert.error(data, k):>9.7f}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
+        let
+            error = solution.convert.error(data, k)
+            passedTime = now() - startTime
+        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
         lr *= lrDecay
 
         if lr < minLearningRate:
@@ -112,9 +113,7 @@ data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 echo "Total number of entries: ", data.len
 
 
-echo "-------------------"
-let k = 0.75#optimizeK(getError = proc(k: float): float = startingEvalParameters.convert.error(data, k))
-echo "-------------------"
+const k = 1.0
 
 var emptyStartParams: EvalParametersFloat
 emptyStartParams.init()
