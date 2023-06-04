@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 137.Value,
-        knight: 525.Value,
-        bishop: 537.Value,
-        rook: 730.Value,
-        queen: 1600.Value,
+        pawn: 141.Value,
+        knight: 526.Value,
+        bishop: 542.Value,
+        rook: 736.Value,
+        queen: 1634.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -161,6 +161,20 @@ func pawnMaskBonus(
     let index = position.pawnMaskIndex(square, us)
     result.addValue(evalParameters, gradient, us, pawnMaskBonus[0][rank][index])
 
+func pawnRelativeToPiece(
+    evalParameters: EvalParameters,
+    position: Position,
+    square: Square,
+    us: Color,
+    gradient: var GradientOrNothing
+): array[Phase, Value] =
+    let square = if us == white: square else: square.mirror
+    
+    for piece in knight..queen:
+        for pieceSquare in position[us] and position[piece]:
+            let pieceSquare = if us == white: pieceSquare else: pieceSquare.mirror
+            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToPiece[0][square][piece][pieceSquare])
+
 func mobility(
     evalParameters: EvalParameters,
     position: Position,
@@ -251,6 +265,9 @@ func evaluatePawn(
             result.addValue(evalParameters, gradient, us, bonusPassedPawnCanMove[index])
         else:
             result.addValue(evalParameters, gradient, us, bonusPawnCanMove)
+
+    # pawn relative to our pieces
+    result += evalParameters.pawnRelativeToPiece(position, square, us, gradient)
 
 #-------------- knight evaluation --------------#
 

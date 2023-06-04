@@ -28,7 +28,7 @@ proc optimize(
     minLearningRate = 500.0,
     maxNumEpochs = 300,
     discount = 0.9,
-    numThreads = 8,
+    numThreads = 10,
     batchSize = 50_000
 ): EvalParametersFloat =
 
