@@ -17,7 +17,6 @@ massif.out
 !parameterOptimization/quietSetNalwald.epd
 !parameterOptimization/quietSetCombinedCCRL4040.epd
 !parameterOptimization/quietSmallNalwaldCCRL4040.epd
-!parameterOptimization/quietSmallCCRL404FRC.epd
 !parameterOptimization/quietSmallPoolGamesNalwald.epd
 !parameterOptimization/quietSetNalwald2.epd
 !parameterOptimization/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd
