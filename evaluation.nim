@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 141.Value,
-        knight: 526.Value,
-        bishop: 542.Value,
-        rook: 736.Value,
-        queen: 1634.Value,
+        pawn: 142.Value,
+        knight: 501.Value,
+        bishop: 525.Value,
+        rook: 719.Value,
+        queen: 1602.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -171,9 +171,14 @@ func pawnRelativeToPiece(
     let square = if us == white: square else: square.mirror
     
     for piece in knight..queen:
+
         for pieceSquare in position[us] and position[piece]:
             let pieceSquare = if us == white: pieceSquare else: pieceSquare.mirror
-            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToPiece[0][square][piece][pieceSquare])
+            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToOurPiece[0][square][piece][pieceSquare])
+
+        for pieceSquare in position[us.opposite] and position[piece]:
+            let pieceSquare = if us == white: pieceSquare else: pieceSquare.mirror
+            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToEnemyPiece[0][square][piece][pieceSquare])
 
 func mobility(
     evalParameters: EvalParameters,
