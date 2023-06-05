@@ -65,12 +65,12 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
         of "UCI_Chess960".toLowerAscii:
             discard
-        of "Threads".toLowerAscii:
-            let newNumThreads = params[3].parseInt
-            if newNumThreads < 1 or newNumThreads > maxNumThreads:
-                echo "Invalid value"
-            else:
-                uciState.numThreads = newNumThreads
+        # of "Threads".toLowerAscii:
+        #     let newNumThreads = params[3].parseInt
+        #     if newNumThreads < 1 or newNumThreads > maxNumThreads:
+        #         echo "Invalid value"
+        #     else:
+        #         uciState.numThreads = newNumThreads
         of "MultiPV".toLowerAscii:
             let newMultiPv = params[3].parseInt
             if newMultiPv < 1 or newMultiPv > 1000:
