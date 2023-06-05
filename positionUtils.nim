@@ -10,13 +10,14 @@ import
     options,
     bitops
 
+
+
 func legalMoves*(position: Position): seq[Move] =
     var moveArray: array[maxNumMoves, Move]
     let numMoves = position.generateMoves(moveArray)
     for i in 0..<numMoves:
-        var newPosition = position
-        newPosition.doMove(moveArray[i])
-        if newPosition.inCheck(position.us, position.enemy):
+        let newPosition = position.doMove(moveArray[i])
+        if newPosition.inCheck(position.us):
             continue
         result.add(moveArray[i])
 
@@ -80,10 +81,8 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     case activeColor
     of "w", "W":
         result.us = white
-        result.enemy = black
     of "b", "B":
         result.us = black
-        result.enemy = white
     else:
         raise newException(ValueError, "FEN active color notation does not exist: " & activeColor)
 
@@ -216,7 +215,9 @@ func notation*(pv: seq[Move], position: Position): string =
     var currentPosition = position
     for move in pv:
         result &= move.notation(currentPosition) & " "
-        currentPosition.doMove(move)
+        currentPosition = currentPosition.doMove(move)
 
 func insufficientMaterial*(position: Position): bool =
     (position[pawn] or position[rook] or position[queen]) == 0 and (position[bishop] or position[knight]).countSetBits <= 1
+
+const startpos* = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition

@@ -12,9 +12,12 @@ type Position* = object
     enPassantCastling*: Bitboard
     rookSource*: array[white..black, array[CastlingSide, Square]]
     zobristKey*: uint64
-    us*, enemy*: Color
+    us*: Color
     halfmovesPlayed*: int16
     halfmoveClock*: int16
+
+func enemy*(position: Position): Color =
+    position.us.opposite
 
 func `[]`*(position: Position, piece: Piece): Bitboard {.inline.} =
     position.pieces[piece]
@@ -33,8 +36,8 @@ func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitbo
     position[color] = position[color] or target
 
 func removePiece*(position: var Position, color: Color, piece: Piece, source: Bitboard) {.inline.} =
-    position[piece] = position[piece] and (not source)
-    position[color] = position[color] and (not source)
+    position[piece] = position[piece] and not source
+    position[color] = position[color] and not source
 
 func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) {.inline.} =
     position.removePiece(color, piece, source)
@@ -48,8 +51,10 @@ func castlingSide*(position: Position, move: Move): CastlingSide =
 func occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
-func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
-    let occupancy = position.occupancy
+func attackers(position: Position, us: Color, target: Square): Bitboard =
+    let
+        enemy = us.opposite
+        occupancy = position.occupancy
     (
         (bishop.attackMask(target, occupancy) and (position[bishop] or position[queen])) or
         (rook.attackMask(target, occupancy) and (position[rook] or position[queen])) or
@@ -58,8 +63,8 @@ func attackers(position: Position, us, enemy: Color, target: Square): Bitboard =
         (attackTablePawnCapture[us][target] and position[pawn])
     ) and position[enemy]
 
-func isAttacked*(position: Position, us, enemy: Color, target: Square): bool =
-    position.attackers(us, enemy, target) != 0
+func isAttacked*(position: Position, us: Color, target: Square): bool =
+    position.attackers(us, target) != 0
 
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:
@@ -128,7 +133,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
             return false
 
         for checkSquare in checkSensitive[us][castlingSide][kingSource]:
-            if position.isAttacked(us, enemy, checkSquare):
+            if position.isAttacked(us, checkSquare):
                 return false
     true
 
@@ -143,7 +148,7 @@ func calculateZobristKey*(position: Position): uint64 =
             )
     result = result xor position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
 
-func doMove*(position: var Position, move: Move) {.inline.} =
+func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
     assert position.isPseudoLegal(move)
     let
         target = move.target
@@ -157,7 +162,7 @@ func doMove*(position: var Position, move: Move) {.inline.} =
 
     position.zobristKey = position.zobristKey xor cast[uint64](position.enPassantCastling)
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
-    position.enPassantCastling = position.enPassantCastling and (not (source.toBitboard or target.toBitboard))
+    position.enPassantCastling = position.enPassantCastling and not (source.toBitboard or target.toBitboard)
     if enPassantTarget != noSquare:
         position.enPassantCastling = position.enPassantCastling or enPassantTarget.toBitboard
     if moved == king:
@@ -211,14 +216,17 @@ func doMove*(position: var Position, move: Move) {.inline.} =
     position.halfmoveClock += 1
     if moved == pawn or captured != noPiece:
         position.halfmoveClock = 0
-
-    position.enemy = position.us
+    
     position.us = position.us.opposite
     
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
     position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
 
-func doNullMove*(position: var Position) =
+func doMove*(position: Position, move: Move): Position {.inline.} =
+    result = position
+    result.doMoveInPlace(move)
+
+func doNullMoveInPlace*(position: var Position) =
     position.zobristKey = position.zobristKey xor position.enPassantCastling
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
     position.zobristKey = position.zobristKey xor position.enPassantCastling
@@ -228,22 +236,24 @@ func doNullMove*(position: var Position) =
 
     position.halfmoveClock = 0
 
-    position.enemy = position.us
     position.us = position.us.opposite
+
+func doNullMove*(position: Position): Position =
+    result = position
+    result.doNullMoveInPlace()
 
 func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1
     (position[king] and position[color]).toSquare
 
-func inCheck*(position: Position, us, enemy: Color): bool =
-    position.isAttacked(us, enemy, position.kingSquare(us))
+func inCheck*(position: Position, us: Color): bool =
+    position.isAttacked(us, position.kingSquare(us))
 
 func isLegal*(position: Position, move: Move): bool =
     if not position.isPseudoLegal(move):
         return false
-    var newPosition = position
-    newPosition.doMove(move)
-    return not newPosition.inCheck(position.us, position.enemy)
+    let newPosition = position.doMove(move)
+    return not newPosition.inCheck(position.us)
 
 func coloredPiece*(position: Position, square: Square): ColoredPiece =
     for color in white..black:
@@ -254,17 +264,17 @@ func coloredPiece*(position: Position, square: Square): ColoredPiece =
 
 func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square: Square) =
     for color in [white, black]:
-        position[color] = position[color] and (not square.toBitboard)
+        position[color] = position[color] and not square.toBitboard
     for piece in pawn..king:
-        position[piece] = position[piece] and (not square.toBitboard)
+        position[piece] = position[piece] and not square.toBitboard
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, square.toBitboard)
 
-func isPassedPawn*(position: Position, us, enemy: Color, square: Square): bool {.inline.} =
-    (isPassedMask[us][square] and position[pawn] and position[enemy]) == 0
+func isPassedPawn*(position: Position, us: Color, square: Square): bool {.inline.} =
+    (isPassedMask[us][square] and position[pawn] and position[us.opposite]) == 0
 
 func isPassedPawnMove*(newPosition: Position, move: Move): bool =
-    move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, newPosition.us, move.target)
+    move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, move.target)
 
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase

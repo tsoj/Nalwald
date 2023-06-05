@@ -1,33 +1,31 @@
 import
     types,
-    bitboard,
     move,
     position,
     positionUtils,
     hashTable,
     uciSearch,
     uciInfos,
-    utils,
     perft,
     see,
     evaluation,
-    evalParameters,
-    defaultParameters,
-    version,
+    version
+
+import std/[
     times,
     strutils,
     strformat,
     atomics,
     threadpool,
     os
+]
 
 const
-    startposFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
     megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1
-    maxNumThreads = 512
+    maxNumThreads = MaxThreadPoolSize
 
 type UciState = object
     position: Position
@@ -37,8 +35,10 @@ type UciState = object
     searchRunningFlag: Atomic[bool]
     numThreads: int
     multiPv: int
+    uciCompatibleOutput: bool = false
 
-proc uci() =
+proc uci(uciState: var UciState) =
+    uciState.uciCompatibleOutput = true
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
@@ -48,6 +48,10 @@ proc uci() =
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: seq[string]) =
+
+    if uciState.searchRunningFlag.load:
+        echo "Can't set options when search is running"
+        return
 
     if params.len == 4 and
     params[0] == "name" and
@@ -73,6 +77,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 echo "Invalid value"
             else:
                 uciState.multiPv = newMultiPv
+                uciState.hashTable.clear()
         else:
             echo "Unknown option: ", params[1]
     else:
@@ -92,7 +97,7 @@ proc moves(uciState: var UciState, params: seq[string]) =
     
     for i in 0..<params.len:
         history.add(position)
-        position.doMove(params[i].toMove(position))
+        position = position.doMove(params[i].toMove(position))
 
     uciState.history = history
     uciState.position = position
@@ -101,11 +106,11 @@ proc moves(uciState: var UciState, params: seq[string]) =
 proc setPosition(uciState: var UciState, params: seq[string]) =
 
     var index = 0
-    var fen: string
     if params.len >= 1 and params[0] == "startpos":
-        fen = startposFen
+        uciState.position = startpos
         index = 1
     elif params.len >= 1 and params[0] == "fen":
+        var fen: string
         index = 1
         var numFenWords = 0
         while params.len > index and params[index] != "moves":
@@ -113,11 +118,11 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
                 numFenWords += 1
                 fen &= " " & params[index]
             index += 1
+        uciState.position = fen.toPosition
     else:
         echo "Unknown parameters"
         return
 
-    uciState.position = fen.toPosition
 
     uciState.history.setLen(0)
 
@@ -140,7 +145,8 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         multiPv: uciState.multiPv,
         searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
-        nodes: uint64.high
+        nodes: uint64.high,
+        uciCompatibleOutput: uciState.uciCompatibleOutput
     )
 
     for i in 0..<params.len:
@@ -163,7 +169,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "nodes":
                 searchInfo.nodes = params[i+1].parseUInt
             else:
-                echo "info string Unknown parameter: ", $params[i]
+                discard
         try:
             let move = params[i].toMove(uciState.position)
             searchInfo.searchMoves.add move
@@ -182,8 +188,11 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
     while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
         sleep(1)
 
-func uciNewGame(uciState: var UciState) =
-    uciState.hashTable.clear()
+proc uciNewGame(uciState: var UciState) =
+    if uciState.searchRunningFlag.load:
+        echo "Can't start new UCI game when search is still running"
+    else:
+        uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
     seeTest()
@@ -216,51 +225,12 @@ proc perft(uciState: UciState, params: seq[string]) =
     else:
         echo "Missing depth parameter"
 
-proc pawnStructureMaskValue(uciState: UciState, params: seq[string]) =
-    if params.len < 1:
-        echo "Need at least one parameter"
-    else:
-        let
-            square = parseEnum[Square](params[0])
-            index = block:
-                var index: int
-                # hack to call function with static argument with dynamic argument
-                for s in (
-                    a1, b1, c1, d1, e1, f1, g1, h1,
-                    a2, b2, c2, d2, e2, f2, g2, h2,
-                    a3, b3, c3, d3, e3, f3, g3, h3,
-                    a4, b4, c4, d4, e4, f4, g4, h4,
-                    a5, b5, c5, d5, e5, f5, g5, h5,
-                    a6, b6, c6, d6, e6, f6, g6, h6,
-                    a7, b7, c7, d7, e7, f7, g7, h7,
-                    a8, b8, c8, d8, e8, f8, g8, h8
-                ).fields:
-                    if s == square:
-                        index = uciState.position.pawnMaskIndex(s, white, black, doChecks = true)
-                index
-            value = uciState.position.gamePhase.interpolate(
-                forOpening = defaultEvalParameters[opening].pawnMaskBonus[index],
-                forEndgame = defaultEvalParameters[endgame].pawnMaskBonus[index]
-            ).toCp
-        var position = uciState.position
-        for color in white..black:
-            position[color] = position[color] and mask3x3[square] and position[pawn]
-        for piece in knight..king:
-            position[piece] = 0
-        position[pawn] = position[pawn] and mask3x3[square]
-        echo position
-        echo "Value: ", value, " cp"
-
 proc uciLoop*() =
-    echo fmt"---------------- Nalwald ----------------"
-    echo fmt"       __,      o     n_n_n   ooooo    + "
-    echo fmt" o    // o\    ( )    \   /    \ /    \ /"
-    echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
-    echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
-    echo fmt"------------ by Jost Triller ------------"
+
+    printLogo()
 
     var uciState = UciState(
-        position: startposFen.toPosition,
+        position: startpos,
         hashtable: newHashTable(),
         numThreads: defaultNumThreads,
         multiPv: 1
@@ -277,7 +247,7 @@ proc uciLoop*() =
                 continue
             case params[0]
             of "uci":
-                uci()
+                uciState.uci()
             of "setoption":
                 uciState.setOption(params[1..^1])
             of "isready":
@@ -310,8 +280,6 @@ proc uciLoop*() =
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
-            of "pawnmask":
-                uciState.pawnStructureMaskValue(params[1..^1])
             of "about":
                 about(extra = params.len >= 1 and "extra" in params)
             of "help":
@@ -323,7 +291,7 @@ proc uciLoop*() =
                     echo "Unknown command: ", params[0]
                     echo "Use 'help'"
         except CatchableError:
-            echo "info string ", getCurrentExceptionMsg()
+            echo "Error: ", getCurrentExceptionMsg()
 
 
     discard ^searchThreadResult

@@ -17,6 +17,9 @@ massif.out
 !parameterOptimization/quietSetNalwald.epd
 !parameterOptimization/quietSetCombinedCCRL4040.epd
 !parameterOptimization/quietSmallNalwaldCCRL4040.epd
+!parameterOptimization/quietSmallPoolGamesNalwald.epd
+!parameterOptimization/quietSetNalwald2.epd
+!parameterOptimization/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 optimization
 *.txt
@@ -24,10 +27,12 @@ optimization
 vgcore.*
 *ptimizationResult*
 game
-genFenList.py
 removeNonQuietPositions
 generatePositions
 labelPositions
 generateSmallerSet
 calculatePieceValue
+mergeDuplicateAndSelectFENs
 processStuff.nim
+mergeDuplicateAndSelect
+*.pgn

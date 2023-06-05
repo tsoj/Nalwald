@@ -39,13 +39,12 @@ func perft*(
             {.cast(noSideEffect).}:
                 randomMoves[rand(0..<randomMoves.len)] = move
 
-        var newPosition = position
-        newPosition.doMove(move)
+        let newPosition = position.doMove(move)
 
         if testZobristKeys:
             doAssert newPosition.zobristKey == newPosition.calculateZobristKey
 
-        if not newPosition.inCheck(position.us, position.enemy):
+        if not newPosition.inCheck(position.us):
             let n = newPosition.perft(
                 depth - 1, height + 1,
                 testZobristKeys = testZobristKeys,
@@ -68,9 +67,8 @@ func fastPerft*(position: Position, depth: int): uint64 =
     let numMoves = position.generateMoves(moves)
     for i in 0..<numMoves:
         template move: Move = moves[i]
-        var newPosition = position
-        newPosition.doMove(move)
-        if not newPosition.inCheck(position.us, position.enemy):
+        let newPosition = position.doMove(move)
+        if not newPosition.inCheck(position.us):
             result += newPosition.fastPerft(depth - 1)
 
 type PerftData = object

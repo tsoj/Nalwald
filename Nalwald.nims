@@ -7,7 +7,7 @@ import version
 --threads:on
 --styleCheck:hint
 
-func lto() =    
+func lto() =
     --passC:"-flto"
     --passL:"-flto"
 
@@ -19,8 +19,11 @@ func highPerformance() =
     --define:danger
     lto()
 
-func debuggerProfilerInfo() =
+func lightDebuggerInfo() =
     --passC:"-fno-omit-frame-pointer -g"
+
+func fullDebuggerInfo() =
+    lightDebuggerInfo()
     --debugger:native
 
 let suffix = if defined(windows): ".exe" else: ""
@@ -29,23 +32,24 @@ let name = projectName() & "-" & version()
 task debug, "debug compile":
     --define:debug
     --passC:"-O2"
-    debuggerProfilerInfo()
+    fullDebuggerInfo()
     switch("o", name & "-debug" & suffix)
     setCommand "c"
 
 task checks, "checks compile":
     --define:release
-    debuggerProfilerInfo()
+    fullDebuggerInfo()
     switch("o", name & "-checks" & suffix)
     setCommand "c"
 
 task profile, "profile compile":
     highPerformance()
-    debuggerProfilerInfo()
+    fullDebuggerInfo()
     switch("o", name & "-profile" & suffix)
     setCommand "c"
 
 task default, "default compile":
+    lightDebuggerInfo()
     highPerformance()
     switch("o", name & suffix)
     setCommand "c"

@@ -49,7 +49,6 @@ func see(position: var Position, target: Square, victim: Piece): Value =
             position.removePiece(us, attacker, source.toBitboard)
         
         position.us = position.enemy
-        position.enemy = position.enemy.opposite
 
         result = max(0, result + victim.value - position.see(target, currentVictim))
 
@@ -79,7 +78,6 @@ func see*(position: Position, move: Move): Value =
         position.removePiece(us, moved, source.toBitboard)
 
     position.us = enemy
-    position.enemy = enemy.opposite
 
     result += captured.value - position.see(target, currentVictim)
                 

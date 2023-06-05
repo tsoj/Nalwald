@@ -5,45 +5,115 @@ import
     positionUtils,
     timeManagedSearch,
     hashTable,
-    evaluation,
+    evaluation
+
+import std/[
+    terminal,
     atomics,
     times,
     strformat,
     strutils,
     math,
-    algorithm
+    algorithm,
+    sugar,
+    random
+]
 
-func infoString(
+func printInfoString(
     iteration: int,
     value: Value,
     nodes: uint64,
+    pv: string,
     time: Duration,
     hashFull: int,
-    pv: string,
+    beautiful: bool,
     multiPvIndex = -1
-): string =
-    var scoreString = " score cp " & fmt"{value.toCp:>4}"
-    if abs(value) >= valueCheckmate:
-        if value < 0:
-            scoreString = " score mate -"
+) =
+    {.cast(noSideEffect).}:
+        proc print(text: string, style: set[Style] = {}, color = fgDefault) =
+            if beautiful:
+                stdout.styledWrite color, style, text
+            else:
+                stdout.write text
+
+        proc printKeyValue(key, value: string, valueColor: ForegroundColor, style: set[Style] = {}) =
+            print " " & key & " ", {styleItalic}
+            print value, style, valueColor
+
+        print "info", {styleDim}
+
+        if multiPvIndex != -1:
+            printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
+        printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
+        printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
+        printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
+
+        let nps = 1000*(nodes div max(1, time.inMilliseconds).uint64)
+        printKeyValue("nps", fmt"{nps:>7}", fgGreen)
+        
+        printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
+
+
+        if abs(value) >= valueCheckmate:
+            
+            print " score ", {styleItalic}
+            let
+                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).ceil.int
+                color = if value > 0: fgGreen else: fgRed
+
+            print valueString, {styleBright}, color
+
         else:
-            scoreString = " score mate "
-        scoreString &= $(value.plysUntilCheckmate.float / 2.0).ceil.int
+            let
+                valueString = fmt"{value.toCp:>4}"
+                style: set[Style] = if value.abs < 100.cp: {styleDim} else: {}
 
-    let nps = 1000*(nodes div (time.inMilliseconds.uint64 + 1))
+            print " score cp ", {styleItalic}
+            if value.abs <= 10.cp:
+                print valueString, style
+            else:
+                let color = if value > 0: fgGreen else: fgRed
+                print valueString, style, color
+                
 
-    result = "info"
-    if multiPvIndex != -1:
-        result &= " multipv " & fmt"{multiPvIndex:>2}"
-    result &= " depth " & fmt"{iteration+1:>2}"
-    result &= " time " & fmt"{time.inMilliseconds:>6}"
-    result &= " nodes " & fmt"{nodes:>9}"
-    result &= " nps " & fmt"{nps:>7}"
-    result &= " hashfull " & fmt"{hashFull:>5}"
-    result &= scoreString
-    result &= " pv " & pv
 
-func bestMoveString(move: Move, position: Position): string =
+            printKeyValue("pv", pv, fgBlue, {styleBright})
+
+        echo ""
+
+func printInfoString(
+    iteration: int,
+    position: Position,
+    pvList: seq[Pv],
+    nodes: uint64,
+    time: Duration,
+    hashFull: int,
+    beautiful: bool
+) =
+    doAssert pvList.isSorted((x, y) => cmp(x.value, y.value), Descending)
+
+    for i, pv in pvList:
+        printInfoString(
+            iteration = iteration,
+            value = pv.value,
+            pv = pv.pv.notation(position),
+            nodes = nodes,
+            time = time,
+            hashFull = hashFull,
+            beautiful = beautiful,
+            multiPvIndex = if pvList.len > 1: i + 1 else: -1
+        )
+
+proc bestMoveString(move: Move, position: Position): string =
+
+    # king's gambit
+    var r = initRand(epochTime().int64)
+    if r.rand(1.0) < 0.5:
+        if "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition == position:
+            return "e2e4"
+        if "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2".toPosition == position:
+            return "f2f4"
+
     let moveNotation = move.notation(position)
     if move in position.legalMoves:
         return "bestmove " & moveNotation
@@ -68,13 +138,17 @@ type SearchInfo* = object
     searchMoves*: seq[Move]
     numThreads*: int
     nodes*: uint64
+    uciCompatibleOutput*: bool
 
-proc uciSearchSinglePv(searchInfo: SearchInfo) =
+proc uciSearch*(searchInfo: SearchInfo) =
+
+    doAssert searchInfo.multiPv > 0
+
     var
         bestMove = noMove
         iteration = 0
 
-    for (value, pv, nodes, passedTime) in searchInfo.position.iterativeTimeManagedSearch(
+    for (pvList, nodes, passedTime) in searchInfo.position.iterativeTimeManagedSearch(
         searchInfo.hashTable[],
         searchInfo.positionHistory,
         searchInfo.targetDepth,
@@ -84,106 +158,27 @@ proc uciSearchSinglePv(searchInfo: SearchInfo) =
         timeLeft = searchInfo.timeLeft,
         moveTime = searchInfo.moveTime,
         numThreads = searchInfo.numThreads,
-        maxNodes = searchInfo.nodes
+        maxNodes = searchInfo.nodes,
+        multiPv = searchInfo.multiPv,
+        searchMoves = searchInfo.searchMoves
     ):
-        doAssert pv.len >= 1
-        bestMove = pv[0]
+        let pvList = pvList.sorted((x, y) => cmp(x.value, y.value), Descending)
+        doAssert pvList.len >= 1
+        doAssert pvList[0].pv.len >= 1
+        bestMove = pvList[0].pv[0]
 
         # uci info
-        echo iteration.infoString(
-            value,
-            nodes,
-            passedTime,
-            searchInfo.hashTable[].hashFull,
-            pv.notation(searchInfo.position)
+        printInfoString(
+            iteration = iteration,
+            position = searchInfo.position,
+            pvList = pvList,
+            nodes = nodes,
+            time = passedTime,
+            hashFull = searchInfo.hashTable[].hashFull,
+            beautiful = not searchInfo.uciCompatibleOutput
         )
 
         iteration += 1
 
     echo bestMove.bestMoveString(searchInfo.position)
-
-type SearchResult = object
-    move: Move
-    value: Value
-    pv: seq[Move]
-    nodes: uint64
-    passedTime: Duration
-
-proc uciSearch*(searchInfo: SearchInfo) =
-
-    if searchInfo.multiPv <= 0:
-        return
-
-    if searchInfo.multiPv == 1 and searchInfo.searchMoves.len == 0:
-        searchInfo.uciSearchSinglePv()
-        return
-
-    var searchMoves = searchInfo.searchMoves
-    if searchMoves.len == 0:
-        for move in searchInfo.position.legalMoves():
-            searchMoves.add move
-
-    var iterators: seq[iterator (): SearchResult{.closure, gcsafe.}]
-
-    for move in searchMoves:
-        var 
-            newPosition = searchInfo.position
-            newPositionHistory = searchInfo.positionHistory
-        newPositionHistory.add searchInfo.position
-        newPosition.doMove(move)
-        proc genIter(newPosition: Position, move: Move): iterator (): SearchResult{.closure, gcsafe.} =
-            return iterator(): SearchResult{.closure, gcsafe.} =
-                for (value, pv, nodes, passedTime) in iterativeTimeManagedSearch(
-                    newPosition,
-                    searchInfo.hashTable[],
-                    newPositionHistory,
-                    searchInfo.targetDepth - 1.Ply,
-                    searchInfo.stop,
-                    movesToGo = searchInfo.movesToGo,
-                    increment = searchInfo.increment,
-                    timeLeft = searchInfo.timeLeft,
-                    moveTime = searchInfo.moveTime,
-                    numThreads = searchInfo.numThreads,
-                    maxNodes = searchInfo.nodes
-                ):
-                    yield SearchResult(move: move, value: value, pv: pv, nodes: nodes, passedTime: passedTime)
-        iterators.add genIter(newPosition, move)
-        
-    var
-        iteration = 1
-        bestMove = noMove
-
-    while true:
-        
-        var searchResults: seq[SearchResult]
-        for iter in iterators:
-            searchResults.add iter()
-            searchResults[^1].value *= -1
-            searchResults[^1].pv.insert(searchResults[^1].move, 0)
-        
-        for iter in iterators:
-            if iter.finished:
-                echo bestMove.bestMoveString(searchInfo.position)
-                return
-
-        searchResults.sort do (x, y: auto) -> int: cmp(y.value, x.value)
-
-        for i, searchResult in searchResults.pairs:
-            if i+1 > searchInfo.multiPv:
-                break
-            echo iteration.infoString(
-                searchResult.value,
-                searchResult.nodes,
-                searchResult.passedTime,
-                searchInfo.hashTable[].hashFull,
-                searchResult.pv.notation(searchInfo.position),
-                i+1,
-            )
-
-        doAssert searchResults.len > 0
-        let bestPv = searchResults[0].pv
-        doAssert bestPv.len >= 1
-        bestMove = bestPv[0]
-
-        iteration += 1
 

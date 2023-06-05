@@ -29,6 +29,8 @@ type
         allNode,
         cutNode
     GamePhase* = 0..32
+    Phase* = enum
+        opening, endgame
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0
@@ -72,13 +74,19 @@ func goNothing*(square: var Square): bool =
 func opposite*(color: Color): Color =
     (color.uint8 xor 1).Color
 
-func `-`*(a: Ply, b: Ply): Ply =
-    max(a.int16 - b.int16, Ply.low.int16).Ply
-func `+`*(a: Ply, b: Ply): Ply =
-    min(a.int16 + b.int16, Ply.high.int16).Ply
-func `-=`*(a: var Ply, b: Ply) =
+func `-`*(a: Ply, b: SomeNumber or Ply): Ply =
+    max(a.BiggestInt - b.BiggestInt, Ply.low.BiggestInt).Ply
+func `-`*(a: SomeNumber, b: Ply): Ply =
+    max(a.BiggestInt - b.BiggestInt, Ply.low.BiggestInt).Ply
+
+func `+`*(a: Ply, b: SomeNumber or Ply): Ply =
+    min(a.BiggestInt + b.BiggestInt, Ply.high.BiggestInt).Ply
+func `+`*(a: SomeNumber, b: Ply): Ply =
+    min(a.BiggestInt + b.BiggestInt, Ply.high.BiggestInt).Ply
+
+func `-=`*(a: var Ply, b: Ply or SomeNumber) =
     a = a - b
-func `+=`*(a: var Ply, b: Ply) =
+func `+=`*(a: var Ply, b: Ply or SomeNumber) =
     a = a + b
 
 const valueInfinity* = min(-(int16.low.Value), int16.high.Value)

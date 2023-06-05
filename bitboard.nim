@@ -1,13 +1,18 @@
 import
     types,
-    utils,
+    utils
+
+import std/[
     options,
     bitops,
     endians
+]
+
+export bitops
 
 type Bitboard* = uint64
 
-func toSquare*(x: Bitboard): Square {.inline.} =
+func toSquare*(x: Bitboard): Square =
     assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
 
@@ -77,13 +82,13 @@ const antiDiagonals: array[a1..h8, Bitboard] = block:
             antiDiagonals[square] = currentAntiDiagonal
     antiDiagonals
 
-func hashkeyRank*(square: Square, occupancy: Bitboard): uint8 =
+func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
     (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
-func hashkeyFile*(square: Square, occupancy: Bitboard): uint8 =
+func hashkeyFile(square: Square, occupancy: Bitboard): uint8 =
     ((((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1) and 0b111111).uint8
-func hashkeyDiagonal*(square: Square, occupancy: Bitboard): uint8 =
+func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
     (((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
-func hashkeyAntiDiagonal*(square: Square, occupancy: Bitboard): uint8 =
+func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
     (((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
 
 const possibleRankOccupancy: array[64, Bitboard] = block:
@@ -192,9 +197,9 @@ const isPassedMask*: array[white..black, array[a1..h8, Bitboard]] = block:
 
         for j in 0..7:
             if j <= (square.int8 div 8):
-                isPassedMask[white][square] = isPassedMask[white][square] and (not ranks[(j*8).Square])
+                isPassedMask[white][square] = isPassedMask[white][square] and not ranks[(j*8).Square]
             if j >= (square.int8 div 8):
-                isPassedMask[black][square] = isPassedMask[black][square] and (not ranks[(j*8).Square])
+                isPassedMask[black][square] = isPassedMask[black][square] and not ranks[(j*8).Square]
     isPassedMask
 
 const leftFiles*: array[a1..h8, Bitboard] = block:

@@ -1,178 +1,127 @@
 import
     ../evalParameters,
-    startingParameters,
-    winningProbability,
     gradient,
     dataUtils,
-    calculatePieceValue,
+    calculatePieceValue
+
+import std/[
     times,
     strformat,
-    terminal,
-    threadpool
+    threadpool,
+    random
+]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
 proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
-    const numProgressBarPoints = 100
-    if not suppressOutput:
-        eraseLine()
-        stdout.write("[")
-        for p in 1..numProgressBarPoints:
-            stdout.write("-")
-        stdout.write("]")
-        setCursorXPos(1)
-        stdout.flushFile
-    var p = 0
-    for entry in data:
-        p += 1
-        if p mod (data.len div numProgressBarPoints) == 0 and not suppressOutput:
-            stdout.write("#")
-            stdout.flushFile
-        
+    result.gradient = newEvalParamatersFloat();
+    for entry in data:        
         result.weight += entry.weight
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
 
 proc optimize(
     start: EvalParametersFloat,
     data: seq[Entry],
-    lr = 6400.0,
-    minLearningRate = 80.0,
-    maxIterations = int.high,
-    minTries = 10,
+    k: float,
+    lr = 51200.0,
+    lrDecay = 0.98,
+    minLearningRate = 500.0,
+    maxNumEpochs = 300,
     discount = 0.9,
-    numThreads = 40
-): EvalParameters =
+    numThreads = 10,
+    batchSize = 50_000
+): EvalParametersFloat =
 
-    echo "-------------------"
-    let k = optimizeK(getError = proc(k: float): float = start.convert.error(data, k))
+    var
+        solution = start
+        lr = lr
+        data = data
 
-    var bestSolution: EvalParametersFloat = start
+    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
-    echo "-------------------"
+    var previousGradient = newEvalParamatersFloat()
 
-    var lr = lr
-    var decreaseLr = true
-    var bestError = bestSolution.convert.error(data, k)
-    echo "starting error: ", fmt"{bestError:>9.7f}", ", starting lr: ", lr
-
-    var previousGradient: EvalParametersFloat 
-    for j in 0..<maxIterations:
+    for epoch in 1..maxNumEpochs:
         let startTime = now()
-        var currentSolution = bestSolution
-        let batchSize = data.len div numThreads
+        data.shuffle
+        for batchId in 0..<data.len div batchSize:
+            let data = data[batchId*batchSize..<min(data.len, (batchId+1)*batchSize)]
 
-        template batchSlize(i: int): auto =
-            let
-                b = data.len mod numThreads + (i+1)*batchSize
-                a = if i == 0: 0 else: b - batchSize
-            doAssert b > a
-            doAssert i < numThreads - 1 or b == data.len
-            doAssert i == 0 or b - a == batchSize
-            doAssert i > 0 or b - a == batchSize + data.len mod numThreads
-            doAssert b <= data.len
-            data[a..<b]
+            func batchSlize(data: openArray[Entry], i: int, numThreads: int): auto =
+                let
+                    batchSlizeSize = data.len div numThreads
+                    b = data.len mod numThreads + (i+1)*batchSlizeSize
+                    a = if i == 0: 0 else: b - batchSlizeSize
+                doAssert b > a
+                doAssert i < numThreads - 1 or b == data.len
+                doAssert i == 0 or b - a == batchSlizeSize
+                doAssert i > 0 or b - a == batchSlizeSize + data.len mod numThreads
+                doAssert b <= data.len
+                data[a..<b]
 
-        var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
-        
-        let bestSolutionConverted = bestSolution.convert
-        for i, flowVar in threadSeq.mpairs:
-            flowVar = spawn calculateGradient(
-                i.batchSlize,
-                bestSolutionConverted,
-                k, i > 0
-            )    
-
-        var gradient: EvalParametersFloat
-        var totalWeight: float = 0.0
-        for flowVar in threadSeq.mitems:
-            let (threadWeight, threadGradient) = ^flowVar
-            totalWeight += threadWeight
-            gradient += threadGradient
-        # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
-        # result is better
-        gradient *= (1.0/totalWeight)
-        gradient *= 1.0 - discount
-        previousGradient *= discount
-        gradient += previousGradient
-        previousGradient = gradient
-
-        gradient *= lr
-
-        let oldBestError = bestError
-        
-        eraseLine()
-        stdout.write("iteration: " & fmt"{j:>3}")
-        stdout.flushFile
-
-        var leftTries = minTries
-        var successes = 0
-        var tries = 0
-        while leftTries > 0:
-
-            currentSolution += gradient
-
-            let currentSolutionConverted = currentSolution.convert
-            var errors = newSeq[FlowVar[tuple[error, summedWeight: float]]](numThreads)
-            for i, error in errors.mpairs:
-                error = spawn errorTuple(currentSolutionConverted, i.batchSlize, k)
-            var
-                error: float = 0.0
-                summedWeight: float = 0.0
-            for e in errors.mitems:
-                let r = ^e
-                error += r.error
-                summedWeight += r.summedWeight
-            error /= summedWeight
-
-            tries += 1                    
-            if error < bestError:
-                leftTries += 1
-                successes += 1
-
-                bestError = error
-                bestSolution = currentSolution
-            else:
-                leftTries -= 1
+            var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
             
-            # print info
-            eraseLine()
-            let s = $successes & "/" & $tries
-            let passedTime = now() - startTime
-            stdout.write(
-                "iteration: ", fmt"{j:>3}", ", successes: ", fmt"{s:>9}",
-                ", error: ", fmt"{bestError:>9.7f}", ", lr: ", lr, ", time: ", $passedTime.inSeconds, " s"
-            )
-            stdout.flushFile
-        
-        stdout.write("\n")
-        stdout.flushFile
+            let solutionConverted = solution.convert
+            for i, flowVar in threadSeq.mpairs:
+                flowVar = spawn calculateGradient(
+                    data.batchSlize(i, numThreads),
+                    solutionConverted,
+                    k, i > 0
+                )    
 
-        if oldBestError <= bestError and lr >= minLearningRate:
-            previousGradient *= 0.5
-            if decreaseLr:
-                lr /= 2.0
-            else:
-                decreaseLr = true
-        else:
-            decreaseLr = false
+            var gradient = newEvalParamatersFloat()
+            var totalWeight: float = 0.0
+            for flowVar in threadSeq.mitems:
+                let (threadWeight, threadGradient) = ^flowVar
+                totalWeight += threadWeight
+                gradient += threadGradient
+            # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
+            # result is better
+            gradient *= (1.0/totalWeight)
+            gradient *= 1.0 - discount
+            previousGradient *= discount
+            gradient += previousGradient
+            previousGradient = gradient
+
+            gradient *= lr
+
+            solution += gradient
+
+        let
+            error = solution.convert.error(data, k)
+            passedTime = now() - startTime
+        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
+        lr *= lrDecay
 
         if lr < minLearningRate:
             break
-
-    let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-    echo "filename: ", filename
-    writeFile(filename, $bestSolution.convert)
         
-    return bestSolution.convert
+    return solution
+
+let startTime = now()
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd", weight = 1.0)
-# Elements in quietSetZuri are weighed more, because it brings better results.
-# quietSetZuri is probably of higher quality
-data.loadData("quietSetNalwald.epd", weight = 0.6)
-data.loadData("quietSetCombinedCCRL4040.epd", weight = 0.6)
+data.loadData("quietSetZuri.epd")
+data.loadData("quietSetNalwald.epd")
+data.loadData("quietSetCombinedCCRL4040.epd")
+data.loadData("quietSmallPoolGamesNalwald.epd")
+data.loadData("quietSetNalwald2.epd")
+data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 
-let startingEvalParametersFloat = startingEvalParameters
+echo "Total number of entries: ", data.len
 
-let ep = startingEvalParametersFloat.optimize(data)
-printPieceValues(ep)
+
+const k = 1.0
+
+let ep = newEvalParamatersFloat().optimize(data, k)
+
+let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+echo "filename: ", filename
+writeFile(
+    filename,
+    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
+)
+printPieceValues(ep.convert)
+
+echo "Total time: ", now() - startTime
+

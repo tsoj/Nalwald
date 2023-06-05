@@ -1,40 +1,46 @@
 import types
 
-type Phase* = enum
-    opening, endgame
+import std/random
 
 type OurKingOrEnemyKing* = enum
     ourKing, enemyKing
 
-type SinglePhaseEvalParametersTemplate*[ValueType: Value or float32] = object
+type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnMaskBonus*: array[3*3*3 * 3*3*3 * 3*3*3, ValueType]
+    pawnStructureBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
+    bonusPawnRelativeToOurPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
+    bonusPawnRelativeToEnemyPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
+    bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
     bonusPieceForkedMajorPieces*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType
-    bonusPieceAttackedByPawn*: ValueType
     bonusMobility*: array[knight..queen, array[32, ValueType]]
+    bonusAttackingPiece*: array[knight..queen, array[pawn..king, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
-    bonusAttackingKing*: array[bishop..queen, ValueType]
     bonusKingSafety*: array[32, ValueType]
     bonusAttackersNearKing*: array[5*5, ValueType]
 
-type EvalParametersTemplate*[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
+type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
 type EvalParametersFloat* = EvalParametersTemplate[float32]
 
 type EvalParameters* = EvalParametersTemplate[Value]
 
-func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
+func newEvalParamatersFloat*(): EvalParametersFloat =
+    for phase in Phase:
+        result[phase].pawnStructureBonus.setLen 1
+        result[phase].bonusPawnRelativeToOurPiece.setLen 1
+        result[phase].bonusPawnRelativeToEnemyPiece.setLen 1
+
+func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
 
     when Out is AtomType:
         static: doAssert In is AtomType, "Transforming types must have the same structure."
-        when Out is float32 and In is float32:
-            floatOp(output, input)
-        else:
-            output = input.Out
+        var tmp = output.float32
+        floatOp(tmp, input.float32)
+        output = tmp.Out
         
     elif Out is (tuple or object):
         static: doAssert In is (tuple or object), "Transforming types must have the same structure."
@@ -54,11 +60,17 @@ func transform*[Out, In](output: var Out, input: In, floatOp: proc(a: var float3
             var outputIndex = (typeof(output.low))((output.low.int + i))
             var inputIndex = (typeof(input.low))((input.low.int + i))
             transform(output[outputIndex], input[inputIndex], floatOp)
+
+    elif Out is seq:
+        static: doAssert In is seq, "Transforming types must have the same structure."
+        output.setLen input.len
+        for i in 0..<input.len:
+            transform(output[i], input[i], floatOp)
     
     else:
         static: doAssert false, "Type is not not implemented for transforming"
 
-func transform*[Out, In](output: var Out, input: In) =
+func transform[Out, In](output: var Out, input: In) =
     transform(output, input, proc(a: var float32, b: float32) = a = b)
 
 func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
@@ -66,6 +78,7 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
 
 func convert*(a: auto, T: typedesc): T =
     transform(result, a)
+
 
 func convert*(a: EvalParameters): EvalParametersFloat =
     a.convert(EvalParametersFloat)
@@ -85,3 +98,9 @@ func `*=`*(a: var EvalParametersFloat, b: float32) =
 
 func setAll*(a: var EvalParametersFloat, b: float32) =
     transform(a, a, proc(x: var float32, y: float32) = x = b)
+
+proc addRand*(a: var EvalParametersFloat, amplitude: float32) =
+    func floatOp(x: var float32, y: float32) =
+        {.cast(noSideEffect).}:
+            x += rand(-amplitude..amplitude)
+    transform(a, a, floatOp)

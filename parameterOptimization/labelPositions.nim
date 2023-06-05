@@ -1,31 +1,61 @@
 import
     ../position,
     ../positionUtils,
-    game,
+    ../timeManagedSearch,
+    ../hashTable,
+    ../types,
+    winningProbability,
+    game
+
+import std/[
     times,
     threadpool,
+    cpuinfo,
     os,
-    psutil,
     tables,
     strutils
+]
 
-proc playGame(fen: string): (string, float) =
-    try:
-        
-        var game = newGame(
-            startingPosition = fen.toPosition,
-            moveTime = initDuration(milliseconds = 80),
-        )
-        return (fen, game.playGame(suppressOutput = true))
-        
-    except:
-        echo getCurrentExceptionMsg()
-        return ("", -1.0)
+type EvalMode = enum
+    playout, search
 
 const
-    maxLoadPercentageCPU = 70.0
-    writeFilename = "quietSetNalwald.epd"#"quietSmallNalwaldCCRL4040.epd"
-    readFilename = "unlabeledQuietSetNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    evalMode = search
+    readFilename = "quietLeavesSmallPoolGamesNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"#"quietSmallNalwaldCCRL4040.epd"
+
+let maxNumThreads = countProcessors() div 2
+
+proc playGame(fen: string): (string, float) =
+    case evalMode:
+    of playout:
+        try:
+            
+            var game = newGame(
+                startingPosition = fen.toPosition,
+                maxNodes = 50_000,
+            )
+            return (fen, game.playGame(suppressOutput = true))
+            
+        except CatchableError:
+            echo getCurrentExceptionMsg()
+            return ("", -1.0)
+    of search:
+
+        const maxNodes = 2_000_000
+        
+        var hashTable: HashTable = newHashTable()
+        hashTable.setSize(maxNodes * sizeof HashTableEntry)
+        let position = fen.toPosition
+        let pvSeq = position.timeManagedSearch(
+            hashTable = hashTable,
+            maxNodes = maxNodes
+        )
+        doAssert pvSeq.len > 0
+        var value = pvSeq[0].value
+        if position.us == black:
+            value = -value
+        return (fen, value.winningProbability(0.75)) # 0.75 is what k is usually during optimization
 
 proc labelPositions() =
     var alreadyLabeled = block:
@@ -65,14 +95,14 @@ proc labelPositions() =
         i += 1
         if (i mod 1000) == 0:
             echo i
-        let fen = line.toPosition.fen 
+        let fen = line.toPosition(suppressWarnings = true).fen 
         if fen in alreadyLabeled and alreadyLabeled[fen] == 1:
             alreadyLabeled[fen] = 0
             continue
-        if i < 1614000:
-            continue
-        writeResults()
-        while cpu_percent() >= maxLoadPercentageCPU:
+        while true:
+            writeResults()
+            if threadResults.len < maxNumThreads:
+                break
             sleep(10)
         threadResults.add(spawn playGame(fen))
         sleep(10)
