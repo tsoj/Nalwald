@@ -1,18 +1,14 @@
 import
     types,
-    bitboard,
     move,
     position,
     positionUtils,
     hashTable,
     uciSearch,
     uciInfos,
-    utils,
     perft,
     see,
     evaluation,
-    evalParameters,
-    defaultParameters,
     version
 
 import std/[

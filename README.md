@@ -3,71 +3,70 @@
 ### Chess engine written in Nim
 ![](./logo.svg)
 
-You can play against Nalwald [here](https://lichess.org/@/squared-chess).
-
-#### Download
+### Download
 ```
 git clone https://gitlab.com/tsoj/Nalwald.git
 ```
 Pre-compiled executables for Windows and Linux can be found [here](https://gitlab.com/tsoj/Nalwald/-/releases).
 
-#### Compile
+### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 1.6 or higher) and the Clang compiler.
+You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and the Clang compiler.
 
 **Compiling for native CPU**
 ```
 nim native Nalwald.nim
 ```
 
-**Compiling for generic 64-bit CPUs**
+**Compiling for generic CPUs**
 ```
 nim default Nalwald.nim
 ```
 
-**Compiling for modern 64-bit CPUs (BMI2 and POPCNT)**
+**Compiling for modern CPUs (BMI2 and POPCNT)**
 ```
 nim modern Nalwald.nim
 ```
 
-#### Features
+### Features
 
-- evaluation:
-  - king square contextual piece square tables
-  - pawn structure masks
-  - passed pawns
-  - pawn attacking piece
-  - mobility
-  - sliding pieces attacking area around king
-  - rook on open file
-  - both bishops
-  - minor pieces forking major pieces
-  - knight attacking bishop, rook, or queen
-  - tapered parameters
-  - optimized using gradient descent
-- search:
-  - principle variation search
-  - quiescence search
-  - transposition table
-  - move ordering:
-    - transposition table suggested best move
-    - static exchange evaluation
-    - killermoves
-    - relative and counter move history heuristic
-  - check extensions
-  - nullmove reduction
-  - late move reductions
-  - futility reductions
-  - hash result futility pruning
-  - delta pruning
-  - aspiration windows
-- multithreading support
-- supports Chess960/FRC
-- multi PV
+- Evaluation:
+  - King contextual piece square tables
+  - Pawn contextual piece square tables
+  - 3x3 pawn structure tables
+  - Passed pawns
+  - Mobility
+  - Pieces attacking area around king
+  - Rook on open file
+  - Both bishops
+  - Minor pieces forking major pieces
+  - Pieces attacking other pieces
+  - Tapered parameters
+  - Optimized using gradient descent
+- Search:
+  - Principle variation search
+  - Quiescence search
+  - Transposition table
+  - Move ordering:
+    - Transposition table suggested best move
+    - Static exchange evaluation
+    - Killermoves
+    - Relative and counter move history heuristic
+  - Check extensions
+  - Nullmove reduction
+  - Late move reductions
+  - Futility reductions
+  - Hash result futility pruning
+  - Delta pruning
+  - Aspiration windows
+  - Internal iterative reductions
+- Multithreading support
+- Supports Chess960/FRC
+- Multi PV support
 - UCI compatible
-  - additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
+  - Additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
 
-#### About
+### About
 
 Nalwald is a Super GM level chess engine for classical and fischer random chess.
 It supports the Universal Chess Interface (UCI), so it can be used with most
@@ -94,6 +93,8 @@ During the development of Nalwald I also introduced some methods that I believe
 are novelties in the chess programming space:
 - *King contextual PSTs* are piece square tables that are different depending on
 where our own king and the enemy king are located.
+- *Pawn contextual PSTs* are piece square tables that are different depending on
+where a pawn is. They are added together for all pawns.
 - *Futility reductions* are an improvement to futility pruning. Here not only are moves
 skipped that are likely to be much worse than alpha. Additionally, moves that are likely
 slightly worse than alpha get their depth reduced accordingly to how bad they are
@@ -102,18 +103,19 @@ expected to be.
 enough to adjust alpha or beta, or to return a value immediately. Rather, depending
 on their depth, the value gets only used, when the margin to alpha or beta is big
 enough.
-- *Pawn structure masks* are a way to evaluate the structure of multiple pawns. For this a
+- *3x3 pawn structure tables* are a way to evaluate the structure of multiple pawns. For this a
 3x3 mask is used on any square for which at least two pawns (ours or enemy) fall
 into this mask. The pawns in that mask can be used to calculate an exact index for
 this structure of pawns in a 3x3 space. This index can be used to access a table,
 which contains values to evaluate this pawn structure. This table can then be
 optimized using a method like gradient descent.
 
-#### Rating
+### Rating
 
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
+| 17      |          – |         – |           – |              – |
 | 16      |       2946 |      3012 |        2994 |  July 11, 2022 |
 | 15      |       2881 |      2932 |        2921 |    Feb 8, 2022 |
 | 14      |       2826 |         – |        2825 |   Sep 16, 2021 |
@@ -133,6 +135,6 @@ optimized using a method like gradient descent.
 | **Hactar**                                                      |
 | 0.9.0   |          – |      1352 |           – |   Jan 13, 2018 |
 
-#### License
+### License
 
 Copyright © Jost Triller

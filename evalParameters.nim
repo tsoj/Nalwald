@@ -8,16 +8,14 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnMaskBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
+    pawnStructureBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
     bonusPawnRelativeToOurPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
     bonusPawnRelativeToEnemyPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
-    bonusPawnCanMove*: ValueType
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
     bonusPieceForkedMajorPieces*: ValueType
     bonusBothBishops*: ValueType
     bonusRookOnOpenFile*: ValueType
-    bonusPieceAttackedByPawn*: ValueType
     bonusMobility*: array[knight..queen, array[32, ValueType]]
     bonusAttackingPiece*: array[knight..queen, array[pawn..king, ValueType]]
     bonusTargetingKingArea*: array[bishop..queen, ValueType]
@@ -32,7 +30,7 @@ type EvalParameters* = EvalParametersTemplate[Value]
 
 func newEvalParamatersFloat*(): EvalParametersFloat =
     for phase in Phase:
-        result[phase].pawnMaskBonus.setLen 1
+        result[phase].pawnStructureBonus.setLen 1
         result[phase].bonusPawnRelativeToOurPiece.setLen 1
         result[phase].bonusPawnRelativeToEnemyPiece.setLen 1
 
