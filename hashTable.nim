@@ -130,6 +130,7 @@ func add*(
 
 func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
     
+    # TODO threading doesn't work
     if ht.pvNodes.hasKey(zobristKey):
         ht.pvNodes[zobristKey].lookupCounter += 1
         return ht.pvNodes[zobristKey].entry

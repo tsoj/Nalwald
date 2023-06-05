@@ -42,7 +42,7 @@ proc uci(uciState: var UciState) =
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
-    echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
+    # echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
     echo "option name MultiPV type spin default 1 min 1 max 1000"
     echo "option name UCI_Chess960 type check default false"
     echo "uciok"
