@@ -42,7 +42,7 @@ proc uci(uciState: var UciState) =
     echo "id name Nalwald " & version()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
-    # echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
+    echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
     echo "option name MultiPV type spin default 1 min 1 max 1000"
     echo "option name UCI_Chess960 type check default false"
     echo "uciok"
@@ -65,12 +65,12 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
         of "UCI_Chess960".toLowerAscii:
             discard
-        # of "Threads".toLowerAscii:
-        #     let newNumThreads = params[3].parseInt
-        #     if newNumThreads < 1 or newNumThreads > maxNumThreads:
-        #         echo "Invalid value"
-        #     else:
-        #         uciState.numThreads = newNumThreads
+        of "Threads".toLowerAscii:
+            let newNumThreads = params[3].parseInt
+            if newNumThreads < 1 or newNumThreads > maxNumThreads:
+                echo "Invalid value"
+            else:
+                uciState.numThreads = newNumThreads
         of "MultiPV".toLowerAscii:
             let newMultiPv = params[3].parseInt
             if newMultiPv < 1 or newMultiPv > 1000:
