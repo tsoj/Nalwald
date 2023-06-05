@@ -43,12 +43,16 @@ proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
     try:
         doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
         let position = game.positionHistory[^1]
-        let (value, pv) = position.timeManagedSearch(
+        let pvSeq = position.timeManagedSearch(
             hashTable = game.hashTable,
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
             maxNodes = game.maxNodes
         )
+        doAssert pvSeq.len >= 1
+        let
+            pv = pvSeq[0].pv
+            value = pvSeq[0].value
         doAssert pv.len >= 1
         doAssert pv[0] != noMove
         game.positionHistory.add position.doMove(pv[0])

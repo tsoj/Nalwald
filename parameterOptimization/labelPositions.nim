@@ -47,10 +47,12 @@ proc playGame(fen: string): (string, float) =
         var hashTable: HashTable = newHashTable()
         hashTable.setSize(maxNodes * sizeof HashTableEntry)
         let position = fen.toPosition
-        var value = position.timeManagedSearch(
+        let pvSeq = position.timeManagedSearch(
             hashTable = hashTable,
             maxNodes = maxNodes
-        ).value
+        )
+        doAssert pvSeq.len > 0
+        var value = pvSeq[0].value
         if position.us == black:
             value = -value
         return (fen, value.winningProbability(0.75)) # 0.75 is what k is usually during optimization
