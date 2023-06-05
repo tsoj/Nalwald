@@ -67,4 +67,4 @@ nim c --run calculatePieceValue.nim
 - randomly selected number of positions from games between Nalwald and other engines
 - for each position made a search with 5000 nodes and selected ~2 leave node positions
 - removed all non-quiet positions
-- label positions with result of Nalwald search with TODOx nodes
+- labeled positions with result of Nalwald search with 2,000,000 nodes
