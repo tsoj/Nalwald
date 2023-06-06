@@ -70,7 +70,7 @@ func update(
     nodeType: NodeType,
     bestValue: Value
 ) =
-    if bestMove != noMove and bestValue.abs < valueInfinity:
+    if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
         if nodeType != allNode:
             state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)

@@ -124,7 +124,9 @@ iterator iterativeDeepeningSearch*(
                     else:
                         var threadSeq: seq[FlowVar[uint64]]
                         for i in 0..<numThreads:
-                            if i > 0: sleep(1)
+                            if i > 0:
+                                sleep(1)
+
                             threadSeq.add spawn launchSearch(i)
 
                         while threadSeq.len == numThreads:
