@@ -171,7 +171,6 @@ func pawnRelativeToPiece(
     position: Position,
     square: Square,
     us: Color,
-    
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
