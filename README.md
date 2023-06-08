@@ -91,8 +91,6 @@ the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
 During the development of Nalwald I also introduced some methods that I believe
 are novelties in the chess programming space:
-- *King contextual PSTs* are piece square tables that are different depending on
-where our own king and the enemy king are located.
 - *Pawn contextual PSTs* are piece square tables that are different depending on
 where a pawn is. They are added together for all pawns.
 - *Futility reductions* are an improvement to futility pruning. Here not only are moves
