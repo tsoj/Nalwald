@@ -269,7 +269,7 @@ func search(
         if hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode:
             newBeta = alpha + 1
 
-        # stop search if we exceded maximum nodes or we got a stop signal from outside
+        # stop search if we exceeded maximum nodes or we got a stop signal from outside
         if state.shouldStop:
             break
         
