@@ -78,7 +78,6 @@ iterator iterativeDeepeningSearch*(
 
             hashTable.age()        
 
-            let start = now()
             for depth in 1.Ply..targetDepth:
 
                 var
@@ -118,8 +117,7 @@ iterator iterativeDeepeningSearch*(
                         evaluation
                     )
 
-                    if numThreads == 1 or (now() - start).inMilliseconds < 100:
-                        # don't use multithreading too early or when only one thread allowed
+                    if numThreads == 1:
                         currentPvNodes = launchSearch(0)
                     else:
                         var threadSeq: seq[FlowVar[uint64]]

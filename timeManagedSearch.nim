@@ -77,7 +77,7 @@ iterator iterativeTimeManagedSearch*(
         stop,
         positionHistory,
         targetDepth,
-        numThreads = numThreads,
+        numThreads = if calculatedMoveTime.approxTime.inMilliseconds <= 100: 1 else: numThreads,
         maxNodes = maxNodes,
         multiPv = multiPv,
         searchMoves = searchMoves,
