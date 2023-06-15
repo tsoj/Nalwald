@@ -276,7 +276,7 @@ proc uciLoop*() =
             of "test":
                 test(params[1..^1])
             of "eval":
-                echo uciState.position.absoluteEvaluate, " centipawns"
+                echo uciState.position.absoluteEvaluate, " centipawns from whites perspective"
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
