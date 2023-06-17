@@ -146,13 +146,10 @@ iterator iterativeDeepeningSearch*(
                         pv = hashTable.getPv(position)
                         value = hashTable.get(position.zobristKey).value
                     
-                    when defined release:
-                        if pv.len == 0:
-                            debugEcho "WARNING: Couldn't find PV at root node.", &"\n{position.fen = }\n{positionHistory = }\n{depth = }"
-                            doAssert position.legalMoves.len > 0
-                            pv = @[position.legalMoves[0]]
-                    
-                    doAssert pv.len >= 1, &"\n{position.fen = }\n{positionHistory = }\n{depth = }"
+                    if pv.len == 0:
+                        debugEcho "WARNING: Couldn't find PV at root node.", &"\n{position.fen = }"
+                        doAssert position.legalMoves.len > 0
+                        pv = @[position.legalMoves[0]]
 
                     skipMoves.add pv[0]
 

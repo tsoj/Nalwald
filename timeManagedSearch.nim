@@ -22,17 +22,18 @@ func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, half
     doAssert movesToGo >= 0
     let
         estimatedGameLength = 70
-        estimatedMovesToGo = max(10, estimatedGameLength - halfmovesPlayed div 2)
+        estimatedMovesToGo = max(20, estimatedGameLength - halfmovesPlayed div 2)
         newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
     result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), moveTime)
     result.approxTime = initDuration(milliseconds =
         clamp(timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
         clamp(incPerMove.inMilliseconds, 0, int.high div 2)
+        # clamping to int.high divided by 2 to make sure that adding these two things doesn't cause an int overflow
     )
 
-    if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 2):
-        result.approxTime = (15 * result.approxTime) div 10
+    if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 3):
+        result.approxTime = (12 * result.approxTime) div 10
     elif incPerMove.inMilliseconds < 200 and timeLeft < initDuration(seconds = 30):
         result.approxTime = (8 * result.approxTime) div 10
         if movesToGo > 2:
