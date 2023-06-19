@@ -20,9 +20,9 @@ type EvalMode = enum
     playout, search
 
 const
-    evalMode = search
-    readFilename = "quietLeavesSmallPoolGamesNalwald.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"#"quietSmallNalwaldCCRL4040.epd"
+    evalMode = playout
+    readFilename = "quietSmallPoolGamesNalwald2Unlabeled.epd"
+    writeFilename = "quietSmallPoolGamesNalwald2SelfPlayLabel.epd"
 
 let maxNumThreads = countProcessors() div 2
 
@@ -55,7 +55,7 @@ proc playGame(fen: string): (string, float) =
         var value = pvSeq[0].value
         if position.us == black:
             value = -value
-        return (fen, value.winningProbability(0.75)) # 0.75 is what k is usually during optimization
+        return (fen, value.winningProbability(k = 1.0)) # 1.0 is what k is usually during optimization
 
 proc labelPositions() =
     var alreadyLabeled = block:

@@ -68,3 +68,9 @@ nim c --run calculatePieceValue.nim
 - for each position made a search with 5000 nodes and selected ~2 leave node positions
 - removed all non-quiet positions
 - labeled positions with result of Nalwald search with 2,000,000 nodes
+
+###### quietSmallPoolGamesNalwald2Labeled.epd
+- removed non-quiet positions from games played between Nalwald and other engines
+- randomly select 4,000,000 positions
+- three copies of that set: labeled with original game result, labeled with Nalwald self-play result (TODO), labeled with search (TODO)
+- merge three copies

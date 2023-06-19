@@ -10,9 +10,9 @@ import std/
 randomize(epochTime().int64 mod 500_000)
 
 const
-    readFilename = "poolGamesNalwald.epd"
-    writeFilename = "smallPoolGamesNalwald.epd"
-    approxMaxNumLines = 2_500_000
+    readFilename = "quietSmallPoolGamesNalwald2LabeledConcat_incomplete.epd"
+    writeFilename = "quietSmallPoolGamesNalwald2Labeled_incomplete.epd"
+    approxMaxNumLines = 5_000_000
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)
@@ -21,6 +21,8 @@ var
     table: Table[string, tuple[count: float, sum: float]]
     line: string
 while f.readLine(line):
+    if line.isEmptyOrWhitespace:
+        continue
     let words = line.splitWhitespace()
     doAssert words.len == 7
     let
