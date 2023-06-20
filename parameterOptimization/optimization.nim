@@ -101,13 +101,12 @@ proc optimize(
 let startTime = now()
 
 var data: seq[Entry]
-data.loadData("quietSetZuri.epd")
 data.loadData("quietSetNalwald.epd")
 data.loadData("quietSetCombinedCCRL4040.epd")
 data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
-data.loadData("quietSmallPoolGamesNalwald2Labeled.epd")
+data.loadData("quietSmallPoolGamesNalwald2Labeled.epd", weight = 2.0)
 
 echo "Total number of entries: ", data.len
 
