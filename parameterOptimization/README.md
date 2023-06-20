@@ -72,5 +72,5 @@ nim c --run calculatePieceValue.nim
 ###### quietSmallPoolGamesNalwald2Labeled.epd
 - removed non-quiet positions from games played between Nalwald and other engines
 - randomly select 4,000,000 positions
-- three copies of that set: labeled with original game result, labeled with Nalwald self-play result (TODO), labeled with search (TODO)
+- three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies

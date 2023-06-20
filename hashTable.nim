@@ -130,7 +130,6 @@ func add*(
 
 func get*(ht: var HashTable, zobristKey: uint64): HashTableEntry =
     
-    # TODO threading doesn't work
     if ht.pvNodes.hasKey(zobristKey):
         withLock ht.pvTableMutex:
             if ht.pvNodes.hasKey(zobristKey):
