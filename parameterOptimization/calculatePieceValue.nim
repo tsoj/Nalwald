@@ -10,7 +10,7 @@ import
 when isMainModule:
     import ../defaultParameters
 
-func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry]): Value =
+func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray[Entry]): Value =
     var sum: int64 = 0
     var numPieceEvals: int64 = 0
     for entry in data:
@@ -34,16 +34,17 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: seq[Entry
             numPieceEvals += 1
     (sum div numPieceEvals).Value
 
-proc printPieceValues*(evalParameters: EvalParameters) =
-    var data: seq[Entry]
-    data.loadData("quietSetZuri.epd")
-    data.loadData("quietSetNalwald.epd")
-    data.loadData("quietSetCombinedCCRL4040.epd")
-    data.loadData("quietSmallPoolGamesNalwald.epd")
-    data.loadData("quietSetNalwald2.epd")
+proc printPieceValues*(evalParameters: EvalParameters, data: openArray[Entry]) =
     echo "Piece values:"
     for piece in pawn..queen:
         echo piece, ": ", getPieceValue(piece, evalParameters, data)
 
 when isMainModule:
-    printPieceValues(defaultEvalParameters)
+    var data: seq[Entry]
+    data.loadData("quietSetNalwald.epd")
+    data.loadData("quietSetCombinedCCRL4040.epd")
+    data.loadData("quietSmallPoolGamesNalwald.epd")
+    data.loadData("quietSetNalwald2.epd")
+    data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
+    data.loadData("quietSmallPoolGamesNalwald2Labeled.epd")
+    printPieceValues(defaultEvalParameters, data)

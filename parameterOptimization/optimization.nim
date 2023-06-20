@@ -121,7 +121,7 @@ writeFile(
     filename,
     &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
 )
-printPieceValues(ep.convert)
+printPieceValues(ep.convert, data)
 
 echo "Total time: ", now() - startTime
 
