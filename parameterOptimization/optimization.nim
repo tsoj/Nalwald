@@ -88,9 +88,9 @@ proc optimize(
             solution += gradient
 
         let
-            error = solution.convert.error(data, k)
+            errorString = if (epoch mod 20) == 0: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
             passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
+        echo fmt"Epoch {epoch}, error: {errorString}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
         lr *= lrDecay
 
         if lr < minLearningRate:
@@ -107,7 +107,7 @@ data.loadData("quietSetCombinedCCRL4040.epd")
 data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
-data.loadData("quietSmallPoolGamesNalwald2Labeled_incomplete.epd")
+data.loadData("quietSmallPoolGamesNalwald2Labeled.epd")
 
 echo "Total number of entries: ", data.len
 
