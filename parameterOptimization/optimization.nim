@@ -88,7 +88,7 @@ proc optimize(
             solution += gradient
 
         let
-            errorString = if (epoch mod 20) == 0: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
+            errorString = if (epoch mod 20) == 1: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
             passedTime = now() - startTime
         echo fmt"Epoch {epoch}, error: {errorString}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
         lr *= lrDecay

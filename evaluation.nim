@@ -70,12 +70,12 @@ template addValue(
     parameter: untyped
 ) =
     for phase {.inject.} in Phase:
-        value[phase] += getParameter(phase, evalParameters, parameter)
+        value[phase] += getParameter(phase, evalParameters[0], parameter)
 
     when gradient isnot Nothing:
         let f = (if us == black: -1.0 else: 1.0) * gradient.g
-        getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
-        getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
+        getParameter(opening, gradient.evalParams[][0], parameter) += f * gradient.gamePhaseFactor
+        getParameter(endgame, gradient.evalParams[][0], parameter) += f * (1.0 - gradient.gamePhaseFactor)
 
 func getPstValue(
     evalParameters: EvalParameters,
@@ -96,8 +96,8 @@ func getPstValue(
 
     for phase in Phase:
         result[phase] =
-            evalParameters[phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
-            evalParameters[phase].pst[ourKing][kingSquare[ourKing]][piece][square]
+            evalParameters[0][phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
+            evalParameters[0][phase].pst[ourKing][kingSquare[ourKing]][piece][square]
 
     when gradient isnot Nothing:
 
@@ -117,8 +117,8 @@ func getPstValue(
                     (currentKingSquare.mirrorVertically, square.mirrorVertically)
                 ]:
                     let f = gradient.g * multiplier
-                    gradient.evalParams[][opening].pst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                    gradient.evalParams[][endgame].pst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+                    gradient.evalParams[][0][opening].pst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                    gradient.evalParams[][0][endgame].pst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pawnMaskIndex*(
     position: Position,
@@ -164,7 +164,7 @@ func pawnStructureBonus(
     let rank = if us == white: rank else: 3 - rank
     
     let index = position.pawnMaskIndex(square, us)
-    result.addValue(evalParameters, gradient, us, pawnStructureBonus[0][rank][index])
+    result.addValue(evalParameters, gradient, us, pawnStructureBonus[rank][index])
 
 func pawnRelativeToPiece(
     evalParameters: EvalParameters,
@@ -180,11 +180,11 @@ func pawnRelativeToPiece(
 
         for pieceSquare in position[us] and position[piece]:
             let pieceSquare = pieceSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToOurPiece[0][square][piece][pieceSquare])
+            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToOurPiece[square][piece][pieceSquare])
 
         for pieceSquare in position[us.opposite] and position[piece]:
             let pieceSquare = pieceSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToEnemyPiece[0][square][piece][pieceSquare])
+            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToEnemyPiece[square][piece][pieceSquare])
 
 func mobility(
     evalParameters: EvalParameters,

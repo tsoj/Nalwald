@@ -8,9 +8,9 @@ type OurKingOrEnemyKing* = enum
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
     pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pawnStructureBonus*{.requiresInit.}: seq[array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]] # needs to be set to length 1 (is too big for the stack)
-    bonusPawnRelativeToOurPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
-    bonusPawnRelativeToEnemyPiece*{.requiresInit.}: seq[array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
+    pawnStructureBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
+    bonusPawnRelativeToOurPiece*: array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]
+    bonusPawnRelativeToEnemyPiece*: array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]
     bonusPassedPawnCanMove*: array[8, ValueType]
     bonusKnightAttackingPiece*: ValueType
     bonusPieceForkedMajorPieces*: ValueType
@@ -24,15 +24,16 @@ type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
-type EvalParametersFloat* = EvalParametersTemplate[float32]
+type EvalParametersFloat* {.requiresInit.} = seq[EvalParametersTemplate[float32]]
 
-type EvalParameters* = EvalParametersTemplate[Value]
+type EvalParameters* {.requiresInit.} = seq[EvalParametersTemplate[Value]]
 
 func newEvalParamatersFloat*(): EvalParametersFloat =
-    for phase in Phase:
-        result[phase].pawnStructureBonus.setLen 1
-        result[phase].bonusPawnRelativeToOurPiece.setLen 1
-        result[phase].bonusPawnRelativeToEnemyPiece.setLen 1
+    newSeq[EvalParametersTemplate[float32]](1)
+
+func newEvalParamaters*(): EvalParameters =
+    newSeq[EvalParametersTemplate[Value]](1)
+
 
 func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
 
@@ -77,6 +78,10 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
     transform(a, a, proc(x: var float32, y: float32) = x *= b)
 
 func convert*(a: auto, T: typedesc): T =
+    when T is EvalParametersFloat:
+        result = newEvalParamatersFloat()
+    elif T is EvalParameters:
+        result = newEvalParamaters()
     transform(result, a)
 
 
@@ -93,8 +98,7 @@ func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     transform(a, b, proc(x: var float32, y: float32) = x *= y)
 
 func `*=`*(a: var EvalParametersFloat, b: float32) =
-    for phase in Phase:
-        a[phase] *= b
+    transform(a, a, proc(x: var float32, y: float32) = x *= b)
 
 func setAll*(a: var EvalParametersFloat, b: float32) =
     transform(a, a, proc(x: var float32, y: float32) = x = b)
