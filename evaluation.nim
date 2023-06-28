@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 133.Value,
-        knight: 435.Value,
-        bishop: 465.Value,
-        rook: 648.Value,
-        queen: 1436.Value,
+        pawn: 136.Value,
+        knight: 440.Value,
+        bishop: 474.Value,
+        rook: 668.Value,
+        queen: 1417.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -166,25 +166,26 @@ func pawnStructureBonus(
     let index = position.pawnMaskIndex(square, us)
     result.addValue(evalParameters, gradient, us, pawnStructureBonus[rank][index])
 
-func pawnRelativeToPiece(
+func pieceRelativeToPiece(
     evalParameters: EvalParameters,
     position: Position,
-    square: Square,
+    ourPiece: static Piece,
+    ourSquare: Square,
     us: Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
-    let square = square.colorConditionalMirror(us)
+    let ourSquare = ourSquare.colorConditionalMirror(us)
     
-    for piece in knight..queen:
+    for otherPiece in knight..queen:
 
-        for pieceSquare in position[us] and position[piece]:
-            let pieceSquare = pieceSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToOurPiece[square][piece][pieceSquare])
+        for otherSquare in position[us] and position[otherPiece]:
+            let otherSquare = otherSquare.colorConditionalMirror(us)
+            result.addValue(evalParameters, gradient, us, bonusPieceRelativeToOurPiece[ourPiece][ourSquare][otherPiece][otherSquare])
 
-        for pieceSquare in position[us.opposite] and position[piece]:
-            let pieceSquare = pieceSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPawnRelativeToEnemyPiece[square][piece][pieceSquare])
+        for otherSquare in position[us.opposite] and position[otherPiece]:
+            let otherSquare = otherSquare.colorConditionalMirror(us)
+            result.addValue(evalParameters, gradient, us, bonusPieceRelativeToEnemyPiece[ourPiece][ourSquare][otherPiece][otherSquare])
 
 func mobility(
     evalParameters: EvalParameters,
@@ -259,9 +260,6 @@ func evaluatePawn(
         # passed pawn can move forward
         let index = square.colorConditionalMirror(us).int div 8
         result.addValue(evalParameters, gradient, us, bonusPassedPawnCanMove[index])
-
-    # pawn relative to our pieces
-    result += evalParameters.pawnRelativeToPiece(position, square, us, gradient)
 
 #-------------- knight evaluation --------------#
 
@@ -412,12 +410,19 @@ func evaluatePiece(
 
     result.addValue(evalParameters, gradient, us, pieceValues[piece])
 
+    # piece type specific eval parameters
     result += evaluationFunctions[piece](position, square, us, kingSquare, evalParameters, gradient)
+
+    # king-relative piece square table
     result += evalParameters.getPstValue(
         square, piece, us,
         kingSquare,
         gradient
     )
+
+    # piece-relative piece square table
+    when piece != king:
+        result += evalParameters.pieceRelativeToPiece(position, piece, square, us, gradient)
     
 func evaluatePieceType(
     position: Position,
