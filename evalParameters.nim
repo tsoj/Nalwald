@@ -2,23 +2,18 @@ import types
 
 import std/random
 
-type OurKingOrEnemyKing* = enum
-    ourKing, enemyKing
+type Relativity* = enum
+    relativeToUs, relativeToEnemy
 
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceValues*: array[pawn..king, ValueType]
-    pst*: array[ourKing..enemyKing, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
+    kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
+    pieceRelativePst*: array[Relativity, array[pawn..queen, array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]]
     pawnStructureBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
-    bonusPieceRelativeToOurPiece*: array[pawn..queen, array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
-    bonusPieceRelativeToEnemyPiece*: array[pawn..queen, array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]
     bonusPassedPawnCanMove*: array[8, ValueType]
-    bonusKnightAttackingPiece*: ValueType
     bonusPieceForkedMajorPieces*: ValueType
-    bonusBothBishops*: ValueType
-    bonusRookOnOpenFile*: ValueType
     bonusMobility*: array[knight..queen, array[32, ValueType]]
-    bonusAttackingPiece*: array[knight..queen, array[pawn..king, ValueType]]
-    bonusTargetingKingArea*: array[bishop..queen, ValueType]
+    bonusAttackingPiece*: array[bishop..queen, array[pawn..king, ValueType]]
     bonusKingSafety*: array[32, ValueType]
     bonusAttackersNearKing*: array[5*5, ValueType]
 

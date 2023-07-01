@@ -12,10 +12,10 @@ import
 func value*(piece: Piece): Value =
     const table = [
         pawn: 136.Value,
-        knight: 440.Value,
-        bishop: 474.Value,
+        knight: 439.Value,
+        bishop: 475.Value,
         rook: 668.Value,
-        queen: 1417.Value,
+        queen: 1419.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -90,18 +90,18 @@ func getPstValue(
         enemy = us.opposite
         square = square.colorConditionalMirror(us)
         kingSquare = [
-            ourKing: kingSquare[us].colorConditionalMirror(us),
-            enemyKing: kingSquare[enemy].colorConditionalMirror(enemy)
+            relativeToUs: kingSquare[us].colorConditionalMirror(us),
+            relativeToEnemy: kingSquare[enemy].colorConditionalMirror(enemy)
         ]
 
     for phase in Phase:
         result[phase] =
-            evalParameters[0][phase].pst[enemyKing][kingSquare[enemyKing]][piece][square] +
-            evalParameters[0][phase].pst[ourKing][kingSquare[ourKing]][piece][square]
+            evalParameters[0][phase].kingRelativePst[relativeToEnemy][kingSquare[relativeToEnemy]][piece][square] +
+            evalParameters[0][phase].kingRelativePst[relativeToUs][kingSquare[relativeToUs]][piece][square]
 
     when gradient isnot Nothing:
 
-        for whoseKing in ourKing..enemyKing:
+        for whoseKing in relativeToUs..relativeToEnemy:
             for currentKingSquare in a1..h8:
                 let multiplier = (if us == black: -1.0 else: 1.0) * (if currentKingSquare == kingSquare[whoseKing]:
                     2.0
@@ -117,8 +117,8 @@ func getPstValue(
                     (currentKingSquare.mirrorVertically, square.mirrorVertically)
                 ]:
                     let f = gradient.g * multiplier
-                    gradient.evalParams[][0][opening].pst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                    gradient.evalParams[][0][endgame].pst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+                    gradient.evalParams[][0][opening].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                    gradient.evalParams[][0][endgame].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pawnMaskIndex*(
     position: Position,
@@ -175,17 +175,18 @@ func pieceRelativeToPiece(
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
-    let ourSquare = ourSquare.colorConditionalMirror(us)
+    let
+        ourSquare = ourSquare.colorConditionalMirror(us)
+        otherPieces = [
+            relativeToUs: position[us],
+            relativeToEnemy: position[us.opposite]
+        ]
     
     for otherPiece in knight..queen:
-
-        for otherSquare in position[us] and position[otherPiece]:
-            let otherSquare = otherSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPieceRelativeToOurPiece[ourPiece][ourSquare][otherPiece][otherSquare])
-
-        for otherSquare in position[us.opposite] and position[otherPiece]:
-            let otherSquare = otherSquare.colorConditionalMirror(us)
-            result.addValue(evalParameters, gradient, us, bonusPieceRelativeToEnemyPiece[ourPiece][ourSquare][otherPiece][otherSquare])
+        for relativity in relativeToUs..relativeToEnemy:
+            for otherSquare in otherPieces[relativity] and position[otherPiece]:
+                let otherSquare = otherSquare.colorConditionalMirror(us)
+                result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
 
 func mobility(
     evalParameters: EvalParameters,
@@ -198,21 +199,6 @@ func mobility(
     let reachableSquares = (attackMask and not position[us]).countSetBits
     result.addValue(evalParameters, gradient, us, bonusMobility[piece][reachableSquares])
 
-func targetingKingArea(
-    evalParameters: EvalParameters,
-    position: Position,
-    piece: static Piece,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    attackMask: Bitboard,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-    # knight and pawn are not included, as the king contextual piece square tables are enough in this case
-    static: doAssert piece in bishop..queen
-    let enemy = us.opposite
-    if (attackMask and king.attackMask(kingSquare[enemy], 0)) != 0:
-        result.addValue(evalParameters, gradient, us, bonusTargetingKingArea[piece])
-    
 func attackingPiece(
     evalParameters: EvalParameters,
     position: Position,
@@ -221,7 +207,7 @@ func attackingPiece(
     attackMask: Bitboard,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    static: doAssert piece in knight..queen
+    static: doAssert piece in bishop..queen
     for attackedPiece in pawn..king:
         if (attackMask and position[us.opposite] and position[attackedPiece]) != 0:
             result.addValue(evalParameters, gradient, us, bonusAttackingPiece[piece][attackedPiece])
@@ -280,13 +266,6 @@ func evaluateKnight(
     # forks
     result += evalParameters.forkingMajorPieces(position, us, attackMask, gradient)
 
-    # attacking pieces
-    result += evalParameters.attackingPiece(position, knight, us, attackMask, gradient)
-
-    # attacking bishop, rook, or queen
-    if (attackMask and position[us.opposite] and (position[bishop] or position[rook] or position[queen])) != 0:
-        result.addValue(evalParameters, gradient, us, bonusKnightAttackingPiece)
-
 #-------------- bishop evaluation --------------#
 
 func evaluateBishop(
@@ -308,15 +287,6 @@ func evaluateBishop(
 
     # attacking pieces
     result += evalParameters.attackingPiece(position, bishop, us, attackMask, gradient)
-    
-    # targeting enemy king area
-    result += evalParameters.targetingKingArea(
-        position, bishop, us, kingSquare, attackMask, gradient
-    )
-    
-    # both bishops
-    if (position[us] and position[bishop] and not square.toBitboard) != 0:
-        result.addValue(evalParameters, gradient, us, bonusBothBishops)
 
 #-------------- rook evaluation --------------#
 
@@ -336,15 +306,6 @@ func evaluateRook(
 
     # attacking pieces
     result += evalParameters.attackingPiece(position, rook, us, attackMask, gradient)
-    
-    # targeting enemy king area
-    result += evalParameters.targetingKingArea(
-        position, rook, us, kingSquare, attackMask, gradient
-    )
-    
-    # rook on open file
-    if (files[square] and position[pawn]) == 0:
-        result.addValue(evalParameters, gradient, us, bonusRookOnOpenFile)
 
 #-------------- queen evaluation --------------#
 
@@ -364,11 +325,6 @@ func evaluateQueen(
 
     # attacking pieces
     result += evalParameters.attackingPiece(position, queen, us, attackMask, gradient)
-    
-    # targeting enemy king area
-    result += evalParameters.targetingKingArea(
-        position, queen, us, kingSquare, attackMask, gradient
-    )
 
 #-------------- king evaluation --------------#
 
