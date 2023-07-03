@@ -251,7 +251,7 @@ func search(
             newDepth = depth
             newBeta = beta
 
-        if not (givingCheck or inCheck):
+        if not givingCheck:
 
             # late move reduction
             if moveCounter > 3 and not move.isTactical:
