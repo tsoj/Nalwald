@@ -35,7 +35,6 @@ nim modern Nalwald.nim
   - Piece-relative piece square tables
   - 3x3 pawn structure tables
   - Passed pawns
-  - Pieces attacking area around king
   - Tapered parameters
   - Optimized using gradient descent
 - Search:
@@ -108,8 +107,8 @@ optimized using a method like gradient descent.
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 17.1    |          – |         – |           – |  June 20, 2023 |
-| 17      |          – |      3195 |        3052 |   June 5, 2023 |
+| 17.1    |       3133 |         – |           – |  June 20, 2023 |
+| 17      |          – |      3194 |        3053 |   June 5, 2023 |
 | 16      |       2946 |      3012 |        2994 |  July 11, 2022 |
 | 15      |       2881 |      2932 |        2921 |    Feb 8, 2022 |
 | 14      |       2826 |         – |        2825 |   Sep 16, 2021 |

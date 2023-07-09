@@ -271,14 +271,7 @@ func evaluateKing(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-
-    # kingsafety by pawn shielding
-    let numPossibleQueenAttack = queen.attackMask(square, position[pawn] and position[us]).countSetBits
-    result.addValue(evalParameters, gradient, us, bonusKingSafety[numPossibleQueenAttack])
-
-    # numbers of attackers near king
-    let numNearAttackers = (position[us.opposite] and mask5x5[square]).countSetBits
-    result.addValue(evalParameters, gradient, us, bonusAttackersNearKing[numNearAttackers])
+    discard
 
 func evaluatePiece(
     position: Position,

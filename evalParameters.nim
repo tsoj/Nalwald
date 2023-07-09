@@ -11,8 +11,6 @@ type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceRelativePst*: array[Relativity, array[pawn..queen, array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]]
     pawnStructureBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
     bonusPassedPawnCanMove*: array[8, ValueType]
-    bonusKingSafety*: array[32, ValueType]
-    bonusAttackersNearKing*: array[5*5, ValueType]
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
