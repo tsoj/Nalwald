@@ -27,6 +27,7 @@ optimization
 *.sh
 vgcore.*
 *ptimizationResult*
+network_*.json
 game
 removeNonQuietPositions
 generatePositions

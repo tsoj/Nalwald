@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 136.Value,
-        knight: 439.Value,
-        bishop: 475.Value,
-        rook: 668.Value,
-        queen: 1419.Value,
+        pawn: 135.Value,
+        knight: 438.Value,
+        bishop: 473.Value,
+        rook: 667.Value,
+        queen: 1417.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -188,40 +188,6 @@ func pieceRelativeToPiece(
                 let otherSquare = otherSquare.colorConditionalMirror(us)
                 result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
 
-func mobility(
-    evalParameters: EvalParameters,
-    position: Position,
-    piece: static Piece,
-    us: Color,
-    attackMask: Bitboard,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-    let reachableSquares = (attackMask and not position[us]).countSetBits
-    result.addValue(evalParameters, gradient, us, bonusMobility[piece][reachableSquares])
-
-func attackingPiece(
-    evalParameters: EvalParameters,
-    position: Position,
-    piece: static Piece,
-    us: Color,
-    attackMask: Bitboard,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-    static: doAssert piece in bishop..queen
-    for attackedPiece in pawn..king:
-        if (attackMask and position[us.opposite] and position[attackedPiece]) != 0:
-            result.addValue(evalParameters, gradient, us, bonusAttackingPiece[piece][attackedPiece])
-
-func forkingMajorPieces(
-    evalParameters: EvalParameters,
-    position: Position,
-    us: Color,
-    attackMask: Bitboard,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-    if (attackMask and position[us.opposite] and (position[queen] or position[rook])).countSetBits >= 2:
-        result.addValue(evalParameters, gradient, us, bonusPieceForkedMajorPieces)
-
 #-------------- pawn evaluation --------------#
 
 func evaluatePawn(
@@ -257,14 +223,7 @@ func evaluateKnight(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-
-    let attackMask = knight.attackMask(square, position.occupancy)
-    
-    # mobility
-    result += evalParameters.mobility(position, knight, us, attackMask, gradient)
-
-    # forks
-    result += evalParameters.forkingMajorPieces(position, us, attackMask, gradient)
+    discard
 
 #-------------- bishop evaluation --------------#
 
@@ -276,17 +235,7 @@ func evaluateBishop(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-
-    let attackMask = bishop.attackMask(square, position.occupancy)
-
-    # mobility
-    result += evalParameters.mobility(position, bishop, us, attackMask, gradient)
-
-    # forks
-    result += evalParameters.forkingMajorPieces(position, us, attackMask, gradient)
-
-    # attacking pieces
-    result += evalParameters.attackingPiece(position, bishop, us, attackMask, gradient)
+    discard
 
 #-------------- rook evaluation --------------#
 
@@ -298,14 +247,7 @@ func evaluateRook(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-
-    let attackMask = rook.attackMask(square, position.occupancy)
-
-    # mobility
-    result += evalParameters.mobility(position, rook, us, attackMask, gradient)
-
-    # attacking pieces
-    result += evalParameters.attackingPiece(position, rook, us, attackMask, gradient)
+    discard
 
 #-------------- queen evaluation --------------#
 
@@ -317,14 +259,7 @@ func evaluateQueen(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-
-    let attackMask = queen.attackMask(square, position.occupancy)
-
-    # mobility
-    result += evalParameters.mobility(position, queen, us, attackMask, gradient)
-
-    # attacking pieces
-    result += evalParameters.attackingPiece(position, queen, us, attackMask, gradient)
+    discard
 
 #-------------- king evaluation --------------#
 
