@@ -31,8 +31,8 @@ nim modern Nalwald.nim
 ### Features
 
 - Evaluation:
-  - King contextual piece square tables
-  - Pawn contextual piece square tables
+  - King-relative piece square tables
+  - Piece-relative piece square tables
   - 3x3 pawn structure tables
   - Passed pawns
   - Mobility
@@ -91,8 +91,8 @@ the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
 During the development of Nalwald I also introduced some methods that I believe
 are novelties in the chess programming space:
-- *Pawn contextual PSTs* are piece square tables that are different depending on
-where a pawn is. They are added together for all pawns.
+- *Piece-relative PSTs* are piece square tables that are different depending on
+where a piece is. They are added together for all pieces of all piece types.
 - *Futility reductions* are an improvement to futility pruning. Here not only are moves
 skipped that are likely to be much worse than alpha. Additionally, moves that are likely
 slightly worse than alpha get their depth reduced accordingly to how bad they are
