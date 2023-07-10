@@ -12,10 +12,10 @@ import
 func value*(piece: Piece): Value =
     const table = [
         pawn: 135.Value,
-        knight: 438.Value,
+        knight: 437.Value,
         bishop: 473.Value,
         rook: 667.Value,
-        queen: 1417.Value,
+        queen: 1416.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -102,23 +102,21 @@ func getPstValue(
     when gradient isnot Nothing:
 
         for whoseKing in relativeToUs..relativeToEnemy:
-            for currentKingSquare in a1..h8:
-                let multiplier = (if us == black: -1.0 else: 1.0) * (if currentKingSquare == kingSquare[whoseKing]:
-                    2.0
-                elif (currentKingSquare.toBitboard and mask3x3[kingSquare[whoseKing]]) != 0:
-                    0.5
-                elif (currentKingSquare.toBitboard and mask5x5[kingSquare[whoseKing]]) != 0:
-                    0.1
-                else:
-                    continue)
+            let kingSquare = kingSquare[whoseKing]
+            for (kingSquaresBitboard, multiplier) in [
+                (kingSquare.toBitboard, 1.5),
+                (mask3x3[kingSquare], 0.4),
+                (mask5x5[kingSquare], 0.1)
+            ]:
+                for kingSquare in kingSquaresBitboard:
 
-                for (kingSquare, pieceSquare) in [
-                    (currentKingSquare, square),
-                    (currentKingSquare.mirrorVertically, square.mirrorVertically)
-                ]:
-                    let f = gradient.g * multiplier
-                    gradient.evalParams[][0][opening].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                    gradient.evalParams[][0][endgame].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+                    for (kingSquare, pieceSquare) in [
+                        (kingSquare, square),
+                        (kingSquare.mirrorVertically, square.mirrorVertically)
+                    ]:
+                        let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
+                        gradient.evalParams[][0][opening].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                        gradient.evalParams[][0][endgame].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pawnMaskIndex*(
     position: Position,
@@ -208,10 +206,6 @@ func evaluatePawn(
             kingSquare,
             gradient
         )
-
-        # passed pawn can move forward
-        let index = square.colorConditionalMirror(us).int div 8
-        result.addValue(evalParameters, gradient, us, bonusPassedPawnCanMove[index])
 
 #-------------- knight evaluation --------------#
 
