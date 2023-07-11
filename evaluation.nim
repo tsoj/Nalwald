@@ -180,7 +180,7 @@ func pieceRelativeToPiece(
             relativeToEnemy: position[us.opposite]
         ]
     
-    for otherPiece in knight..queen:
+    for otherPiece in pawn..queen:
         for relativity in relativeToUs..relativeToEnemy:
             for otherSquare in otherPieces[relativity] and position[otherPiece]:
                 let otherSquare = otherSquare.colorConditionalMirror(us)
@@ -299,7 +299,7 @@ func evaluatePiece(
     )
 
     # piece-relative piece square table
-    when piece != king:
+    when piece notin [king, pawn]:
         result += evalParameters.pieceRelativeToPiece(position, piece, square, us, gradient)
     
 func evaluatePieceType(
