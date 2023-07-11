@@ -46,6 +46,10 @@ func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
     for phase in Phase:
         a[phase] -= b[phase]
 
+func `*=`[T: Value or float32](a: var array[Phase, T], b: T) =
+    for phase in Phase:
+        a[phase] *= b
+
 func colorConditionalMirror(x: Square or Bitboard, color: Color): auto =
     if color == black:
         x.mirror
@@ -77,11 +81,11 @@ template addValue(
         getParameter(opening, gradient.evalParams[][0], parameter) += f * gradient.gamePhaseFactor
         getParameter(endgame, gradient.evalParams[][0], parameter) += f * (1.0 - gradient.gamePhaseFactor)
 
-func getPstValue(
+func kingRelativePst(
     evalParameters: EvalParameters,
     square: Square,
     piece: static Piece,
-    us: Color,
+    us: static Color,
     kingSquare: array[white..black, Square],
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
@@ -164,12 +168,12 @@ func pawnStructureBonus(
     let index = position.pawnMaskIndex(square, us)
     result.addValue(evalParameters, gradient, us, pawnStructureBonus[rank][index])
 
-func pieceRelativeToPiece(
+func pieceRelativePst(
     evalParameters: EvalParameters,
     position: Position,
     ourPiece: static Piece,
     ourSquare: Square,
-    us: Color,
+    us: static Color,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
@@ -186,88 +190,7 @@ func pieceRelativeToPiece(
                 let otherSquare = otherSquare.colorConditionalMirror(us)
                 result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
 
-#-------------- pawn evaluation --------------#
-
-func evaluatePawn(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-
-    # passed pawn
-    let isPassed = position.isPassedPawn(us, square)
-    if isPassed:
-        result += evalParameters.getPstValue(
-            square, noPiece, # noPiece stands for passed pawn
-            us,
-            kingSquare,
-            gradient
-        )
-
-#-------------- knight evaluation --------------#
-
-func evaluateKnight(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-    discard
-
-#-------------- bishop evaluation --------------#
-
-func evaluateBishop(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-    discard
-
-#-------------- rook evaluation --------------#
-
-func evaluateRook(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-    discard
-
-#-------------- queen evaluation --------------#
-
-func evaluateQueen(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-    discard
-
-#-------------- king evaluation --------------#
-
-func evaluateKing(
-    position: Position,
-    square: Square,
-    us: Color,
-    kingSquare: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
-): array[Phase, Value] {.inline.} =
-    discard
-
-func evaluatePiece(
+func evaluatePieceFromWhitesPerspective(
     position: Position,
     piece: static Piece,
     square: Square,
@@ -276,54 +199,48 @@ func evaluatePiece(
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
-    const evaluationFunctions = [
-        pawn: evaluatePawn[GradientOrNothing],
-        knight: evaluateKnight[GradientOrNothing],
-        bishop: evaluateBishop[GradientOrNothing],
-        rook: evaluateRook[GradientOrNothing],
-        queen: evaluateQueen[GradientOrNothing],
-        king: evaluateKing[GradientOrNothing]
-    ]
     static: doAssert piece != noPiece
 
     result.addValue(evalParameters, gradient, us, pieceValues[piece])
 
-    # piece type specific eval parameters
-    result += evaluationFunctions[piece](position, square, us, kingSquare, evalParameters, gradient)
-
     # king-relative piece square table
-    result += evalParameters.getPstValue(
+    result += evalParameters.kingRelativePst(
         square, piece, us,
         kingSquare,
         gradient
     )
+    when piece == pawn:
+        if position.isPassedPawn(us, square):
+            result += evalParameters.kingRelativePst(
+                square, noPiece, # noPiece stands for passed pawn
+                us,
+                kingSquare,
+                gradient
+            )
 
     # piece-relative piece square table
     when piece notin [king, pawn]:
-        result += evalParameters.pieceRelativeToPiece(position, piece, square, us, gradient)
+        result += evalParameters.pieceRelativePst(position, piece, square, us, gradient)
+
+    when us == black:
+        result *= -1
     
-func evaluatePieceType(
+func evaluatePieceTypeFromWhitesPerspective(
     position: Position,
     piece: static Piece,
-    us: static Color,
     kingSquare: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.}  =
     
-    template evaluatePiece(square: Square, us): auto =
-        position.evaluatePiece(
-            piece, square,
-            us,
-            kingSquare,
-            evalParameters, gradient
-        )
-     
-    for square in (position[piece] and position[us]):
-        result += evaluatePiece(square, us)
-
-    for square in (position[piece] and position[us.opposite]):
-        result -= evaluatePiece(square, us.opposite)
+    for us in (white, black).fields:
+        for square in (position[piece] and position[us]):
+            result += position.evaluatePieceFromWhitesPerspective(
+                piece, square,
+                us,
+                kingSquare,
+                evalParameters, gradient
+            )
 
 func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value {.inline.} =
     if position.halfmoveClock >= 100:
@@ -338,10 +255,11 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     
     # evaluating pieces
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
+        let pieceTypeValue = position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquare, evalParameters, gradient)
         if position.us == white:
-            value += position.evaluatePieceType(piece, white, kingSquare, evalParameters, gradient)
+            value += pieceTypeValue
         else:
-            value += position.evaluatePieceType(piece, black, kingSquare, evalParameters, gradient)
+            value -= pieceTypeValue
 
     # evaluation pawn patters
     for rankAndSquareList in (
