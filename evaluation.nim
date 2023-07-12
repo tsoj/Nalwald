@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 134.Value,
-        knight: 434.Value,
-        bishop: 469.Value,
-        rook: 663.Value,
-        queen: 1406.Value,
+        pawn: 132.Value,
+        knight: 437.Value,
+        bishop: 470.Value,
+        rook: 659.Value,
+        queen: 1416.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -50,9 +50,9 @@ func `*=`[T: Value or float32](a: var array[Phase, T], b: T) =
     for phase in Phase:
         a[phase] *= b
 
-func colorConditionalMirror(x: Square or Bitboard, color: Color): auto =
+func colorConditionalMirrorVertically(x: Square or Bitboard, color: Color): auto =
     if color == black:
-        x.mirror
+        x.mirrorVertically
     else:
         x
 
@@ -92,10 +92,10 @@ func kingRelativePst(
 
     let
         enemy = us.opposite
-        square = square.colorConditionalMirror(us)
+        square = square.colorConditionalMirrorVertically(us)
         kingSquares = [
-            relativeToUs: kingSquares[us].colorConditionalMirror(us),
-            relativeToEnemy: kingSquares[enemy].colorConditionalMirror(enemy)
+            relativeToUs: kingSquares[us].colorConditionalMirrorVertically(us),
+            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(enemy)
         ]
 
     for phase in Phase:
@@ -116,38 +116,66 @@ func kingRelativePst(
 
                     for (kingSquare, pieceSquare) in [
                         (kingSquare, square),
-                        (kingSquare.mirrorVertically, square.mirrorVertically)
+                        (kingSquare.mirrorHorizontally, square.mirrorHorizontally)
                     ]:
                         let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
                         gradient.evalParams[][0][opening].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
                         gradient.evalParams[][0][endgame].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
+func pieceRelativePst(
+    evalParameters: EvalParameters,
+    position: Position,
+    ourPiece: static Piece,
+    ourSquare: Square,
+    us: static Color,
+    gradient: var GradientOrNothing
+): array[Phase, Value] =
+
+    let
+        ourSquare = ourSquare.colorConditionalMirrorVertically(us)
+        otherPieces = [
+            relativeToUs: position[us],
+            relativeToEnemy: position[us.opposite]
+        ]
+    
+    for otherPiece in pawn..queen:
+        for relativity in relativeToUs..relativeToEnemy:
+            for otherSquare in otherPieces[relativity] and position[otherPiece]:
+                let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
+                result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
+
 func pawnMaskIndex*(
     position: Position,
     square: static Square,
-    us: Color,
-    doChecks: static bool = false
+    us: static Color,
+    mirrorHorizontally: static bool = false
 ): int =
 
-    let square = square.colorConditionalMirror(us)
+    let square = square.colorConditionalMirrorVertically(us)
 
     assert not square.isEdge
     assert square >= b2
 
-    when doChecks:
-        if square.isEdge: # includes cases when square < b2
-            raise newException(ValueError, "Can't calculate pawn mask index of edge square")
-
     let
-        ourPawns = (position[us] and position[pawn]).colorConditionalMirror(us) shr (square.int8 - b2.int8)
-        enemyPawns = (position[us.opposite] and position[pawn]).colorConditionalMirror(us) shr (square.int8 - b2.int8)
+        ourPawns = (position[us] and position[pawn]).colorConditionalMirrorVertically(us) shr (square.int8 - b2.int8)
+        enemyPawns = (position[us.opposite] and position[pawn]).colorConditionalMirrorVertically(us) shr (square.int8 - b2.int8)
 
     var counter = 1
-    for bit in [
-        a3.toBitboard, b3.toBitboard, c3.toBitboard,
-        a2.toBitboard, b2.toBitboard, c2.toBitboard,
-        a1.toBitboard, b1.toBitboard, c1.toBitboard
-    ]:
+
+    const bits = when mirrorHorizontally:
+        [
+            c3.toBitboard, b3.toBitboard, a3.toBitboard,
+            c2.toBitboard, b2.toBitboard, a2.toBitboard,
+            c1.toBitboard, b1.toBitboard, a1.toBitboard
+        ]
+    else:
+        [
+            a3.toBitboard, b3.toBitboard, c3.toBitboard,
+            a2.toBitboard, b2.toBitboard, c2.toBitboard,
+            a1.toBitboard, b1.toBitboard, c1.toBitboard
+        ]
+
+    for bit in bits:
         if (ourPawns and bit) != 0:
             result += counter * 2
         elif (enemyPawns and bit) != 0:
@@ -173,27 +201,15 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
                 let index = position.pawnMaskIndex(square, white)
                 result.addValue(evalParameters, gradient, white, pawnStructureBonus[rank][index])
 
-func pieceRelativePst(
-    evalParameters: EvalParameters,
-    position: Position,
-    ourPiece: static Piece,
-    ourSquare: Square,
-    us: static Color,
-    gradient: var GradientOrNothing
-): array[Phase, Value] =
-
-    let
-        ourSquare = ourSquare.colorConditionalMirror(us)
-        otherPieces = [
-            relativeToUs: position[us],
-            relativeToEnemy: position[us.opposite]
-        ]
-    
-    for otherPiece in pawn..queen:
-        for relativity in relativeToUs..relativeToEnemy:
-            for otherSquare in otherPieces[relativity] and position[otherPiece]:
-                let otherSquare = otherSquare.colorConditionalMirror(us)
-                result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
+                when gradient isnot Nothing:
+                    var dummy: array[Phase, Value]
+                    let mirroredIndex = position.pawnMaskIndex(square, white, mirrorHorizontally = true)                    
+                    dummy.addValue(evalParameters, gradient, white, pawnStructureBonus[rank][mirroredIndex])
+                    let
+                        indexBlack = position.pawnMaskIndex(square, black)
+                        mirroredIndexBlack = position.pawnMaskIndex(square, black, mirrorHorizontally = true)
+                    dummy.addValue(evalParameters, gradient, black, pawnStructureBonus[rank][indexBlack])
+                    dummy.addValue(evalParameters, gradient, black, pawnStructureBonus[rank][mirroredIndexBlack])
 
 func evaluatePieceFromPieceColorPerspective(
     position: Position,
@@ -205,8 +221,6 @@ func evaluatePieceFromPieceColorPerspective(
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
     static: doAssert piece != noPiece
-
-    result.addValue(evalParameters, gradient, pieceColor, pieceValues[piece])
 
     # king-relative piece square table
     result += evalParameters.kingRelativePst(

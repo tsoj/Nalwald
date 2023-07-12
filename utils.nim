@@ -59,10 +59,10 @@ func toColoredPiece*(s: char): ColoredPiece =
     let color = if s.isLowerAscii: black else: white
     ColoredPiece(color: color, piece: piece)
 
-func mirror*(square: Square): Square =
+func mirrorVertically*(square: Square): Square =
     (square.int8 xor 56).Square
 
-func mirrorVertically*(square: Square): Square =
+func mirrorHorizontally*(square: Square): Square =
     (square.int8 xor 7).Square
 
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
