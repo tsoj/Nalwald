@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 135.Value,
-        knight: 437.Value,
-        bishop: 473.Value,
-        rook: 667.Value,
-        queen: 1416.Value,
+        pawn: 134.Value,
+        knight: 434.Value,
+        bishop: 469.Value,
+        rook: 663.Value,
+        queen: 1406.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -86,27 +86,27 @@ func kingRelativePst(
     square: Square,
     piece: static Piece,
     us: static Color,
-    kingSquare: array[white..black, Square],
+    kingSquares: array[white..black, Square],
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
 
     let
         enemy = us.opposite
         square = square.colorConditionalMirror(us)
-        kingSquare = [
-            relativeToUs: kingSquare[us].colorConditionalMirror(us),
-            relativeToEnemy: kingSquare[enemy].colorConditionalMirror(enemy)
+        kingSquares = [
+            relativeToUs: kingSquares[us].colorConditionalMirror(us),
+            relativeToEnemy: kingSquares[enemy].colorConditionalMirror(enemy)
         ]
 
     for phase in Phase:
         result[phase] =
-            evalParameters[0][phase].kingRelativePst[relativeToEnemy][kingSquare[relativeToEnemy]][piece][square] +
-            evalParameters[0][phase].kingRelativePst[relativeToUs][kingSquare[relativeToUs]][piece][square]
+            evalParameters[0][phase].kingRelativePst[relativeToEnemy][kingSquares[relativeToEnemy]][piece][square] +
+            evalParameters[0][phase].kingRelativePst[relativeToUs][kingSquares[relativeToUs]][piece][square]
 
     when gradient isnot Nothing:
 
         for whoseKing in relativeToUs..relativeToEnemy:
-            let kingSquare = kingSquare[whoseKing]
+            let kingSquare = kingSquares[whoseKing]
             for (kingSquaresBitboard, multiplier) in [
                 (kingSquare.toBitboard, 1.5),
                 (mask3x3[kingSquare], 0.4),
@@ -154,19 +154,24 @@ func pawnMaskIndex*(
             result += counter * 1
         counter *= 3
 
-func pawnStructureBonus(
-    evalParameters: EvalParameters,
+func evaluate3x3PawnStructureFromWhitesPerspective(
     position: Position,
-    square: static Square,
-    rank: static int,
-    us: Color,
+    evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
-    static: doAssert rank in 0..3
-    let rank = if us == white: rank else: 3 - rank
-    
-    let index = position.pawnMaskIndex(square, us)
-    result.addValue(evalParameters, gradient, us, pawnStructureBonus[rank][index])
+
+    for rankAndSquareList in (
+        (0, (b3, c3, d3, e3, f3, g3)),
+        (1, (b4, c4, d4, e4, f4, g4)),
+        (2, (b5, c5, d5, e5, f5, g5)),
+        (3, (b6, c6, d6, e6, f6, g6))
+    ).fields:
+        const (rank, squareList) = rankAndSquareList
+        for square in squareList.fields:
+            if (mask3x3[square] and position[pawn]).countSetBits >= 2:
+                
+                let index = position.pawnMaskIndex(square, white)
+                result.addValue(evalParameters, gradient, white, pawnStructureBonus[rank][index])
 
 func pieceRelativePst(
     evalParameters: EvalParameters,
@@ -190,57 +195,61 @@ func pieceRelativePst(
                 let otherSquare = otherSquare.colorConditionalMirror(us)
                 result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
 
-func evaluatePieceFromWhitesPerspective(
+func evaluatePieceFromPieceColorPerspective(
     position: Position,
     piece: static Piece,
     square: Square,
-    us: static Color,
-    kingSquare: array[white..black, Square],
+    pieceColor: static Color,
+    kingSquares: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.} =
     static: doAssert piece != noPiece
 
-    result.addValue(evalParameters, gradient, us, pieceValues[piece])
+    result.addValue(evalParameters, gradient, pieceColor, pieceValues[piece])
 
     # king-relative piece square table
     result += evalParameters.kingRelativePst(
-        square, piece, us,
-        kingSquare,
+        square, piece, pieceColor,
+        kingSquares,
         gradient
     )
     when piece == pawn:
-        if position.isPassedPawn(us, square):
+        if position.isPassedPawn(pieceColor, square):
             result += evalParameters.kingRelativePst(
                 square, noPiece, # noPiece stands for passed pawn
-                us,
-                kingSquare,
+                pieceColor,
+                kingSquares,
                 gradient
             )
 
     # piece-relative piece square table
     when piece notin [king, pawn]:
-        result += evalParameters.pieceRelativePst(position, piece, square, us, gradient)
+        result += evalParameters.pieceRelativePst(position, piece, square, pieceColor, gradient)
 
-    when us == black:
-        result *= -1
     
 func evaluatePieceTypeFromWhitesPerspective(
     position: Position,
     piece: static Piece,
-    kingSquare: array[white..black, Square],
+    kingSquares: array[white..black, Square],
     evalParameters: EvalParameters,
     gradient: var GradientOrNothing
 ): array[Phase, Value] {.inline.}  =
     
-    for us in (white, black).fields:
-        for square in (position[piece] and position[us]):
-            result += position.evaluatePieceFromWhitesPerspective(
+    for pieceColor in (white, black).fields:
+        for square in (position[piece] and position[pieceColor]):
+            var pieceValue = position.evaluatePieceFromPieceColorPerspective(
                 piece, square,
-                us,
-                kingSquare,
+                pieceColor,
+                kingSquares,
                 evalParameters, gradient
             )
+
+            when pieceColor == black:
+                pieceValue *= -1
+
+            result += pieceValue
+
 
 func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value {.inline.} =
     if position.halfmoveClock >= 100:
@@ -248,39 +257,22 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
     var value = [opening: 0.Value, endgame: 0.Value]
 
-    let kingSquare = [
+    let kingSquares = [
         white: position.kingSquare(white),
         black: position.kingSquare(black)
     ]
     
     # evaluating pieces
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
-        let pieceTypeValue = position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquare, evalParameters, gradient)
-        if position.us == white:
-            value += pieceTypeValue
-        else:
-            value -= pieceTypeValue
+        value += position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquares, evalParameters, gradient)
 
-    # evaluation pawn patters
-    for rankAndSquareList in (
-        (0, (b3, c3, d3, e3, f3, g3)),
-        (1, (b4, c4, d4, e4, f4, g4)),
-        (2, (b5, c5, d5, e5, f5, g5)),
-        (3, (b6, c6, d6, e6, f6, g6))
-    ).fields:
-        const (rank, squareList) = rankAndSquareList
-        for square in squareList.fields:
-            if (mask3x3[square] and position[pawn]).countSetBits >= 2:
-                value += evalParameters.pawnStructureBonus(
-                    position,
-                    square,
-                    rank,
-                    position.us,
-                    gradient
-                )
+    # evaluating 3x3 pawn patters
+    value += position.evaluate3x3PawnStructureFromWhitesPerspective(evalParameters, gradient)
 
     # interpolating between opening and endgame values
     result = position.gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
+    if position.us == black:
+        result *= -1
     doAssert result.abs < valueCheckmate
 
 #-------------- sugar functions --------------#
