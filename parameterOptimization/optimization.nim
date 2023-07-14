@@ -27,7 +27,7 @@ proc optimize(
     lrDecay = 0.98,
     minLearningRate = 500.0,
     maxNumEpochs = 300,
-    discount = 0.9,
+    gradientDecay = 0.9,
     numThreads = 10,
     batchSize = 50_000
 ): EvalParametersFloat =
@@ -75,11 +75,11 @@ proc optimize(
                 let (threadWeight, threadGradient) = ^flowVar
                 totalWeight += threadWeight
                 gradient += threadGradient
-            # smooth the gradient out over previous discounted gradients. Seems to help in optimization speed and the final
+            # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
             # result is better
             gradient *= (1.0/totalWeight)
-            gradient *= 1.0 - discount
-            previousGradient *= discount
+            gradient *= 1.0 - gradientDecay
+            previousGradient *= gradientDecay
             gradient += previousGradient
             previousGradient = gradient
 
@@ -107,9 +107,9 @@ data.loadData("quietSmallPoolGamesNalwald.epd")
 data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 data.loadData("quietSmallPoolGamesNalwald2Labeled.epd", weight = 2.0)
+data.loadData("quietSmallPoolGamesNalwald3.epd")
 
 echo "Total number of entries: ", data.len
-
 
 const k = 1.0
 
