@@ -1,7 +1,7 @@
 <div align="center">
-<p><h1>Nalwald<br>
-<i><h6><sup>Chess engine written in Nim ♜</sup></h6></i>
-<img src="./logo.jpg" style="max-width: 100%; width: 768px;" width="768">
+<p><h1>Nalwald</h1>
+<i><h5>Chess engine written in Nim ♜</h5></i>
+<img src="./logo.jpg" width="768">
 </h1>
 </div>
 
