@@ -1,7 +1,16 @@
-# Nalwald
+<div align="center">
+<p><h1>Nalwald<br>
+<i><h6><sup>Chess engine written in Nim ♜</sup></h6></i>
+<img src="./logo.png">
+</h1>
+</div>
 
-### Chess engine written in Nim
-![](./logo.svg)
+
+
+Nalwald is a Super GM level chess engine for classical and fischer random chess.
+It supports the Universal Chess Interface (UCI), so it can be used with most
+chess GUIs, such as Arena or Cute Chess. Nalwald is written in the programming
+language Nim, a modern compiled systems language.
 
 ### Download
 ```
@@ -11,7 +20,7 @@ Pre-compiled executables for Windows and Linux can be found [here](https://gitla
 
 ### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and the Clang compiler.
+You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and the [Clang](https://clang.llvm.org/) compiler.
 
 **Compiling for native CPU**
 ```
@@ -61,11 +70,6 @@ nim modern Nalwald.nim
   - Additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
 
 ### About
-
-Nalwald is a Super GM level chess engine for classical and fischer random chess.
-It supports the Universal Chess Interface (UCI), so it can be used with most
-chess GUIs, such as Arena or Cute Chess. Nalwald is written in the programming
-language Nim, which is a compiled language with an intuitive and clean syntax.
 
 I began writing chess programs pretty much immediately after my first "Hello world!"
 in 2016. My first big project was *jht-chess*, a chess playing program with
