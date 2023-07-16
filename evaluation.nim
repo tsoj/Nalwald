@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 132.Value,
-        knight: 434.Value,
-        bishop: 467.Value,
-        rook: 658.Value,
-        queen: 1398.Value,
+        pawn: 134.Value,
+        knight: 437.Value,
+        bishop: 470.Value,
+        rook: 660.Value,
+        queen: 1404.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -147,8 +147,7 @@ func pieceRelativePst(
 func pawnMaskIndex*(
     position: Position,
     square: static Square,
-    us: static Color,
-    mirrorHorizontally: static bool = false
+    us: static Color
 ): int =
 
     let square = square.colorConditionalMirrorVertically(us)
@@ -162,20 +161,11 @@ func pawnMaskIndex*(
 
     var counter = 1
 
-    const bits = when mirrorHorizontally:
-        [
-            c3.toBitboard, b3.toBitboard, a3.toBitboard,
-            c2.toBitboard, b2.toBitboard, a2.toBitboard,
-            c1.toBitboard, b1.toBitboard, a1.toBitboard
-        ]
-    else:
-        [
-            a3.toBitboard, b3.toBitboard, c3.toBitboard,
-            a2.toBitboard, b2.toBitboard, c2.toBitboard,
-            a1.toBitboard, b1.toBitboard, c1.toBitboard
-        ]
-
-    for bit in bits:
+    for bit in [
+        a3.toBitboard, b3.toBitboard, c3.toBitboard,
+        a2.toBitboard, b2.toBitboard, c2.toBitboard,
+        a1.toBitboard, b1.toBitboard, c1.toBitboard
+    ]:
         if (ourPawns and bit) != 0:
             result += counter * 2
         elif (enemyPawns and bit) != 0:
@@ -188,28 +178,16 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
-    for rankAndSquareList in (
-        (0, (b3, c3, d3, e3, f3, g3)),
-        (1, (b4, c4, d4, e4, f4, g4)),
-        (2, (b5, c5, d5, e5, f5, g5)),
-        (3, (b6, c6, d6, e6, f6, g6))
+    for square in (
+        b3, c3, d3, e3, f3, g3,
+        b4, c4, d4, e4, f4, g4,
+        b5, c5, d5, e5, f5, g5,
+        b6, c6, d6, e6, f6, g6
     ).fields:
-        const (rank, squareList) = rankAndSquareList
-        for square in squareList.fields:
-            if (mask3x3[square] and position[pawn]).countSetBits >= 2:
-                
-                let index = position.pawnMaskIndex(square, white)
-                result.addValue(evalParameters, gradient, white, pawnStructureBonus[rank][index])
-
-                when gradient isnot Nothing:
-                    var dummy: array[Phase, Value]
-                    let mirroredIndex = position.pawnMaskIndex(square, white, mirrorHorizontally = true)                    
-                    dummy.addValue(evalParameters, gradient, white, pawnStructureBonus[rank][mirroredIndex])
-                    let
-                        indexBlack = position.pawnMaskIndex(square, black)
-                        mirroredIndexBlack = position.pawnMaskIndex(square, black, mirrorHorizontally = true)
-                    dummy.addValue(evalParameters, gradient, black, pawnStructureBonus[rank][indexBlack])
-                    dummy.addValue(evalParameters, gradient, black, pawnStructureBonus[rank][mirroredIndexBlack])
+        if (mask3x3[square] and position[pawn]).countSetBits >= 2:
+            
+            let index = position.pawnMaskIndex(square, white)
+            result.addValue(evalParameters, gradient, white, pawnStructureBonus[square][index])
 
 func evaluatePieceFromPieceColorPerspective(
     position: Position,

@@ -8,7 +8,7 @@ type Relativity* = enum
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
     pieceRelativePst*: array[Relativity, array[knight..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]
-    pawnStructureBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
+    pawnStructureBonus*: array[a1..h8, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
