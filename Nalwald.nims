@@ -27,7 +27,7 @@ func fullDebuggerInfo() =
     --debugger:native
 
 let suffix = if defined(windows): ".exe" else: ""
-let name = projectName() & "-" & version()
+let name = projectName() & "-" & version().get(otherwise = "dev")
 
 task debug, "debug compile":
     --define:debug

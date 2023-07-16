@@ -4,8 +4,7 @@ import
 
 import std/[
     terminal,
-    strformat,
-    strutils
+    strformat
 ]
 
 proc printSeperatorLine() =
@@ -176,7 +175,7 @@ proc printLogo*() =
 proc about*(extra = true) =
     const readme = readFile("README.md")
     printSeperatorLine()
-    echo "Nalwald ", version()
+    echo "Nalwald ", versionOrId()
     echo "Compiled at ", compileDate()
     echo "Copyright © 2016-", compileYear() , " by Jost Triller"
     echo "git hash: ", commitHash()

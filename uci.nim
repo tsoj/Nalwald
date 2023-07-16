@@ -39,7 +39,7 @@ type UciState = object
 
 proc uci(uciState: var UciState) =
     uciState.uciCompatibleOutput = true
-    echo "id name Nalwald " & version()
+    echo "id name Nalwald " & versionOrId()
     echo "id author Jost Triller"
     echo "option name Hash type spin default ", defaultHashSizeMB, " min 1 max ", maxHashSizeMB
     echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
