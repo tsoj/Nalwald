@@ -21,7 +21,7 @@ const
     deltaMargin = 150.cp
     failHighDeltaMargin = 50.cp
     aspirationWindowStartingOffset = 10.cp
-    aspirationWindowMultiplier = 3.0
+    aspirationWindowMultiplier = 2.0
 
 func futilityReduction(value: Value): Ply =
     clamp(
@@ -323,11 +323,11 @@ func search*(
     depth: Ply
 ): Value =
 
-    let
-        hashResult = state.hashTable[].get(position.zobristKey)
-        estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
+    let hashResult = state.hashTable[].get(position.zobristKey)
+        
 
     var
+        estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
         alphaOffset = aspirationWindowStartingOffset.float
         betaOffset = aspirationWindowStartingOffset.float
 
@@ -345,6 +345,7 @@ func search*(
         )
         doAssert result.abs <= valueInfinity
 
+        estimatedValue = result.float
         if result <= alpha:
             alphaOffset *= aspirationWindowMultiplier
         elif result >= beta:
