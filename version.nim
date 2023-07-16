@@ -16,11 +16,6 @@ func compileDate*(): string = CompileDate & " " & CompileTime & " (UTC)"
 
 func compileYear*(): string = CompileDate.split('-')[0]
 
-func compileDateId(): string =
-    const d = CompileDate.split('-')
-    const t = CompileTime.split(':')
-    d[0] & d[1] & d[2] & t[0] & t[1] & t[2]
-
 func version*(): Option[string] =
     when not gitTag.isEmptyOrWhitespace:
         some(gitTag)
@@ -28,7 +23,9 @@ func version*(): Option[string] =
 func id(): string =
     result = gitShortHash
     when gitHasUnstagedChanges:
-        result &= "-" & compileDateId()
+        const d = CompileDate.split('-')
+        const t = CompileTime.split(':')
+        result &= "-" & d[0] & d[1] & d[2] & t[0] & t[1] & t[2]
 
 func versionOrId*(): string =
     version().get(otherwise = id())
