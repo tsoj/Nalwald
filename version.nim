@@ -5,12 +5,11 @@ import std/[
 
 export options
 
-
-const gitHasUnstagedChanges = "nothing to commit, working tree clean" notin staticExec("git status")
-const gitHash = staticExec("git rev-parse HEAD").strip
-const gitShortHash = staticExec("git rev-parse --short HEAD").strip
-const gitTag = staticExec("git tag --points-at HEAD").strip
-
+const
+    gitHasUnstagedChanges = "nothing to commit, working tree clean" notin staticExec("git status")
+    gitHash = staticExec("git rev-parse HEAD").strip
+    gitShortHash = staticExec("git rev-parse --short HEAD").strip
+    gitTag = staticExec("git tag --points-at HEAD").strip
 
 func compileDate*(): string = CompileDate & " " & CompileTime & " (UTC)"
 
