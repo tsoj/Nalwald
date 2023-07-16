@@ -4,8 +4,8 @@ import
     ../evaluation
 
 const
-    readFilename = "poolGamesNalwald2.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "quietPoolGamesNalwald2.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    readFilename = "poolGamesNalwald3.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
+    writeFilename = "quietPoolGamesNalwald3.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

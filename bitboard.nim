@@ -27,7 +27,7 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
     while tmp != 0:
         yield tmp.removeTrailingOneBit
 
-func mirror*(bitboard: Bitboard): Bitboard =
+func mirrorVertically*(bitboard: Bitboard): Bitboard =
     swapEndian64(addr result, unsafeAddr bitboard)
 
 func bitboardString*(bitboard: Bitboard): string =

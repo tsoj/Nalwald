@@ -6,16 +6,9 @@ type Relativity* = enum
     relativeToUs, relativeToEnemy
 
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
-    pieceValues*: array[pawn..king, ValueType]
     kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pieceRelativePst*: array[Relativity, array[pawn..queen, array[a1..h8, array[knight..queen, array[a1..h8, ValueType]]]]]
-    pawnStructureBonus*: array[4, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
-    bonusPassedPawnCanMove*: array[8, ValueType]
-    bonusPieceForkedMajorPieces*: ValueType
-    bonusMobility*: array[knight..queen, array[32, ValueType]]
-    bonusAttackingPiece*: array[bishop..queen, array[pawn..king, ValueType]]
-    bonusKingSafety*: array[32, ValueType]
-    bonusAttackersNearKing*: array[5*5, ValueType]
+    pieceRelativePst*: array[Relativity, array[knight..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]
+    pawnStructureBonus*: array[a1..h8, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
 
 type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
 
