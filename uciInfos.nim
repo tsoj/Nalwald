@@ -4,7 +4,8 @@ import
 
 import std/[
     terminal,
-    strformat
+    strformat,
+    strutils
 ]
 
 proc printSeperatorLine() =
@@ -178,6 +179,7 @@ proc about*(extra = true) =
     echo "Nalwald ", version()
     echo "Compiled at ", compileDate()
     echo "Copyright © 2016-", compileYear() , " by Jost Triller"
+    echo "git hash: ", commitHash()
     printSeperatorLine()
     if extra:
         printMarkdownSubset readme
