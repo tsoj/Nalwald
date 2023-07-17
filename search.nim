@@ -268,7 +268,7 @@ func search(
         # first explore with null window
         if hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode:
             newBeta = alpha + 1
-        else: # TODO check if it works if only at pv nodes or only a cut nodes
+        elif hashResult.nodeType == pvNode:
             newBeta = min(newBeta, max(alpha + 1, hashResult.value + 20.cp))
 
 
