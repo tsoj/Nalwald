@@ -16,7 +16,7 @@ func compileDate*(): string = CompileDate & " " & CompileTime & " (UTC)"
 func compileYear*(): string = CompileDate.split('-')[0]
 
 func version*(): Option[string] =
-    when not gitTag.isEmptyOrWhitespace:
+    when not gitTag.isEmptyOrWhitespace and not gitHasUnstagedChanges:
         some(gitTag)
     
 func id(): string =
