@@ -103,7 +103,7 @@ func quiesce(
     if standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = false):
+    for move in position.treeSearchMoveIterator(doQuiets = false):
         let newPosition = position.doMove(move)
         
         let seeEval = standPat + position.see(move)
@@ -236,7 +236,7 @@ func search(
         detailStaticEval.get
 
     # iterate over all moves and recursively search the new positions
-    for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
+    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
             continue
