@@ -175,8 +175,7 @@ func search(
         moveCounter = 0
         lmrMoveCounter = 0
 
-    let (beta, depth) = block:
-
+    let depth = block:
         var depth = depth
 
         # check and passed pawn extension
@@ -186,7 +185,10 @@ func search(
         # internal iterative reduction
         if hashResult.isEmpty and depth >= 6.Ply:
             depth -= 1.Ply
-        
+
+        depth
+
+    let beta = block:
         # update alpha, beta or value based on hash table result
         var beta = beta
         if height > 0 and not hashResult.isEmpty:
@@ -207,8 +209,7 @@ func search(
                     return hashResult.value - margin
                 if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
                     return hashResult.value + margin
-        
-        (beta, depth)
+        beta
 
     if depth <= 0:
         return position.quiesce(state, alpha = alpha, beta = beta, height)
@@ -270,7 +271,6 @@ func search(
             newBeta = alpha + 1
         elif hashResult.nodeType == pvNode:
             newBeta = min(newBeta, max(alpha + 1, hashResult.value + 20.cp))
-
 
         # stop search if we exceeded maximum nodes or we got a stop signal from outside
         if state.shouldStop:
