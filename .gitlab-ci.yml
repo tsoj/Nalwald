@@ -1,0 +1,19 @@
+image: nimlang/choosenim
+
+build:
+  stage: build
+  script:
+    - choosenim update devel
+    - nim default -o:"Nalwald-default" Nalwald.nim
+    - nim debug -o:"Nalwald-debug" Nalwald.nim
+  artifacts:
+    paths:
+      - Nalwald-default
+      - Nalwald-debug
+
+# run tests using the binary built before
+test:
+  stage: test
+  script:
+    - echo -e "test 1000000\nquit\n" | Nalwald-debug
+    - echo -e "test 10000000\nquit\n" | Nalwald-default
