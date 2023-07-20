@@ -165,7 +165,6 @@ func search(
         us = position.us
         inCheck = position.inCheck(us)
         hashResult = state.hashTable[].get(position.zobristKey)
-        originalAlpha = alpha
 
     var
         alpha = alpha
@@ -261,7 +260,7 @@ func search(
 
             # futility reduction
             if moveCounter > 1 and newDepth > 0:
-                newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
+                newDepth -= futilityReduction(alpha - staticEval - position.see(move))
             
             if newDepth <= 0:
                 continue
