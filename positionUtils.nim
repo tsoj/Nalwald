@@ -84,14 +84,20 @@ func debugString*(position: Position): string =
 
 
 func legalMoves*(position: Position): seq[Move] =
-    var moveArray: array[1024, Move]
-    let numMoves = position.generateMoves(moveArray)
-    doAssert numMoves < 1024, "Too many moves possible in position: " & position.fen
-    for i in 0..<numMoves:
-        let newPosition = position.doMove(moveArray[i])
-        if newPosition.inCheck(position.us):
-            continue
-        result.add(moveArray[i])
+    var pseudoLegalMoves = newSeq[Move](64)
+    while true:
+        # 'generateMoves' silently stops generating moves if the given array is not big enough
+        let numMoves = position.generateMoves(pseudoLegalMoves)
+        if pseudoLegalMoves.len <= numMoves:
+            pseudoLegalMoves.setLen(numMoves * 2)
+        else:
+            pseudoLegalMoves.setLen(numMoves)
+            for move in pseudoLegalMoves:
+                let newPosition = position.doMove(move)
+                if newPosition.inCheck(position.us):
+                    continue
+                result.add move
+            break
 
 func isChess960*(position: Position): bool =
     let us = position.us

@@ -120,6 +120,8 @@ proc perftTest*(
     useInternal = true,
     useExternal = true
 ) =
+    # TODO make some proper tests
+    doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len == 265
 
     let data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
     
