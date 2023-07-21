@@ -6,7 +6,7 @@ import
     evaluation,
     searchUtils
 
-iterator moveIterator*(
+iterator treeSearchMoveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: HistoryTable or tuple[] = (),
@@ -14,9 +14,13 @@ iterator moveIterator*(
     previous = noMove,
     doQuiets = true
 ): Move =
-    type OrderedMoveList = object
-        moves: array[maxNumMoves, Move]
-        movePriorities: array[maxNumMoves, float]
+    ## This iterator is optimized for speed and for good move ordering.
+    ## It does not guarantee to list all legal moves and may include 
+    ## illegal moves that leave our own king in check.
+
+    type OrderedMoveList[maxMoves: static int] = object
+        moves: array[maxMoves, Move]
+        movePriorities: array[maxMoves, float]
         numMoves: int
 
     template findBestMoves(moveList: var OrderedMoveList, minValue = float.low) =
@@ -41,7 +45,7 @@ iterator moveIterator*(
         yield tryFirstMove
 
     # init capture moves
-    var captureList {.noinit.}: OrderedMoveList
+    var captureList {.noinit.}: OrderedMoveList[64]
     captureList.numMoves = position.generateCaptures(captureList.moves)
     for i in 0..<captureList.numMoves:
         captureList.movePriorities[i] = position.see(captureList.moves[i]).float
@@ -60,11 +64,13 @@ iterator moveIterator*(
 
     # quiet moves
     if doQuiets:
-        var quietList {.noinit.}: OrderedMoveList
-        quietList.numMoves = position.generateQuiets(quietList.moves)
-        when historyTable is HistoryTable:
-            for i in 0..<quietList.numMoves:
-                quietList.movePriorities[i] = historyTable.get(quietList.moves[i], previous, position.us)
+        var quietList {.noinit.}: OrderedMoveList[192]
+        quietList.numMoves = position.generateQuiets(quietList.moves)        
+        for i in 0..<quietList.numMoves:
+            quietList.movePriorities[i] = when historyTable is HistoryTable:
+                historyTable.get(quietList.moves[i], previous, position.us)
+            else:
+                0.0
                 
         quietList.findBestMoves()
     

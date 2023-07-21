@@ -112,5 +112,3 @@ const
     exact* = pvNode
     upperBound* = allNode
     lowerBound* = cutNode
-
-const maxNumMoves* = 256

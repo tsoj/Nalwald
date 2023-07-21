@@ -10,16 +10,94 @@ import
     options,
     bitops
 
+func fen*(position: Position): string =
+    result = ""
+    var emptySquareCounter = 0
+    for rank in countdown(7, 0):
+        for file in 0..7:
+            let square = (rank*8 + file).Square
+            let coloredPiece = position.coloredPiece(square)
+            if coloredPiece.piece != noPiece and coloredPiece.color != noColor:
+                if emptySquareCounter > 0:
+                    result &= $emptySquareCounter
+                    emptySquareCounter = 0
+                result &= coloredPiece.notation
+            else:
+                emptySquareCounter += 1
+        if emptySquareCounter > 0:
+            result &= $emptySquareCounter
+            emptySquareCounter = 0
+        if rank != 0:
+            result &= "/"
+            
+    result &= (if position.us == white: " w " else: " b ")
+
+    for color in [white, black]:
+        for castlingSide in queenside..kingside:
+            let rookSource = position.rookSource[color][castlingSide]
+            if (position.enPassantCastling and rookSource.toBitboard and homeRank[color]) != 0:
+                result &= ($rookSource)[0]
+
+                if result[^1] == 'h':
+                    result[^1] = 'k'
+                if result[^1] == 'a':
+                    result[^1] = 'q'
+
+                if color == white:
+                    result[^1] = result[^1].toUpperAscii
+                
+    if result.endsWith(' '):
+        result &= "-"
+
+    result &= " "
+
+    if (position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0:
+        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).toSquare)
+    else:
+        result &= "-"
+
+    result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2)
+
+func `$`*(position: Position): string =
+    result = boardString(proc (square: Square): Option[string] =
+        if (square.toBitboard and position.occupancy) != 0:
+            return some($position.coloredPiece(square))
+        none(string)
+    ) & "\n"
+    let fenWords = position.fen.splitWhitespace
+    for i in 1..<fenWords.len:
+        result &= fenWords[i] & " "
+
+func debugString*(position: Position): string =    
+    for piece in pawn..king:
+        result &= $piece & ":\n"
+        result &= position[piece].bitboardString & "\n"
+    for color in white..black:
+        result &= $color & ":\n"
+        result &= position[color].bitboardString & "\n"
+    result &= "enPassantCastling:\n"
+    result &= position.enPassantCastling.bitboardString & "\n"
+    result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
+    result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
+    result &= "zobristKey: " & $position.zobristKey & "\n"
+    result &= "rookSource: " & $position.rookSource
 
 
 func legalMoves*(position: Position): seq[Move] =
-    var moveArray: array[maxNumMoves, Move]
-    let numMoves = position.generateMoves(moveArray)
-    for i in 0..<numMoves:
-        let newPosition = position.doMove(moveArray[i])
-        if newPosition.inCheck(position.us):
-            continue
-        result.add(moveArray[i])
+    var pseudoLegalMoves = newSeq[Move](64)
+    while true:
+        # 'generateMoves' silently stops generating moves if the given array is not big enough
+        let numMoves = position.generateMoves(pseudoLegalMoves)
+        if pseudoLegalMoves.len <= numMoves:
+            pseudoLegalMoves.setLen(numMoves * 2)
+        else:
+            pseudoLegalMoves.setLen(numMoves)
+            for move in pseudoLegalMoves:
+                let newPosition = position.doMove(move)
+                if newPosition.inCheck(position.us):
+                    continue
+                result.add move
+            break
 
 func isChess960*(position: Position): bool =
     let us = position.us
@@ -133,78 +211,6 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
         raise newException(ValueError, "FEN fullmove number is not correctly formatted: " & getCurrentExceptionMsg())
 
     result.zobristKey = result.calculateZobristKey
-
-func fen*(position: Position): string =
-    result = ""
-    var emptySquareCounter = 0
-    for rank in countdown(7, 0):
-        for file in 0..7:
-            let square = (rank*8 + file).Square
-            let coloredPiece = position.coloredPiece(square)
-            if coloredPiece.piece != noPiece and coloredPiece.color != noColor:
-                if emptySquareCounter > 0:
-                    result &= $emptySquareCounter
-                    emptySquareCounter = 0
-                result &= coloredPiece.notation
-            else:
-                emptySquareCounter += 1
-        if emptySquareCounter > 0:
-            result &= $emptySquareCounter
-            emptySquareCounter = 0
-        if rank != 0:
-            result &= "/"
-            
-    result &= (if position.us == white: " w " else: " b ")
-
-    for color in [white, black]:
-        for castlingSide in queenside..kingside:
-            let rookSource = position.rookSource[color][castlingSide]
-            if (position.enPassantCastling and rookSource.toBitboard and homeRank[color]) != 0:
-                result &= ($rookSource)[0]
-
-                if result[^1] == 'h':
-                    result[^1] = 'k'
-                if result[^1] == 'a':
-                    result[^1] = 'q'
-
-                if color == white:
-                    result[^1] = result[^1].toUpperAscii
-                
-    if result.endsWith(' '):
-        result &= "-"
-
-    result &= " "
-
-    if (position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0:
-        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).toSquare)
-    else:
-        result &= "-"
-
-    result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2)
-
-func `$`*(position: Position): string =
-    result = boardString(proc (square: Square): Option[string] =
-        if (square.toBitboard and position.occupancy) != 0:
-            return some($position.coloredPiece(square))
-        none(string)
-    ) & "\n"
-    let fenWords = position.fen.splitWhitespace
-    for i in 1..<fenWords.len:
-        result &= fenWords[i] & " "
-
-func debugString*(position: Position): string =    
-    for piece in pawn..king:
-        result &= $piece & ":\n"
-        result &= position[piece].bitboardString & "\n"
-    for color in white..black:
-        result &= $color & ":\n"
-        result &= position[color].bitboardString & "\n"
-    result &= "enPassantCastling:\n"
-    result &= position.enPassantCastling.bitboardString & "\n"
-    result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
-    result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
-    result &= "zobristKey: " & $position.zobristKey & "\n"
-    result &= "rookSource: " & $position.rookSource
 
 func notation*(move: Move, position: Position): string =
     if move.castled and not position.isChess960:

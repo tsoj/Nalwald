@@ -103,7 +103,7 @@ func quiesce(
     if standPat > alpha:
         alpha = standPat
 
-    for move in position.moveIterator(doQuiets = false):
+    for move in position.treeSearchMoveIterator(doQuiets = false):
         let newPosition = position.doMove(move)
         
         let seeEval = standPat + position.see(move)
@@ -165,7 +165,6 @@ func search(
         us = position.us
         inCheck = position.inCheck(us)
         hashResult = state.hashTable[].get(position.zobristKey)
-        originalAlpha = alpha
 
     var
         alpha = alpha
@@ -236,7 +235,7 @@ func search(
         detailStaticEval.get
 
     # iterate over all moves and recursively search the new positions
-    for move in position.moveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
+    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
             continue
@@ -261,7 +260,7 @@ func search(
 
             # futility reduction
             if moveCounter > 1 and newDepth > 0:
-                newDepth -= futilityReduction(originalAlpha - staticEval - position.see(move))
+                newDepth -= futilityReduction(alpha - staticEval - position.see(move))
             
             if newDepth <= 0:
                 continue
@@ -269,8 +268,6 @@ func search(
         # first explore with null window
         if hashResult.isEmpty or hashResult.bestMove != move or hashResult.nodeType == allNode:
             newBeta = alpha + 1
-        elif hashResult.nodeType == pvNode:
-            newBeta = min(newBeta, max(alpha + 1, hashResult.value + 20.cp))
 
         # stop search if we exceeded maximum nodes or we got a stop signal from outside
         if state.shouldStop:

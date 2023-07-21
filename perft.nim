@@ -1,5 +1,4 @@
 import
-    types,
     position,
     positionUtils,
     move,
@@ -30,7 +29,7 @@ func perft*(
                 if position.isPseudoLegal(move):
                     claimedPseudoLegalMoves.add(move)
 
-    for move in position.moveIterator:
+    for move in position.treeSearchMoveIterator:
         if testPseudoLegality:
             doAssert position.isPseudoLegal(move)
             for claimedMove in claimedPseudoLegalMoves.mitems:
@@ -63,8 +62,9 @@ func perft*(
 func fastPerft*(position: Position, depth: int): uint64 =
     if depth <= 0:
         return 1
-    var moves: array[maxNumMoves, Move]
+    var moves: array[512, Move]
     let numMoves = position.generateMoves(moves)
+    assert numMoves < 512
     for i in 0..<numMoves:
         template move: Move = moves[i]
         let newPosition = position.doMove(move)
@@ -120,6 +120,8 @@ proc perftTest*(
     useInternal = true,
     useExternal = true
 ) =
+    # TODO make some proper tests
+    doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len == 265
 
     let data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
     

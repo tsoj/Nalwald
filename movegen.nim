@@ -5,18 +5,32 @@ import
     types,
     castling
 
+template addMove(
+    moves: var openArray[Move], index: var int, 
+    source, target, enPassantTarget: Square,
+    moved, captured, promoted: Piece,
+    castled, capturedEnPassant: bool
+) =
+    if moves.len > index:
+        moves[index].create(
+            source, target, enPassantTarget,
+            moved, captured, promoted,
+            castled, capturedEnPassant
+        )
+        index += 1
+
 func generateCaptures(position: Position, piece: Piece, moves: var openArray[Move]): int =
     result = 0
     for source in position[position.us] and position[piece]:
         for target in piece.attackMask(source, position.occupancy) and position[position.enemy]:
             for captured in pawn..king:
                 if (position[captured] and target.toBitboard) != 0:
-                    moves[result].create(
+                    moves.addMove(
+                        result,
                         source = source, target = target, enPassantTarget = noSquare,
                         moved = piece, captured = captured, promoted = noPiece,
                         castled = false, capturedEnPassant = false
                     )
-                    result += 1
                     break
 
 func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]): int =
@@ -24,12 +38,12 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
     result = 0
     for source in position[position.us] and position[piece]:
         for target in piece.attackMask(source, occupancy) and not occupancy:
-            moves[result].create(
+            moves.addMove(
+                result,
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = piece, captured = noPiece, promoted = noPiece,
                 castled = false, capturedEnPassant = false
             )
-            result += 1
 
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     let
@@ -39,12 +53,12 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
 
     proc addPromotions(moves: var openArray[Move], source, target: Square, counter: var int, captured = noPiece) =
         for promoted in knight..queen:
-            moves[counter].create(
+            moves.addMove(
+                counter,
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = captured, promoted = promoted,
                 castled = false, capturedEnPassant = false
             )
-            counter += 1
 
     for source in position[pawn] and position[us]:
         # quiet promotions
@@ -59,24 +73,24 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
                     if (target.toBitboard and homeRank[enemy]) != 0:
                         moves.addPromotions(source, target, result, captured)
                     else:
-                        moves[result].create(
+                        moves.addMove(
+                            result,
                             source = source, target = target, enPassantTarget = noSquare,
                             moved = pawn, captured = captured, promoted = noPiece,
                             castled = false, capturedEnPassant = false
                         )
-                        result += 1
                     break
 
         # en passant capture
         let attackMask = attackTablePawnCapture[us][source] and position.enPassantCastling and (ranks[a3] or ranks[a6])
         if attackMask != 0:
             let target = attackMask.toSquare
-            moves[result].create(
+            moves.addMove(
+                result,
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = pawn, promoted = noPiece,
                 castled = false, capturedEnPassant = true
             )
-            result += 1
 
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
     let
@@ -86,23 +100,23 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
     for source in position[pawn] and position[us]:
         if (attackTablePawnQuiet[us][source] and (occupancy or homeRank[position.enemy])) == 0:
             let target = attackTablePawnQuiet[us][source].toSquare
-            moves[result].create(
+            moves.addMove(
+                result,
                 source = source, target = target, enPassantTarget = noSquare,
                 moved = pawn, captured = noPiece, promoted = noPiece,
                 castled = false, capturedEnPassant = false
             )
-            result += 1
 
             # double pushs
             if (source.toBitboard and pawnHomeRank[us]) != 0:
                 let doublePushTarget = attackTablePawnQuiet[us][target].toSquare
                 if (doublePushTarget.toBitboard and occupancy) == 0:
-                    moves[result].create(
+                    moves.addMove(
+                        result,
                         source = source, target = doublePushTarget, enPassantTarget = target,
                         moved = pawn, captured = noPiece, promoted = noPiece,
                         castled = false, capturedEnPassant = false
                     )
-                    result += 1
 
 func generateCastlingMoves(position: Position, moves: var openArray[Move]): int =
     let
@@ -129,24 +143,30 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
         if kingInCheck:
             continue
 
-        moves[result].create(
+        moves.addMove(
+            result,
             source = kingSource, target = rookSource, enPassantTarget = noSquare,
             moved = king, captured = noPiece, promoted = noPiece,
             castled = true, capturedEnPassant = false
         )
-        result += 1
 
 func generateCaptures*(position: Position, moves: var openArray[Move]): int =
+    ## Generates pseudo-legal capture moves and writes the into the `moves` array, starting from index 0.
+    ## This function will silently stop generating moves if the `moves` array fills up.
     result = position.generatePawnCaptures(moves)
     for piece in knight..king:
         result += position.generateCaptures(piece, moves.toOpenArray(result, moves.len - 1))
 
 func generateQuiets*(position: Position, moves: var openArray[Move]): int =
+    ## Generates pseudo-legal quiet moves and writes the into the `moves` array, starting from index 0.
+    ## This function will silently stop generating moves if the `moves` array fills up.
     result = position.generatePawnQuiets(moves)
     result += position.generateCastlingMoves(moves.toOpenArray(result, moves.len - 1))
     for piece in knight..king:
         result += position.generateQuiets(piece, moves.toOpenArray(result, moves.len - 1))
 
 func generateMoves*(position: Position, moves: var openArray[Move]): int =
+    ## Generates pseudo-legal moves and writes the into the `moves` array, starting from index 0.
+    ## This function will silently stop generating moves if the `moves` array fills up.
     result = position.generateCaptures(moves)
     result += position.generateQuiets(moves.toOpenArray(result, moves.len - 1))
