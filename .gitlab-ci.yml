@@ -4,8 +4,8 @@ build:
   stage: build
   script:
     - choosenim update devel
-    - nim default -o:"Nalwald-default" Nalwald.nim
-    - nim debug -o:"Nalwald-debug" Nalwald.nim
+    - nim default --cc:gcc -o:"Nalwald-default" Nalwald.nim
+    - nim debug --cc:gcc -o:"Nalwald-debug" Nalwald.nim
   artifacts:
     paths:
       - Nalwald-default
