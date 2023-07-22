@@ -266,9 +266,10 @@ proc uciLoop*() =
             of "moves":
                 uciState.moves(params[1..^1])
             of "print":
-                echo uciState.position
-            of "printdebug":
-                echo uciState.position.debugString
+                if params.len >= 2 and params[1] == "debug":
+                    echo uciState.position.debugString
+                else:
+                    echo uciState.position
             of "fen":
                 echo uciState.position.fen
             of "perft":

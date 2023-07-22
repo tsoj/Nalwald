@@ -28,7 +28,6 @@ proc help*(params: openArray[string]) =
         printCommandBulletPoint "ucinewgame"
         printCommandBulletPoint "moves"
         printCommandBulletPoint "print"
-        printCommandBulletPoint "printdebug"
         printCommandBulletPoint "fen"
         printCommandBulletPoint "perft"
         printCommandBulletPoint "test"
@@ -114,9 +113,8 @@ proc help*(params: openArray[string]) =
             echo "Example:"
             echo "'e2e4 c7c6 d2d4 d7d5' will have the same effect as 'moves e2e4 c7c6 d2d4 d7d5'"
         of "print":
-            echo "Prints the current internal board."
-        of "printdebug":
-            echo "Prints the internal representation of the current board."
+            styledEcho {styleBright}, "print [debug]"
+            echo "Prints the current internal board. If 'debug' is added, a debug repepresentation of the board is printed."
         of "fen":
             echo "Prints the FEN notation of the current internal board."    
         of "perft":

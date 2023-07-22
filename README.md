@@ -64,7 +64,7 @@ nim modern Nalwald.nim
 - Supports Chess960/FRC
 - Multi PV support
 - UCI compatible
-  - Additional commands: `moves`, `print`, `printdebug`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
+  - Additional commands: `moves`, `print`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
 
 ### About
 
