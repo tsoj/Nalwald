@@ -3,10 +3,13 @@ import
     positionUtils,
     move,
     movegen,
-    moveIterator,
+    moveIterator
+
+import std/[
     strutils,
     times,
     random
+]
 
 var randomMoves = newSeq[Move](10000)
 

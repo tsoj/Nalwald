@@ -30,8 +30,7 @@ func futilityReduction(value: Value): Ply =
     ).Ply
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
-    if depthDifference >= 5.Ply: return valueInfinity
-    depthDifference.Value * 200.cp
+    depthDifference.Value * 300.cp
 
 func nullMoveDepth(depth: Ply): Ply =
     depth - 3.Ply - depth div 4.Ply
@@ -188,26 +187,20 @@ func search(
         depth
 
     let beta = block:
-        # update alpha, beta or value based on hash table result
+        # update alpha, beta or return immediatly based on hash table result
         var beta = beta
         if height > 0 and not hashResult.isEmpty:
-            if hashResult.depth >= depth:
-                case hashResult.nodeType:
-                of exact:
-                    return hashResult.value
-                of lowerBound:
-                    alpha = max(alpha, hashResult.value)
-                of upperBound:
-                    beta = min(beta, hashResult.value)
-                if alpha >= beta:
-                    return alpha
-            else:
-                # hash result futility pruning
-                let margin = hashResultFutilityMargin(depth - hashResult.depth)
-                if hashResult.nodeType == lowerBound and hashResult.value - margin >= beta:
-                    return hashResult.value - margin
-                if hashResult.nodeType == upperBound and hashResult.value + margin <= alpha:
-                    return hashResult.value + margin
+            if hashResult.nodeType == exact and hashResult.depth >= depth:
+                return hashResult.value
+
+            let margin = hashResultFutilityMargin(depth - hashResult.depth)
+            if hashResult.nodeType != upperBound:
+                alpha = max(alpha, hashResult.value - margin)
+            if hashResult.nodeType != lowerBound:
+                beta = min(beta, hashResult.value + margin)
+
+            if alpha >= beta:
+                return alpha
         beta
 
     if depth <= 0:
