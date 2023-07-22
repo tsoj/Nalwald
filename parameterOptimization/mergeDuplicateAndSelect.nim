@@ -10,9 +10,9 @@ import std/
 randomize(epochTime().int64 mod 500_000)
 
 const
-    readFilename = "quietPoolGamesNalwald3.epd"
-    writeFilename = "quietSmallPoolGamesNalwald3.epd"
-    approxMaxNumLines = 1_500_000
+    readFilename = "quietPoolGamesNalwald4.epd"
+    writeFilename = "quietSmallPoolGamesNalwald4.epd"
+    approxMaxNumLines = 2_800_000
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

@@ -108,6 +108,7 @@ data.loadData("quietSetNalwald2.epd")
 data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
 data.loadData("quietSmallPoolGamesNalwald2Labeled.epd", weight = 2.0)
 data.loadData("quietSmallPoolGamesNalwald3.epd")
+data.loadData("quietSmallPoolGamesNalwald4.epd")
 
 echo "Total number of entries: ", data.len
 

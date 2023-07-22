@@ -23,6 +23,7 @@ massif.out
 !parameterOptimization/quietSmallPoolGamesNalwald2Labeled.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
 !parameterOptimization/quietSmallPoolGamesNalwald3.epd
+!parameterOptimization/quietSmallPoolGamesNalwald4.epd
 optimization
 *.txt
 *.sh

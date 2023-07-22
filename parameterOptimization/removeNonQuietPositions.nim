@@ -4,8 +4,8 @@ import
     ../evaluation
 
 const
-    readFilename = "poolGamesNalwald3.epd"#"unlabeledNonQuietSmallNalwaldCCRL4040.epd"
-    writeFilename = "quietPoolGamesNalwald3.epd"#"unlabeledQuietSmallNalwaldCCRL4040.epd"
+    readFilename = "poolGamesNalwald4.epd"
+    writeFilename = "quietPoolGamesNalwald4.epd"
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)
@@ -24,7 +24,7 @@ while f.readLine(line):
         continue
     g.writeLine(line)
     i += 1
-    if (i mod 1000) == 0:
+    if (i mod 10_000) == 0:
         echo i
 
 g.close()

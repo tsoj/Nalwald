@@ -1,4 +1,4 @@
-cd d##### Generate positions
+##### Generate positions
 ```
 nim c --run generatePositions.nim
 ```
@@ -81,6 +81,6 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-##### quietSmallPoolGamesNalwald3.epd
+##### quietSmallPoolGamesNalwald3.epd, quietSmallPoolGamesNalwald4.epd
 - removed non-quiet positions from games played between Nalwald and other engines
-- randomly selected 1,500,000 positions
+- randomly selected 1,500,000 (2,600,000 respectively) positions
