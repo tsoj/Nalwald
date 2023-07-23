@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 135.Value,
-        knight: 435.Value,
-        bishop: 469.Value,
-        rook: 660.Value,
-        queen: 1378.Value,
+        pawn: 136.Value,
+        knight: 452.Value,
+        bishop: 483.Value,
+        rook: 675.Value,
+        queen: 1471.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -64,7 +64,7 @@ type Gradient* = object
 type GradientOrNothing = Gradient or Nothing
 
 macro getParameter(phase, structName, parameter: untyped): untyped =
-    parseExpr($toStrLit(quote do: `structName`[`phase`]) & "." & $toStrLit(quote do: `parameter`))
+    parseExpr($toStrLit(quote do: `structName`[`phase`.int]) & "." & $toStrLit(quote do: `parameter`))
 
 template addValue(
     value: var array[Phase, Value],
@@ -74,12 +74,12 @@ template addValue(
     parameter: untyped
 ) =
     for phase {.inject.} in Phase:
-        value[phase] += getParameter(phase, evalParameters[0], parameter)
+        value[phase] += getParameter(phase, evalParameters, parameter)
 
     when gradient isnot Nothing:
         let f = (if us == black: -1.0 else: 1.0) * gradient.g
-        getParameter(opening, gradient.evalParams[][0], parameter) += f * gradient.gamePhaseFactor
-        getParameter(endgame, gradient.evalParams[][0], parameter) += f * (1.0 - gradient.gamePhaseFactor)
+        getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
+        getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
 
 func kingRelativePst(
     evalParameters: EvalParameters,
@@ -95,13 +95,13 @@ func kingRelativePst(
         square = square.colorConditionalMirrorVertically(us)
         kingSquares = [
             relativeToUs: kingSquares[us].colorConditionalMirrorVertically(us),
-            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(enemy)
+            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(enemy) # TODO check if changing this to colorConditionalMirrorVertically(enemy) makes any difference
         ]
 
     for phase in Phase:
         result[phase] =
-            evalParameters[0][phase].kingRelativePst[relativeToEnemy][kingSquares[relativeToEnemy]][piece][square] +
-            evalParameters[0][phase].kingRelativePst[relativeToUs][kingSquares[relativeToUs]][piece][square]
+            evalParameters[phase.int].kingRelativePst[relativeToEnemy][kingSquares[relativeToEnemy]][piece][square] +
+            evalParameters[phase.int].kingRelativePst[relativeToUs][kingSquares[relativeToUs]][piece][square]
 
     when gradient isnot Nothing:
 
@@ -119,8 +119,8 @@ func kingRelativePst(
                         (kingSquare.mirrorHorizontally, square.mirrorHorizontally)
                     ]:
                         let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
-                        gradient.evalParams[][0][opening].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                        gradient.evalParams[][0][endgame].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+                        gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                        gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pieceRelativePst(
     evalParameters: EvalParameters,
@@ -128,6 +128,7 @@ func pieceRelativePst(
     ourPiece: static Piece,
     ourSquare: Square,
     us: static Color,
+    kingSquares: array[white..black, Square],
     gradient: var GradientOrNothing
 ): array[Phase, Value] =
 
@@ -137,12 +138,28 @@ func pieceRelativePst(
             relativeToUs: position[us],
             relativeToEnemy: position[us.opposite]
         ]
+        # we do it just relative to the enemy king, as that's faster
+        roughEnemyKingFile = (kingSquares[us.opposite].int mod 8) div 2
     
     for otherPiece in pawn..queen:
         for relativity in relativeToUs..relativeToEnemy:
             for otherSquare in otherPieces[relativity] and position[otherPiece]:
                 let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
-                result.addValue(evalParameters, gradient, us, pieceRelativePst[relativity][ourPiece][ourSquare][otherPiece][otherSquare])
+                result.addValue(
+                    evalParameters, gradient, us,
+                    pieceRelativePst[roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
+                )
+
+                when gradient isnot Nothing:
+                    var dummy: array[Phase, Value]
+                    let
+                        flippedOurSquare = ourSquare.mirrorHorizontally
+                        flippedOtherSquare = otherSquare.mirrorHorizontally
+                        flippedKingFile = 3 - roughEnemyKingFile
+                    dummy.addValue(
+                        evalParameters, gradient, us,
+                        pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
+                    )
 
 func pawnMaskIndex*(
     position: Position,
@@ -217,7 +234,7 @@ func evaluatePieceFromPieceColorPerspective(
 
     # piece-relative piece square table
     when piece notin [king, pawn]:
-        result += evalParameters.pieceRelativePst(position, piece, square, pieceColor, gradient)
+        result += evalParameters.pieceRelativePst(position, piece, square, pieceColor, kingSquares, gradient)
 
     
 func evaluatePieceTypeFromWhitesPerspective(
@@ -271,7 +288,8 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
-    position.evaluate(defaultEvalParameters, gradient)
+    {.cast(noSideEffect).}: # TODO make const again
+        return position.evaluate(defaultEvalParameters, gradient)
 
 func absoluteEvaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
     result = position.evaluate(evalParameters, gradient)
@@ -284,4 +302,5 @@ func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Valu
 
 func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
-    position.absoluteEvaluate(defaultEvalParameters, gradient)
+    {.cast(noSideEffect).}: # TODO make const again
+        return position.absoluteEvaluate(defaultEvalParameters, gradient)

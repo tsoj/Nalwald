@@ -7,20 +7,21 @@ type Relativity* = enum
 
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pieceRelativePst*: array[Relativity, array[knight..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]
+    pieceRelativePst*: array[4, array[Relativity, array[knight..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]]
     pawnStructureBonus*: array[a1..h8, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
 
-type EvalParametersTemplate[ValueType] = array[Phase, SinglePhaseEvalParametersTemplate[ValueType]]
+# TODO write wrapper such that it looks like an array[Phase, ...] from the outside
+type EvalParametersTemplate[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
 
-type EvalParametersFloat* {.requiresInit.} = seq[EvalParametersTemplate[float32]]
+type EvalParametersFloat* {.requiresInit.} = EvalParametersTemplate[float32]
 
-type EvalParameters* {.requiresInit.} = seq[EvalParametersTemplate[Value]]
+type EvalParameters* {.requiresInit.} = EvalParametersTemplate[Value]
 
 func newEvalParamatersFloat*(): EvalParametersFloat =
-    newSeq[EvalParametersTemplate[float32]](1)
+    newSeq[SinglePhaseEvalParametersTemplate[float32]](2)
 
 func newEvalParamaters*(): EvalParameters =
-    newSeq[EvalParametersTemplate[Value]](1)
+    newSeq[SinglePhaseEvalParametersTemplate[Value]](2)
 
 
 func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
