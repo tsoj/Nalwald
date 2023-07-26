@@ -317,7 +317,6 @@ func search*(
 ): Value =
 
     let hashResult = state.hashTable[].get(position.zobristKey)
-        
 
     var
         estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
