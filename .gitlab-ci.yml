@@ -7,12 +7,12 @@ build:
     - nim default --cc:gcc -o:"Nalwald-default" Nalwald.nim
     - nim debug --cc:gcc -o:"Nalwald-debug" Nalwald.nim
     - cd parameterOptimization/
-    - nim c generatePositions.nim
-    - nim c removeNonQuietPositions.nim
-    - nim c mergeDuplicateAndSelect.nim
-    - nim c labelPositions.nim
-    - nim c optimization.nim
-    - nim c calculatePieceValue.nim
+    - nim c --cc:gcc generatePositions.nim
+    - nim c --cc:gcc removeNonQuietPositions.nim
+    - nim c --cc:gcc mergeDuplicateAndSelect.nim
+    - nim c --cc:gcc labelPositions.nim
+    - nim c --cc:gcc optimization.nim
+    - nim c --cc:gcc calculatePieceValue.nim
   artifacts:
     paths:
       - Nalwald-default
