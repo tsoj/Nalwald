@@ -3,8 +3,9 @@ import
     bitboard,
     move,
     zobristBitmasks,
-    castling,
-    bitops
+    castling
+    
+export types, bitboard, move
 
 type Position* = object
     pieces: array[pawn..king, Bitboard]
