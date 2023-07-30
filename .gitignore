@@ -25,6 +25,7 @@ massif.out
 !parameterOptimization/quietSmallPoolGamesNalwald3.epd
 !parameterOptimization/quietSmallPoolGamesNalwald4.epd
 !parameterOptimization/quietSmallPoolGamesNalwald5.epd
+!parameterOptimization/quietSmallPoolGamesNalwald6.epd
 optimization
 *.txt
 *.sh

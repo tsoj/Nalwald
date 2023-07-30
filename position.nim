@@ -32,6 +32,9 @@ func `[]`*(position: Position, color: Color): Bitboard {.inline.} =
 func `[]=`*(position: var Position, color: Color, bitboard: Bitboard) {.inline.} =
     position.colors[color] = bitboard
 
+func `[]`*(position: Position, piece: Piece, color: Color): Bitboard {.inline.} =
+    position[color] and position[piece]
+
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) {.inline.} =
     position[piece] = position[piece] or target
     position[color] = position[color] or target

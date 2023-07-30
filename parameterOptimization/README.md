@@ -81,6 +81,6 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-##### quietSmallPoolGamesNalwald3.epd, quietSmallPoolGamesNalwald4.epd, quietSmallPoolGamesNalwald5.epd
+##### quietSmallPoolGamesNalwald3.epd, quietSmallPoolGamesNalwald4.epd, quietSmallPoolGamesNalwald5.epd, quietSmallPoolGamesNalwald6.epd
 - removed non-quiet positions from games played between Nalwald and other engines
-- randomly selected positions (1.5 million, 2.6 million, 4 million respectively)
+- randomly selected positions (1.5 million, 2.6 million, 4 million, 4.4 million respectively)

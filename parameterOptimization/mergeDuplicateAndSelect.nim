@@ -4,15 +4,19 @@ import std/
     tables,
     strutils,
     random,
-    times
+    times,
+    os
 ]
 
 randomize(epochTime().int64 mod 500_000)
 
 const
-    readFilename = "quietPoolGamesNalwald5.epd"
-    writeFilename = "quietSmallPoolGamesNalwald5.epd"
-    approxMaxNumLines = 4_000_000
+    readFilename = "quietPoolGamesNalwald6.epd"
+    writeFilename = "quietSmallPoolGamesNalwald6.epd"
+    approxMaxNumLines = 4_400_000
+
+doAssert fileExists readFilename
+doAssert not fileExists writeFilename
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)
@@ -26,7 +30,7 @@ while f.readLine(line):
     let words = line.splitWhitespace()
     doAssert words.len == 7
     let
-        fen = words[0] & " " & words[1] & " " & words[2] & " " & words[3] & " " & words[4] & " " & words[5]
+        fen = words[0] & " " & words[1] & " " & words[2] & " " & words[3] & " 0 1"
         outcome = words[6].parseFloat
     if fen in table:
         table[fen].count += 1

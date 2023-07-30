@@ -3,9 +3,16 @@ import
     ../positionUtils,
     ../evaluation
 
+import std/[
+    os
+]
+
 const
-    readFilename = "poolGamesNalwald5.epd"
-    writeFilename = "quietPoolGamesNalwald5.epd"
+    readFilename = "poolGamesNalwald6.epd"
+    writeFilename = "quietPoolGamesNalwald6.epd"
+
+doAssert fileExists readFilename
+doAssert not fileExists writeFilename
 
 let f = open(readFilename)
 let g = open(writeFilename, fmWrite)

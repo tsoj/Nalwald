@@ -65,6 +65,8 @@ iterator iterativeDeepeningSearch*(
 
         if legalMoves.len == 0:
             yield (pvList: @[], nodes: 0'u64, canStop: true)
+        elif (position[king, white] == 0) or (position[king, black] == 0):
+            yield (pvList: @[Pv(value: 0.Value, pv: @[legalMoves[0]])], nodes: 0'u64, canStop: true)
         else:
 
             let
