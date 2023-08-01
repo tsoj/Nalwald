@@ -17,10 +17,10 @@ type EvalParametersFloat* {.requiresInit.} = EvalParametersTemplate[float32]
 
 type EvalParameters* {.requiresInit.} = EvalParametersTemplate[Value]
 
-func newEvalParamatersFloat*(): EvalParametersFloat =
+func newEvalParametersFloat*(): EvalParametersFloat =
     newSeq[SinglePhaseEvalParametersTemplate[float32]](2)
 
-func newEvalParamaters*(): EvalParameters =
+func newEvalParameters*(): EvalParameters =
     newSeq[SinglePhaseEvalParametersTemplate[Value]](2)
 
 
@@ -68,9 +68,9 @@ func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
 
 func convert*(a: auto, T: typedesc): T =
     when T is EvalParametersFloat:
-        result = newEvalParamatersFloat()
+        result = newEvalParametersFloat()
     elif T is EvalParameters:
-        result = newEvalParamaters()
+        result = newEvalParameters()
     transform(result, a)
 
 

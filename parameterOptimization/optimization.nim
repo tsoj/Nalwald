@@ -14,7 +14,7 @@ import std/[
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
 proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
-    result.gradient = newEvalParamatersFloat();
+    result.gradient = newEvalParametersFloat();
     for entry in data:        
         result.weight += entry.weight
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
@@ -39,7 +39,7 @@ proc optimize(
 
     echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
-    var previousGradient = newEvalParamatersFloat()
+    var previousGradient = newEvalParametersFloat()
 
     for epoch in 1..maxNumEpochs:
         let startTime = now()
@@ -69,7 +69,7 @@ proc optimize(
                     k, i > 0
                 )    
 
-            var gradient = newEvalParamatersFloat()
+            var gradient = newEvalParametersFloat()
             var totalWeight: float = 0.0
             for flowVar in threadSeq.mitems:
                 let (threadWeight, threadGradient) = ^flowVar
@@ -116,7 +116,7 @@ echo "Total number of entries: ", data.len
 
 const k = 1.0
 
-let ep = newEvalParamatersFloat().optimize(data, k)
+let ep = newEvalParametersFloat().optimize(data, k)
 
 let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 echo "filename: ", filename
