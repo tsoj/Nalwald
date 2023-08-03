@@ -51,16 +51,13 @@ iterator treeSearchMoveIterator*(
         captureList.movePriorities[i] = position.see(captureList.moves[i]).float
 
     # mostly winning captures
-    captureList.findBestMoves(minValue = -50.cp.float)
+    captureList.findBestMoves(minValue = -150.cp.float)
 
     # killers
     if doQuiets:
         for i in killers.low..killers.high:
             if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
                 yield killers[i]
-
-    # slightly losing captures
-    captureList.findBestMoves(minValue = -150.cp.float)
 
     # quiet moves
     if doQuiets:
