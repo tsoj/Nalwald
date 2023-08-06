@@ -8,8 +8,8 @@ import std/[
 ]
 
 const
-    readFilename = "poolGamesNalwald6.epd"
-    writeFilename = "quietPoolGamesNalwald6.epd"
+    readFilename = "poolGamesNalwald7.epd"
+    writeFilename = "quietPoolGamesNalwald7.epd"
 
 doAssert fileExists readFilename
 doAssert not fileExists writeFilename
@@ -31,8 +31,11 @@ while f.readLine(line):
         continue
     g.writeLine(line)
     i += 1
-    if (i mod 10_000) == 0:
-        echo i
+    if (i mod 100_000) == 0:
+        stdout.write "\r" & $i
+        stdout.flushFile
 
 g.close()
 f.close()
+
+echo "\nFinished"

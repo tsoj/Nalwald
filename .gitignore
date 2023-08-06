@@ -13,7 +13,6 @@ massif.out
 *.epd
 *.epd.backup
 *.fen
-!parameterOptimization/quietSetZuri.epd
 !parameterOptimization/quietSetNalwald.epd
 !parameterOptimization/quietSetCombinedCCRL4040.epd
 !parameterOptimization/quietSmallNalwaldCCRL4040.epd

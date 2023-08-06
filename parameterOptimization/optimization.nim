@@ -111,6 +111,7 @@ data.loadData("quietSmallPoolGamesNalwald3.epd")
 data.loadData("quietSmallPoolGamesNalwald4.epd")
 data.loadData("quietSmallPoolGamesNalwald5.epd")
 data.loadData("quietSmallPoolGamesNalwald6.epd")
+data.loadData("quietSmallPoolGamesNalwald7.epd")
 
 echo "Total number of entries: ", data.len
 

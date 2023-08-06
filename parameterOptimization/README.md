@@ -41,10 +41,6 @@ nim c --run calculatePieceValue.nim
 
 ##### How data sets are generated
 
-###### quietSetZuri.epd
-
-- quiet set from the Zurichess engine
-
 ###### quietSetNalwald.epd
 
 - a number of random games are played, at random evaluation calls the positions are collected
@@ -75,12 +71,6 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-###### quietSmallPoolGamesNalwald2Labeled.epd
+###### quietSmallPoolGamesNalwald3.epd to quietSmallPoolGamesNalwald7.epd
 - removed non-quiet positions from games played between Nalwald and other engines
-- randomly select 4,000,000 positions
-- three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
-- merge three copies
-
-##### quietSmallPoolGamesNalwald3.epd, quietSmallPoolGamesNalwald4.epd, quietSmallPoolGamesNalwald5.epd, quietSmallPoolGamesNalwald6.epd
-- removed non-quiet positions from games played between Nalwald and other engines
-- randomly selected positions (1.5 million, 2.6 million, 4 million, 4.4 million respectively)
+- randomly selected positions (1.5 million, 2.6 million, 4 million, 4.4 million, 5.5 million respectively)

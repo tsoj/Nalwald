@@ -11,9 +11,9 @@ import std/
 randomize(epochTime().int64 mod 500_000)
 
 const
-    readFilename = "quietPoolGamesNalwald6.epd"
-    writeFilename = "quietSmallPoolGamesNalwald6.epd"
-    approxMaxNumLines = 4_400_000
+    readFilename = "quietPoolGamesNalwald7.epd"
+    writeFilename = "quietSmallPoolGamesNalwald7.epd"
+    approxMaxNumLines = 5_500_000
 
 doAssert fileExists readFilename
 doAssert not fileExists writeFilename
@@ -24,6 +24,7 @@ let g = open(writeFilename, fmWrite)
 var
     table: Table[string, tuple[count: float, sum: float]]
     line: string
+    numInputPositions = 0
 while f.readLine(line):
     if line.isEmptyOrWhitespace:
         continue
@@ -37,7 +38,11 @@ while f.readLine(line):
         table[fen].sum += outcome
     else:
         table[fen] = (count: 1.0, sum: outcome)
-        
+    numInputPositions += 1
+
+echo "Num input positions: ", numInputPositions
+echo "Num unique positions: ", table.len
+
 for fen, (count, sum) in table:
     if rand(table.len) <= approxMaxNumLines:
         g.writeLine(fen & " " & $(sum/count))
