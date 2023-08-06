@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 136.Value,
+        pawn: 135.Value,
         knight: 439.Value,
         bishop: 473.Value,
-        rook: 671.Value,
-        queen: 1391.Value,
+        rook: 670.Value,
+        queen: 1389.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -108,9 +108,8 @@ func kingRelativePst(
         for whoseKing in relativeToUs..relativeToEnemy:
             let kingSquare = kingSquares[whoseKing]
             for (kingSquaresBitboard, multiplier) in [
-                (kingSquare.toBitboard, 1.5),
-                (mask3x3[kingSquare], 0.4),
-                (mask5x5[kingSquare], 0.1)
+                (kingSquare.toBitboard, 1.7),
+                (mask3x3[kingSquare], 0.3)
             ]:
                 for kingSquare in kingSquaresBitboard:
 
