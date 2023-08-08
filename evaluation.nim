@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 135.Value,
-        knight: 439.Value,
-        bishop: 473.Value,
-        rook: 670.Value,
-        queen: 1389.Value,
+        pawn: 138.Value,
+        knight: 442.Value,
+        bishop: 477.Value,
+        rook: 678.Value,
+        queen: 1397.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -222,6 +222,7 @@ func evaluatePieceFromPieceColorPerspective(
         kingSquares,
         gradient
     )
+
     when piece == pawn:
         if position.isPassedPawn(pieceColor, square):
             result += evalParameters.kingRelativePst(
@@ -230,9 +231,9 @@ func evaluatePieceFromPieceColorPerspective(
                 kingSquares,
                 gradient
             )
+            result += evalParameters.pieceRelativePst(position, pawn, square, pieceColor, kingSquares, gradient)
 
-    # piece-relative piece square table
-    when piece notin [king, pawn]:
+    elif piece != king:
         result += evalParameters.pieceRelativePst(position, piece, square, pieceColor, kingSquares, gradient)
 
     
