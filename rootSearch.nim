@@ -16,8 +16,6 @@ import std/[
     strformat
 ]
 
-# TODO: create one big search info object
-
 func launchSearch(
     position: Position,
     hashTable: ptr HashTable,

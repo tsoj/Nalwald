@@ -288,8 +288,7 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 
 func evaluate*(position: Position): Value =
     var gradient: Nothing = nothing
-    {.cast(noSideEffect).}: # TODO make const again
-        return position.evaluate(defaultEvalParameters, gradient)
+    position.evaluate(defaultEvalParameters, gradient)
 
 func absoluteEvaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
     result = position.evaluate(evalParameters, gradient)
@@ -302,5 +301,4 @@ func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Valu
 
 func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
-    {.cast(noSideEffect).}: # TODO make const again
-        return position.absoluteEvaluate(defaultEvalParameters, gradient)
+    position.absoluteEvaluate(defaultEvalParameters, gradient)
