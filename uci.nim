@@ -196,7 +196,6 @@ proc uciNewGame(uciState: var UciState) =
         uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
-    seeTest()
     if params.len == 0:
         runTests()
     else:
