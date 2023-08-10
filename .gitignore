@@ -42,3 +42,4 @@ processStuff.nim
 mergeDuplicateAndSelect
 *.pgn
 logo_backup.jpg
+tests

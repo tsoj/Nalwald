@@ -9,7 +9,8 @@ import
     perft,
     see,
     evaluation,
-    version
+    version,
+    utils
 
 import std/[
     times,
@@ -21,7 +22,6 @@ import std/[
 ]
 
 const
-    megaByteToByte = 1_048_576
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1

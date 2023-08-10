@@ -1,11 +1,15 @@
 import
-    types,
+    types
+
+import std/[
     options,
     strutils,
     atomics,
     times,
     os
+]
 
+const megaByteToByte* = 1_048_576
 
 func boardString*(f: proc(square: Square): Option[string] {.noSideEffect.}): string =
     result = " _ _ _ _ _ _ _ _\n"
