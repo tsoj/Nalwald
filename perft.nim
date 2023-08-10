@@ -2,14 +2,7 @@ import
     position,
     positionUtils,
     move,
-    movegen,
-    moveIterator
-
-import std/[
-    strutils,
-    times,
-    random
-]
+    movegen
 
 func perft*(position: Position, depth: int, printRootMoveNodes = false): uint64 =
     if depth <= 0:

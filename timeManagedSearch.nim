@@ -53,7 +53,8 @@ iterator iterativeTimeManagedSearch*(
     maxNodes: uint64 = uint64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    requireRootPv = false
 ): tuple[pvList: seq[Pv], nodes: uint64, passedTime: Duration] =
 
     var stopFlag: Atomic[bool]
@@ -82,7 +83,8 @@ iterator iterativeTimeManagedSearch*(
         maxNodes = maxNodes,
         multiPv = multiPv,
         searchMoves = searchMoves,
-        evaluation
+        evaluation = evaluation,
+        requireRootPv = requireRootPv
     ):
         iteration += 1
         let totalPassedTime = now() - start
@@ -128,7 +130,8 @@ proc timeManagedSearch*(
     maxNodes: uint64 = uint64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    requireRootPv = false
 ): seq[Pv] =
     for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(
         position,
@@ -144,6 +147,7 @@ proc timeManagedSearch*(
         maxNodes = maxNodes,
         multiPv = multiPv,
         searchMoves = searchMoves,
-        evaluation
+        evaluation = evaluation,
+        requireRootPv = requireRootPv
     ):
         result = pvList

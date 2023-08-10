@@ -1,22 +1,24 @@
 import
     position,
-    movegen,
     types,
     perft,
     searchUtils,
     hashTable,
     moveIterator,
     positionUtils,
-    utils
+    utils,
+    timeManagedSearch,
+    see
 
 import std/[
     random,
     times,
-    strutils
+    strutils,
+    terminal
 ]
 
 
-type SearchTestState = object
+type TestPerftState = object
     randomMoves: array[10000, Move]
     hashTable: ptr HashTable
     killerTable: KillerTable
@@ -24,7 +26,7 @@ type SearchTestState = object
     randState = initRand(0)
     testPseudoLegality = false
 
-func searchTest(position: Position, state: var SearchTestState, depth: Ply, height: Ply, previous: Move): uint64 =
+func testPerft(position: Position, state: var TestPerftState, depth: Ply, height: Ply, previous: Move): uint64 =
     ## Returns number of nodes and also does a number of asserts on different systems
     
     if depth <= 0.Ply:
@@ -39,7 +41,9 @@ func searchTest(position: Position, state: var SearchTestState, depth: Ply, heig
 
     let hashResult = state.hashTable[].get(position.zobristKey)
 
-    var bestMove = noMove
+    var
+        bestMove = noMove
+        numLegalMoves = 0
 
     for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
 
@@ -56,8 +60,9 @@ func searchTest(position: Position, state: var SearchTestState, depth: Ply, heig
         # Test zobrist key incremental calculation
         doAssert newPosition.zobristKey == newPosition.calculateZobristKey
 
-        if not newPosition.inCheck(position.us):    
-            result += newPosition.searchTest(state, depth = depth - 1, height = height + 1, previous = move)
+        if not newPosition.inCheck(position.us):
+            numLegalMoves += 1
+            result += newPosition.testPerft(state, depth = depth - 1, height = height + 1, previous = move)
 
             if bestMove == noMove:
                 bestMove = move
@@ -68,7 +73,7 @@ func searchTest(position: Position, state: var SearchTestState, depth: Ply, heig
     let bestValue = if state.randState.rand(1.0) < 0.01:
         valueCheckmate * state.randState.rand(-1..1).Value
     else:
-        state.randState.rand(-valueCheckmate..valueCheckmate)
+        state.randState.rand(-valueCheckmate.int64..valueCheckmate.int64).Value
     
     let
         nodeTypeRandValue = state.randState.rand(1.0)
@@ -79,10 +84,12 @@ func searchTest(position: Position, state: var SearchTestState, depth: Ply, heig
         else:
             pvNode
 
-    state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
-    state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = nodeType != allNode)
-    if nodeType == cutNode:
-        state.killerTable.update(height, bestMove)
+    if numLegalMoves > 0:
+        doAssert bestMove != noMove
+        state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
+        state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = nodeType != allNode)
+        if nodeType == cutNode:
+            state.killerTable.update(height, bestMove)
 
     # Test for isPseudoLegal
     if state.testPseudoLegality:
@@ -131,14 +138,11 @@ proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
             result[^1].nodes.add(words[i].parseBiggestUInt)
 
 
-proc searchTest*(
+proc testSearchAndPerft(
     maxNodes = uint64.high,
     useInternal = true,
     useExternal = false
 ) =
-    # TODO make some proper tests
-    doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len == 265
-
     let
         data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
         start = now()
@@ -146,7 +150,7 @@ proc searchTest*(
     var
         hashTable = newHashTable()
         historyTable = newHistoryTable()
-        searchTestState = SearchTestState(
+        testPerftState = TestPerftState(
             hashTable: addr hashTable,
             historyTable: addr historyTable
         )
@@ -156,30 +160,67 @@ proc searchTest*(
 
         
     for perftData in data:
-        echo "---------------\nTesting ", perftData.position.fen
+        let position = perftData.position
+        echo "---------------\nTesting ", position.fen
+        echo "Perft test:"
+        # perft test
         for depth in 1..perftData.nodes.len:
             let trueNumNodes = perftData.nodes[depth - 1]
 
             if trueNumNodes > maxNodes:
                 break
 
-            searchTestState.testPseudoLegality = trueNumNodes < 100_000
+            testPerftState.testPseudoLegality = trueNumNodes < 100_000
 
             let
-                searchTestResult = perftData.position.searchTest(
-                    searchTestState,
+                testPerftResult = position.testPerft(
+                    testPerftState,
                     depth = depth.Ply,
                     height = 0.Ply,
                     previous = noMove
                 )
-                perftResult = perftData.position.perft(depth.Ply)
+                perftResult = position.perft(depth.Ply)
 
-            echo searchTestResult, (if searchTestResult == trueNumNodes: " == " else: " != "), trueNumNodes
-            doAssert searchTestResult == trueNumNodes, "Failed perft test"
-            doAssert perftResult == searchTestResult, "Failed fast perft test"
+            echo testPerftResult, (if testPerftResult == trueNumNodes: " == " else: " != "), trueNumNodes
+            doAssert testPerftResult == trueNumNodes, "Failed perft test"
+            doAssert perftResult == testPerftResult, "Failed fast perft test"
+
+        # testing real search
+        echo "Search test:"
+        hashTable.clear()
+        let searchResult = position.timeManagedSearch(
+            hashTable, requireRootPv = true, moveTime = initDuration(seconds = 2)
+        )
+        doAssert searchResult.len > 0
+        doAssert searchResult[0].value in -valueCheckmate..valueCheckmate
+        doAssert searchResult[0].pv.len > 0
+        echo "Value: ", searchResult[0].value, ", pv: ", searchResult[0].pv.notation(position)
 
     echo "---------------\nPassed time: ", now() - start   
     echo "Finished search/perft test successfully"
 
+proc runTests(
+    maxNodes = uint64.high,
+    useInternal = true,
+    useExternal = false
+) =
+    doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len == 265
+
+    echo "---------------"
+    styledEcho styleBright, "SEE test:"
+    seeTest()
+
+    echo "---------------"
+    styledEcho styleBright, "Search and perft test:"
+    testSearchAndPerft(
+        maxNodes = maxNodes,
+        useInternal = useInternal,
+        useExternal = useExternal
+    )
+
+    echo "---------------"
+    styledEcho styleBright, fgGreen, "Finished all tests successfully"
+
+
 when isMainModule:
-    searchTest useExternal = true
+    runTests(maxNodes = 1_000_000)# useExternal = true

@@ -55,7 +55,8 @@ iterator iterativeDeepeningSearch*(
     maxNodes = uint64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    requireRootPv = false
 ): tuple[pvList: seq[Pv], nodes: uint64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
 
@@ -147,9 +148,13 @@ iterator iterativeDeepeningSearch*(
                         value = hashTable.get(position.zobristKey).value
                     
                     if pv.len == 0:
-                        debugEcho "WARNING: Couldn't find PV at root node.", &"\n{position.fen = }"
-                        doAssert position.legalMoves.len > 0
-                        pv = @[position.legalMoves[0]]
+                        let msg = &"WARNING: Couldn't find PV at root node.\n{position.fen = }"
+                        if requireRootPv:
+                            doAssert false, msg
+                        else:
+                            debugEcho msg
+                            doAssert position.legalMoves.len > 0
+                            pv = @[position.legalMoves[0]]
 
                     skipMoves.add pv[0]
 
