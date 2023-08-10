@@ -8,7 +8,6 @@ import
     uciInfos,
     perft,
     tests,
-    see,
     evaluation,
     version,
     utils
