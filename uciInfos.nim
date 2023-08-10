@@ -118,33 +118,14 @@ proc help*(params: openArray[string]) =
         of "fen":
             echo "Prints the FEN notation of the current internal board."    
         of "perft":
-            styledEcho {styleBright}, "perft <x> [fast]"
-            echo(
-                "Calculates the perft of the current position to depth <x>. ",
-                "If 'fast' is added, no node counts for root moves are printed. ",
-                "Instead printed will be final node count and time needed for the most optimized perft function."
-            )
+            styledEcho {styleBright}, "perft <x>"
+            echo "Calculates the perft of the current position to depth <x>."
         of "test":
-            styledEcho {styleBright}, "test [<x>] [nozobrist|pseudo|onlytxt]..."
+            styledEcho {styleBright}, "test [<x>]"
             echo(
-                "Runs SEE and perft tests. ",
-                "If a file 'perft_test.txt' exists then the positions from that file will be included."
-            )
-            printCommandBulletPoint "<x>"
-            echo "    Run perft test only to a maximum of <x> nodes per position."
-            printCommandBulletPoint "nozobrist"
-            echo "    Don't do zobrist key tests."
-            printCommandBulletPoint "pseudo"
-            echo "    Do tests for the pseudo legality function."
-            printCommandBulletPoint "nointernal"
-            echo "    Don't use the internal test positions."
-            printCommandBulletPoint "noexternal"
-            echo "    Don't use the positions given in 'perft_test.txt'."
-            echo "Example:"
-            echo "'test 100000 nozobrist nointernal'"
-            echo(
-                "Runs perft only up to 100000 nodes per positions, doesn't do zobrist key test and only ",
-                "uses positions from 'perft_test.txt'."
+                "Runs various tests. ",
+                "If a file './perft_test.txt' exists then the positions from that file will be included for some of these tests. ",
+                "If <x> is given, perft tests will only test up to <x> nodes per position."
             )
         of "eval":
             echo "Prints the static evaluation value for the current internal position."

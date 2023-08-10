@@ -141,7 +141,7 @@ proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
 proc testSearchAndPerft(
     maxNodes = uint64.high,
     useInternal = true,
-    useExternal = false
+    useExternal = true
 ) =
     let
         data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
@@ -199,10 +199,10 @@ proc testSearchAndPerft(
     echo "---------------\nPassed time: ", now() - start   
     echo "Finished search/perft test successfully"
 
-proc runTests(
+proc runTests*(
     maxNodes = uint64.high,
     useInternal = true,
-    useExternal = false
+    useExternal = true
 ) =
     doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len == 265
 
@@ -223,4 +223,4 @@ proc runTests(
 
 
 when isMainModule:
-    runTests(maxNodes = 1_000_000)# useExternal = true
+    runTests()

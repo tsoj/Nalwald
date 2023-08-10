@@ -7,6 +7,7 @@ import
     uciSearch,
     uciInfos,
     perft,
+    tests,
     see,
     evaluation,
     version,
@@ -197,31 +198,23 @@ proc uciNewGame(uciState: var UciState) =
 proc test(params: seq[string]) =
     seeTest()
     if params.len == 0:
-        perftTest()
+        runTests()
     else:
         let numNodes = try:
             params[0].parseInt.uint64
         except CatchableError:
             uint64.high
 
-        perftTest(
-            numNodes,
-            testPseudoLegality = "pseudo" in params,
-            testZobristKeys = not ("nozobrist" in params),
-            useInternal = not ("nointernal" in params),
-            useExternal = not ("noexternal" in params)
-        )
+        runTests(maxNodes = numNodes)
 
 proc perft(uciState: UciState, params: seq[string]) =
     if params.len >= 1:
-        if "fast" in params:
-            let start = now()
-            let nodes = uciState.position.fastPerft(params[0].parseInt)
-            let s = (now() - start).inMilliseconds.float / 1000.0
-            echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
-            echo (nodes.float / s).int, " nodes per second"
-        else:
-            echo uciState.position.perft(params[0].parseInt, printMoveNodes = true)
+        let
+            start = now()
+            nodes = uciState.position.perft(params[0].parseInt, printRootMoveNodes = true)
+            s = (now() - start).inMilliseconds.float / 1000.0
+        echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
+        echo (nodes.float / s).int, " nodes per second"
     else:
         echo "Missing depth parameter"
 
