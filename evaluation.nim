@@ -95,7 +95,7 @@ func kingRelativePst(
         square = square.colorConditionalMirrorVertically(us)
         kingSquares = [
             relativeToUs: kingSquares[us].colorConditionalMirrorVertically(us),
-            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(enemy) # TODO check if changing this to colorConditionalMirrorVertically(enemy) makes any difference
+            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(us)
         ]
 
     for phase in Phase:
