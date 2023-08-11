@@ -148,12 +148,12 @@ proc help*(params: openArray[string]) =
 
 proc printLogo*() =
 
-    echo fmt"──────────────── Nalwald ────────────────"
+    echo fmt"---------------- Nalwald ----------------"
     echo fmt"       __,      o     n_n_n   ooooo    + "
     echo fmt" o    // o\    ( )    \   /    \ /    \ /"
     echo fmt"( )   \  \_>   / \    |   |    / \    ( )"
     echo fmt"|_|   /__\    /___\   /___\   /___\   /_\"
-    echo fmt"──────────── by Jost Triller ────────────"
+    echo fmt"------------ by Jost Triller ------------"
 
 proc about*(extra = true) =
     const readme = readFile("README.md")
