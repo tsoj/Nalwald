@@ -1,5 +1,6 @@
 import std/[
-    terminal
+    terminal,
+    strutils
 ]
 
 
@@ -12,6 +13,7 @@ proc printMarkdownSubset*(markdown: string) =
         isCodeBlock = false
         isBright = false
         isItalic = false
+        couldBeBulletPoint = true
         currentString = ""
 
     func popFront(s: var string) =
@@ -40,6 +42,9 @@ proc printMarkdownSubset*(markdown: string) =
 
     while markdown.len > 0:
 
+        if markdown[0] != '-' and markdown[0] notin Whitespace:
+            couldBeBulletPoint = false
+
         if markdown[0] == '\n':
             printCurrentString()
             isTitle = false
@@ -50,6 +55,8 @@ proc printMarkdownSubset*(markdown: string) =
             elif markdown.len > 1 and not isInlineCode:
                 if markdown[0] == '#':
                     isTitle = true
+                else:
+                    couldBeBulletPoint = true
         
         elif markdown.len >= 2 and markdown[0..1] == "**":
             printCurrentString()
@@ -73,6 +80,12 @@ proc printMarkdownSubset*(markdown: string) =
             printCurrentString()
             isInlineCode = not isInlineCode
             markdown.popFront
+
+        elif markdown[0] == '-' and couldBeBulletPoint:
+            stdout.styledWrite styleDim, styleBright, currentString, "•"
+            currentString = ""
+            markdown.popFront
+            couldBeBulletPoint = false
 
         else:
             currentString &= markdown[0]
