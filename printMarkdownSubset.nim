@@ -4,15 +4,16 @@ import std/[
 ]
 
 
-proc printMarkdownSubset*(markdown: string) =
+proc printMarkdownSubsetNoNewline(markdown: string) =
 
     var
-        markdown = "\n" & markdown
+        markdown = markdown
         isTitle = false
         isInlineCode = false
         isCodeBlock = false
         isBright = false
         isItalic = false
+        isBulletPoint = false
         couldBeBulletPoint = true
         currentString = ""
 
@@ -35,6 +36,9 @@ proc printMarkdownSubset*(markdown: string) =
 
         if isTitle:
             stdout.setStyle {styleBright, styleUnderscore}
+
+        if isBulletPoint:
+            stdout.setStyle {styleDim}
 
         stdout.write currentString
         stdout.resetAttributes()
@@ -82,11 +86,23 @@ proc printMarkdownSubset*(markdown: string) =
             markdown.popFront
 
         elif markdown[0] == '-' and couldBeBulletPoint:
-            stdout.styledWrite styleDim, styleBright, currentString, "•"
-            currentString = ""
-            markdown.popFront
+            currentString &= "•"
+            isBulletPoint = true
+            printCurrentString()
+            isBulletPoint = false
             couldBeBulletPoint = false
+            markdown.popFront
 
         else:
             currentString &= markdown[0]
             markdown.popFront
+
+proc printMarkdownSubset*(markdownLines: varargs[string]) =
+    var markdown = ""
+    for line in markdownLines:
+        markdown &= line
+
+    if markdown.len > 0:
+        if markdown[^1] != '\n':
+            markdown &= "\n"
+        printMarkdownSubsetNoNewline markdown
