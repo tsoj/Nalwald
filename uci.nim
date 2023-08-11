@@ -123,7 +123,6 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
         echo "Unknown parameters"
         return
 
-
     uciState.history.setLen(0)
 
     if params.len > index and params[index] == "moves":
