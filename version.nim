@@ -10,6 +10,10 @@ func compileYear*(): string = CompileDate.split('-')[0]
 
 when "git version" notin staticExec("git -v") or "not a git repository" in staticExec("git status"):
 
+    static:
+        debugEcho "WARNING: Git not available or not a git repo"
+        debugEcho "git -v: ", staticExec("git -v"), "\ngit status: ", staticExec("git status")
+
     func version*(): Option[string] =
         none(string)
     
