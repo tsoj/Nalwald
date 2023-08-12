@@ -79,31 +79,37 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         source = move.source
         moved = move.moved
         captured = move.captured
+        promoted = move.promoted
         enPassantTarget = move.enPassantTarget
         capturedEnPassant = move.capturedEnPassant
         us = position.us
         enemy = position.enemy
         occupancy = position.occupancy
-    assert source != noSquare and target != noSquare and moved != noPiece
 
+    if moved notin pawn..king or
+    source notin a1..h8 or
+    target notin a1..h8:
+        return false
+
+    # check that moved is okay
     if (source.toBitboard and position[us] and position[moved]) == 0:
         return false
     
+    # check that target is okay, but handle castle case extra
     if (target.toBitboard and position[us]) != 0 and not move.castled:
         return false
 
+    # check that captured is okay, but handle en passant case extra
     if captured != noPiece and (target.toBitboard and position[enemy] and position[captured]) == 0 and not capturedEnPassant:
         return false
-
-    if captured == noPiece and  (target.toBitboard and position[enemy]) != 0:
+    if captured == noPiece and (target.toBitboard and position[enemy]) != 0:
         return false
-
-    if moved == pawn and captured == noPiece and 
-    ((occupancy and target.toBitboard) != 0 or (enPassantTarget != noSquare and (enPassantTarget.toBitboard and occupancy) != 0)):
-        return false
-
-    if capturedEnPassant and (target.toBitboard and position.enPassantCastling and not(ranks[a1] or ranks[a8])) == 0:
-        return false
+    # handle the captured en passant case
+    if capturedEnPassant:
+        if (target.toBitboard and position.enPassantCastling and not(ranks[a1] or ranks[a8])) == 0:
+            return false
+        if (target.toBitboard and occupancy) != 0:
+            return false
 
     if (moved == bishop or moved == rook or moved == queen) and
     (target.toBitboard and moved.attackMask(source, occupancy)) == 0:
@@ -112,11 +118,23 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     if moved == pawn:
         if captured != noPiece and (target.toBitboard and attackTablePawnCapture[us][source]) == 0:
             return false
-        elif captured == noPiece and (target.toBitboard and attackTablePawnQuiet[us][source]) == 0 and
-        (
-            (attackTablePawnQuiet[enemy][target] and attackTablePawnQuiet[us][source]) == 0 or
-            (occupancy and attackTablePawnQuiet[us][source]) != 0
-        ):
+        elif captured == noPiece:
+            if target.toBitboard != attackTablePawnQuiet[us][source]:
+                if (occupancy and attackTablePawnQuiet[us][source]) != 0:
+                    return false
+                if enPassantTarget notin a1..h8:
+                    return false
+                if (enPassantTarget.toBitboard and attackTablePawnQuiet[enemy][target] and attackTablePawnQuiet[us][source]) == 0:
+                    return false
+            elif enPassantTarget != noSquare:
+                return false
+
+    if promoted != noPiece:
+        if moved != pawn:
+            return false
+        if promoted notin knight..queen:
+            return false
+        if (target.toBitboard and (ranks[a1] or ranks[a8])) == 0:
             return false
 
     if move.castled:
@@ -139,6 +157,8 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         for checkSquare in checkSensitive[us][castlingSide][kingSource]:
             if position.isAttacked(us, checkSquare):
                 return false
+
+    assert source != noSquare and target != noSquare and moved != noPiece
     true
 
 func calculateZobristKey*(position: Position): uint64 =

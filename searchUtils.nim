@@ -30,7 +30,7 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
     if move.isTactical:
         return
 
-    doAssert move.moved in pawn..king
+    doAssert move.moved in pawn..king, "Is move a noMove? " & $(move == noMove)
     doAssert historyTable.counterTable != nil
 
     func add(

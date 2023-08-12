@@ -26,22 +26,23 @@ template create*(
     move = cast[Move](cast[uint32](move) or ((capturedEnPassant.uint32 and 0b1) shl 24))
     move = cast[Move](cast[uint32](move) or ((enPassantTarget.uint32 and 0b1111111) shl 25))
 
+# TODO create a clampToType(number, type): type function that does this
 template source*(move: Move): Square =
-    (cast[uint32](move) and 0b1111111).Square
+    clamp(cast[uint32](move) and 0b1111111, Square.low.uint32, Square.high.uint32).Square
 template target*(move: Move): Square  =
-    ((cast[uint32](move) shr 7) and 0b1111111).Square
+    clamp((cast[uint32](move) shr 7) and 0b1111111, Square.low.uint32, Square.high.uint32).Square
 template moved*(move: Move): Piece =
-    ((cast[uint32](move) shr 14) and 0b111).Piece
+    clamp((cast[uint32](move) shr 14) and 0b111, Piece.low.uint32, Piece.high.uint32).Piece
 template captured*(move: Move): Piece =
-    ((cast[uint32](move) shr 17) and 0b111).Piece
+    clamp((cast[uint32](move) shr 17) and 0b111, Piece.low.uint32, Piece.high.uint32).Piece
 template promoted*(move: Move): Piece =
-    ((cast[uint32](move) shr 20) and 0b111).Piece
+    clamp((cast[uint32](move) shr 20) and 0b111, Piece.low.uint32, Piece.high.uint32).Piece
 template castled*(move: Move): bool =
     ((cast[uint32](move) shr 23) and 0b1).bool
 template capturedEnPassant*(move: Move): bool =
     ((cast[uint32](move) shr 24) and 0b1).bool
 template enPassantTarget*(move: Move): Square =
-    ((cast[uint32](move) shr 25) and 0b1111111).Square
+    clamp((cast[uint32](move) shr 25) and 0b1111111, Square.low.uint32, Square.high.uint32).Square
 
 const noMove*: Move = block:
     var move: Move

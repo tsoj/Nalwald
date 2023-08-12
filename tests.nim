@@ -94,7 +94,7 @@ func testPerft(position: Position, state: var TestPerftState, depth: Ply, height
     # Test for isPseudoLegal
     if state.testPseudoLegality:
         for claimedMove in claimedPseudoLegalMoves:
-            doAssert claimedMove == noMove
+            doAssert claimedMove == noMove, "Move: " & $claimedMove & ", position: " & position.fen
 
 type PerftData = object
     position: Position
@@ -170,7 +170,7 @@ proc testSearchAndPerft(
             if trueNumNodes > maxNodes:
                 break
 
-            testPerftState.testPseudoLegality = trueNumNodes < 100_000
+            testPerftState.testPseudoLegality = trueNumNodes < 200_000
 
             let
                 testPerftResult = position.testPerft(
