@@ -5,8 +5,6 @@
 </h1>
 </div>
 
-
-
 Nalwald is a superhuman chess engine for classical and fischer random chess. It supports the Universal Chess Interface (UCI), so it can be used with most chess GUIs, such as Arena or Cute Chess. Nalwald is written in the programming language Nim, a modern compiled systems language.
 
 ### Download
@@ -73,10 +71,10 @@ I began writing chess programs pretty much immediately after my first "Hello wor
 On this journey from an at best mediocre chess program to a chess engine that can win against the best human players, the chessprogramming.org wiki and the talkchess.com forum have been a great source of information and motivation. At the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
 Some noteworthy features of Nalwald are:
-- *Piece-relative PSTs* are piece square tables that are different depending on which square another piece is. They are added together for all pieces of all piece types.
-- *Futility reductions* are an improvement to futility pruning. Here not only are moves skipped that are likely to be much worse than alpha. Additionally, moves that are likely slightly worse than alpha get their depth reduced accordingly to how bad they are expected to be.
-- *Hash result futility pruning* uses hash table entries that have not a depth high enough to adjust alpha or beta, or to return a value immediately. Rather, depending on their depth, the value gets only used, when the margin to alpha or beta is big enough.
-- *3x3 pawn structure tables* are a way to evaluate the structure of multiple pawns. For this a 3x3 mask is used on any square for which at least two pawns (ours or enemy) fall into this mask. The pawns in that mask can be used to calculate an exact index for this structure of pawns in a 3x3 space. This index can be used to access a table, which contains values to evaluate this pawn structure. This table can then be optimized using a method like gradient descent.
+- **Piece-relative PSTs** are piece square tables that are different depending on which square another piece is. They are added together for all pieces of all piece types.
+- **Futility reductions** are an improvement to futility pruning. Here not only are moves skipped that are likely to be much worse than alpha. Additionally, moves that are likely slightly worse than alpha get their depth reduced accordingly to how bad they are expected to be.
+- **Hash result futility pruning** uses hash table entries that have not a depth high enough to adjust alpha or beta, or to return a value immediately. Rather, depending on their depth, the value gets only used, when the margin to alpha or beta is big enough.
+- **3x3 pawn structure tables** are a way to evaluate the structure of multiple pawns. For this a 3x3 mask is used on any square for which at least two pawns (ours or enemy) fall into this mask. The pawns in that mask can be used to calculate an exact index for this structure of pawns in a 3x3 space. This index can be used to access a table, which contains values to evaluate this pawn structure. This table can then be optimized using a method like gradient descent.
 
 ### Rating
 
