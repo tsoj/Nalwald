@@ -152,7 +152,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         if i+1 < params.len:  
             case params[i]:
             of "depth":
-                searchInfo.targetDepth = params[i+1].parseInt.clamp(Ply.low, Ply.high).Ply
+                searchInfo.targetDepth = params[i+1].parseInt.clampToType(Ply)
             of "movestogo":
                 searchInfo.movesToGo = params[i+1].parseInt.int16
             of "winc":

@@ -116,7 +116,6 @@ proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
             "b1rkrbnq/1pp1pppp/2np4/p5N1/8/1P2P3/P1PP1PPP/BNRKRB1Q w CEce - 0 9,37,740,27073,581744,21156664,485803600",
             "nrknbrqb/3p1ppp/ppN1p3/8/6P1/8/PPPPPP1P/1RKNBRQB w BFbf - 0 9,32,526,17267,319836,10755190,220058991",
             "bbqrnnkr/1ppp1p1p/5p2/p5p1/P7/1P4P1/2PPPP1P/1BQRNNKR w DKdk - 0 9,20,322,7224,145818,3588435,82754650"
-
         ]
     else:
         @[]

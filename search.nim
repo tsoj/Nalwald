@@ -8,6 +8,7 @@ import
     moveIterator,
     hashTable,
     evaluation,
+    utils,
     see
 
 import std/[
@@ -24,10 +25,7 @@ const
     aspirationWindowMultiplier = 2.0
 
 func futilityReduction(value: Value): Ply =
-    clamp(
-        value.toCp div 100,
-        Ply.low.int, Ply.high.int
-    ).Ply
+    clampToType(value.toCp div 100, Ply)
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
     depthDifference.Value * 300.cp

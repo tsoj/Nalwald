@@ -94,3 +94,6 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
         if now() - start >= duration:
             flag[].store(true)
         sleep(sleepTimeMs)
+
+func clampToType*[In, Out](x: In, OutType: typedesc[Out]): Out =
+    x.clamp(OutType.low.In, OutType.high.In).Out
