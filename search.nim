@@ -51,8 +51,8 @@ type SearchState* = object
     killerTable*: KillerTable
     historyTable*: ptr HistoryTable
     gameHistory*: GameHistory
-    countedNodes*: uint64
-    maxNodes*: uint64
+    countedNodes*: int64
+    maxNodes*: int64
     skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 

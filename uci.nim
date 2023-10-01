@@ -62,7 +62,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
-                uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
+                uciState.hashTable.setByteSize(sizeInBytes = newHashSizeMB * megaByteToByte)
         of "UCI_Chess960".toLowerAscii:
             discard
         of "Threads".toLowerAscii:
@@ -144,7 +144,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         multiPv: uciState.multiPv,
         searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
-        nodes: uint64.high,
+        nodes: int64.high,
         uciCompatibleOutput: uciState.uciCompatibleOutput
     )
 
@@ -166,7 +166,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "movetime":
                 searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
             of "nodes":
-                searchInfo.nodes = params[i+1].parseUInt
+                searchInfo.nodes = params[i+1].parseBiggestInt
             else:
                 discard
         try:
@@ -198,9 +198,9 @@ proc test(params: seq[string]) =
         runTests()
     else:
         let numNodes = try:
-            params[0].parseInt.uint64
+            params[0].parseBiggestInt.int64
         except CatchableError:
-            uint64.high
+            int64.high
 
         runTests(maxNodes = numNodes)
 
@@ -226,7 +226,7 @@ proc uciLoop*() =
         multiPv: 1
     )
     uciState.searchRunningFlag.store(false)
-    uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
+    uciState.hashTable.setByteSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     
     var searchThreadResult = FlowVar[bool]()
     while true:

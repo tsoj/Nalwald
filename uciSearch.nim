@@ -22,7 +22,7 @@ import std/[
 func printInfoString(
     iteration: int,
     value: Value,
-    nodes: uint64,
+    nodes: int64,
     pv: string,
     time: Duration,
     hashFull: int,
@@ -48,7 +48,7 @@ func printInfoString(
         printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
         printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-        let nps = 1000*(nodes div max(1, time.inMilliseconds).uint64)
+        let nps = 1000*(nodes div max(1, time.inMilliseconds).int64)
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
         
         printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
@@ -85,7 +85,7 @@ func printInfoString(
     iteration: int,
     position: Position,
     pvList: seq[Pv],
-    nodes: uint64,
+    nodes: int64,
     time: Duration,
     hashFull: int,
     beautiful: bool
@@ -137,7 +137,7 @@ type SearchInfo* = object
     multiPv*: int
     searchMoves*: seq[Move]
     numThreads*: int
-    nodes*: uint64
+    nodes*: int64
     uciCompatibleOutput*: bool
 
 proc uciSearch*(searchInfo: SearchInfo) =

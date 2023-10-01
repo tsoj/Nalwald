@@ -26,7 +26,7 @@ type TestPerftState = object
     randState = initRand(0)
     testPseudoLegality = false
 
-func testPerft(position: Position, state: var TestPerftState, depth: Ply, height: Ply, previous: Move): uint64 =
+func testPerft(position: Position, state: var TestPerftState, depth: Ply, height: Ply, previous: Move): int64 =
     ## Returns number of nodes and also does a number of asserts on different systems
     
     if depth <= 0.Ply:
@@ -98,7 +98,7 @@ func testPerft(position: Position, state: var TestPerftState, depth: Ply, height
 
 type PerftData = object
     position: Position
-    nodes: seq[uint64]
+    nodes: seq[int64]
 
 proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
 
@@ -132,13 +132,13 @@ proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
     for line in lines:
         var words = line.split(',')
         doAssert words.len >= 1
-        result.add(PerftData(position: words[0].toPosition, nodes: newSeq[uint64](0)))
+        result.add(PerftData(position: words[0].toPosition, nodes: newSeq[int64](0)))
         for i in 1..<words.len:
-            result[^1].nodes.add(words[i].parseBiggestUInt)
+            result[^1].nodes.add(words[i].parseBiggestInt)
 
 
 proc testSearchAndPerft(
-    maxNodes = uint64.high,
+    maxNodes = int64.high,
     useInternal = true,
     useExternal = true
 ) =
@@ -154,7 +154,7 @@ proc testSearchAndPerft(
             historyTable: addr historyTable
         )
 
-    hashTable.setSize megaByteToByte * 16
+    hashTable.setByteSize megaByteToByte * 16
 
 
         
@@ -199,7 +199,7 @@ proc testSearchAndPerft(
     echo "Finished search/perft test successfully"
 
 proc runTests*(
-    maxNodes = uint64.high,
+    maxNodes = int64.high,
     useInternal = true,
     useExternal = true
 ) =

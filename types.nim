@@ -31,6 +31,7 @@ type
     GamePhase* = 0..32
     Phase* = enum
         opening, endgame
+    ZobristKey* = uint64
 
 template isLeftEdge*(square: Square): bool =
     square.int8 mod 8 == 0

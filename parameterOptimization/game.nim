@@ -7,13 +7,17 @@ import
     ../move,
     ../evaluation
 
+import std/[
+    options
+]
+
 type
     Game* = object
         hashTable: HashTable
         positionHistory: seq[Position]
-        maxNodes: uint64
+        maxNodes: int64
         earlyResignMargin: Value
-        earlyAdjudicationPly: Ply
+        earlyAdjudicationMinConsistentPly: Ply
         evaluation: proc(position: Position): Value {.noSideEffect.}
     GameStatus* = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
@@ -32,58 +36,50 @@ func gameStatus*(positionHistory: openArray[Position]): GameStatus =
     for p in positionHistory:
         if p.zobristKey == position.zobristKey:
             repetitions += 1
-    doAssert repetitions >= 1
-    doAssert repetitions <= 3
+    doAssert repetitions in 1..3
     if repetitions == 3:
         return threefoldRepetition
     running
 
 proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
-    try:
-        doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
-        let position = game.positionHistory[^1]
-        let pvSeq = position.timeManagedSearch(
-            hashTable = game.hashTable,
-            positionHistory = game.positionHistory,
-            evaluation = game.evaluation,
-            maxNodes = game.maxNodes
-        )
-        doAssert pvSeq.len >= 1
-        let
-            pv = pvSeq[0].pv
-            value = pvSeq[0].value
-        doAssert pv.len >= 1
-        doAssert pv[0] != noMove
-        game.positionHistory.add position.doMove(pv[0])
-        return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
-        
-    except CatchableError:
-        var s = getCurrentExceptionMsg() & "\n"
-        s &= game.positionHistory[^1].fen & "\n"
-        s &= $game.positionHistory[^1] & "\n"
-        s &= game.positionHistory[^1].debugString & "\n"
-        raise newException(AssertionDefect, s)
+    doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
+    let position = game.positionHistory[^1]
+    let pvSeq = position.timeManagedSearch(
+        hashTable = game.hashTable,
+        positionHistory = game.positionHistory,
+        evaluation = game.evaluation,
+        maxNodes = game.maxNodes
+    )
+    doAssert pvSeq.len >= 1
+    let
+        pv = pvSeq[0].pv
+        value = pvSeq[0].value
+    doAssert pv.len >= 1
+    doAssert pv[0] != noMove
+
+    game.positionHistory.add position.doMove(pv[0])
+    return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
+    
 
 
 
 func newGame*(
     startingPosition: Position,
-    maxNodes = 20_000'u64,
+    maxNodes = 20_000,
     earlyResignMargin = 800.Value,
-    earlyAdjudicationPly = 8.Ply,
-    hashSize = 4_000_000,
+    earlyAdjudicationMinConsistentPly = 8.Ply,
+    hashLen = none(int),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
     result = Game(
-        hashTable: newHashTable(),
+        hashTable: newHashTable(len = hashLen.get(otherwise = maxNodes*2)),
         positionHistory: @[startingPosition],
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
-        earlyAdjudicationPly: earlyAdjudicationPly,
+        earlyAdjudicationMinConsistentPly: earlyAdjudicationMinConsistentPly,
         evaluation: evaluation
     )
-    result.hashTable.setSize(hashSize)
 
 proc playGame*(game: var Game, suppressOutput = false): float =
     doAssert game.positionHistory.len >= 1
@@ -130,11 +126,11 @@ proc playGame*(game: var Game, suppressOutput = false): float =
             else:
                 doAssert false
 
-        if drawPlies >= game.earlyAdjudicationPly:
+        if drawPlies >= game.earlyAdjudicationMinConsistentPly:
             return 0.5
-        if whiteResignPlies >= game.earlyAdjudicationPly:
+        if whiteResignPlies >= game.earlyAdjudicationMinConsistentPly:
             return 0.0
-        if blackResignPlies >= game.earlyAdjudicationPly:
+        if blackResignPlies >= game.earlyAdjudicationMinConsistentPly:
             return 1.0
 
 

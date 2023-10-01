@@ -50,12 +50,12 @@ iterator iterativeTimeManagedSearch*(
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
     numThreads: int,
-    maxNodes: uint64 = uint64.high,
+    maxNodes: int64 = int64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     requireRootPv = false
-): tuple[pvList: seq[Pv], nodes: uint64, passedTime: Duration] =
+): tuple[pvList: seq[Pv], nodes: int64, passedTime: Duration] =
 
     var stopFlag: Atomic[bool]
     var stop = if stop == nil: addr stopFlag else: stop
@@ -70,7 +70,7 @@ iterator iterativeTimeManagedSearch*(
     var
         startLastIteration = now()
         branchingFactors = newSeq[float](targetDepth.int)
-        lastNumNodes = uint64.high
+        lastNumNodes = int64.high
 
     var iteration = -1
     for (pvList, nodes, canStop) in iterativeDeepeningSearch(
@@ -96,7 +96,7 @@ iterator iterativeTimeManagedSearch*(
         doAssert calculatedMoveTime.approxTime >= DurationZero
         
         branchingFactors[iteration] = nodes.float / lastNumNodes.float;
-        lastNumNodes = if nodes <= 100_000: uint64.high else: nodes
+        lastNumNodes = if nodes <= 100_000: int64.high else: nodes
         var averageBranchingFactor = branchingFactors[iteration]
         if iteration >= 4:
             averageBranchingFactor =
@@ -127,7 +127,7 @@ proc timeManagedSearch*(
     timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
     moveTime = initDuration(milliseconds = int64.high),
     numThreads = 1,
-    maxNodes: uint64 = uint64.high,
+    maxNodes: int64 = int64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,

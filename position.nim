@@ -12,7 +12,7 @@ type Position* = object
     colors: array[white..black, Bitboard]
     enPassantCastling*: Bitboard
     rookSource*: array[white..black, array[CastlingSide, Square]]
-    zobristKey*: uint64
+    zobristKey*: ZobristKey
     us*: Color
     halfmovesPlayed*: int16
     halfmoveClock*: int16
@@ -161,7 +161,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     assert source != noSquare and target != noSquare and moved != noPiece
     true
 
-func calculateZobristKey*(position: Position): uint64 =
+func calculateZobristKey*(position: Position): ZobristKey =
     result = 0
     for piece in pawn..king:
         for square in position[piece]:
@@ -184,14 +184,14 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
         us = position.us
         enemy = position.enemy
 
-    position.zobristKey = position.zobristKey xor cast[uint64](position.enPassantCastling)
+    position.zobristKey = position.zobristKey xor cast[ZobristKey](position.enPassantCastling)
     position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
     position.enPassantCastling = position.enPassantCastling and not (source.toBitboard or target.toBitboard)
     if enPassantTarget != noSquare:
         position.enPassantCastling = position.enPassantCastling or enPassantTarget.toBitboard
     if moved == king:
         position.enPassantCastling = position.enPassantCastling and not homeRank[us]
-    position.zobristKey = position.zobristKey xor cast[uint64](position.enPassantCastling)
+    position.zobristKey = position.zobristKey xor cast[ZobristKey](position.enPassantCastling)
 
     # en passant
     if move.capturedEnPassant:

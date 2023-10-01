@@ -44,8 +44,7 @@ proc playGame(fen: string): (string, float) =
 
         const maxNodes = 2_000_000
         
-        var hashTable: HashTable = newHashTable()
-        hashTable.setSize(maxNodes * sizeof HashTableEntry)
+        var hashTable: HashTable = newHashTable(len = maxNodes)
         let position = fen.toPosition
         let pvSeq = position.timeManagedSearch(
             hashTable = hashTable,

@@ -83,8 +83,8 @@ func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
 #-------------- repetition detection --------------#
 
 type GameHistory* = object
-    staticHistory: seq[uint64]
-    dynamicHistory: array[Ply, uint64]
+    staticHistory: seq[ZobristKey]
+    dynamicHistory: array[Ply, ZobristKey]
 
 func newGameHistory*(staticHistory: seq[Position]): GameHistory =
     for position in staticHistory:
