@@ -45,4 +45,4 @@ mergeDuplicateAndSelect
 logo_backup.jpg
 tests
 generateTrainingData
-trainingSet.bin*
+trainingSet*.bin*

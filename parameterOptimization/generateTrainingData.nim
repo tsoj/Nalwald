@@ -17,34 +17,32 @@ import std/[
     atomics,
     streams,
     strformat,
-    times
+    times,
+    cpuinfo
 ]
 
 
 
 const
     openingFilename = "10ply-openings.epd"
-    outputFilename = "trainingSet.bin"
     targetTrainingSamples = 100_000_000
     openingSearchNodes = 50_000
     sampleGameSearchNodes = 10_000
     sampleGameMinLenPly = 10
     sampleFrequencyInGamePly = 25..35
 
-if fileExists outputFilename:
-    var backupFileName = outputFilename
-    while fileExists backupFileName:
-        backupFileName &= "_backup"
-    moveFile outputFilename, backupFileName
-
-doAssert not fileExists outputFilename
+let
+    startDate = now().format("yyyy-MM-dd-HH-mm-ss")
+    outputFilename = fmt"trainingSet_{startDate}.bin"
 
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
+    const earlyAdjudicationMinConsistentPly = 8
+    static: doAssert earlyAdjudicationMinConsistentPly <= sampleGameMinLenPly - 2, "This is necessary to avoid including trivial positions in the training set"
     var game = newGame(
         startingPosition = startPos,
         maxNodes = sampleGameSearchNodes,
         earlyResignMargin = 600.Value,
-        earlyAdjudicationMinConsistentPly = 8,
+        earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
         minAdjudicationGameLenPly = 20,
         hashTable = hashTable,
     )
@@ -70,6 +68,8 @@ let
             line: string
         while f.readLine(line):
             lines.add line
+        var rg = initRand()
+        rg.shuffle(lines)
         lines
     expectedNumberSamplesPerOpening = targetTrainingSamples div openingLines.len
 
@@ -87,12 +87,10 @@ echo fmt"{openingLines.len = }"
 echo fmt"{expectedNumberSamplesPerOpening = }"
 
 
-proc findStartPositionsAndPlay(startPos: Position) =
+proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
     var
         rg = initRand()
         numSamples = 0
-
-    echo fmt"{randRatio.load = }"
 
     
     {.warning[ProveInit]:off.}:
@@ -117,7 +115,7 @@ proc findStartPositionsAndPlay(startPos: Position) =
     var game = newGame(
         startingPosition = startPos,
         maxNodes = openingSearchNodes,
-        earlyResignMargin = 600.Value,
+        earlyResignMargin = 600.cp,
         earlyAdjudicationMinConsistentPly = 8,
         minAdjudicationGameLenPly = 20,
         hashTable = nil,
@@ -125,21 +123,19 @@ proc findStartPositionsAndPlay(startPos: Position) =
     )
     discard game.playGame
 
-    echo fmt"{numSamples = }"
+    echo fmt"Finished opening {stringIndex}, {numSamples = }"
 
-    randRatio.store randRatio.load*(expectedNumberSamplesPerOpening.float/numSamples.float)
-
-# var threadpool = createMaster()
-
-
-# let g = open(writeFilename, fmWrite)
-
-# proc playGame
+    randRatio.store randRatio.load*clamp(expectedNumberSamplesPerOpening.float/numSamples.float, 0.99, 1.01)
 
 let startTime = now()
 
-for fen in openingLines[0..1]:
-    let position = fen.toPosition
-    position.findStartPositionsAndPlay    
+var threadpool = createMaster()
+
+threadpool.awaitAll:
+    for i, fen in openingLines:
+        let
+            position = fen.toPosition
+            stringIndex = fmt"{i+1}/{openingLines.len}"
+        threadpool.spawn position.findStartPositionsAndPlay(stringIndex)
 
 echo "Total time: ", now() - startTime

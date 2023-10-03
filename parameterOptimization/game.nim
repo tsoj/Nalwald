@@ -78,7 +78,7 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
 func newGame*(
     startingPosition: Position,
     maxNodes = 20_000,
-    earlyResignMargin = 800.Value,
+    earlyResignMargin = 800.cp,
     earlyAdjudicationMinConsistentPly = 8,
     minAdjudicationGameLenPly = 30,
     hashTable: ref HashTable = nil,
