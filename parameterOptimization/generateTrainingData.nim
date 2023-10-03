@@ -42,12 +42,12 @@ func isValidSamplePosition(position: Position): bool =
     position.halfmoveClock < 80
 
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
-    const earlyAdjudicationMinConsistentPly = 8
+    const earlyAdjudicationMinConsistentPly = 6
     static: doAssert earlyAdjudicationMinConsistentPly <= sampleGameMinLenPly - 2, "This is necessary to avoid including trivial positions in the training set"
     var game = newGame(
         startingPosition = startPos,
         maxNodes = sampleGameSearchNodes,
-        earlyResignMargin = 600.Value,
+        earlyResignMargin = 500.cp,
         earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
         minAdjudicationGameLenPly = 20,
         hashTable = hashTable,
@@ -111,24 +111,21 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
     func specialEval(position: Position): Value =
         result = position.evaluate
         {.cast(noSideEffect).}:
-            if rg.rand(1.0) <= randRatio.load:
+            if rg.rand(1.0) <= randRatio.load and position.isValidSamplePosition:
+                let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
+                numSamples += samples.len
 
-                if position.isValidSamplePosition:                    
-
-                    let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
-                    numSamples += samples.len
-
-                    withLock outFileMutex:
-                        for (position, value) in samples:
-                            outFileStream.writePosition position
-                            outFileStream.write value
-                            outFileStream.flush
+                withLock outFileMutex:
+                    for (position, value) in samples:
+                        outFileStream.writePosition position
+                        outFileStream.write value
+                        outFileStream.flush
 
 
     var game = newGame(
         startingPosition = startPos,
         maxNodes = openingSearchNodes,
-        earlyResignMargin = 600.cp,
+        earlyResignMargin = 400.cp,
         earlyAdjudicationMinConsistentPly = 8,
         minAdjudicationGameLenPly = 20,
         hashTable = nil,
