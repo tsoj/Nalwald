@@ -4,6 +4,7 @@ import
     ../position,
     ../hashTable,
     ../evaluation,
+    ../search,
     ../positionUtils,
     winningProbability,
     game
@@ -35,6 +36,11 @@ let
     startDate = now().format("yyyy-MM-dd-HH-mm-ss")
     outputFilename = fmt"trainingSet_{startDate}.bin"
 
+func isValidSamplePosition(position: Position): bool =
+    position.material == position.materialQuiesce and
+    position.legalMoves.len > 0 and
+    position.halfmoveClock < 80
+
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
     const earlyAdjudicationMinConsistentPly = 8
     static: doAssert earlyAdjudicationMinConsistentPly <= sampleGameMinLenPly - 2, "This is necessary to avoid including trivial positions in the training set"
@@ -57,8 +63,12 @@ proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTa
         let
             (position, value) = positionHistory[index]
             searchWinningProb = value.winningProbability(k = 1.0)
-        result.add (position, (searchWinningProb + gameResult)/2.0)
-        index += rg.rand(sampleFrequencyInGamePly)
+
+        if position.isValidSamplePosition:
+            result.add (position, (searchWinningProb + gameResult)/2.0)
+            index += rg.rand(sampleFrequencyInGamePly)
+        else:
+            index += 1
 
 let
     openingLines = block:
@@ -102,14 +112,17 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
         result = position.evaluate
         {.cast(noSideEffect).}:
             if rg.rand(1.0) <= randRatio.load:
-                let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
-                numSamples += samples.len
 
-                withLock outFileMutex:
-                    for (position, value) in samples:
-                        outFileStream.writePosition position
-                        outFileStream.write value
-                        outFileStream.flush
+                if position.isValidSamplePosition:                    
+
+                    let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
+                    numSamples += samples.len
+
+                    withLock outFileMutex:
+                        for (position, value) in samples:
+                            outFileStream.writePosition position
+                            outFileStream.write value
+                            outFileStream.flush
 
 
     var game = newGame(
