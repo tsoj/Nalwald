@@ -25,19 +25,10 @@ while not inFileStream.atEnd:
         value = inFileStream.readFloat64
     content.add (position, value)
 
-for (position, value) in content[0..<min(5, content.len)]:
+for (position, value) in content[^min(10, content.len - 1)..^1]:
     echo "--------------"
     echo position
     echo value
-
-echo "--------------"
-echo "..."
-
-if content.len > 10:
-    for (position, value) in content[^5..^1]:
-        echo "--------------"
-        echo position
-        echo value
 
 
 

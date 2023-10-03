@@ -39,17 +39,21 @@ let
 func isValidSamplePosition(position: Position): bool =
     position.material == position.materialQuiesce and
     position.legalMoves.len > 0 and
-    position.halfmoveClock < 20 # otherwise the positions is probably just shuffling
+    position.halfmoveClock < 20 # otherwise the position is probably just shuffling
 
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
-    const earlyAdjudicationMinConsistentPly = 6
+    const
+        earlyAdjudicationMinConsistentPly = 6
+        minAdjudicationGameLenPly = 0
     static: doAssert earlyAdjudicationMinConsistentPly <= sampleGameMinLenPly - 2, "This is necessary to avoid including trivial positions in the training set"
+    static: doAssert minAdjudicationGameLenPly <= earlyAdjudicationMinConsistentPly - 2, "This is necessary to avoid including trivial positions in the training set"
+
     var game = newGame(
         startingPosition = startPos,
         maxNodes = sampleGameSearchNodes,
         earlyResignMargin = 500.cp,
         earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
-        minAdjudicationGameLenPly = 0,
+        minAdjudicationGameLenPly = minAdjudicationGameLenPly,
         hashTable = hashTable,
     )
     let
