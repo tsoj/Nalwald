@@ -29,8 +29,8 @@ const
     targetTrainingSamples = 100_000_000
     openingSearchNodes = 50_000
     sampleGameSearchNodes = 10_000
-    sampleGameMinLenPly = 10
-    sampleFrequencyInGamePly = 25..35
+    sampleGameMinLenPly = 20 # shorter games are probably from trivial positions
+    sampleFrequencyInGamePly = 30..40
 
 let
     startDate = now().format("yyyy-MM-dd-HH-mm-ss")
@@ -39,7 +39,7 @@ let
 func isValidSamplePosition(position: Position): bool =
     position.material == position.materialQuiesce and
     position.legalMoves.len > 0 and
-    position.halfmoveClock < 80
+    position.halfmoveClock < 20 # otherwise the positions is probably just shuffling
 
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
     const earlyAdjudicationMinConsistentPly = 6
@@ -49,7 +49,7 @@ proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTa
         maxNodes = sampleGameSearchNodes,
         earlyResignMargin = 500.cp,
         earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
-        minAdjudicationGameLenPly = 20,
+        minAdjudicationGameLenPly = 0,
         hashTable = hashTable,
     )
     let
