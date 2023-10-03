@@ -5,10 +5,13 @@ import
     movegen,
     utils,
     bitboard,
-    castling,
+    castling
+
+import std/[
     strutils,
     options,
     bitops
+]
 
 func fen*(position: Position): string =
     result = ""

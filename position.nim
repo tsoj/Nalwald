@@ -4,6 +4,8 @@ import
     move,
     zobristBitmasks,
     castling
+
+import std/[streams]
     
 export types, bitboard, move
 
@@ -302,4 +304,38 @@ func isPassedPawnMove*(newPosition: Position, move: Move): bool =
 
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
+
+proc writePosition*(stream: Stream, position: Position) =
+    for pieceBitboard in position.pieces:
+        stream.write pieceBitboard.uint64
+    for colorBitboard in position.colors:
+        stream.write colorBitboard.uint64
+
+    stream.write position.enPassantCastling.uint64
+    
+    for color in white..black:
+        for castlingSide in CastlingSide:
+            stream.write position.rookSource[color][castlingSide].uint8
+    
+    stream.write position.zobristKey.uint64
+    stream.write position.us.uint8
+    stream.write position.halfmovesPlayed
+    stream.write position.halfmoveClock
+    
+proc readPosition*(stream: Stream): Position =
+    for pieceBitboard in result.pieces.mitems:
+        pieceBitboard = stream.readUint64.Bitboard
+    for colorBitboard in result.colors.mitems:
+        colorBitboard = stream.readUint64.Bitboard
+
+    result.enPassantCastling = stream.readUint64.Bitboard
+    
+    for color in white..black:
+        for castlingSide in CastlingSide:
+            result.rookSource[color][castlingSide] = stream.readUint8.toSquare
+    
+    result.zobristKey = stream.readUint64.ZobristKey
+    result.us = stream.readUint8.Color
+    result.halfmovesPlayed = stream.readInt16
+    result.halfmoveClock = stream.readInt16
 

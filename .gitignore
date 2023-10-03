@@ -44,3 +44,5 @@ mergeDuplicateAndSelect
 *.pgn
 logo_backup.jpg
 tests
+generateTrainingData
+trainingSet.bin*

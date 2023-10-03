@@ -8,13 +8,14 @@ import
     ../evaluation
 
 import std/[
-    options
+    tables
 ]
 
 type
     Game* {.requiresInit.} = object
-        hashTable: HashTable
+        hashTable: ref HashTable
         positionHistory: seq[Position]
+        evals: Table[Position, Value] = initTable[Position, Value]()
         maxNodes: int64
         earlyResignMargin: Value
         earlyAdjudicationMinConsistentPly: int
@@ -42,13 +43,20 @@ func gameStatus*(positionHistory: openArray[Position]): GameStatus =
         return threefoldRepetition
     running
 
+func getPositionHistory*(game: Game): seq[(Position, Value)] =
+    for position in game.positionHistory:
+        let value = if position in game.evals: game.evals[position] else: valueInfinity
+        result.add (position, value)
+
 proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
-    doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
+    if game.positionHistory.gameStatus != running:
+        return (game.positionHistory.gameStatus, 0.Value, noMove)
+
     let
         position = game.positionHistory[^1]
         pvSeq = position.timeManagedSearch(
-            hashTable = game.hashTable,
+            hashTable = game.hashTable[],
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
             maxNodes = game.maxNodes
@@ -57,12 +65,15 @@ proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     let
         pv = pvSeq[0].pv
         value = pvSeq[0].value
+        absoluteValue = if position.us == white: value else: -value
     doAssert pv.len >= 1
     doAssert pv[0] != noMove
+    doAssert position notin game.evals
 
+    game.evals[position] = absoluteValue
     game.positionHistory.add position.doMove pv[0]
 
-    (game.positionHistory.gameStatus, if position.us == white: value else: -value, pv[0])
+    (game.positionHistory.gameStatus, absoluteValue, pv[0])
     
 func newGame*(
     startingPosition: Position,
@@ -70,11 +81,11 @@ func newGame*(
     earlyResignMargin = 800.Value,
     earlyAdjudicationMinConsistentPly = 8,
     minAdjudicationGameLenPly = 30,
-    hashLen = none(int),
+    hashTable: ref HashTable = nil,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
-    Game(
-        hashTable: newHashTable(len = hashLen.get(otherwise = maxNodes*2)),
+    result = Game(
+        hashTable: hashTable,
         positionHistory: @[startingPosition],
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
@@ -82,8 +93,13 @@ func newGame*(
         minAdjudicationGameLenPly: minAdjudicationGameLenPly,
         evaluation: evaluation
     )
+    if result.hashTable == nil:
+        {.warning[ProveInit]:off.}:
+            result.hashTable = new HashTable
+        result.hashTable[] = newHashTable(len = maxNodes*2)
+    
 
-proc playGame*(game: var Game, suppressOutput = false): float =
+proc playGame*(game: var Game, suppressOutput = true): float =
     doAssert game.positionHistory.len >= 1, "Need a starting position"
 
     template echoSuppressed(x: typed) =
