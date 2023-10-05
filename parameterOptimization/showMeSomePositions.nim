@@ -5,8 +5,7 @@ import
 
 import std/[
     os,
-    streams,
-    strformat
+    streams
 ]
 
 doAssert commandLineParams().len == 1, "Need file as commandline argument"
@@ -15,21 +14,28 @@ let fileName = commandLineParams()[0]
 
 doAssert fileExists fileName, "File should exist"
 
-var inFileStream = newFileStream(fileName, fmRead)
+var
+    inFileStream = newFileStream(fileName, fmRead)
+    content: seq[(Position, float)]
+    numSamples = 0
 
-var content: seq[(Position, float)]
+const numExamples = 10
 
 while not inFileStream.atEnd:
     let
         position = inFileStream.readPosition
         value = inFileStream.readFloat64
     content.add (position, value)
+    numSamples += 1
 
-for (position, value) in content[^min(10, content.len - 1)..^1]:
+    if content.len >= numExamples + 10_000:
+        content = content[^numExamples..^1]
+
+for (position, value) in content[^min(numExamples, content.len - 1)..^1]:
     echo "--------------"
     echo position
     echo value
 
 
 
-echo content.len, " positions"
+echo numSamples, " positions"

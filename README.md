@@ -70,7 +70,7 @@ I began writing chess programs pretty much immediately after my first "Hello wor
 
 On this journey from an at best mediocre chess program to a chess engine that can win against the best human players, the chessprogramming.org wiki and the talkchess.com forum have been a great source of information and motivation. At the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
-Some noteworthy features of Nalwald are:
+Some noteworthy features of Nalwald:
 - **Piece-relative PSTs** are piece square tables that are different depending on which square another piece is. They are added together for all pieces of all piece types.
 - **Futility reductions** are an improvement to futility pruning. Here not only are moves skipped that are likely to be much worse than alpha. Additionally, moves that are likely slightly worse than alpha get their depth reduced accordingly to how bad they are expected to be.
 - **Hash result futility pruning** uses hash table entries that have not a depth high enough to adjust alpha or beta, or to return a value immediately. Rather, depending on their depth, the value gets only used, when the margin to alpha or beta is big enough.
@@ -81,7 +81,7 @@ Some noteworthy features of Nalwald are:
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 18      |          – |         – |           – |   Aug 13, 2023 |
+| 18      |       3199 |      3277 |        3144 |   Aug 13, 2023 |
 | 17.1    |       3146 |         – |           – |  June 20, 2023 |
 | 17      |          – |      3197 |        3052 |   June 5, 2023 |
 | 16      |       2946 |      3012 |        2994 |  July 11, 2022 |
