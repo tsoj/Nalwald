@@ -27,9 +27,6 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
     while tmp != 0:
         yield tmp.removeTrailingOneBit
 
-func mirrorVertically*(bitboard: Bitboard): Bitboard =
-    swapEndian64(addr result, unsafeAddr bitboard)
-
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
         if (square.toBitboard and bitboard) != 0:
@@ -48,6 +45,21 @@ const files*: array[a1..h8, Bitboard] = block:
     for square in a1..h8:
         files[square] = 0b0000000100000001000000010000000100000001000000010000000100000001u64 shl (square.int8 mod 8)
     files
+
+func mirrorVertically*(bitboard: Bitboard): Bitboard =
+    swapEndian64(addr result, unsafeAddr bitboard)
+
+func mirrorHorizontally*(bitboard: Bitboard): Bitboard =
+    for i in 0..3:
+        let
+            f1 = files[i.Square]
+            f2 = files[(7 - i).Square]
+            shiftAmount = 7 - 2*i
+        result = result or ((bitboard and f1) shl shiftAmount)
+        result = result or ((bitboard and f2) shr shiftAmount)
+
+func rotate*(bitboard: Bitboard): Bitboard =
+    bitboard.mirrorHorizontally.mirrorVertically
 
 const mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64 # a1 to h9
 const antiDiagonal: Bitboard = 0b0000000100000010000001000000100000010000001000000100000010000000u64 # h1 to a8

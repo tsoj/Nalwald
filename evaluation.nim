@@ -112,14 +112,9 @@ func kingRelativePst(
                 (mask3x3[kingSquare], 0.3)
             ]:
                 for kingSquare in kingSquaresBitboard:
-
-                    for (kingSquare, pieceSquare) in [
-                        (kingSquare, square),
-                        (kingSquare.mirrorHorizontally, square.mirrorHorizontally)
-                    ]:
-                        let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
-                        gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                        gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+                    let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
+                    gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][square] += f * gradient.gamePhaseFactor
+                    gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][square] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pieceRelativePst(
     evalParameters: EvalParameters,
@@ -148,17 +143,6 @@ func pieceRelativePst(
                     evalParameters, gradient, us,
                     pieceRelativePst[roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
                 )
-
-                when gradient isnot Nothing:
-                    var dummy: array[Phase, Value]
-                    let
-                        flippedOurSquare = ourSquare.mirrorHorizontally
-                        flippedOtherSquare = otherSquare.mirrorHorizontally
-                        flippedKingFile = 3 - roughEnemyKingFile
-                    dummy.addValue(
-                        evalParameters, gradient, us,
-                        pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
-                    )
 
 func pawnMaskIndex*(
     position: Position,

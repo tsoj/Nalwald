@@ -72,6 +72,12 @@ func goRight*(square: var Square): bool =
 func goNothing*(square: var Square): bool =
     true
 
+func mirrorVertically*(square: Square): Square =
+    (square.int8 xor 56).Square
+
+func mirrorHorizontally*(square: Square): Square =
+    (square.int8 xor 7).Square
+
 func opposite*(color: Color): Color =
     (color.uint8 xor 1).Color
 

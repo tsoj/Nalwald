@@ -1,7 +1,6 @@
 import
     ../types,
     ../position,
-    ../positionUtils,
     ../evaluation,
     ../bitboard,
     ../evalParameters,

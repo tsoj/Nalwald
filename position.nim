@@ -305,6 +305,56 @@ func isPassedPawnMove*(newPosition: Position, move: Move): bool =
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
 
+func mirrorVertically*(position: Position, skipZobristKey: static bool = false): Position =
+    
+    result.halfmovesPlayed = position.halfmovesPlayed
+    result.halfmoveClock = position.halfmoveClock
+    
+    for piece, bitboard in position.pieces:
+        result[piece] = bitboard.mirrorVertically
+    for color, bitboard in position.colors:
+        result[color.opposite] = bitboard.mirrorVertically
+    
+    result.enPassantCastling = position.enPassantCastling.mirrorVertically
+    result.us = position.us.opposite
+
+    result.rookSource = [
+        white: position.rookSource[black],
+        black: position.rookSource[white]
+    ]
+    for color in white..black:
+        for castlingSide in queenside..kingside:
+            result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].mirrorVertically
+    
+    when not skipZobristKey:
+        result.zobristKey = position.calculateZobristKey
+
+func mirrorHorizontally*(position: Position, skipZobristKey: static bool = false): Position =
+    
+    result.halfmovesPlayed = position.halfmovesPlayed
+    result.halfmoveClock = position.halfmoveClock
+    
+    for piece, bitboard in position.pieces:
+        result[piece] = bitboard.mirrorHorizontally
+    for color, bitboard in position.colors:
+        result[color] = bitboard.mirrorHorizontally
+    
+    result.enPassantCastling = position.enPassantCastling.mirrorHorizontally
+    result.us = position.us
+
+    for color in white..black:
+        result.rookSource[color][kingside] = position.rookSource[color][queenside].mirrorHorizontally
+        result.rookSource[color][queenside] = position.rookSource[color][kingside].mirrorHorizontally
+    
+    when not skipZobristKey:
+        result.zobristKey = position.calculateZobristKey
+
+func rotate*(position: Position, skipZobristKey: static bool = false): Position =
+    result = position.mirrorHorizontally(skipZobristKey = true).mirrorVertically(skipZobristKey = true)
+    
+    when not skipZobristKey:
+        result.zobristKey = position.calculateZobristKey
+
 proc writePosition*(stream: Stream, position: Position) =
     for pieceBitboard in position.pieces:
         stream.write pieceBitboard.uint64
