@@ -24,12 +24,12 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray
             var diff = startEval - newPosition.absoluteEvaluate(evalParameters)
             if us == black:
                 diff *= -1
-            if piece == rook and diff < 0.Value:
-                debugEcho position
-                debugEcho square
-                debugEcho piece
-                debugEcho diff
-                doAssert diff >= 0.Value
+            # if piece == rook and diff < 0.Value:
+            #     debugEcho position
+            #     debugEcho square
+            #     debugEcho piece
+            #     debugEcho diff
+            #     doAssert diff >= 0.Value
             sum += diff.int
             numPieceEvals += 1
     (sum div numPieceEvals).Value
@@ -41,10 +41,10 @@ proc printPieceValues*(evalParameters: EvalParameters, data: openArray[Entry]) =
 
 when isMainModule:
     var data: seq[Entry]
-    data.loadData("quietSetNalwald.epd")
-    data.loadData("quietSetCombinedCCRL4040.epd")
-    data.loadData("quietSmallPoolGamesNalwald.epd")
-    data.loadData("quietSetNalwald2.epd")
-    data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
-    data.loadData("quietSmallPoolGamesNalwald2Labeled.epd")
+    data.loadDataEpd "quietSetNalwald.epd"
+    data.loadDataEpd "quietSetCombinedCCRL4040.epd"
+    data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
+    data.loadDataEpd "quietSetNalwald2.epd"
+    data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+    data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
     printPieceValues(defaultEvalParameters, data)

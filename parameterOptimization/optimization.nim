@@ -16,12 +16,12 @@ type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
     result.gradient = newEvalParametersFloat();
     for entry in data:        
-        result.weight += entry.weight
-        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
+        result.weight += 1.0
+        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k)
 
 proc optimize(
     start: EvalParametersFloat,
-    data: seq[Entry],
+    data: var seq[Entry],
     k: float,
     lr = 51200.0,
     lrDecay = 0.98,
@@ -29,13 +29,12 @@ proc optimize(
     maxNumEpochs = 300,
     gradientDecay = 0.9,
     numThreads = 8,
-    batchSize = 50_000
+    batchSize = 100_000
 ): EvalParametersFloat =
 
     var
         solution = start
         lr = lr
-        data = data
 
     echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
@@ -67,7 +66,7 @@ proc optimize(
                     data.batchSlize(i, numThreads),
                     solutionConverted,
                     k, i > 0
-                )    
+                )
 
             var gradient = newEvalParametersFloat()
             var totalWeight: float = 0.0
@@ -101,17 +100,24 @@ proc optimize(
 let startTime = now()
 
 var data: seq[Entry]
-data.loadData("quietSetNalwald.epd")
-data.loadData("quietSetCombinedCCRL4040.epd")
-data.loadData("quietSmallPoolGamesNalwald.epd")
-data.loadData("quietSetNalwald2.epd")
-data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
-data.loadData("quietSmallPoolGamesNalwald2Labeled.epd", weight = 2.0)
-data.loadData("quietSmallPoolGamesNalwald3.epd")
-data.loadData("quietSmallPoolGamesNalwald4.epd")
-data.loadData("quietSmallPoolGamesNalwald5.epd")
-data.loadData("quietSmallPoolGamesNalwald6.epd")
-data.loadData("quietSmallPoolGamesNalwald7.epd")
+data.loadDataEpd "quietSetNalwald.epd"
+data.loadDataEpd "quietSetCombinedCCRL4040.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
+data.loadDataEpd "quietSetNalwald2.epd"
+data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
+
+data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
+data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"
+data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
+data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
+data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
+data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
 
 echo "Total number of entries: ", data.len
 

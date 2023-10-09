@@ -1,7 +1,7 @@
 <div align="center">
 <p><h1>Nalwald</h1>
 <i><h4>Chess engine written in Nim ♜</h4></i>
-<img src="./logo.jpg" width="256">
+<img src="./logo.jpg" height="352">
 </h1>
 </div>
 
@@ -81,7 +81,7 @@ Some noteworthy features of Nalwald:
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 18      |       3199 |      3277 |        3144 |   Aug 13, 2023 |
+| 18      |       3198 |      3275 |        3143 |   Aug 13, 2023 |
 | 17.1    |       3146 |         – |           – |  June 20, 2023 |
 | 17      |          – |      3197 |        3052 |   June 5, 2023 |
 | 16      |       2946 |      3012 |        2994 |  July 11, 2022 |
