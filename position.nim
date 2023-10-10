@@ -36,6 +36,8 @@ func `[]=`*(position: var Position, color: Color, bitboard: Bitboard) {.inline.}
 
 func `[]`*(position: Position, piece: Piece, color: Color): Bitboard {.inline.} =
     position[color] and position[piece]
+func `[]`*(position: Position, color: Color, piece: Piece): Bitboard {.inline.} =
+    position[color] and position[piece]
 
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) {.inline.} =
     position[piece] = position[piece] or target
@@ -382,7 +384,7 @@ proc readPosition*(stream: Stream): Position =
     
     for color in white..black:
         for castlingSide in CastlingSide:
-            result.rookSource[color][castlingSide] = stream.readUint8.toSquare
+            result.rookSource[color][castlingSide] = stream.readUint8.Square
     
     result.zobristKey = stream.readUint64.ZobristKey
     result.us = stream.readUint8.Color

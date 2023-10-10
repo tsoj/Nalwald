@@ -25,7 +25,7 @@ proc optimize(
     k: float,
     lr = 51200.0,
     lrDecay = 0.98,
-    minLearningRate = 500.0,
+    minLearningRate = 4000.0,
     maxNumEpochs = 300,
     gradientDecay = 0.9,
     numThreads = 8,

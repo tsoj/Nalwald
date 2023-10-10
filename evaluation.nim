@@ -73,13 +73,13 @@ template addValue(
     us: Color,
     parameter: untyped
 ) =
-    for phase {.inject.} in Phase:
-        value[phase] += getParameter(phase, evalParameters, parameter)
-
     when gradient isnot Nothing:
         let f = (if us == black: -1.0 else: 1.0) * gradient.g
         getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
         getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
+    else:
+        for phase {.inject.} in Phase:
+            value[phase] += getParameter(phase, evalParameters, parameter)
 
 func kingRelativePst(
     evalParameters: EvalParameters,
@@ -112,9 +112,14 @@ func kingRelativePst(
                 (mask3x3[kingSquare], 0.3)
             ]:
                 for kingSquare in kingSquaresBitboard:
-                    let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
-                    gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][square] += f * gradient.gamePhaseFactor
-                    gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][square] += f * (1.0 - gradient.gamePhaseFactor)
+
+                    for (kingSquare, pieceSquare) in [
+                        (kingSquare, square),
+                        (kingSquare.mirrorHorizontally, square.mirrorHorizontally)
+                    ]:
+                        let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
+                        gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
+                        gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
 
 func pieceRelativePst(
     evalParameters: EvalParameters,
@@ -144,20 +149,28 @@ func pieceRelativePst(
                     pieceRelativePst[roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
                 )
 
+                when gradient isnot Nothing:
+                    var dummy: array[Phase, Value]
+                    let
+                        flippedOurSquare = ourSquare.mirrorHorizontally
+                        flippedOtherSquare = otherSquare.mirrorHorizontally
+                        flippedKingFile = 3 - roughEnemyKingFile
+                    dummy.addValue(
+                        evalParameters, gradient, us,
+                        pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
+                    )
+
 func pawnMaskIndex*(
     position: Position,
-    square: static Square,
-    us: static Color
+    square: static Square
 ): int =
-
-    let square = square.colorConditionalMirrorVertically(us)
 
     assert not square.isEdge
     assert square >= b2
 
     let
-        ourPawns = (position[us] and position[pawn]).colorConditionalMirrorVertically(us) shr (square.int8 - b2.int8)
-        enemyPawns = (position[us.opposite] and position[pawn]).colorConditionalMirrorVertically(us) shr (square.int8 - b2.int8)
+        whitePawns = position[white, pawn] shr (square.int8 - b2.int8)
+        blackPawns = position[black, pawn] shr (square.int8 - b2.int8)
 
     var counter = 1
 
@@ -166,9 +179,9 @@ func pawnMaskIndex*(
         a2.toBitboard, b2.toBitboard, c2.toBitboard,
         a1.toBitboard, b1.toBitboard, c1.toBitboard
     ]:
-        if (ourPawns and bit) != 0:
+        if (whitePawns and bit) != 0:
             result += counter * 2
-        elif (enemyPawns and bit) != 0:
+        elif (blackPawns and bit) != 0:
             result += counter * 1
         counter *= 3
 
@@ -186,7 +199,7 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
     ).fields:
         if (mask3x3[square] and position[pawn]).countSetBits >= 2:
             
-            let index = position.pawnMaskIndex(square, white)
+            let index = position.pawnMaskIndex(square)
             result.addValue(evalParameters, gradient, white, pawnStructureBonus[square][index])
 
 func evaluatePieceFromPieceColorPerspective(
@@ -286,3 +299,15 @@ func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Valu
 func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.absoluteEvaluate(defaultEvalParameters, gradient)
+
+import positionUtils
+
+let sp = "1rbqk1nr/ppp2ppp/2nb4/4p3/4N3/3B1N2/PPP1QPPP/R1B2RK1 w k - 8 9".toPosition
+echo sp
+echo sp.absoluteEvaluate
+echo sp.mirrorHorizontally
+echo sp.mirrorHorizontally.absoluteEvaluate
+echo sp.mirrorVertically
+echo sp.mirrorVertically.absoluteEvaluate
+echo sp.rotate
+echo sp.rotate.absoluteEvaluate
