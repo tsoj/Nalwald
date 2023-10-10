@@ -19,6 +19,12 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
         result.weight += 1.0
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k)
 
+func getMask*(entries: openArray[Entry], margin: int): EvalParametersFloat =
+    result = newEvalParametersFloat()
+    for entry in entries:
+        result += getActiveParameters entry.position
+    result = getMask(result, margin.float32)
+
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
@@ -35,6 +41,8 @@ proc optimize(
     var
         solution = start
         lr = lr
+
+    let mask = data.getMask(margin = 100)
 
     echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
@@ -76,6 +84,7 @@ proc optimize(
                 gradient += threadGradient
             # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
             # result is better
+            gradient *= mask
             gradient *= (1.0/totalWeight)
             gradient *= 1.0 - gradientDecay
             previousGradient *= gradientDecay
@@ -101,23 +110,23 @@ let startTime = now()
 
 var data: seq[Entry]
 data.loadDataEpd "quietSetNalwald.epd"
-data.loadDataEpd "quietSetCombinedCCRL4040.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
-data.loadDataEpd "quietSetNalwald2.epd"
-data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
+# data.loadDataEpd "quietSetCombinedCCRL4040.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
+# data.loadDataEpd "quietSetNalwald2.epd"
+# data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
+# data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
 
 data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
-data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"
-data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
-data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
-data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
-data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
+# data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"
+# data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
+# data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
+# data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
+# data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
 
 echo "Total number of entries: ", data.len
 
@@ -129,7 +138,7 @@ let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".t
 echo "filename: ", filename
 writeFile(
     filename,
-    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
+    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters\n"
 )
 printPieceValues(ep.convert, data)
 

@@ -3,11 +3,22 @@ import
     ../evaluation,
     ../position,
     ../types,
+    ../defaultParameters,
     winningProbability,
     error,
     ../bitboard,
     ../utils
 
+func getActiveParameters*(position: Position): EvalParametersFloat =
+    result = newEvalParametersFloat()
+    var
+        currentGradient = Gradient(
+            gamePhaseFactor: 0.5,
+            g: 1.0,
+            evalParams: addr result
+        )
+    discard position.absoluteEvaluate(defaultEvalParameters, currentGradient)
+    result = result.getMask(margin = 0.01)
 
 func addGradient*(
     gradient: var EvalParametersFloat,
@@ -22,5 +33,7 @@ func addGradient*(
         evalParams: addr gradient
     )
     discard position.absoluteEvaluate(currentSolution, currentGradient)
+
+
 
 
