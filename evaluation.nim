@@ -11,11 +11,11 @@ import
 
 func value*(piece: Piece): Value =
     const table = [
-        pawn: 142.Value,
-        knight: 454.Value,
-        bishop: 487.Value,
-        rook: 692.Value,
-        queen: 1384.Value,
+        pawn: 141.Value,
+        knight: 451.Value,
+        bishop: 478.Value,
+        rook: 704.Value,
+        queen: 1419.Value,
         king: 1000000.Value,
         noPiece: 0.Value
     ]
@@ -98,28 +98,23 @@ func kingRelativePst(
             relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(us)
         ]
 
-    for phase in Phase:
-        result[phase] =
-            evalParameters[phase.int].kingRelativePst[relativeToEnemy][kingSquares[relativeToEnemy]][piece][square] +
-            evalParameters[phase.int].kingRelativePst[relativeToUs][kingSquares[relativeToUs]][piece][square]
+    for side in relativeToUs..relativeToEnemy:
+    
+        result.addValue(
+            evalParameters, gradient, us,
+            kingRelativePst[side][kingSquares[side]][piece][square]
+        )
 
-    when gradient isnot Nothing:
+        when gradient isnot Nothing:
+            var dummy: array[Phase, Value]
+            let
+                flippedSquare = square.mirrorHorizontally
+                flippedKingSquare = kingSquares[side].mirrorHorizontally
 
-        for whoseKing in relativeToUs..relativeToEnemy:
-            let kingSquare = kingSquares[whoseKing]
-            for (kingSquaresBitboard, multiplier) in [
-                (kingSquare.toBitboard, 1.7),
-                (mask3x3[kingSquare], 0.3)
-            ]:
-                for kingSquare in kingSquaresBitboard:
-
-                    for (kingSquare, pieceSquare) in [
-                        (kingSquare, square),
-                        (kingSquare.mirrorHorizontally, square.mirrorHorizontally)
-                    ]:
-                        let f = gradient.g * multiplier * (if us == black: -1.0 else: 1.0)
-                        gradient.evalParams[][opening.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * gradient.gamePhaseFactor
-                        gradient.evalParams[][endgame.int].kingRelativePst[whoseKing][kingSquare][piece][pieceSquare] += f * (1.0 - gradient.gamePhaseFactor)
+            dummy.addValue(
+                evalParameters, gradient, us,
+                kingRelativePst[side][flippedKingSquare][piece][flippedSquare]
+            )
 
 func pieceRelativePst(
     evalParameters: EvalParameters,
@@ -300,14 +295,14 @@ func absoluteEvaluate*(position: Position): Value =
     var gradient: Nothing = nothing
     position.absoluteEvaluate(defaultEvalParameters, gradient)
 
-import positionUtils
+# import positionUtils
 
-let sp = "1rbqk1nr/ppp2ppp/2nb4/4p3/4N3/3B1N2/PPP1QPPP/R1B2RK1 w k - 8 9".toPosition
-echo sp
-echo sp.absoluteEvaluate
-echo sp.mirrorHorizontally
-echo sp.mirrorHorizontally.absoluteEvaluate
-echo sp.mirrorVertically
-echo sp.mirrorVertically.absoluteEvaluate
-echo sp.rotate
-echo sp.rotate.absoluteEvaluate
+# let sp = "1rbqk1nr/ppp2ppp/2nb4/4p3/4N3/3B1N2/PPP1QPPP/R1B2RK1 w k - 8 9".toPosition
+# echo sp
+# echo sp.absoluteEvaluate
+# echo sp.mirrorHorizontally
+# echo sp.mirrorHorizontally.absoluteEvaluate
+# echo sp.mirrorVertically
+# echo sp.mirrorVertically.absoluteEvaluate
+# echo sp.rotate
+# echo sp.rotate.absoluteEvaluate
