@@ -9,16 +9,15 @@ import
     ../bitboard,
     ../utils
 
-func getActiveParameters*(position: Position): EvalParametersFloat =
-    result = newEvalParametersFloat()
-    var
-        currentGradient = Gradient(
-            gamePhaseFactor: 0.5,
-            g: 1.0,
-            evalParams: addr result
-        )
+func countActiveParameters*(
+    activeParams: var EvalParametersFloat,
+    position: Position
+) =
+    var currentGradient = JustCountParamActivity(
+        gamePhaseFactor: position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
+        evalParams: addr activeParams
+    )
     discard position.absoluteEvaluate(defaultEvalParameters, currentGradient)
-    result = result.getMask(margin = 0.01)
 
 func addGradient*(
     gradient: var EvalParametersFloat,

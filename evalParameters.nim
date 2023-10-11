@@ -1,6 +1,8 @@
 import types
 export types
 
+import std/strformat
+
 type Relativity* = enum
     relativeToUs, relativeToEnemy
 
@@ -45,24 +47,16 @@ template doForAll[Out, In, F](output: var EvalParametersTemplate[Out], input: Ev
     for phase in 0..1:
         doForAll(output[phase], input[phase], f)
 
-func transform[Out, In](output: var Out, input: In) =
-    doForAll(output, input, proc(a: var auto, b: auto) {.noSideEffect.} = a = b)
-
 func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
-    doForAll(a, a, proc(x: var auto, y: auto){.noSideEffect.} = x *= b)
-
-func convert*(a: auto, T: typedesc): T =
-    when T is EvalParametersFloat:
-        result = newEvalParametersFloat()
-    elif T is EvalParameters:
-        result = newEvalParameters()
-    transform(result, a)
+    doForAll(a, a, proc(x: var float32, y: float32){.noSideEffect.} = x *= b)
 
 func convert*(a: EvalParameters): EvalParametersFloat =
-    a.convert(EvalParametersFloat)
+    result = newEvalParametersFloat()
+    doForAll(result, a, proc(a: var float32, b: Value) {.noSideEffect.} = a = b.float32)
 
 func convert*(a: EvalParametersFloat): EvalParameters =
-    a.convert(EvalParameters)
+    result = newEvalParameters()
+    doForAll(result, a, proc(a: var Value, b: float32) {.noSideEffect.} = a = b.Value)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
     doForAll(a, b, proc(x: var float32, y: float32) = x += y)
@@ -94,9 +88,9 @@ proc toEvalParameters*(s: seq[int]): EvalParameters =
         i += 1
     )
 
-# proc toNimDefaultParamFile*(a: EvalParameters, fileName: string) =
-#     writeFile(
-#         fileName,
-#         &"import evalParameters\n\nconst defaultEvalParameters* = {a.toSeq}.toEvalParameters\n"
-#     )
+proc toNimDefaultParamFile*(a: EvalParameters, fileName: string) =
+    writeFile(
+        fileName,
+        &"import evalParameters\n\nconst defaultEvalParameters* = {a.toSeq}.toEvalParameters\n"
+    )
 

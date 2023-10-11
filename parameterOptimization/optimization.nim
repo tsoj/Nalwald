@@ -22,7 +22,7 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
 func getMask*(entries: openArray[Entry], margin: int): EvalParametersFloat =
     result = newEvalParametersFloat()
     for entry in entries:
-        result += getActiveParameters entry.position
+        countActiveParameters result, entry.position
     result = getMask(result, margin.float32)
 
 proc optimize(
@@ -42,6 +42,8 @@ proc optimize(
         solution = start
         lr = lr
 
+    # This mask exists to make sure that parameters that have a very low number of positions
+    # to learn from, are ignored
     let mask = data.getMask(margin = 100)
 
     echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
@@ -110,23 +112,23 @@ let startTime = now()
 
 var data: seq[Entry]
 data.loadDataEpd "quietSetNalwald.epd"
-# data.loadDataEpd "quietSetCombinedCCRL4040.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
-# data.loadDataEpd "quietSetNalwald2.epd"
-# data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
-# data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
+data.loadDataEpd "quietSetCombinedCCRL4040.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
+data.loadDataEpd "quietSetNalwald2.epd"
+data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
+data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
 
 data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
-# data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"
-# data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
-# data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
-# data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
-# data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
+data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"
+data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
+data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
+data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
+data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
 
 echo "Total number of entries: ", data.len
 
@@ -136,10 +138,8 @@ let ep = newEvalParametersFloat().optimize(data, k)
 
 let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 echo "filename: ", filename
-writeFile(
-    filename,
-    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters\n"
-)
+ep.convert.toNimDefaultParamFile filename
+
 printPieceValues(ep.convert, data)
 
 echo "Total time: ", now() - startTime
