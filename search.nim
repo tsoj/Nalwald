@@ -34,15 +34,14 @@ func nullMoveDepth(depth: Ply): Ply =
     depth - 3.Ply - depth div 4.Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-    const halfLife = 35
-    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
-    if lmrMoveCounter >= 4:
-        if depth <= 8.Ply:
-            result -= 1.Ply
-        if depth <= 2.Ply:
-            result -= 1.Ply    
-    if lmrMoveCounter >= 16:
-        result -= 1.Ply
+    const halfLife = 30
+    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - 1.Ply
+
+# for depth in 1.Ply .. 20.Ply:
+#     var s = "["
+#     for m in 0..40:
+#         s &= $lmrDepth(depth, m) & ","
+#     echo s, "],"
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
