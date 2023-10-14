@@ -9,17 +9,7 @@ import
     algorithm,
     macros
 
-func value*(piece: Piece): Value =
-    const table = [
-        pawn: 141.Value,
-        knight: 451.Value,
-        bishop: 478.Value,
-        rook: 704.Value,
-        queen: 1419.Value,
-        king: 1000000.Value,
-        noPiece: 0.Value
-    ]
-    table[piece]
+export defaultParameters
 
 func cp*(cp: int): Value {.inline.} =
     (pawn.value * cp.Value) div 100.Value

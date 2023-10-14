@@ -1,8 +1,6 @@
 import types
 export types
 
-import std/strformat
-
 type Relativity* = enum
     relativeToUs, relativeToEnemy
 
@@ -86,11 +84,5 @@ proc toEvalParameters*(s: seq[int]): EvalParameters =
     doForAll(result, result, proc(x: var Value, y: Value) =
         x = sAddr[][i].Value
         i += 1
-    )
-
-proc toNimDefaultParamFile*(a: EvalParameters, fileName: string) =
-    writeFile(
-        fileName,
-        &"import evalParameters\n\nconst defaultEvalParameters* = {a.toSeq}.toEvalParameters\n"
     )
 

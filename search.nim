@@ -37,12 +37,6 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     const halfLife = 30
     result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - 1.Ply
 
-# for depth in 1.Ply .. 20.Ply:
-#     var s = "["
-#     for m in 0..40:
-#         s &= $lmrDepth(depth, m) & ","
-#     echo s, "],"
-
 type SearchState* = object
     stop*: ptr Atomic[bool]
     threadStop*: ptr Atomic[bool]

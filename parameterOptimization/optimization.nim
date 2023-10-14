@@ -19,32 +19,22 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
         result.weight += 1.0
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k)
 
-func getMask*(entries: openArray[Entry], margin: int): EvalParametersFloat =
-    result = newEvalParametersFloat()
-    for entry in entries:
-        countActiveParameters result, entry.position
-    result = getMask(result, margin.float32)
-
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
     k: float,
-    lr = 51200.0,
-    lrDecay = 0.98,
+    lr = 150_000.0,
+    lrDecay = 0.83,
     minLearningRate = 4000.0,
     maxNumEpochs = 300,
     gradientDecay = 0.9,
     numThreads = 8,
-    batchSize = 100_000
+    batchSize = 50_000
 ): EvalParametersFloat =
 
     var
         solution = start
         lr = lr
-
-    # This mask exists to make sure that parameters that have a very low number of positions
-    # to learn from, are ignored
-    let mask = data.getMask(margin = 100)
 
     echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
 
@@ -86,7 +76,6 @@ proc optimize(
                 gradient += threadGradient
             # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
             # result is better
-            gradient *= mask
             gradient *= (1.0/totalWeight)
             gradient *= 1.0 - gradientDecay
             previousGradient *= gradientDecay
@@ -98,12 +87,13 @@ proc optimize(
             solution += gradient
 
         let
-            errorString = if (epoch mod 20) == 1: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
+            lastIteration = lr < minLearningRate
+            errorString = if (epoch mod 20) == 1 or lastIteration: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
             passedTime = now() - startTime
         echo fmt"Epoch {epoch}, error: {errorString}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
         lr *= lrDecay
 
-        if lr < minLearningRate:
+        if lastIteration:
             break
         
     return solution
@@ -129,6 +119,7 @@ data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
 data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
 data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
 data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
+data.shuffle
 
 echo "Total number of entries: ", data.len
 
@@ -136,11 +127,19 @@ const k = 1.0
 
 let ep = newEvalParametersFloat().optimize(data, k)
 
-let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-echo "filename: ", filename
-ep.convert.toNimDefaultParamFile filename
+let fileName = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
+let fileContent = &"""
+import evalParameters
 
-printPieceValues(ep.convert, data)
+const defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters
+
+func value*(piece: Piece): Value =
+    const table = [{ep.convert.pieceValuesAsString(data[0..<max(data.len, 10_000_000)])}king: valueCheckmate, noPiece: 0.Value]
+    table[piece]
+"""
+
+writeFile(fileName, fileContent)
+echo "filename: ", fileName
 
 echo "Total time: ", now() - startTime
 

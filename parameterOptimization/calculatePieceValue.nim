@@ -23,20 +23,13 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray
             var diff = startEval - newPosition.absoluteEvaluate(evalParameters)
             if us == black:
                 diff *= -1
-            # if piece == rook and diff < 0.Value:
-            #     debugEcho position
-            #     debugEcho square
-            #     debugEcho piece
-            #     debugEcho diff
-            #     doAssert diff >= 0.Value
             sum += diff.int
             numPieceEvals += 1
     (sum div numPieceEvals).Value
 
-proc printPieceValues*(evalParameters: EvalParameters, data: openArray[Entry]) =
-    echo "Piece values:"
+proc pieceValuesAsString*(evalParameters: EvalParameters, data: openArray[Entry]): string =
     for piece in pawn..queen:
-        echo piece, ": ", getPieceValue(piece, evalParameters, data)
+        result &= $piece & ": " & $getPieceValue(piece, evalParameters, data) & ".Value, "
 
 when isMainModule:
     var data: seq[Entry]
@@ -46,4 +39,4 @@ when isMainModule:
     data.loadDataEpd "quietSetNalwald2.epd"
     data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
     data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
-    printPieceValues(defaultEvalParameters, data)
+    echo pieceValuesAsString(defaultEvalParameters, data)
