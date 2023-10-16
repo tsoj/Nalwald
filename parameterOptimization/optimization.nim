@@ -23,13 +23,12 @@ proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
     k: float,
-    lr = 150_000.0,
-    lrDecay = 0.83,
-    minLearningRate = 4000.0,
-    maxNumEpochs = 300,
+    lr = 500_000.0,
+    lrDecay = 0.8,
+    maxNumEpochs = 20,
     gradientDecay = 0.9,
     numThreads = 8,
-    batchSize = 50_000
+    batchSize = 60_000
 ): EvalParametersFloat =
 
     var
@@ -87,14 +86,13 @@ proc optimize(
             solution += gradient
 
         let
-            lastIteration = lr < minLearningRate
-            errorString = if (epoch mod 20) == 1 or lastIteration: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
+            error = solution.convert.error(data[0..<min(data.len, 1_000_000)], k)
             passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {errorString}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
+        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.1f}, batch size: {batchSize}, time: {passedTime.inSeconds} s"
         lr *= lrDecay
-
-        if lastIteration:
-            break
+    
+    let finalError = solution.convert.error(data, k)
+    echo fmt"Final error: {finalError:>9.7f}"
         
     return solution
 
@@ -134,7 +132,7 @@ import evalParameters
 const defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters
 
 func value*(piece: Piece): Value =
-    const table = [{ep.convert.pieceValuesAsString(data[0..<max(data.len, 10_000_000)])}king: valueCheckmate, noPiece: 0.Value]
+    const table = [{ep.convert.pieceValuesAsString(data[0..<min(data.len, 10_000_000)])}king: valueCheckmate, noPiece: 0.Value]
     table[piece]
 """
 
