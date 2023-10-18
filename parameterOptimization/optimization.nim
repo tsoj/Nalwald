@@ -22,13 +22,13 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
-    k: float,
-    lr = 500_000.0,
-    lrDecay = 0.8,
-    maxNumEpochs = 20,
+    k = 1.0,
+    lr = 50_000.0,
+    lrDecay = 0.98,
+    maxNumEpochs = 150,
     gradientDecay = 0.9,
     numThreads = 8,
-    batchSize = 60_000
+    batchSize = 100_000
 ): EvalParametersFloat =
 
     var
@@ -121,9 +121,7 @@ data.shuffle
 
 echo "Total number of entries: ", data.len
 
-const k = 1.0
-
-let ep = newEvalParametersFloat().optimize(data, k)
+let ep = newEvalParametersFloat().optimize(data)
 
 let fileName = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
 let fileContent = &"""

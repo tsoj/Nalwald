@@ -58,7 +58,7 @@ func printInfoString(
             
             print " score ", {styleItalic}
             let
-                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).ceil.int
+                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).int
                 color = if value > 0: fgGreen else: fgRed
 
             print valueString, {styleBright}, color
