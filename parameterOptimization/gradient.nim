@@ -8,17 +8,7 @@ import
     error,
     ../bitboard,
     ../utils
-
-func countActiveParameters*(
-    activeParams: var EvalParametersFloat,
-    position: Position
-) =
-    var currentGradient = JustCountParamActivity(
-        gamePhaseFactor: position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
-        evalParams: addr activeParams
-    )
-    discard position.absoluteEvaluate(defaultEvalParameters, currentGradient)
-
+    
 func addGradient*(
     gradient: var EvalParametersFloat,
     currentSolution: EvalParameters,
