@@ -23,7 +23,7 @@ func see(position: var Position, target: Square, victim: Piece, us: Color): Valu
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
         let attack = position[piece, us] and attackers
         if attack != 0:
-            position.removePiece(us, piece, attack.toSquare.toBitboard)
+            position.removePiece(us, piece, attack.toSquare)
 
             var
                 collected = victim.value
@@ -49,17 +49,17 @@ func see*(position: Position, move: Move): Value =
         position = position
         currentVictim = moved
 
-    position.removePiece(us, moved, source.toBitboard)
+    position.removePiece(us, moved, source)
 
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
-        position.removePiece(us, pawn, source.toBitboard)
+        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target].toSquare)
+        position.removePiece(us, pawn, source)
     elif promoted != noPiece:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, source)
         result = promoted.value - pawn.value
         currentVictim = promoted
     else:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, source)
 
     result += move.captured.value - position.see(target, currentVictim, enemy)
                 

@@ -39,15 +39,17 @@ func `[]`*(position: Position, piece: Piece, color: Color): Bitboard {.inline.} 
 func `[]`*(position: Position, color: Color, piece: Piece): Bitboard {.inline.} =
     position[color] and position[piece]
 
-func addPiece*(position: var Position, color: Color, piece: Piece, target: Bitboard) {.inline.} =
-    position[piece] = position[piece] or target
-    position[color] = position[color] or target
+func addPiece*(position: var Position, color: Color, piece: Piece, target: Square) {.inline.} =
+    let bit = target.toBitboard
+    position[piece] = position[piece] or bit
+    position[color] = position[color] or bit
 
-func removePiece*(position: var Position, color: Color, piece: Piece, source: Bitboard) {.inline.} =
-    position[piece] = position[piece] and not source
-    position[color] = position[color] and not source
+func removePiece*(position: var Position, color: Color, piece: Piece, source: Square) {.inline.} =
+    let bit = not source.toBitboard
+    position[piece] = position[piece] and bit
+    position[color] = position[color] and bit
 
-func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Bitboard) {.inline.} =
+func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Square) {.inline.} =
     position.removePiece(color, piece, source)
     position.addPiece(color, piece, target)
 
@@ -199,14 +201,14 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
 
     # en passant
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
-        position.movePiece(us, pawn, source.toBitboard, target.toBitboard)
+        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target].toSquare)
+        position.movePiece(us, pawn, source, target)
 
         let capturedSquare = attackTablePawnQuiet[enemy][target].toSquare
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][pawn][capturedSquare]
     # removing captured piece
     elif captured != noPiece:
-        position.removePiece(enemy, captured, target.toBitboard)
+        position.removePiece(enemy, captured, target)
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][captured][target]
 
     # castling
@@ -218,14 +220,14 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
             rookTarget = rookTarget[us][castlingSide]
             kingTarget = kingTarget[us][castlingSide]
         
-        position.removePiece(us, king, kingSource.toBitboard)
-        position.removePiece(us, rook, rookSource.toBitboard)
+        position.removePiece(us, king, kingSource)
+        position.removePiece(us, rook, rookSource)
 
         for (piece, source, target) in [
             (king, kingSource, kingTarget),
             (rook, rookSource, rookTarget)
         ]:
-            position.addPiece(us, piece, target.toBitboard)
+            position.addPiece(us, piece, target)
             position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][source]
             position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][target]
 
@@ -233,11 +235,11 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
     else:
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][source]
         if promoted != noPiece:
-            position.removePiece(us, moved, source.toBitboard)
-            position.addPiece(us, promoted, target.toBitboard)
+            position.removePiece(us, moved, source)
+            position.addPiece(us, promoted, target)
             position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][promoted][target]
         else:
-            position.movePiece(us, moved, source.toBitboard, target.toBitboard)
+            position.movePiece(us, moved, source, target)
             position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][target]
 
     position.halfmovesPlayed += 1 
@@ -296,7 +298,7 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
     for piece in pawn..king:
         position[piece] = position[piece] and not square.toBitboard
 
-    position.addPiece(coloredPiece.color, coloredPiece.piece, square.toBitboard)
+    position.addPiece(coloredPiece.color, coloredPiece.piece, square)
 
 func isPassedPawn*(position: Position, us: Color, square: Square): bool {.inline.} =
     (isPassedMask[us][square] and position[pawn] and position[us.opposite]) == 0
