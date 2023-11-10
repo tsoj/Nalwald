@@ -59,7 +59,7 @@ func castlingSide*(position: Position, move: Move): CastlingSide =
 func occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
-func attackers(position: Position, us: Color, target: Square): Bitboard =
+func attackers*(position: Position, us: Color, target: Square): Bitboard =
     let
         enemy = us.opposite
         occupancy = position.occupancy
