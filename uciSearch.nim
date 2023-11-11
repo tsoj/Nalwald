@@ -13,7 +13,6 @@ import std/[
     times,
     strformat,
     strutils,
-    math,
     algorithm,
     sugar,
     random

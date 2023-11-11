@@ -280,8 +280,8 @@ func search(
             bestMove = move
 
         if value >= beta:
-            state.update(position, bestMove, previous = previous, depth = depth, height = height, cutNode, value)
-            return bestValue
+            nodeType = cutNode
+            break
 
         if value > alpha:
             nodeType = pvNode
