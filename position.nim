@@ -289,10 +289,10 @@ func coloredPiece*(position: Position, square: Square): ColoredPiece =
     ColoredPiece(piece: noPiece, color: noColor)
 
 func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square: Square) =
-    for color in [white, black]:
-        position[color] = position[color] and not square.toBitboard
-    for piece in pawn..king:
-        position[piece] = position[piece] and not square.toBitboard
+    for color in position.colors.mitems:
+        color &= not square.toBitboard
+    for piece in position.pieces.mitems:
+        piece &= not square.toBitboard
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, square)
 
@@ -305,49 +305,41 @@ func isPassedPawnMove*(newPosition: Position, move: Move): bool =
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.GamePhase
 
-func mirrorVertically*(position: Position, skipZobristKey: static bool = false): Position =
+template mirror(position: Position, skipZobristKey: static bool, mirrorFn: untyped): Position =
+    var position = position
     
-    result.halfmovesPlayed = position.halfmovesPlayed
-    result.halfmoveClock = position.halfmoveClock
+    for bitboard in position.pieces.mitems:
+        bitboard = bitboard.mirrorFn
+    for bitboard in position.colors.mitems:
+        bitboard = bitboard.mirrorFn
     
-    for piece, bitboard in position.pieces:
-        result[piece] = bitboard.mirrorVertically
-    for color, bitboard in position.colors:
-        result[color.opposite] = bitboard.mirrorVertically
-    
-    result.enPassantCastling = position.enPassantCastling.mirrorVertically
-    result.us = position.us.opposite
+    position.enPassantCastling = position.enPassantCastling.mirrorFn
 
-    result.rookSource = [
-        white: position.rookSource[black],
-        black: position.rookSource[white]
-    ]
     for color in white..black:
         for castlingSide in queenside..kingside:
-            result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].mirrorVertically
+            result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].mirrorFn
     
     when not skipZobristKey:
-        result.zobristKey = position.calculateZobristKey
+        position.zobristKey = position.calculateZobristKey
+
+    position
+
+func mirrorVertically*(position: Position, skipZobristKey: static bool = false): Position =
+    result = position.mirror(skipZobristKey, mirrorVertically)
+
+    result.rookSource = [
+        white: result.rookSource[black],
+        black: result.rookSource[white]
+    ]
+    result.us = result.enemy
+
 
 func mirrorHorizontally*(position: Position, skipZobristKey: static bool = false): Position =
-    
-    result.halfmovesPlayed = position.halfmovesPlayed
-    result.halfmoveClock = position.halfmoveClock
-    
-    for piece, bitboard in position.pieces:
-        result[piece] = bitboard.mirrorHorizontally
-    for color, bitboard in position.colors:
-        result[color] = bitboard.mirrorHorizontally
-    
-    result.enPassantCastling = position.enPassantCastling.mirrorHorizontally
-    result.us = position.us
+    result = position.mirror(skipZobristKey, mirrorHorizontally)
 
     for color in white..black:
-        result.rookSource[color][kingside] = position.rookSource[color][queenside].mirrorHorizontally
-        result.rookSource[color][queenside] = position.rookSource[color][kingside].mirrorHorizontally
-    
-    when not skipZobristKey:
-        result.zobristKey = position.calculateZobristKey
+        result.rookSource[color][kingside] = result.rookSource[color][queenside]
+        result.rookSource[color][queenside] = result.rookSource[color][kingside]
 
 func rotate*(position: Position, skipZobristKey: static bool = false): Position =
     result = position.mirrorHorizontally(skipZobristKey = true).mirrorVertically(skipZobristKey = true)

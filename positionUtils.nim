@@ -7,6 +7,8 @@ import
     bitboard,
     castling
 
+export move, position
+
 import std/[
     strutils,
     options,
@@ -84,7 +86,6 @@ func debugString*(position: Position): string =
     result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
     result &= "zobristKey: " & $position.zobristKey & "\n"
     result &= "rookSource: " & $position.rookSource
-
 
 func legalMoves*(position: Position): seq[Move] =
     var pseudoLegalMoves = newSeq[Move](64)
