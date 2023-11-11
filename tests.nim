@@ -238,7 +238,7 @@ proc runTests*(
 
     if testPerftSpeed:
         echo "---------------"
-        styledEcho styleBright, "Speed perft test: ", resetStyle, $speedPerftTest(), styleItalic, " knps"
+        styledEcho styleBright, "Speed perft test: ", resetStyle, $speedPerftTest(maxNodes), styleItalic, " knps"
         echo getCpuInfo()
     
 
