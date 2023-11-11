@@ -45,10 +45,7 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
                 castled = false, capturedEnPassant = false
             )
 
-const firstPawnPushRank = [
-    white: homeRank[white].up(white).up(white),
-    black: homeRank[black].up(black).up(black)
-]
+
 
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     let
@@ -97,6 +94,11 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
             )
 
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
+    const firstPawnPushRank = [
+        white: homeRank[white].up(white).up(white),
+        black: homeRank[black].up(black).up(black)
+    ]
+
     let
         us = position.us
         enemy = position.enemy
