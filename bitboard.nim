@@ -25,14 +25,11 @@ func toSquare*(x: Bitboard): Square =
 
 func toBitboard*(square: Square): Bitboard = 1u64 shl square.int8
 
-func removeTrailingOneBit(x: var SomeInteger): Square {.inline.} =
-    result = x.countTrailingZeroBits.Square
-    x = x and not result.toBitboard
-
 iterator items*(bitboard: Bitboard): Square {.inline.} =
-    var tmp = bitboard
-    while tmp != 0:
-        yield tmp.removeTrailingOneBit
+    var occ = bitboard
+    while occ != 0:
+        yield occ.countTrailingZeroBits.Square
+        occ &= occ - 1
 
 func bitboardString*(bitboard: Bitboard): string =
     boardString(proc (square: Square): Option[string] =
