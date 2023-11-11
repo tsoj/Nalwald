@@ -54,7 +54,6 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     let
         us = position.us
         enemy = position.enemy
-    result = 0
 
     proc addPromotions(moves: var openArray[Move], source, target: Square, counter: var int, captured = noPiece) =
         for promoted in knight..queen:
@@ -103,11 +102,7 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
         enemy = position.enemy
         occupancy = position.occupancy
 
-    # debugEcho "-------------------"
-    # debugEcho position
-    result = 0
     let targets = position[pawn, us].up(us) and not (occupancy or homeRank[enemy])
-    # debugEcho targets.bitboardString
     for target in targets:
         let source = target.up(enemy)
         moves.addMove(
@@ -118,7 +113,6 @@ func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
         )
 
     let doubleTargets = (targets and firstPawnPushRank[us]).up(us) and not occupancy
-    # debugEcho doubleTargets.bitboardString
     for target in doubleTargets:
         let
             enPassantTarget = target.up(enemy)
