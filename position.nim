@@ -67,20 +67,18 @@ func castlingSide*(position: Position, move: Move): CastlingSide =
 func occupancy*(position: Position): Bitboard =
     position[white] or position[black]
 
-func attackers*(position: Position, us: Color, target: Square): Bitboard =
-    let
-        enemy = us.opposite
-        occupancy = position.occupancy
+func attackers*(position: Position, attacker: Color, target: Square): Bitboard =
+    let occupancy = position.occupancy
     (
         (bishop.attackMask(target, occupancy) and (position[bishop] or position[queen])) or
         (rook.attackMask(target, occupancy) and (position[rook] or position[queen])) or
         (knight.attackMask(target, occupancy) and position[knight]) or
         (king.attackMask(target, occupancy) and position[king]) or
-        (attackMaskPawnCapture(target, us) and position[pawn])
-    ) and position[enemy]
+        (attackMaskPawnCapture(target, attacker.opposite) and position[pawn])
+    ) and position[attacker]
 
 func isAttacked*(position: Position, us: Color, target: Square): bool =
-    position.attackers(us, target) != 0
+    position.attackers(us.opposite, target) != 0
 
 func isPseudoLegal*(position: Position, move: Move): bool =
     if move == noMove:

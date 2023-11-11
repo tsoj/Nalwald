@@ -19,7 +19,7 @@ static: doAssert checkAssumptions()
 
 func see(position: var Position, target: Square, victim: Piece, us: Color): Value =
 
-    let attackers = position.attackers(us.opposite, target)
+    let attackers = position.attackers(us, target)
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
         let attack = position[piece, us] and attackers
         if attack != 0:
