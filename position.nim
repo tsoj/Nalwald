@@ -181,8 +181,9 @@ func calculateZobristKey*(position: Position): ZobristKey =
             for square in position[piece, color]:
                 result ^= zobristPieceBitmasks[color][piece][square]
 
-func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
-    assert position.isPseudoLegal(move)
+func doMove*(position: Position, move: Move): Position {.inline.} =
+    result = position
+    assert result.isPseudoLegal(move)
     let
         target = move.target
         source = move.source
@@ -190,90 +191,84 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
         captured = move.captured
         promoted = move.promoted
         enPassantTarget = move.enPassantTarget
-        us = position.us
-        enemy = position.enemy
+        us = result.us
+        enemy = result.enemy
 
-    position.zobristKey = position.zobristKey xor cast[ZobristKey](position.enPassantCastling)
-    position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
-    position.enPassantCastling = position.enPassantCastling and not (source.toBitboard or target.toBitboard)
+    result.zobristKey ^= cast[ZobristKey](result.enPassantCastling)
+    result.enPassantCastling &= ranks[a1] or ranks[a8]
+    result.enPassantCastling &= not (source.toBitboard or target.toBitboard)
     if enPassantTarget != noSquare:
-        position.enPassantCastling = position.enPassantCastling or enPassantTarget.toBitboard
+        result.enPassantCastling |= enPassantTarget.toBitboard
     if moved == king:
-        position.enPassantCastling = position.enPassantCastling and not homeRank[us]
-    position.zobristKey = position.zobristKey xor cast[ZobristKey](position.enPassantCastling)
+        result.enPassantCastling &= not homeRank[us]
+    result.zobristKey ^= cast[ZobristKey](result.enPassantCastling)
 
     # en passant
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackMaskPawnQuiet(target, enemy).toSquare)
-        position.movePiece(us, pawn, source, target)
+        result.removePiece(enemy, pawn, attackMaskPawnQuiet(target, enemy).toSquare)
+        result.movePiece(us, pawn, source, target)
 
         let capturedSquare = attackMaskPawnQuiet(target, enemy).toSquare
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][pawn][capturedSquare]
+        result.zobristKey ^= zobristPieceBitmasks[enemy][pawn][capturedSquare]
+    
     # removing captured piece
     elif captured != noPiece:
-        position.removePiece(enemy, captured, target)
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][captured][target]
+        result.removePiece(enemy, captured, target)
+        result.zobristKey ^= zobristPieceBitmasks[enemy][captured][target]
 
     # castling
     if move.castled:
         let
             rookSource = target
             kingSource = source
-            castlingSide = position.castlingSide(move)
+            castlingSide = result.castlingSide(move)
             rookTarget = rookTarget[us][castlingSide]
             kingTarget = kingTarget[us][castlingSide]
         
-        position.removePiece(us, king, kingSource)
-        position.removePiece(us, rook, rookSource)
+        result.removePiece(us, king, kingSource)
+        result.removePiece(us, rook, rookSource)
 
         for (piece, source, target) in [
             (king, kingSource, kingTarget),
             (rook, rookSource, rookTarget)
         ]:
-            position.addPiece(us, piece, target)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][source]
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][piece][target]
+            result.addPiece(us, piece, target)
+            result.zobristKey ^= zobristPieceBitmasks[us][piece][source]
+            result.zobristKey ^= zobristPieceBitmasks[us][piece][target]
 
     # moving piece
     else:
-        position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][source]
+        result.zobristKey ^= zobristPieceBitmasks[us][moved][source]
         if promoted != noPiece:
-            position.removePiece(us, moved, source)
-            position.addPiece(us, promoted, target)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][promoted][target]
+            result.removePiece(us, moved, source)
+            result.addPiece(us, promoted, target)
+            result.zobristKey ^= zobristPieceBitmasks[us][promoted][target]
         else:
-            position.movePiece(us, moved, source, target)
-            position.zobristKey = position.zobristKey xor zobristPieceBitmasks[us][moved][target]
+            result.movePiece(us, moved, source, target)
+            result.zobristKey ^= zobristPieceBitmasks[us][moved][target]
 
-    position.halfmovesPlayed += 1 
-    position.halfmoveClock += 1
+    result.halfmovesPlayed += 1 
+    result.halfmoveClock += 1
     if moved == pawn or captured != noPiece:
-        position.halfmoveClock = 0
+        result.halfmoveClock = 0
     
-    position.us = position.us.opposite
+    result.us = result.enemy
     
-    position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
-    position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
-
-func doMove*(position: Position, move: Move): Position {.inline.} =
-    result = position
-    result.doMoveInPlace(move)
-
-func doNullMoveInPlace*(position: var Position) =
-    position.zobristKey = position.zobristKey xor position.enPassantCastling
-    position.enPassantCastling = position.enPassantCastling and (ranks[a1] or ranks[a8])
-    position.zobristKey = position.zobristKey xor position.enPassantCastling
-
-    position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[white]
-    position.zobristKey = position.zobristKey xor zobristSideToMoveBitmasks[black]
-
-    position.halfmoveClock = 0
-
-    position.us = position.us.opposite
+    result.zobristKey ^= zobristSideToMoveBitmasks[white]
+    result.zobristKey ^= zobristSideToMoveBitmasks[black]
 
 func doNullMove*(position: Position): Position =
     result = position
-    result.doNullMoveInPlace()
+    result.zobristKey ^= result.enPassantCastling
+    result.enPassantCastling &= ranks[a1] or ranks[a8]
+    result.zobristKey ^= result.enPassantCastling
+
+    result.zobristKey ^= zobristSideToMoveBitmasks[white]
+    result.zobristKey ^= zobristSideToMoveBitmasks[black]
+
+    result.halfmoveClock = 0
+
+    result.us = result.enemy
 
 func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1

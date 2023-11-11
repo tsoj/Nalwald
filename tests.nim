@@ -104,6 +104,7 @@ proc getPerftTestData(useInternal, useExternal: bool): seq[PerftData] =
 
     var lines = if useInternal:
         @[
+            "4k3/8/8/8/8/8/8/4K2R w K - 0 1,15,66,1197,7059,133987,764643",
             # classical positions
             "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w QKqk - 0 1,48,2039,97862,4085603,193690690",
             "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1,14,191,2812,43238,674624,11030083,178633661",
@@ -191,7 +192,7 @@ proc testSearchAndPerft(
             hashTable, requireRootPv = true, moveTime = initDuration(seconds = 2)
         )
         doAssert searchResult.len > 0
-        doAssert searchResult[0].value in -valueCheckmate..valueCheckmate
+        doAssert searchResult[0].value in -checkmateValue(Ply.low)..checkmateValue(Ply.low), $searchResult[0].value
         doAssert searchResult[0].pv.len > 0
         echo "Value: ", searchResult[0].value, ", pv: ", searchResult[0].pv.notation(position)
 
