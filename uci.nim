@@ -194,15 +194,36 @@ proc uciNewGame(uciState: var UciState) =
         uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
-    if params.len == 0:
-        runTests()
-    else:
-        let numNodes = try:
-            params[0].parseBiggestInt.int64
+    var
+        maxNodes = int64.high
+        testSee = false
+        testPerftSearch = false
+        testPerftSpeed = false
+
+    if "see" notin params and "perft" notin params and "speed" notin params:
+        testSee = true
+        testPerftSearch = true
+        testPerftSpeed = true
+    if "see" in params:
+        testSee = true
+    if "perft" in params:
+        testPerftSearch = true
+    if "speed" in params:
+        testPerftSpeed = true
+
+    for param in params:
+        maxNodes = min(maxNodes, try:
+            param.parseBiggestInt.int64
         except CatchableError:
             int64.high
-
-        runTests(maxNodes = numNodes)
+        )
+    
+    runTests(
+        maxNodes = maxNodes,
+        testSee = testSee,
+        testPerftSearch = testPerftSearch,
+        testPerftSpeed = testPerftSpeed
+    )
 
 proc perft(uciState: UciState, params: seq[string]) =
     if params.len >= 1:

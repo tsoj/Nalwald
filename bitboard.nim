@@ -115,14 +115,6 @@ const
     knightAttackTable = kingKnightAttackTable(0x442800000028440u64)
     kingAttackTable = kingKnightAttackTable(0x8380000000000383u64)
 
-func left*(b: Bitboard): Bitboard = b shr 1
-func right*(b: Bitboard): Bitboard = b shl 1
-func up*(b: Bitboard, c: Color): Bitboard =
-    if c == white: b shl 8 else: b shr 8
-
-func pawnLeftAttack*(pawns: Bitboard, color: Color): Bitboard = (pawns and not files[a1]).up(color).left
-func pawnRightAttack*(pawns: Bitboard, color: Color): Bitboard = (pawns and not files[h1]).up(color).right
-
 const attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]] = block:
     var attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]]
     for square in a1..h8:

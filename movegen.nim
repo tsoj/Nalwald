@@ -45,12 +45,22 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
                 castled = false, capturedEnPassant = false
             )
 
+func left(b: Bitboard): Bitboard = b shr 1
+func right(b: Bitboard): Bitboard = b shl 1
+func up(b: Bitboard, c: Color): Bitboard =
+    if c == white: b shl 8 else: b shr 8
+
+func pawnLeftAttack(pawns: Bitboard, color: Color): Bitboard = (pawns and not files[a1]).up(color).left
+func pawnRightAttack(pawns: Bitboard, color: Color): Bitboard = (pawns and not files[h1]).up(color).right
+
+
+const firstPawnPushRank = [
+    white: homeRank[white].up(white).up(white),
+    black: homeRank[black].up(black).up(black)
+]
 
 
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
-    let
-        us = position.us
-        enemy = position.enemy
 
     proc addPromotions(moves: var openArray[Move], source, target: Square, counter: var int, captured = noPiece) =
         for promoted in knight..queen:
@@ -61,43 +71,43 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
                 castled = false, capturedEnPassant = false
             )
 
-    for source in position[pawn] and position[us]:
-        # quiet promotions
-        if (source.toBitboard and pawnHomeRank[enemy]) != 0 and (attackMaskPawnQuiet(source, us) and position.occupancy) == 0:
-            let target = attackMaskPawnQuiet(source, us).toSquare
-            moves.addPromotions(source, target, result)
+    let
+        us = position.us
+        enemy = position.enemy
+        enPassantTarget = position.enPassantCastling and not (homeRank[white] or homeRank[black])
+        potentialTargets = position[enemy] or enPassantTarget
+    for (targets, dir) in [(position[pawn, us].pawnLeftAttack(us) and potentialTargets, 1), (position[pawn, us].pawnRightAttack(us) and potentialTargets, -1)]:
+        for target in targets:
+            let source = (target.int + dir).Square.up(enemy)
+            var
+                captured = noPiece
+                capturedEnPassant = false
 
-        # captures
-        for target in attackMaskPawnCapture(source, us) and position[enemy]:
-            for captured in pawn..king:
-                if (position[captured] and target.toBitboard) != 0:
-                    if (target.toBitboard and homeRank[enemy]) != 0:
-                        moves.addPromotions(source, target, result, captured)
-                    else:
-                        moves.addMove(
-                            result,
-                            source = source, target = target, enPassantTarget = noSquare,
-                            moved = pawn, captured = captured, promoted = noPiece,
-                            castled = false, capturedEnPassant = false
-                        )
+            for piece in pawn..king:
+                if (position[enemy, piece] and target.toBitboard) != 0:
+                    captured = piece
                     break
+                
+            if captured == noPiece:
+                capturedEnPassant = true
+                captured = pawn
 
-        # en passant capture
-        let attackMask = attackMaskPawnCapture(source, us) and position.enPassantCastling and (ranks[a3] or ranks[a6])
-        if attackMask != 0:
-            let target = attackMask.toSquare
-            moves.addMove(
-                result,
-                source = source, target = target, enPassantTarget = noSquare,
-                moved = pawn, captured = pawn, promoted = noPiece,
-                castled = false, capturedEnPassant = true
-            )
+            if target notin a2..h7:
+                moves.addPromotions(source, target, result, captured)
+            else:
+                moves.addMove(
+                    result,
+                    source = source, target = target, enPassantTarget = noSquare,
+                    moved = pawn, captured = captured, promoted = noPiece,
+                    castled = false, capturedEnPassant = capturedEnPassant
+                )
+
+    # quiet promotions
+    for target in position[pawn, us].up(us) and homeRank[enemy] and not position.occupancy:
+        let source = target.up(enemy)
+        moves.addPromotions(source, target, result)
 
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
-    const firstPawnPushRank = [
-        white: homeRank[white].up(white).up(white),
-        black: homeRank[black].up(black).up(black)
-    ]
 
     let
         us = position.us

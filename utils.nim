@@ -6,7 +6,8 @@ import std/[
     strutils,
     atomics,
     times,
-    os
+    os,
+    osproc
 ]
 
 const megaByteToByte* = 1_048_576
@@ -91,3 +92,10 @@ proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
 
 func clampToType*[In, Out](x: In, OutType: typedesc[Out]): Out =
     x.clamp(OutType.low.In, OutType.high.In).Out
+
+proc getCpuInfo*(): string =
+    when defined(posix):
+        var cpuName = execCmdEx("""
+        cat /proc/cpuinfo | awk -F '\\s*: | @' '/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ { cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' "$cpu_file"
+        """).output
+        return cpuName.strip
