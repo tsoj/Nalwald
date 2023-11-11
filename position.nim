@@ -179,7 +179,7 @@ func calculateZobristKey*(position: Position): ZobristKey =
             for square in position[piece, color]:
                 result ^= zobristPieceBitmasks[color][piece][square]
 
-func doMove*(position: Position, move: Move): Position {.inline.} =
+func doMove*(position: Position, move: Move): Position =
     result = position
     assert result.isPseudoLegal(move)
     let
@@ -296,7 +296,7 @@ func addColoredPiece*(position: var Position, coloredPiece: ColoredPiece, square
 
     position.addPiece(coloredPiece.color, coloredPiece.piece, square)
 
-func isPassedPawn*(position: Position, us: Color, square: Square): bool {.inline.} =
+func isPassedPawn*(position: Position, us: Color, square: Square): bool =
     (isPassedMask[us][square] and position[pawn] and position[us.opposite]) == 0
 
 func isPassedPawnMove*(newPosition: Position, move: Move): bool =
