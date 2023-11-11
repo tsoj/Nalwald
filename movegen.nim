@@ -45,6 +45,11 @@ func generateQuiets(position: Position, piece: Piece, moves: var openArray[Move]
                 castled = false, capturedEnPassant = false
             )
 
+const firstPawnPushRank = [
+    white: homeRank[white].up(white).up(white),
+    black: homeRank[black].up(black).up(black)
+]
+
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     let
         us = position.us
@@ -95,28 +100,35 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
     let
         us = position.us
+        enemy = position.enemy
         occupancy = position.occupancy
-    result = 0
-    for source in position[pawn] and position[us]:
-        if (attackMaskPawnQuiet(source, us) and (occupancy or homeRank[position.enemy])) == 0:
-            let target = attackMaskPawnQuiet(source, us).toSquare
-            moves.addMove(
-                result,
-                source = source, target = target, enPassantTarget = noSquare,
-                moved = pawn, captured = noPiece, promoted = noPiece,
-                castled = false, capturedEnPassant = false
-            )
 
-            # double pushs
-            if (source.toBitboard and pawnHomeRank[us]) != 0:
-                let doublePushTarget = attackMaskPawnQuiet(target, us).toSquare
-                if (doublePushTarget.toBitboard and occupancy) == 0:
-                    moves.addMove(
-                        result,
-                        source = source, target = doublePushTarget, enPassantTarget = target,
-                        moved = pawn, captured = noPiece, promoted = noPiece,
-                        castled = false, capturedEnPassant = false
-                    )
+    # debugEcho "-------------------"
+    # debugEcho position
+    result = 0
+    let targets = position[pawn, us].up(us) and not (occupancy or homeRank[enemy])
+    # debugEcho targets.bitboardString
+    for target in targets:
+        let source = target.up(enemy)
+        moves.addMove(
+            result,
+            source = source, target = target, enPassantTarget = noSquare,
+            moved = pawn, captured = noPiece, promoted = noPiece,
+            castled = false, capturedEnPassant = false
+        )
+
+    let doubleTargets = (targets and firstPawnPushRank[us]).up(us) and not occupancy
+    # debugEcho doubleTargets.bitboardString
+    for target in doubleTargets:
+        let
+            enPassantTarget = target.up(enemy)
+            source = enPassantTarget.up(enemy)
+        moves.addMove(
+            result,
+            source = source, target = target, enPassantTarget = enPassantTarget,
+            moved = pawn, captured = noPiece, promoted = noPiece,
+            castled = false, capturedEnPassant = false
+        )
 
 func generateCastlingMoves(position: Position, moves: var openArray[Move]): int =
     let

@@ -52,6 +52,11 @@ template up*(square: Square): Square = (square.int8 + 8).Square
 template down*(square: Square): Square = (square.int8 - 8).Square
 template left*(square: Square): Square = (square.int8 - 1).Square
 template right*(square: Square): Square = (square.int8 + 1).Square
+template up*(square: Square, color: Color): Square =
+    if color == white:
+        square.up
+    else:
+        square.down
 
 func goUp*(square: var Square): bool =
     if square.isUpperEdge: return false
