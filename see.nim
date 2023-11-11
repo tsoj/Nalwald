@@ -52,7 +52,7 @@ func see*(position: Position, move: Move): Value =
     position.removePiece(us, moved, source)
 
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target].toSquare)
+        position.removePiece(enemy, pawn, attackMaskPawnQuiet(target, enemy).toSquare)
         position.removePiece(us, pawn, source)
     elif promoted != noPiece:
         position.removePiece(us, moved, source)

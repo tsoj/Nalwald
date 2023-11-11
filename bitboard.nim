@@ -12,6 +12,13 @@ export bitops
 
 type Bitboard* = uint64
 
+func `&=`*(a: var Bitboard, b: Bitboard) =
+    a = a and b
+func `|=`*(a: var Bitboard, b: Bitboard) =
+    a = a or b
+func `^=`*(a: var Bitboard, b: Bitboard) =
+    a = a xor b
+
 func toSquare*(x: Bitboard): Square =
     assert x.countSetBits > 0
     x.countTrailingZeroBits.Square
@@ -174,7 +181,7 @@ const kingAttackTable: array[a1..h8, Bitboard] = block:
                 kingAttackTable[square] = kingAttackTable[square] or targetSquare.toBitboard
     kingAttackTable
 
-const attackTablePawnQuiet*: array[white..black, array[a1..h8, Bitboard]] = block:
+const attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]] = block:
     var attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]]
     for square in a1..h8:
         var targetSquare = square
@@ -185,7 +192,7 @@ const attackTablePawnQuiet*: array[white..black, array[a1..h8, Bitboard]] = bloc
             attackTablePawnQuiet[black][square] = targetSquare.toBitboard
     attackTablePawnQuiet
 
-const attackTablePawnCapture*: array[white..black, array[a1..h8, Bitboard]] = block:
+const attackTablePawnCapture: array[white..black, array[a1..h8, Bitboard]] = block:
     var attackTablePawnCapture: array[white..black, array[a1..h8, Bitboard]]
     for square in a1..h8:
         for direction in [goLeft, goRight]:
@@ -250,6 +257,13 @@ const mask5x5*: array[a1..h8, Bitboard] = block:
 const homeRank*: array[white..black, Bitboard] = [white: ranks[a1], black: ranks[a8]]
 
 const pawnHomeRank*: array[white..black, Bitboard] = [white: ranks[a2], black: ranks[a7]]
+
+
+func attackMaskPawnQuiet*(square: Square, color: Color): Bitboard =
+    attackTablePawnQuiet[color][square]
+
+func attackMaskPawnCapture*(square: Square, color: Color): Bitboard =
+    attackTablePawnCapture[color][square]
 
 func attackMaskKnight*(square: Square, occupancy: Bitboard): Bitboard =
     knightAttackTable[square]

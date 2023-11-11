@@ -25,10 +25,16 @@ func enemy*(position: Position): Color =
 func `[]`*(position: Position, piece: Piece): Bitboard {.inline.} =
     position.pieces[piece]
 
+func `[]`*(position: var Position, piece: Piece): var Bitboard {.inline.} =
+    position.pieces[piece]
+
 func `[]=`*(position: var Position, piece: Piece, bitboard: Bitboard) {.inline.} =
     position.pieces[piece] = bitboard
 
 func `[]`*(position: Position, color: Color): Bitboard {.inline.} =
+    position.colors[color]
+
+func `[]`*(position: var Position, color: Color): var Bitboard {.inline.} =
     position.colors[color]
 
 func `[]=`*(position: var Position, color: Color, bitboard: Bitboard) {.inline.} =
@@ -41,13 +47,13 @@ func `[]`*(position: Position, color: Color, piece: Piece): Bitboard {.inline.} 
 
 func addPiece*(position: var Position, color: Color, piece: Piece, target: Square) {.inline.} =
     let bit = target.toBitboard
-    position[piece] = position[piece] or bit
-    position[color] = position[color] or bit
+    position[piece] |= bit
+    position[color] |= bit
 
 func removePiece*(position: var Position, color: Color, piece: Piece, source: Square) {.inline.} =
     let bit = not source.toBitboard
-    position[piece] = position[piece] and bit
-    position[color] = position[color] and bit
+    position[piece] &= bit
+    position[color] &= bit
 
 func movePiece*(position: var Position, color: Color, piece: Piece, source, target: Square) {.inline.} =
     position.removePiece(color, piece, source)
@@ -70,7 +76,7 @@ func attackers*(position: Position, us: Color, target: Square): Bitboard =
         (rook.attackMask(target, occupancy) and (position[rook] or position[queen])) or
         (knight.attackMask(target, occupancy) and position[knight]) or
         (king.attackMask(target, occupancy) and position[king]) or
-        (attackTablePawnCapture[us][target] and position[pawn])
+        (attackMaskPawnCapture(target, us) and position[pawn])
     ) and position[enemy]
 
 func isAttacked*(position: Position, us: Color, target: Square): bool =
@@ -110,6 +116,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         return false
     if captured == noPiece and (target.toBitboard and position[enemy]) != 0:
         return false
+
     # handle the captured en passant case
     if capturedEnPassant:
         if (target.toBitboard and position.enPassantCastling and not(ranks[a1] or ranks[a8])) == 0:
@@ -122,15 +129,15 @@ func isPseudoLegal*(position: Position, move: Move): bool =
         return false
 
     if moved == pawn:
-        if captured != noPiece and (target.toBitboard and attackTablePawnCapture[us][source]) == 0:
+        if captured != noPiece and (target.toBitboard and attackMaskPawnCapture(source, us)) == 0:
             return false
         elif captured == noPiece:
-            if target.toBitboard != attackTablePawnQuiet[us][source]:
-                if (occupancy and attackTablePawnQuiet[us][source]) != 0:
+            if target.toBitboard != attackMaskPawnQuiet(source, us):
+                if (occupancy and attackMaskPawnQuiet(source, us)) != 0:
                     return false
                 if enPassantTarget notin a1..h8:
                     return false
-                if (enPassantTarget.toBitboard and attackTablePawnQuiet[enemy][target] and attackTablePawnQuiet[us][source]) == 0:
+                if (enPassantTarget.toBitboard and attackMaskPawnQuiet(target, enemy) and attackMaskPawnQuiet(source, us)) == 0:
                     return false
             elif enPassantTarget != noSquare:
                 return false
@@ -168,15 +175,11 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     true
 
 func calculateZobristKey*(position: Position): ZobristKey =
-    result = 0
+    result = position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
     for piece in pawn..king:
-        for square in position[piece]:
-            result = result xor (if (position[white] and square.toBitboard) != 0:
-                zobristPieceBitmasks[white][piece][square]
-            else:
-                zobristPieceBitmasks[black][piece][square]
-            )
-    result = result xor position.enPassantCastling xor zobristSideToMoveBitmasks[position.us]
+        for color in white..black:
+            for square in position[piece, color]:
+                result ^= zobristPieceBitmasks[color][piece][square]
 
 func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
     assert position.isPseudoLegal(move)
@@ -201,10 +204,10 @@ func doMoveInPlace*(position: var Position, move: Move) {.inline.} =
 
     # en passant
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target].toSquare)
+        position.removePiece(enemy, pawn, attackMaskPawnQuiet(target, enemy).toSquare)
         position.movePiece(us, pawn, source, target)
 
-        let capturedSquare = attackTablePawnQuiet[enemy][target].toSquare
+        let capturedSquare = attackMaskPawnQuiet(target, enemy).toSquare
         position.zobristKey = position.zobristKey xor zobristPieceBitmasks[enemy][pawn][capturedSquare]
     # removing captured piece
     elif captured != noPiece:
