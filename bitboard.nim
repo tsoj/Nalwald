@@ -5,7 +5,8 @@ import
 import std/[
     options,
     bitops,
-    endians
+    endians,
+    sugar
 ]
 
 export bitops
@@ -65,38 +66,27 @@ func mirrorHorizontally*(bitboard: Bitboard): Bitboard =
 func rotate*(bitboard: Bitboard): Bitboard =
     bitboard.mirrorHorizontally.mirrorVertically
 
-const mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64 # a1 to h9
-const antiDiagonal: Bitboard = 0b0000000100000010000001000000100000010000001000000100000010000000u64 # h1 to a8
+proc attackForSquareAndKey(hashKey: uint8, startSquare: Square, dirs: openArray[int], hashKeyFn: (Square, Bitboard) -> uint8): Bitboard =
+    result = 0
+    for dir in dirs:
+        var square = startSquare.int
+        while true:
+            square += dir
+            if square notin 0..63 or abs((square mod 8) - ((square - dir) mod 8)) >= 2:
+                break
+            let sq = square.Square
+            result |= sq.toBitboard
+            if (hashKeyFn(startSquare, sq.toBitboard) and hashKey) != 0:
+                break
 
-const upperLeftSideZero: Bitboard = 0b1000000011000000111000001111000011111000111111001111111011111111u64
-const lowerLeftSideZero: Bitboard = 0b1111111111111110111111001111100011110000111000001100000010000000u64
-const upperRightSideZero: Bitboard = 0b0000000000000001000000110000011100001111000111110011111101111111u64
-const lowerRightSideZero: Bitboard = 0b0111111100111111000111110000111100000111000000110000000100000000u64
+proc collect64[T](f: (int -> T)): array[64, T] =
+    for i in 0..63:
+        result[i] = f(i)
 
-const diagonals*: array[a1..h8, Bitboard] = block:
-    var diagonals: array[a1..h8, Bitboard]
-    for i in 0..7:
-        let currentDiagonal = (mainDiagonal shl i) and upperLeftSideZero
-        for square in currentDiagonal:
-            diagonals[square] = currentDiagonal
-    for i in 1..7:
-        let currentDiagonal = (mainDiagonal shr i) and lowerRightSideZero
-        for square in currentDiagonal:
-            diagonals[square] = currentDiagonal
-    diagonals
-
-const antiDiagonals: array[a1..h8, Bitboard] = block:
-    var antiDiagonals: array[a1..h8, Bitboard]
-    antiDiagonals[h8] = h8.toBitboard
-    for i in 0..6:
-        let currentAntiDiagonal = (antiDiagonal shl i) and lowerLeftSideZero
-        for square in currentAntiDiagonal:
-            antiDiagonals[square] = currentAntiDiagonal
-    for i in 1..7:
-        let currentAntiDiagonal = (antiDiagonal shr i) and upperRightSideZero
-        for square in currentAntiDiagonal:
-            antiDiagonals[square] = currentAntiDiagonal
-    antiDiagonals
+const
+    mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64
+    diagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-9, 9], (sq, occ) => 0)
+    antiDiagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-7, 7], (sq, occ) => 0)
 
 func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
     (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
@@ -107,76 +97,23 @@ func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
 func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
     (((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
 
-const possibleRankOccupancy: array[64, Bitboard] = block:
-    var possibleRankOccupancy: array[64, Bitboard]
-    for i in 0..63:
-        let tmp: Bitboard = 0b10000001 or (i.Bitboard shl 1)
-        possibleRankOccupancy[i] = 0
-        for j in 0..7:
-            possibleRankOccupancy[i] = possibleRankOccupancy[i] or (tmp shl (j * 8))
-    possibleRankOccupancy
+proc attackTable(dirs: array[2, int], hashKeyFn: (Square, Bitboard) -> uint8): array[a1..h8, array[64, Bitboard]] =
+    collect64((sq) => collect64((key) => attackForSquareAndKey(key.uint8, sq.Square, dirs, hashKeyFn)))
 
-const possibleFileOccupancy: array[64, Bitboard] = block:
-    var possibleFileOccupancy: array[64, Bitboard]
-    for i in 0..63:
-        func rankToFile(rank: Bitboard): Bitboard = (((rank and 0b11111111) * mainDiagonal) and files[h1]) shr 7
-        let tmp: Bitboard = rankToFile(0b10000001 or (i.Bitboard shl 1))
-        possibleFileOccupancy[i] = 0
-        for j in 0..7:
-            possibleFileOccupancy[i] = possibleFileOccupancy[i] or (tmp shl j)
-    possibleFileOccupancy
+proc kingKnightAttackTable(a1Proto: Bitboard): array[a1..h8, Bitboard] =
+    collect64(proc(sourceSq: int): Bitboard = 
+        for target in rotateLeftBits(a1Proto, sourceSq):
+            if abs((target.int div 8) - (sourceSq div 8)) + abs((target.int mod 8) - (sourceSq mod 8)) <= 3:
+                result |= target.toBitboard
+    )
 
-func generateSlidingAttackTable[F](
-    possibleOccupancy: array[64, Bitboard],
-    directions: array[2, array[2, F]],
-    hashkeyFunction: proc(square: Square, occupancy: Bitboard): uint8 {.noSideEffect.}
-    ): array[a1..h8, array[64, Bitboard]] =
-    for square in a1..h8:
-        for occupancy in possibleOccupancy:
-            var attackMask: Bitboard = 0
-            for goDirection in directions:
-                var targetSquare = square
-                while goDirection[0](targetSquare) and goDirection[1](targetSquare):
-                    attackMask = attackMask or targetSquare.toBitboard
-                    if (occupancy and targetSquare.toBitboard) != 0:
-                        break;
-            result[square][hashkeyFunction(square, occupancy)] = attackMask
-
-const rankAttackTable: array[a1..h8, array[64, Bitboard]] = generateSlidingAttackTable(
-    possibleRankOccupancy, [[goRight, goNothing], [goLeft, goNothing]], hashkeyRank)
-
-const fileAttackTable: array[a1..h8, array[64, Bitboard]] = generateSlidingAttackTable(
-    possibleFileOccupancy, [[goUp, goNothing], [goDown, goNothing]], hashkeyFile)
-
-const diagonalAttackTable: array[a1..h8, array[64, Bitboard]] = generateSlidingAttackTable(
-    possibleRankOccupancy, [[goUp, goRight], [goDown, goLeft]], hashkeyDiagonal)
-
-const antiDiagonalAttackTable: array[a1..h8, array[64, Bitboard]] = generateSlidingAttackTable(
-    possibleRankOccupancy, [[goUp, goLeft], [goDown, goRight]], hashkeyAntiDiagonal)
-
-const knightAttackTable: array[a1..h8, Bitboard] = block:
-    var knightAttackTable: array[a1..h8, Bitboard]
-    for square in a1..h8:
-        for directions in [
-            [goUp, goLeft, goLeft], [goUp, goRight, goRight], [goUp, goUp, goLeft], [goUp, goUp, goRight],
-            [goDown, goLeft, goLeft], [goDown, goRight, goRight], [goDown, goDown, goLeft], [goDown, goDown, goRight]
-        ]:
-            var targetSquare = square
-            if directions[0](targetSquare) and directions[1](targetSquare) and directions[2](targetSquare):
-                knightAttackTable[square] = knightAttackTable[square] or targetSquare.toBitboard
-    knightAttackTable
-
-const kingAttackTable: array[a1..h8, Bitboard] = block:
-    var kingAttackTable: array[a1..h8, Bitboard]
-    for square in a1..h8:
-        for directions in [
-            [goUp, goNothing], [goUp, goRight], [goUp, goLeft], [goLeft, goNothing],
-            [goDown, goNothing], [goDown, goRight], [goDown, goLeft], [goRight, goNothing]
-        ]:
-            var targetSquare = square
-            if directions[0](targetSquare) and directions[1](targetSquare):
-                kingAttackTable[square] = kingAttackTable[square] or targetSquare.toBitboard
-    kingAttackTable
+const
+    rankAttackTable = attackTable([1, -1], hashkeyRank)
+    fileAttackTable = attackTable([8, -8], hashkeyFile)
+    diagonalAttackTable = attackTable([9, -9], hashkeyDiagonal)
+    antiDiagonalAttackTable = attackTable([7, -7], hashkeyAntiDiagonal)
+    knightAttackTable = kingKnightAttackTable(0x442800000028440u64)
+    kingAttackTable = kingKnightAttackTable(0x8380000000000383u64)
 
 const attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]] = block:
     var attackTablePawnQuiet: array[white..black, array[a1..h8, Bitboard]]
