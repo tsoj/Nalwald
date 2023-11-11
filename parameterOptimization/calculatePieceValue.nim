@@ -19,7 +19,7 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray
             let us = position.coloredPiece(square).color
             assert position.coloredPiece(square).piece == piece
             var newPosition = position
-            newPosition.removePiece(us, piece, square.toBitboard)
+            newPosition.removePiece(us, piece, square)
             var diff = startEval - newPosition.absoluteEvaluate(evalParameters)
             if us == black:
                 diff *= -1
