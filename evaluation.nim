@@ -131,8 +131,8 @@ func pieceRelativePst(
         # we do it just relative to the enemy king, as that's faster
         roughEnemyKingFile = (kingSquares[us.opposite].int mod 8) div 2
     
-    for otherPiece in pawn..queen:
-        for relativity in relativeToUs..relativeToEnemy:
+    for relativity in relativeToUs..relativeToEnemy:
+        for otherPiece in pawn..queen:
             for otherSquare in otherPieces[relativity] and position[otherPiece]:
                 let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
                 result.addValue(
