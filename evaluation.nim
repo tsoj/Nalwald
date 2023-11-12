@@ -51,10 +51,7 @@ type Gradient* = object
     gamePhaseFactor*: float32
     g*: float32
     evalParams*: ptr EvalParametersFloat
-type JustCountParamActivity* = object
-    gamePhaseFactor*: float32
-    evalParams*: ptr EvalParametersFloat
-type GradientOrNothing = Gradient or Nothing or JustCountParamActivity
+type GradientOrNothing = Gradient or Nothing
 
 macro getParameter(phase, structName, parameter: untyped): untyped =
     parseExpr($toStrLit(quote do: `structName`[`phase`.int]) & "." & $toStrLit(quote do: `parameter`))
@@ -70,9 +67,6 @@ template addValue(
         let f = (if us == black: -1.0 else: 1.0) * gradient.g
         getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
         getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
-    elif gradient is JustCountParamActivity:
-        getParameter(opening, gradient.evalParams[], parameter) += gradient.gamePhaseFactor
-        getParameter(endgame, gradient.evalParams[], parameter) += (1.0 - gradient.gamePhaseFactor)
     else:
         for phase {.inject.} in Phase:
             value[phase] += getParameter(phase, evalParameters, parameter)
