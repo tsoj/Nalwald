@@ -21,7 +21,7 @@ func newEvalParametersFloat*(): EvalParametersFloat =
 func newEvalParameters*(): EvalParameters =
     newSeq[SinglePhaseEvalParametersTemplate[Value]](2)
 
-template doForAll[Out, In, F](output: var SinglePhaseEvalParametersTemplate[Out], input: SinglePhaseEvalParametersTemplate[In], f: F) =
+template doForAll*[Out, In, F](output: var SinglePhaseEvalParametersTemplate[Out], input: SinglePhaseEvalParametersTemplate[In], f: F) =
 
     for r in Relativity:
         for s1 in a1..h8:
@@ -41,7 +41,7 @@ template doForAll[Out, In, F](output: var SinglePhaseEvalParametersTemplate[Out]
         for i in 0..<3*3*3 * 3*3*3 * 3*3*3:
             f(output.pawnStructureBonus[s][i], input.pawnStructureBonus[s][i])
 
-template doForAll[Out, In, F](output: var EvalParametersTemplate[Out], input: EvalParametersTemplate[In], f: F) =
+template doForAll*[Out, In, F](output: var EvalParametersTemplate[Out], input: EvalParametersTemplate[In], f: F) =
     for phase in 0..1:
         doForAll(output[phase], input[phase], f)
 

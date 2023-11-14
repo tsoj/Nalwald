@@ -8,7 +8,8 @@ import std/[
     times,
     strformat,
     threadpool,
-    random
+    random,
+    math
 ]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
@@ -19,25 +20,51 @@ proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, 
         result.weight += 1.0
         result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k)
 
+proc updateParams(params, momentum, secondMomentum: var EvalParametersFloat, timeStep: var int, gradient: EvalParametersFloat, beta1, beta2, alpha: float32) =
+    
+    # Adam optimizer
+
+    doAssert timeStep >= 1
+    doForAll(momentum, gradient, proc(m: var float32, g: float32) =
+        m = m*beta1 + (1.0 - beta1)*g
+    )
+    doForAll(secondMomentum, gradient, proc(v: var float32, g: float32) =
+        v = v*beta2 + (1.0 - beta2)*g*g
+    )
+    var update = newEvalParametersFloat()
+    let t = timeStep.float32
+    doForAll(update, momentum, proc(u: var float32, m: float32) =
+        u = alpha * m / (1.0 - pow(beta1, t))
+    )
+    doForAll(update, secondMomentum, proc(u: var float32, v: float32) =
+        u /= float32(sqrt(v/(1.0 - pow(beta2, t))) + 1e-8)
+    )
+
+    params += update
+    timeStep += 1
+
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
     k = 1.0,
-    lr = 50_000.0,
+    beta1 = 0.9,
+    beta2 = 0.999,
+    alpha = 0.1,
     lrDecay = 0.98,
-    maxNumEpochs = 150,
-    gradientDecay = 0.9,
+    maxNumEpochs = 40,
     numThreads = 8,
     batchSize = 100_000
 ): EvalParametersFloat =
 
+    var solution = start
+
+    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", alpha
+
     var
-        solution = start
-        lr = lr
-
-    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
-
-    var previousGradient = newEvalParametersFloat()
+        momentum = newEvalParametersFloat()
+        secondMomentum = newEvalParametersFloat()
+        timeStep = 1
+        alpha = alpha
 
     for epoch in 1..maxNumEpochs:
         let startTime = now()
@@ -76,20 +103,23 @@ proc optimize(
             # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
             # result is better
             gradient *= (1.0/totalWeight)
-            gradient *= 1.0 - gradientDecay
-            previousGradient *= gradientDecay
-            gradient += previousGradient
-            previousGradient = gradient
+            
+            solution.updateParams(momentum, secondMomentum, timeStep, gradient, beta1, beta2, alpha)
 
-            gradient *= lr
+            # gradient *= 1.0 - gradientDecay
+            # previousGradient *= gradientDecay
+            # gradient += previousGradient
+            # previousGradient = gradient
 
-            solution += gradient
+            # gradient *= lr
+
+            # solution += gradient
 
         let
             error = solution.convert.error(data[0..<min(data.len, 1_000_000)], k)
             passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.1f}, batch size: {batchSize}, time: {passedTime.inSeconds} s"
-        lr *= lrDecay
+        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {alpha:.3f}, batch size: {batchSize}, time: {passedTime.inSeconds} s"
+        alpha *= lrDecay
     
     let finalError = solution.convert.error(data, k)
     echo fmt"Final error: {finalError:>9.7f}"
