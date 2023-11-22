@@ -19,7 +19,7 @@ import std/[
 static: doAssert pawn.value == 100.cp
 
 const
-    deltaMargin = 150.cp
+    deltaMargin = 100.cp
     failHighDeltaMargin = 50.cp
     aspirationWindowStartingOffset = 10.cp
     aspirationWindowMultiplier = 2.0
@@ -78,8 +78,7 @@ func quiesce(
 
     state.countedNodes += 1
 
-    if height == Ply.high or
-    position.insufficientMaterial:
+    if height == Ply.high or position.insufficientMaterial:
         return 0.Value
 
     let standPat = state.evaluation(position)
