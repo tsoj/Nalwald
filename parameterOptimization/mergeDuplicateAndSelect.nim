@@ -53,7 +53,7 @@ for fen, (count, sum) in table:
         numSelectedPositions += 1
         g.writeLine(fen & " " & $(sum/count))
 
-echo "Num selected positions: ", numSelectedPositions.len
+echo "Num selected positions: ", numSelectedPositions
 
 f.close
 g.close
