@@ -10,10 +10,14 @@ import std/
 
 randomize(epochTime().int64 mod 500_000)
 
-const
-    readFilename = "quietPoolGamesNalwald7.epd"
-    writeFilename = "quietSmallPoolGamesNalwald7.epd"
-    approxMaxNumLines = 5_500_000
+doAssert commandLineParams().len == 3
+
+let
+    readFilename = commandLineParams()[0]#"quietPoolGamesNalwald7.epd"
+    writeFilename = commandLineParams()[1]#"quietSmallPoolGamesNalwald7.epd"
+    selectFactor = commandLineParams()[2].parseFloat
+
+doAssert selectFactor in 0.0..1.0
 
 doAssert fileExists readFilename
 doAssert not fileExists writeFilename
@@ -43,9 +47,13 @@ while f.readLine(line):
 echo "Num input positions: ", numInputPositions
 echo "Num unique positions: ", table.len
 
+var numSelectedPositions = 0
 for fen, (count, sum) in table:
-    if rand(table.len) <= approxMaxNumLines:
+    if rand(1.0) <= selectFactor:
+        numSelectedPositions += 1
         g.writeLine(fen & " " & $(sum/count))
+
+echo "Num selected positions: ", numSelectedPositions.len
 
 f.close
 g.close

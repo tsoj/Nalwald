@@ -140,6 +140,7 @@ data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
 data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
 data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
 data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
+data.loadDataEpd "gamesNalwald8.epd"
 
 data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
 data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"

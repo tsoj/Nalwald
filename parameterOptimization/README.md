@@ -71,6 +71,8 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-###### quietSmallPoolGamesNalwald3.epd to quietSmallPoolGamesNalwald7.epd
-- removed non-quiet positions from games played between Nalwald and other engines
-- randomly selected positions (1.5 million, 2.6 million, 4 million, 4.4 million, 5.5 million respectively)
+###### quietSmallPoolGamesNalwald*.epd gamesNalwald8.epd
+- Used [`trainingDataFromPGNs.sh`](./trainingDataFromPGNs.sh) to extract positions from games played between Nalwald and other engines
+
+###### trainingSet_*.bin
+- Self-play games using [`generateTrainingData.nim`](./generateTrainingData.nim)

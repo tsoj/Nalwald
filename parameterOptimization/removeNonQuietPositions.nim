@@ -7,9 +7,11 @@ import std/[
     os
 ]
 
-const
-    readFilename = "poolGamesNalwald7.epd"
-    writeFilename = "quietPoolGamesNalwald7.epd"
+doAssert commandLineParams().len == 2
+
+let
+    readFilename = commandLineParams()[0]#"poolGamesNalwald7.epd"
+    writeFilename = commandLineParams()[1]#"quietPoolGamesNalwald7.epd"
 
 doAssert fileExists readFilename
 doAssert not fileExists writeFilename
