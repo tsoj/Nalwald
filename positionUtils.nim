@@ -172,25 +172,34 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     result.enPassantCastling = 0
     result.rookSource = [[d4,d4],[d4,d4]] # d4 should be ignored by castling and enpassant
     for castlingChar in castlingRights:
-        let castlingChar = case castlingChar:
-        of '-':
+        if castlingChar == '-':
             continue
-        of 'K':
-            'H'
-        of 'k':
-            'h'
-        of 'Q':
-            'A'
-        of 'q':
-            'a'
-        else:
-            castlingChar
 
         let
             us = if castlingChar.isUpperAscii: white else: black
             kingSquare = (result[us] and result[king]).toSquare
-            rookSource = (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
-            castlingSide = if rookSource < kingSquare: queenside else: kingside
+
+        let rookSource = case castlingChar:
+        of 'K', 'k':
+            var rookSource = kingSquare
+            while rookSource.goRight:
+                if (result[rook, us] and rookSource.toBitboard) != 0:
+                    break
+            rookSource
+        of 'Q', 'q':
+            var rookSource = kingSquare
+            while rookSource.goLeft:
+                if (result[rook, us] and rookSource.toBitboard) != 0:
+                    break
+            rookSource
+        else:
+            let rookSourceBit = files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]
+        
+            if rookSourceBit.countSetBits != 1:
+                raise newException(ValueError, "FEN castling ambiguous or erroneous: " & activeColor)
+            (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
+
+        let castlingSide = if rookSource < kingSquare: queenside else: kingside
         
         result.enPassantCastling = result.enPassantCastling or rookSource.toBitboard
         result.rookSource[us][castlingSide] = rookSource
