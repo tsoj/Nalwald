@@ -59,19 +59,19 @@ template up*(square: Square, color: Color): Square =
         square.down
 
 func goUp*(square: var Square): bool =
-    if square.isUpperEdge: return false
+    if square.isUpperEdge or square == noSquare: return false
     square = square.up
     true
 func goDown*(square: var Square): bool =
-    if square.isLowerEdge: return false
+    if square.isLowerEdge or square == noSquare: return false
     square = square.down
     true
 func goLeft*(square: var Square): bool =
-    if square.isLeftEdge: return false
+    if square.isLeftEdge or square == noSquare: return false
     square = square.left
     true
 func goRight*(square: var Square): bool =
-    if square.isRightEdge: return false
+    if square.isRightEdge or square == noSquare: return false
     square = square.right
     true
 func goNothing*(square: var Square): bool =

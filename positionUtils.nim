@@ -131,9 +131,12 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     if fenWords.len < 4:
         raise newException(ValueError, "FEN must have at least 4 words")
     if fenWords.len > 6 and not suppressWarnings:
-        echo "Warning: FEN shouldn't have more than 6 words"
+        echo "WARNING: FEN shouldn't have more than 6 words"
     while fenWords.len < 6:
-        fenWords.add("0")   
+        fenWords.add("0")
+
+    for i in 2..8:
+        fenWords[0] = fenWords[0].replace($i, repeat("1", i))
 
     let piecePlacement = fenWords[0]
     let activeColor = fenWords[1]
@@ -142,22 +145,38 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     let halfmoveClock = fenWords[4]
     let fullmoveNumber = fenWords[5]
 
-    var currentSquare = a8
+    var squareList = block:
+        var squareList: seq[Square]
+        for y in 0..7:
+            for x in countdown(7, 0):
+                squareList.add Square(y*8 + x) 
+        squareList
+
     for pieceChar in piecePlacement:
+        if squareList.len == 0:
+            raise newException(ValueError, "FEN is not correctly formatted (too many squares)")
+
         case pieceChar
         of '/':
-            currentSquare = ((currentSquare).int8 - 16).Square
-        of '8', '7', '6', '5', '4', '3', '2', '1':
-            currentSquare = (currentSquare.int8 + parseInt($pieceChar)).Square
+            # we don't need to do anything, except check if the / is at the right place
+            if not squareList[^1].isLeftEdge:
+                raise newException(ValueError, "FEN is not correctly formatted (misplaced '/')")
+        of '1':
+            discard squareList.pop
+        of '0':
+            if not suppressWarnings:
+                echo "WARNING: '0' in FEN piece placement data is not official notation"
         else:
-            if currentSquare > h8 or currentSquare < a1:
-                raise newException(ValueError, "FEN piece placement is not correctly formatted: " & $currentSquare)
+            doAssert pieceChar notin ['2', '3', '4', '5', '6', '7', '8']
             try:
-                result.addColoredPiece(pieceChar.toColoredPiece, currentSquare)
+                let sq = squareList.pop
+                result.addColoredPiece(pieceChar.toColoredPiece, sq)
             except ValueError:
                 raise newException(ValueError, "FEN piece placement is not correctly formatted: " &
                         getCurrentExceptionMsg())
-            currentSquare = (currentSquare.int8 + 1).Square
+            
+    if squareList.len != 0:
+        raise newException(ValueError, "FEN is not correctly formatted (too few squares)")
     
     # active color
     case activeColor
