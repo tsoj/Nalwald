@@ -3,7 +3,8 @@ import
     bitboard,
     move,
     zobristBitmasks,
-    castling
+    castling,
+    utils
 
 import std/[streams]
     
@@ -303,7 +304,7 @@ func isPassedPawnMove*(newPosition: Position, move: Move): bool =
     move.moved == pawn and newPosition.isPassedPawn(newPosition.enemy, move.target)
 
 func gamePhase*(position: Position): GamePhase =
-    position.occupancy.countSetBits.GamePhase
+    position.occupancy.countSetBits.clampToType(GamePhase)
 
 template mirror(position: Position, skipZobristKey: static bool, mirrorFn: untyped): Position =
     var position = position
