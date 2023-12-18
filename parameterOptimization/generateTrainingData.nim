@@ -27,10 +27,11 @@ import std/[
 const
     openingFilename = "10ply-openings.epd"
     targetTrainingSamples = 100_000_000
-    openingSearchNodes = 50_000
-    sampleGameSearchNodes = 10_000
-    sampleGameMinLenPly = 20 # shorter games are probably from trivial positions
+    openingSearchNodes = 10_000
+    sampleGameSearchNodes = 200
+    sampleGameMinLenPly = 10 # shorter games are probably from trivial positions
     sampleFrequencyInGamePly = 30..40
+    earlyResignMargin = 3000.cp
 
 let
     startDate = now().format("yyyy-MM-dd-HH-mm-ss")
@@ -51,7 +52,7 @@ proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTa
     var game = newGame(
         startingPosition = startPos,
         maxNodes = sampleGameSearchNodes,
-        earlyResignMargin = 500.cp,
+        earlyResignMargin = earlyResignMargin,
         earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
         minAdjudicationGameLenPly = minAdjudicationGameLenPly,
         hashTable = hashTable,

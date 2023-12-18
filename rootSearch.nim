@@ -13,7 +13,8 @@ import std/[
     threadpool,
     os,
     atomics,
-    strformat
+    strformat,
+    options
 ]
 
 func launchSearch(
@@ -25,6 +26,7 @@ func launchSearch(
     gameHistory: GameHistory,
     depth: Ply,
     maxNodes: int64,
+    stopTime: DateTime,
     skipMoves: seq[Move],
     evaluation: proc(position: Position): Value {.noSideEffect.}
 ): int64 =
@@ -35,6 +37,7 @@ func launchSearch(
         historyTable: historyTable,
         gameHistory: gameHistory,
         maxNodes: maxNodes,
+        stopTime: stopTime,
         skipMovesAtRoot: skipMoves,
         evaluation: evaluation
     )
@@ -53,6 +56,7 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = int64.high,
+    stopTime = none(DateTime),
     multiPv = 1,
     searchMoves: seq[Move] = @[],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
@@ -114,6 +118,7 @@ iterator iterativeDeepeningSearch*(
                         gameHistory,
                         depth,
                         (maxNodes - totalNodes) div numThreads.int64,
+                        stopTime.get(otherwise=now() + 1000.years),
                         skipMoves,
                         evaluation
                     )

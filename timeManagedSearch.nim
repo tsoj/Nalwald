@@ -10,14 +10,15 @@ import
 import std/[
     atomics,
     threadpool,
-    times
+    times,
+    options
 ]
 
 export Pv
 
 type MoveTime = object
-    maxTime, approxTime: Duration
-func calculateMoveTime(moveTime, timeLeft, incPerMove: Duration, movesToGo, halfmovesPlayed: int16): MoveTime = 
+    maxTime, approxTime: TimeInterval
+func calculateMoveTime(moveTime, timeLeft, incPerMove: TimeInterval, movesToGo, halfmovesPlayed: int16): MoveTime = 
 
     doAssert movesToGo >= 0
     let
@@ -64,7 +65,6 @@ iterator iterativeTimeManagedSearch*(
 
     let calculatedMoveTime = calculateMoveTime(
         moveTime, timeLeft[position.us], increment[position.us], movesToGo, position.halfmovesPlayed)
-    var stopwatchResult = spawn stopwatch(stop, calculatedMoveTime.maxTime)
 
     let start = now()
     var
@@ -81,6 +81,7 @@ iterator iterativeTimeManagedSearch*(
         targetDepth,
         numThreads = if calculatedMoveTime.approxTime.inMilliseconds <= 100: 1 else: numThreads,
         maxNodes = maxNodes,
+        stopTime = some(start + calculatedMoveTime.maxTime),
         multiPv = multiPv,
         searchMoves = searchMoves,
         evaluation = evaluation,
@@ -114,7 +115,6 @@ iterator iterativeTimeManagedSearch*(
             break
 
     stop[].store(true)
-    discard ^stopwatchResult
 
 proc timeManagedSearch*(
     position: Position,

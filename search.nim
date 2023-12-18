@@ -13,7 +13,8 @@ import
 
 import std/[
     atomics,
-    options
+    options,
+    times
 ]
 
 static: doAssert pawn.value == 100.cp
@@ -46,10 +47,14 @@ type SearchState* = object
     gameHistory*: GameHistory
     countedNodes*: int64
     maxNodes*: int64
+    stopTime*: DateTime
     skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func shouldStop(state: SearchState): bool =
+    if (state.countedNodes mod 2048) == 1107:
+        {.cast(noSideEffect).}:
+            if now() >= state.stopTime: state.stop[].store(true)
     state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes
 
 func update(

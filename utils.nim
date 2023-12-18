@@ -4,7 +4,6 @@ import
 import std/[
     options,
     strutils,
-    atomics,
     times,
     os,
     osproc
@@ -79,16 +78,6 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
         tmp = tmp / (GamePhase.high - GamePhase.low).T
 
     result = tmp.T
-
-proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
-    const sleepTimeMs = 5
-    let
-        start = now()
-        duration = duration - initDuration(milliseconds = sleepTimeMs)
-    while not flag[].load:
-        if now() - start >= duration:
-            flag[].store(true)
-        sleep(sleepTimeMs)
 
 func clampToType*[In, Out](x: In, OutType: typedesc[Out]): Out =
     x.clamp(OutType.low.In, OutType.high.In).Out
