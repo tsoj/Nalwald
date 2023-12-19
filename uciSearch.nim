@@ -5,12 +5,12 @@ import
     positionUtils,
     timeManagedSearch,
     hashTable,
-    evaluation
+    evaluation,
+    utils
 
 import std/[
     terminal,
     atomics,
-    times,
     strformat,
     strutils,
     algorithm,
@@ -23,7 +23,7 @@ func printInfoString(
     value: Value,
     nodes: int64,
     pv: string,
-    time: Duration,
+    time: Seconds,
     hashFull: int,
     beautiful: bool,
     multiPvIndex = -1
@@ -44,10 +44,10 @@ func printInfoString(
         if multiPvIndex != -1:
             printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
         printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
-        printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
+        printKeyValue("time", fmt"{int(time * 1000.0):>6}", fgCyan)
         printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-        let nps = 1000*(nodes div max(1, time.inMilliseconds).int64)
+        let nps = int(nodes.float / time.float)
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
         
         printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
@@ -85,7 +85,7 @@ func printInfoString(
     position: Position,
     pvList: seq[Pv],
     nodes: int64,
-    time: Duration,
+    time: Seconds,
     hashFull: int,
     beautiful: bool
 ) =
@@ -106,7 +106,7 @@ func printInfoString(
 proc bestMoveString(move: Move, position: Position): string =
 
     # king's gambit
-    var r = initRand(epochTime().int64)
+    var r = initRand(secondsSince1970().int64)
     if r.rand(1.0) < 0.5:
         if "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition == position:
             return "bestmove e2e4"
@@ -131,8 +131,8 @@ type SearchInfo* = object
     targetDepth*: Ply
     stop*: ptr Atomic[bool]
     movesToGo*: int16
-    increment*, timeLeft*: array[white..black, Duration]
-    moveTime*: Duration
+    increment*, timeLeft*: array[white..black, Seconds]
+    moveTime*: Seconds
     multiPv*: int
     searchMoves*: seq[Move]
     numThreads*: int

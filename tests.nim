@@ -12,7 +12,6 @@ import
 
 import std/[
     random,
-    times,
     strutils,
     terminal
 ]
@@ -146,7 +145,7 @@ proc testSearchAndPerft(
 ) =
     let
         data = getPerftTestData(useInternal = useInternal, useExternal = useExternal)
-        start = now()
+        start = secondsSince1970()
     
     var
         hashTable = newHashTable()
@@ -190,19 +189,19 @@ proc testSearchAndPerft(
         echo "Search test:"
         hashTable.clear()
         let searchResult = position.timeManagedSearch(
-            hashTable, requireRootPv = true, moveTime = initDuration(seconds = 2)
+            hashTable, requireRootPv = true, moveTime = 2.Seconds
         )
         doAssert searchResult.len > 0
         doAssert searchResult[0].value in -checkmateValue(Ply.low)..checkmateValue(Ply.low), $searchResult[0].value
         doAssert searchResult[0].pv.len > 0
         echo "Value: ", searchResult[0].value, ", pv: ", searchResult[0].pv.notation(position)
 
-    echo "---------------\nPassed time: ", now() - start   
+    echo "---------------\nPassed time: ", secondsSince1970() - start
     echo "Finished search/perft test successfully"
 
-proc speedPerftTest(maxNodes = 100_000_000): int =
+proc speedPerftTest(maxNodes = 100_000_000): float =
     var nodes = 0
-    let start = now()
+    let start = secondsSince1970()
     for lines in internalTestPositions:
         let
             words = lines.split ','
@@ -211,8 +210,8 @@ proc speedPerftTest(maxNodes = 100_000_000): int =
         while depth + 1 < words.len and words[depth + 1].parseBiggestInt <= maxNodes:
             depth += 1
         nodes += position.perft(depth.Ply)
-    let time = now() - start
-    nodes div time.inMilliseconds
+    let time = secondsSince1970() - start
+    nodes.float / time.float
 
 proc runTests*(
     maxNodes = int64.high,
@@ -240,7 +239,7 @@ proc runTests*(
 
     if testPerftSpeed:
         echo "---------------"
-        styledEcho styleBright, "Speed perft test: ", resetStyle, $speedPerftTest(maxNodes), styleItalic, " knps"
+        styledEcho styleBright, "Speed perft test: ", resetStyle, $int(speedPerftTest(maxNodes) / 1000.0), styleItalic, " knps"
         echo getCpuInfo()
     
 

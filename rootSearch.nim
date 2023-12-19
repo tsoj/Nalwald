@@ -7,14 +7,13 @@ import
     hashTable,
     searchUtils,
     evaluation,
-    times
+    utils
 
 import std/[
     threadpool,
     os,
     atomics,
-    strformat,
-    options
+    strformat
 ]
 
 func launchSearch(
@@ -26,7 +25,7 @@ func launchSearch(
     gameHistory: GameHistory,
     depth: Ply,
     maxNodes: int64,
-    stopTime: DateTime,
+    stopTime: Seconds,
     skipMoves: seq[Move],
     evaluation: proc(position: Position): Value {.noSideEffect.}
 ): int64 =
@@ -56,7 +55,7 @@ iterator iterativeDeepeningSearch*(
     targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = int64.high,
-    stopTime = none(DateTime),
+    stopTime = Seconds.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
@@ -118,7 +117,7 @@ iterator iterativeDeepeningSearch*(
                         gameHistory,
                         depth,
                         (maxNodes - totalNodes) div numThreads.int64,
-                        stopTime.get(otherwise=now() + 1000.years),
+                        stopTime,
                         skipMoves,
                         evaluation
                     )

@@ -13,7 +13,6 @@ import
     utils
 
 import std/[
-    times,
     strutils,
     strformat,
     atomics,
@@ -138,9 +137,9 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         targetDepth: Ply.high,
         stop: addr uciState.stopFlag,
         movesToGo: int16.high,
-        increment: [white: DurationZero, black: DurationZero],
-        timeLeft: [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
-        moveTime: initDuration(milliseconds = int64.high),
+        increment: [white: 0.Seconds, black: 0.Seconds],
+        timeLeft: [white: Seconds.high, black: Seconds.high],
+        moveTime: Seconds.high,
         multiPv: uciState.multiPv,
         searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
@@ -156,15 +155,15 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "movestogo":
                 searchInfo.movesToGo = params[i+1].parseInt.int16
             of "winc":
-                searchInfo.increment[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[white] = Seconds(params[i+1].parseFloat / 1000.0)
             of "binc":
-                searchInfo.increment[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[black] = Seconds(params[i+1].parseFloat / 1000.0)
             of "wtime":
-                searchInfo.timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[white] = Seconds(params[i+1].parseFloat / 1000.0)
             of "btime":
-                searchInfo.timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[black] = Seconds(params[i+1].parseFloat / 1000.0)
             of "movetime":
-                searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.moveTime = Seconds(params[i+1].parseFloat / 1000.0)
             of "nodes":
                 searchInfo.nodes = params[i+1].parseBiggestInt
             else:
@@ -228,11 +227,11 @@ proc test(params: seq[string]) =
 proc perft(uciState: UciState, params: seq[string]) =
     if params.len >= 1:
         let
-            start = now()
+            start = secondsSince1970()
             nodes = uciState.position.perft(params[0].parseInt, printRootMoveNodes = true)
-            s = (now() - start).inMilliseconds.float / 1000.0
+            s = secondsSince1970() - start
         echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
-        echo (nodes.float / s).int, " nodes per second"
+        echo (nodes.float / s.float).int, " nodes per second"
     else:
         echo "Missing depth parameter"
 

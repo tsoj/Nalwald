@@ -7,18 +7,13 @@ import
     evaluation,
     utils
 
-import std/[
-    atomics,
-    threadpool,
-    times,
-    options
-]
+import std/[atomics]
 
 export Pv
 
 type MoveTime = object
-    maxTime, approxTime: TimeInterval
-func calculateMoveTime(moveTime, timeLeft, incPerMove: TimeInterval, movesToGo, halfmovesPlayed: int16): MoveTime = 
+    maxTime, approxTime: Seconds
+func calculateMoveTime(moveTime, timeLeft, incPerMove: Seconds, movesToGo, halfmovesPlayed: int16): MoveTime = 
 
     doAssert movesToGo >= 0
     let
@@ -26,19 +21,15 @@ func calculateMoveTime(moveTime, timeLeft, incPerMove: TimeInterval, movesToGo, 
         estimatedMovesToGo = max(20, estimatedGameLength - halfmovesPlayed div 2)
         newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
-    result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 2), moveTime)
-    result.approxTime = initDuration(milliseconds =
-        clamp(timeLeft.inMilliseconds div newMovesToGo, 0, int.high div 2) +
-        clamp(incPerMove.inMilliseconds, 0, int.high div 2)
-        # clamping to int.high divided by 2 to make sure that adding these two things doesn't cause an int overflow
-    )
+    result.maxTime = min(timeLeft / 2, moveTime)
+    result.approxTime = incPerMove + timeLeft/newMovesToGo
 
-    if incPerMove.inSeconds >= 2 or timeLeft > initDuration(minutes = 3):
-        result.approxTime = (12 * result.approxTime) div 10
-    elif incPerMove.inMilliseconds < 200 and timeLeft < initDuration(seconds = 30):
-        result.approxTime = (8 * result.approxTime) div 10
+    if incPerMove >= 2.Seconds or timeLeft > 180.Seconds:
+        result.approxTime = result.approxTime * 1.2
+    elif incPerMove < 0.2.Seconds and timeLeft < 30.Seconds:
+        result.approxTime = result.approxTime * 0.8
         if movesToGo > 2:
-            result.maxTime = min(initDuration(milliseconds = timeLeft.inMilliseconds div 4), moveTime)
+            result.maxTime = min(timeLeft / 4, moveTime)
 
 iterator iterativeTimeManagedSearch*(
     position: Position,
@@ -47,16 +38,16 @@ iterator iterativeTimeManagedSearch*(
     targetDepth: Ply = Ply.high,
     stop: ptr Atomic[bool] = nil,
     movesToGo: int16 = int16.high,
-    increment = [white: DurationZero, black: DurationZero],
-    timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
-    moveTime = initDuration(milliseconds = int64.high),
+    increment = [white: 0.Seconds, black: 0.Seconds],
+    timeLeft = [white: Seconds.high, black: Seconds.high],
+    moveTime = Seconds.high,
     numThreads: int,
     maxNodes: int64 = int64.high,
     multiPv = 1,
     searchMoves: seq[Move] = @[],
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     requireRootPv = false
-): tuple[pvList: seq[Pv], nodes: int64, passedTime: Duration] =
+): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
 
     var stopFlag: Atomic[bool]
     var stop = if stop == nil: addr stopFlag else: stop
@@ -66,9 +57,9 @@ iterator iterativeTimeManagedSearch*(
     let calculatedMoveTime = calculateMoveTime(
         moveTime, timeLeft[position.us], increment[position.us], movesToGo, position.halfmovesPlayed)
 
-    let start = now()
+    let start = secondsSince1970()
     var
-        startLastIteration = now()
+        startLastIteration = secondsSince1970()
         branchingFactors = newSeq[float](targetDepth.int)
         lastNumNodes = int64.high
 
@@ -79,22 +70,23 @@ iterator iterativeTimeManagedSearch*(
         stop,
         positionHistory,
         targetDepth,
-        numThreads = if calculatedMoveTime.approxTime.inMilliseconds <= 100: 1 else: numThreads,
+        numThreads = if calculatedMoveTime.approxTime <= 0.1.Seconds: 1 else: numThreads,
         maxNodes = maxNodes,
-        stopTime = some(start + calculatedMoveTime.maxTime),
+        stopTime = start + calculatedMoveTime.maxTime,
         multiPv = multiPv,
         searchMoves = searchMoves,
         evaluation = evaluation,
         requireRootPv = requireRootPv
     ):
         iteration += 1
-        let totalPassedTime = now() - start
-        let iterationPassedTime = (now() - startLastIteration)
-        startLastIteration = now()
+        let
+            totalPassedTime = secondsSince1970() - start
+            iterationPassedTime = (secondsSince1970() - startLastIteration)
+        startLastIteration = secondsSince1970()
 
         yield (pvList: pvList, nodes: nodes, passedTime: iterationPassedTime)
 
-        doAssert calculatedMoveTime.approxTime >= DurationZero
+        doAssert calculatedMoveTime.approxTime >= 0.Seconds
         
         branchingFactors[iteration] = nodes.float / lastNumNodes.float;
         lastNumNodes = if nodes <= 100_000: int64.high else: nodes
@@ -106,12 +98,11 @@ iterator iterativeTimeManagedSearch*(
                 branchingFactors[iteration - 2] +
                 branchingFactors[iteration - 3])/4.0
 
-        let estimatedTimeNextIteration =
-            initDuration(milliseconds = (iterationPassedTime.inMilliseconds.float * averageBranchingFactor).int64)
+        let estimatedTimeNextIteration = iterationPassedTime * averageBranchingFactor
         if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
             break;
 
-        if timeLeft[position.us] < initDuration(milliseconds = int64.high) and canStop:
+        if timeLeft[position.us] < Seconds.high and canStop:
             break
 
     stop[].store(true)
@@ -123,9 +114,9 @@ proc timeManagedSearch*(
     targetDepth: Ply = Ply.high,
     stop: ptr Atomic[bool] = nil,
     movesToGo: int16 = int16.high,
-    increment = [white: DurationZero, black: DurationZero],
-    timeLeft = [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
-    moveTime = initDuration(milliseconds = int64.high),
+    increment = [white: 0.Seconds, black: 0.Seconds],
+    timeLeft = [white: Seconds.high, black: Seconds.high],
+    moveTime = Seconds.high,
     numThreads = 1,
     maxNodes: int64 = int64.high,
     multiPv = 1,
