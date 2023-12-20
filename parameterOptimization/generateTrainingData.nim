@@ -9,7 +9,7 @@ import
     winningProbability,
     game
 
-import malebolgia
+import taskpools
 
 import std/[
     os,
@@ -22,8 +22,6 @@ import std/[
     cpuinfo
 ]
 
-
-
 const
     openingFilename = "10ply-openings.epd"
     targetTrainingSamples = 100_000_000
@@ -32,6 +30,7 @@ const
     sampleGameMinLenPly = 10 # shorter games are probably from trivial positions
     sampleFrequencyInGamePly = 30..40
     earlyResignMargin = 3000.cp
+    addSearchEvalToLabel = false
 
 let
     startDate = now().format("yyyy-MM-dd-HH-mm-ss")
@@ -70,7 +69,12 @@ proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTa
             searchWinningProb = value.winningProbability(k = 1.0)
 
         if position.isValidSamplePosition:
-            result.add (position, (searchWinningProb + gameResult)/2.0)
+            let label = when addSearchEvalToLabel:
+                (gameResult + searchWinningProb) / 2.0
+            else:
+                gameResult
+            
+            result.add (position, label)
             index += rg.rand(sampleFrequencyInGamePly)
         else:
             index += 1
@@ -103,54 +107,60 @@ echo fmt"{expectedNumberSamplesPerOpening = }"
 
 
 proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
-    var
-        rg = initRand()
-        numSamples = 0
+    try:
+        var
+            rg = initRand()
+            numSamples = 0
 
+        
+        {.warning[ProveInit]:off.}:
+            var sampleGameHashTable = new HashTable
+        sampleGameHashTable[] = newHashTable(len = sampleGameSearchNodes*2)
+
+
+        func specialEval(position: Position): Value =
+            result = position.evaluate
+            {.cast(noSideEffect).}:
+                if rg.rand(1.0) <= randRatio.load and position.isValidSamplePosition:
+                    let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
+                    numSamples += samples.len
+
+                    withLock outFileMutex:
+                        for (position, value) in samples:
+                            outFileStream.writePosition position
+                            outFileStream.write value
+                            outFileStream.flush
+
+
+        var game = newGame(
+            startingPosition = startPos,
+            maxNodes = openingSearchNodes,
+            earlyResignMargin = 400.cp,
+            earlyAdjudicationMinConsistentPly = 8,
+            minAdjudicationGameLenPly = 20,
+            hashTable = nil,
+            evaluation = specialEval
+        )
+        discard game.playGame
+
+        echo fmt"Finished opening {stringIndex}, {numSamples = }"
+
+        randRatio.store randRatio.load*clamp(expectedNumberSamplesPerOpening.float/numSamples.float, 0.99, 1.01)
     
-    {.warning[ProveInit]:off.}:
-        var sampleGameHashTable = new HashTable
-    sampleGameHashTable[] = newHashTable(len = sampleGameSearchNodes*2)
-
-
-    func specialEval(position: Position): Value =
-        result = position.evaluate
-        {.cast(noSideEffect).}:
-            if rg.rand(1.0) <= randRatio.load and position.isValidSamplePosition:
-                let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
-                numSamples += samples.len
-
-                withLock outFileMutex:
-                    for (position, value) in samples:
-                        outFileStream.writePosition position
-                        outFileStream.write value
-                        outFileStream.flush
-
-
-    var game = newGame(
-        startingPosition = startPos,
-        maxNodes = openingSearchNodes,
-        earlyResignMargin = 400.cp,
-        earlyAdjudicationMinConsistentPly = 8,
-        minAdjudicationGameLenPly = 20,
-        hashTable = nil,
-        evaluation = specialEval
-    )
-    discard game.playGame
-
-    echo fmt"Finished opening {stringIndex}, {numSamples = }"
-
-    randRatio.store randRatio.load*clamp(expectedNumberSamplesPerOpening.float/numSamples.float, 0.99, 1.01)
+    except Exception:
+        echo "ERROR: EXCEPTION: ", getCurrentExceptionMsg()
 
 let startTime = now()
 
-var threadpool = createMaster()
 
-threadpool.awaitAll:
-    for i, fen in openingLines:
-        let
-            position = fen.toPosition
-            stringIndex = fmt"{i+1}/{openingLines.len}"
-        threadpool.spawn position.findStartPositionsAndPlay(stringIndex)
+var threadpool = Taskpool.new(numThreads = 30)
+
+for i, fen in openingLines:
+    let
+        position = fen.toPosition
+        stringIndex = fmt"{i+1}/{openingLines.len}"
+    threadpool.spawn position.findStartPositionsAndPlay(stringIndex)
+
+threadpool.syncAll()
 
 echo "Total time: ", now() - startTime

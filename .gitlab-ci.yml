@@ -13,7 +13,7 @@ build:
     - nim c --cc:gcc labelPositions.nim
     - nim c --cc:gcc optimization.nim
     - nim c --cc:gcc calculatePieceValue.nim
-    - nimble install malebolgia
+    - nimble install taskpools@#master
     - nim c --cc:gcc generateTrainingData.nim
   artifacts:
     paths:
