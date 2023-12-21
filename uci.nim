@@ -16,7 +16,6 @@ import std/[
     strutils,
     strformat,
     atomics,
-    threadpool,
     os
 ]
 
@@ -24,7 +23,7 @@ const
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1
-    maxNumThreads = MaxThreadPoolSize
+    maxNumThreads = 255
 
 type UciState = object
     position: Position
@@ -176,7 +175,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
     uciState.stop()
     discard ^searchThreadResult
 
-    proc runSearch(searchInfo: SearchInfo, searchRunning: ptr Atomic[bool]): bool =
+    proc runSearch(searchInfo: SearchInfo, searchRunning: ptr Atomic[bool]): bool {.thread.} =
         searchRunning[].store(true)
         uciSearch(searchInfo)
         searchRunning[].store(false)

@@ -42,7 +42,7 @@ type SearchState* = object
     threadStop*: ptr Atomic[bool]
     hashTable*: ptr HashTable
     killerTable*: KillerTable
-    historyTable*: ptr HistoryTable
+    historyTable*: HistoryTable
     gameHistory*: GameHistory
     countedNodes*: int64
     maxNodes*: int64
@@ -51,9 +51,10 @@ type SearchState* = object
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func shouldStop(state: SearchState): bool =
-    if (state.countedNodes mod 2048) == 1107 and secondsSince1970() >= state.stopTime:
+    if state.countedNodes >= state.maxNodes or
+    ((state.countedNodes mod 2048) == 1107 and secondsSince1970() >= state.stopTime):
         state.stop[].store(true)
-    state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes
+    state.stop[].load or state.threadStop[].load
 
 func update(
     state: var SearchState,
@@ -66,7 +67,7 @@ func update(
     if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
         if nodeType != allNode:
-            state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)
+            state.historyTable.update(bestMove, previous, position.us, depth, raisedAlpha = true)
         if nodeType == cutNode:
             state.killerTable.update(height, bestMove)
 
@@ -221,7 +222,7 @@ func search(
         detailStaticEval.get
 
     # iterate over all moves and recursively search the new positions
-    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
+    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous):
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
             continue
@@ -289,7 +290,7 @@ func search(
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable[].update(move, previous = previous, us, newDepth, raisedAlpha = false)
+            state.historyTable.update(move, previous = previous, us, newDepth, raisedAlpha = false)
 
     if moveCounter == 0:
         # checkmate

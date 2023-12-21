@@ -9,39 +9,23 @@ import
     evaluation,
     utils
 
+import taskpools
+
 import std/[
-    threadpool,
     os,
     atomics,
-    strformat
+    strformat,
+    options
 ]
 
-func launchSearch(
-    position: Position,
-    hashTable: ptr HashTable,
-    stop: ptr Atomic[bool],
-    threadStop: ptr Atomic[bool],
-    historyTable: ptr HistoryTable,
-    gameHistory: GameHistory,
-    depth: Ply,
-    maxNodes: int64,
-    stopTime: Seconds,
-    skipMoves: seq[Move],
-    evaluation: proc(position: Position): Value {.noSideEffect.}
-): int64 =
-    var state = SearchState(
-        stop: stop,
-        threadStop: threadStop,
-        hashTable: hashTable,
-        historyTable: historyTable,
-        gameHistory: gameHistory,
-        maxNodes: maxNodes,
-        stopTime: stopTime,
-        skipMovesAtRoot: skipMoves,
-        evaluation: evaluation
-    )
-    discard position.search(state, depth = depth)
-    state.countedNodes
+func launchSearch(position: Position, state: ptr SearchState, depth: Ply): int64 =
+    try:
+        discard position.search(state[], depth = depth)
+        state[].threadStop[].store(true)
+        return state[].countedNodes
+    except Exception:
+        {.cast(noSideEffect).}:
+            debugEcho "info string ", getCurrentExceptionMsg()
 
 type Pv* = object
     value*: Value
@@ -76,9 +60,23 @@ iterator iterativeDeepeningSearch*(
                 gameHistory = newGameHistory(positionHistory)
             var
                 totalNodes = 0'i64
-                historyTable: seq[HistoryTable]
+                searchStates: seq[SearchState]
+                threadpool = none(Taskpool)
+                threadStop: Atomic[bool]
+
             for _ in 0..<numThreads:
-                historyTable.add newHistoryTable()
+                searchStates.add SearchState(
+                    stop: stop,
+                    threadStop: addr threadStop,
+                    hashTable: addr hashTable,
+                    historyTable: newHistoryTable(),
+                    gameHistory: gameHistory,
+                    maxNodes: maxNodes,
+                    stopTime: stopTime,
+                    skipMovesAtRoot: @[],
+                    evaluation: evaluation
+                )                
+                
 
             hashTable.age()        
 
@@ -102,47 +100,28 @@ iterator iterativeDeepeningSearch*(
                     if skipMoves.len == position.legalMoves.len:
                         break
 
-                    var
-                        currentPvNodes = 0'i64
-                        threadStop: Atomic[bool]
+                    var currentPvNodes = 0'i64
                     
                     threadStop.store(false)
-                    
-                    template launchSearch(i: int): int64 = launchSearch(
-                        position,
-                        addr hashTable,
-                        stop,
-                        addr threadStop,
-                        addr historyTable[i],
-                        gameHistory,
-                        depth,
-                        (maxNodes - totalNodes) div numThreads.int64,
-                        stopTime,
-                        skipMoves,
-                        evaluation
-                    )
+
+                    for searchState in searchStates.mitems:
+                        searchState.skipMovesAtRoot = skipMoves
+                        searchState.countedNodes = 0
+                        searchState.maxNodes = (maxNodes - totalNodes) div numThreads.int64
 
                     if numThreads == 1:
-                        currentPvNodes = launchSearch(0)
+                        currentPvNodes = launchSearch(position, addr searchStates[0], depth)
                     else:
+                        if not threadpool.isSome:
+                            threadpool = some Taskpool.new(numThreads)
                         var threadSeq: seq[FlowVar[int64]]
                         for i in 0..<numThreads:
                             if i > 0:
                                 sleep(1)
-
-                            threadSeq.add spawn launchSearch(i)
-
-                        while threadSeq.len == numThreads:
-                            sleep(1)
-                            for i, flowVar in threadSeq.mpairs:
-                                if flowVar.isReady:
-                                    currentPvNodes = ^flowVar
-                                    threadSeq.del i
-                                    break
-
-                        threadStop.store(true)                
+                            threadSeq.add threadpool.get.spawn launchSearch(position, addr searchStates[i], depth)
+               
                         for flowVar in threadSeq.mitems:
-                            currentPvNodes += ^flowVar
+                            currentPvNodes += sync flowVar
 
                     totalNodes += currentPvNodes
                     multiPvNodes += currentPvNodes
@@ -178,3 +157,6 @@ iterator iterativeDeepeningSearch*(
 
                 if stop[].load or totalNodes >= maxNodes:
                     break
+
+            if threadpool.isSome:
+                threadpool.get.shutdown()

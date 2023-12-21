@@ -13,7 +13,7 @@ build:
     - nim c --cc:gcc labelPositions.nim
     - nim c --cc:gcc optimization.nim
     - nim c --cc:gcc calculatePieceValue.nim
-    - nimble install taskpools@#master
+    - nimble install taskpools@0.0.5
     - nim c --cc:gcc generateTrainingData.nim
   artifacts:
     paths:
