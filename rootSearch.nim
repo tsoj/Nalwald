@@ -24,9 +24,13 @@ func launchSearch(position: Position, state: ptr SearchState, depth: Ply): int64
         discard position.search(state[], depth = depth)
         state[].threadStop[].store(true)
         return state[].countedNodes
+    except CatchableError:
+        {.cast(noSideEffect).}:
+            debugEcho "info string ", getCurrentExceptionMsg()
     except Exception:
         {.cast(noSideEffect).}:
             debugEcho "info string ", getCurrentExceptionMsg()
+            quit(QuitFailure)
 
 type Pv* = object
     value*: Value
@@ -150,11 +154,12 @@ iterator iterativeDeepeningSearch*(
                         break
                 
 
-                yield (
-                    pvList: pvList,
-                    nodes: multiPvNodes,
-                    canStop: legalMoves.len == 1 or foundCheckmate
-                )
+                if pvList.len >= min(multiPv, legalMoves.len):
+                    yield (
+                        pvList: pvList,
+                        nodes: multiPvNodes,
+                        canStop: legalMoves.len == 1 or foundCheckmate
+                    )
 
                 if stop[].load or totalNodes >= maxNodes:
                     break
