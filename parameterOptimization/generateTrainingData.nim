@@ -6,6 +6,7 @@ import
     ../evaluation,
     ../search,
     ../positionUtils,
+    ../timeManagedSearch,
     winningProbability,
     game
 
@@ -19,7 +20,8 @@ import std/[
     streams,
     strformat,
     times,
-    cpuinfo
+    cpuinfo,
+    sets
 ]
 
 const
@@ -43,7 +45,7 @@ func isValidSamplePosition(position: Position): bool =
     position.legalMoves.len > 0 and
     position.halfmoveClock < 20 # otherwise the position is probably just shuffling
 
-proc playGameAndCollectTrainingSamplesMultipleMoves(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
+proc playGameAndCollectTrainingSamplesMultipleMoves(position: Position, hashTable: ref HashTable): seq[(Position, float)] =
     doAssert numConsideredMovesPerPosition > 1
     const
         earlyAdjudicationMinConsistentPly = 6
@@ -52,14 +54,14 @@ proc playGameAndCollectTrainingSamplesMultipleMoves(startPos: Position, hashTabl
     static: doAssert minAdjudicationGameLenPly <= earlyAdjudicationMinConsistentPly - 2, "This is necessary to avoid including trivial positions in the training set"
 
     var
-        moves = startPos.legalMoves
+        moves = toHashSet(startPos.legalMoves)
         weightSum = 0.0
         sum = 0.0
 
     for i in 1..numConsideredMovesPerPosition:
-        pvSeq = position.timeManagedSearch(
-            hashTable = hashTable,
-            maxNodes = sampleGameSearchNodes
+        let pvSeq = position.timeManagedSearch(
+            hashTable = hashTable[],
+            maxNodes = sampleGameSearchNodes,
             searchMoves = moves
         )
         doAssert pvSeq.len >= 1
@@ -70,37 +72,37 @@ proc playGameAndCollectTrainingSamplesMultipleMoves(startPos: Position, hashTabl
         let move = pv[0]
         
 
-    var game = newGame(
-        startingPosition = startPos,
-        maxNodes = sampleGameSearchNodes,
-        earlyResignMargin = earlyResignMargin,
-        earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
-        minAdjudicationGameLenPly = minAdjudicationGameLenPly,
-        hashTable = hashTable,
-    )
-    let
-        gameResult = game.playGame
-        positionHistory = game.getPositionHistory
+    # var game = newGame(
+    #     startingPosition = startPos,
+    #     maxNodes = sampleGameSearchNodes,
+    #     earlyResignMargin = earlyResignMargin,
+    #     earlyAdjudicationMinConsistentPly = earlyAdjudicationMinConsistentPly,
+    #     minAdjudicationGameLenPly = minAdjudicationGameLenPly,
+    #     hashTable = hashTable,
+    # )
+    # let
+    #     gameResult = game.playGame
+    #     positionHistory = game.getPositionHistory
 
-    var
-        rg = initRand()
-        index = 0
+    # var
+    #     rg = initRand()
+    #     index = 0
     
-    while index < positionHistory.len - sampleGameMinLenPly:
-        let
-            (position, value) = positionHistory[index]
-            searchWinningProb = value.winningProbability(k = 1.0)
+    # while index < positionHistory.len - sampleGameMinLenPly:
+    #     let
+    #         (position, value) = positionHistory[index]
+    #         searchWinningProb = value.winningProbability(k = 1.0)
 
-        if position.isValidSamplePosition:
-            let label = when addSearchEvalToLabel:
-                (gameResult + searchWinningProb) / 2.0
-            else:
-                gameResult
+    #     if position.isValidSamplePosition:
+    #         let label = when addSearchEvalToLabel:
+    #             (gameResult + searchWinningProb) / 2.0
+    #         else:
+    #             gameResult
             
-            result.add (position, label)
-            index += rg.rand(sampleFrequencyInGamePly)
-        else:
-            index += 1
+    #         result.add (position, label)
+    #         index += rg.rand(sampleFrequencyInGamePly)
+    #     else:
+    #         index += 1
 
 proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTable): seq[(Position, float)] =
     const
