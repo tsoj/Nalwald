@@ -15,7 +15,8 @@ import std/[
     strutils,
     algorithm,
     sugar,
-    random
+    random,
+    sets
 ]
 
 func printInfoString(
@@ -134,7 +135,7 @@ type SearchInfo* = object
     increment*, timeLeft*: array[white..black, Seconds]
     moveTime*: Seconds
     multiPv*: int
-    searchMoves*: seq[Move]
+    searchMoves*: HashSet[Move]
     numThreads*: int
     nodes*: int64
     uciCompatibleOutput*: bool

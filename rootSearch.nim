@@ -15,7 +15,8 @@ import std/[
     os,
     atomics,
     strformat,
-    options
+    options,
+    sets
 ]
 
 func launchSearch(position: Position, state: ptr SearchState, depth: Ply): int64 =
@@ -41,7 +42,7 @@ iterator iterativeDeepeningSearch*(
     maxNodes = int64.high,
     stopTime = Seconds.high,
     multiPv = 1,
-    searchMoves: seq[Move] = @[],
+    searchMoves = initSet[Move](),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     requireRootPv = false
 ): tuple[pvList: seq[Pv], nodes: int64, canStop: bool] {.noSideEffect.} =

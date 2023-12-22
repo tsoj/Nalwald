@@ -13,17 +13,19 @@ import
     utils
 
 import std/[
+    threadpool,
     strutils,
     strformat,
     atomics,
-    os
+    os,
+    sets
 ]
 
 const
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1
-    maxNumThreads = 255
+    maxNumThreads = 255 # nim-taskpools currently supports at most 255 threads
 
 type UciState = object
     position: Position
@@ -140,7 +142,6 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         timeLeft: [white: Seconds.high, black: Seconds.high],
         moveTime: Seconds.high,
         multiPv: uciState.multiPv,
-        searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
         nodes: int64.high,
         uciCompatibleOutput: uciState.uciCompatibleOutput
@@ -169,7 +170,7 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
                 discard
         try:
             let move = params[i].toMove(uciState.position)
-            searchInfo.searchMoves.add move
+            searchInfo.searchMoves.incl move
         except CatchableError: discard
      
     uciState.stop()

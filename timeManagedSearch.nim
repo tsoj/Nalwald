@@ -7,7 +7,10 @@ import
     evaluation,
     utils
 
-import std/[atomics]
+import std/[
+    atomics,
+    sets
+]
 
 export Pv
 
@@ -44,7 +47,7 @@ iterator iterativeTimeManagedSearch*(
     numThreads: int,
     maxNodes: int64 = int64.high,
     multiPv = 1,
-    searchMoves: seq[Move] = @[],
+    searchMoves = initHashSet[Move](),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     requireRootPv = false
 ): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
@@ -120,7 +123,7 @@ proc timeManagedSearch*(
     numThreads = 1,
     maxNodes: int64 = int64.high,
     multiPv = 1,
-    searchMoves: seq[Move] = @[],
+    searchMoves = initHashSet[Move](),
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
     requireRootPv = false
 ): seq[Pv] =
