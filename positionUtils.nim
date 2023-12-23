@@ -104,9 +104,12 @@ func legalMoves*(position: Position): seq[Move] =
             break
 
 func isChess960*(position: Position): bool =
-    let us = position.us
-    (position.enPassantCastling and homeRank[us]) != 0 and
-    (position.rookSource != classicalRookSource or position.kingSquare(us) != classicalKingSource[us])
+    result = false
+    for color in white..black:
+        result = result or (
+            (position.enPassantCastling and homeRank[color]) != 0 and
+            (position.rookSource[color] != classicalRookSource[color] or position.kingSquare(color) != classicalKingSource[color])
+        )
 
 func toMove*(s: string, position: Position): Move =
 
@@ -119,6 +122,7 @@ func toMove*(s: string, position: Position): Move =
         promoted = if s.len == 5: s[4].toColoredPiece.piece else: noPiece
 
     for move in position.legalMoves:
+        
         if move.source == source and move.promoted == promoted:
             if move.target == target:
                 return move

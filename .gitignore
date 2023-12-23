@@ -26,9 +26,9 @@ massif.out
 !parameterOptimization/quietSmallPoolGamesNalwald4.epd
 !parameterOptimization/quietSmallPoolGamesNalwald5.epd
 !parameterOptimization/quietSmallPoolGamesNalwald6.epd
+!Pohl.epd
 optimization
 *.txt
-*.sh
 vgcore.*
 *ptimizationResult*
 network_*.json
@@ -47,3 +47,4 @@ tests
 generateTrainingData
 trainingSet*.bin*
 showMeSomePositions
+weather-factory
