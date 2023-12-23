@@ -9,7 +9,8 @@ import
     hashTable,
     evaluation,
     utils,
-    see
+    see,
+    searchParams
 
 import std/[
     atomics,
@@ -18,24 +19,18 @@ import std/[
 
 static: doAssert pawn.value == 100.cp
 
-const
-    deltaMargin = 100.cp
-    failHighDeltaMargin = 50.cp
-    aspirationWindowStartingOffset = 10.cp
-    aspirationWindowMultiplier = 2.0
-
 func futilityReduction(value: Value): Ply =
-    clampToType(value.toCp div 100, Ply)
+    clampToType(value.toCp div futilityReductionDiv(), Ply)
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
-    depthDifference.Value * 300.cp
+    depthDifference.Value * hashResultFutilityMarginMul().cp
 
 func nullMoveDepth(depth: Ply): Ply =
-    depth - 3.Ply - depth div 4.Ply
+    depth - nullMoveDepthSub() - depth div nullMoveDepthDiv().Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-    const halfLife = 30
-    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - 1.Ply
+    let halfLife = lmrDepthHalfLife()
+    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
@@ -102,7 +97,7 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + deltaMargin < alpha and doPruning:
+        if seeEval + deltaMargin().cp < alpha and doPruning:
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
 
@@ -110,8 +105,8 @@ func quiesce(
             continue
         
         # fail-high delta pruning
-        if seeEval - failHighDeltaMargin >= beta and doPruning:
-            return seeEval - failHighDeltaMargin
+        if seeEval - failHighDeltaMargin().cp >= beta and doPruning:
+            return seeEval - failHighDeltaMargin().cp
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -175,7 +170,7 @@ func search(
             depth += 1.Ply
 
         # internal iterative reduction
-        if hashResult.isEmpty and depth >= 6.Ply:
+        if hashResult.isEmpty and depth >= iirMinDepth():
             depth -= 1.Ply
 
         depth
@@ -241,12 +236,12 @@ func search(
         if not givingCheck:
 
             # late move reduction
-            if moveCounter > 3 and not move.isTactical:
+            if moveCounter >= minMoveCounterLmr() and not move.isTactical:
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
 
             # futility reduction
-            if moveCounter > 1 and newDepth > 0:
+            if moveCounter >= minMoveCounterFutility() and newDepth > 0:
                 newDepth -= futilityReduction(alpha - staticEval - position.see(move))
             
             if newDepth <= 0:
@@ -314,8 +309,8 @@ func search*(
 
     var
         estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
-        alphaOffset = aspirationWindowStartingOffset.float
-        betaOffset = aspirationWindowStartingOffset.float
+        alphaOffset = aspirationWindowStartingOffset().cp.float
+        betaOffset = aspirationWindowStartingOffset().cp.float
 
     # growing alpha beta window
     while not state.shouldStop:
@@ -333,8 +328,8 @@ func search*(
 
         estimatedValue = result.float
         if result <= alpha:
-            alphaOffset *= aspirationWindowMultiplier
+            alphaOffset *= aspirationWindowMultiplier()
         elif result >= beta:
-            betaOffset *= aspirationWindowMultiplier
+            betaOffset *= aspirationWindowMultiplier()
         else:
             break

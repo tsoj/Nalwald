@@ -10,7 +10,8 @@ import
     tests,
     evaluation,
     version,
-    utils
+    utils,
+    searchParams
 
 import std/[
     threadpool,
@@ -45,6 +46,7 @@ proc uci(uciState: var UciState) =
     echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
     echo "option name MultiPV type spin default 1 min 1 max 1000"
     echo "option name UCI_Chess960 type check default false"
+    printUciSearchParams()
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: seq[string]) =
@@ -79,7 +81,10 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 uciState.multiPv = newMultiPv
                 uciState.hashTable.clear()
         else:
-            echo "Unknown option: ", params[1]
+            if hasSearchOption(params[1]):
+                setSearchOption(params[1], params[3].parseInt)
+            else:
+                echo "Unknown option: ", params[1]
     else:
         echo "Unknown parameters"
     
