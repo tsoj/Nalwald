@@ -74,8 +74,7 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     let
         us = position.us
         enemy = position.enemy
-        enPassantTarget = position.enPassantCastling and not (homeRank[white] or homeRank[black])
-        potentialTargets = position[enemy] or enPassantTarget
+        potentialTargets = position[enemy] or position.enPassantTarget
     for (targets, dir) in [(position[pawn, us].pawnLeftAttack(us) and potentialTargets, 1), (position[pawn, us].pawnRightAttack(us) and potentialTargets, -1)]:
         for target in targets:
             let source = (target.int + dir).Square.up(enemy)
@@ -145,7 +144,7 @@ func generateCastlingMoves(position: Position, moves: var openArray[Move]): int 
     result = 0
     for (castlingSide, rookSource) in position.rookSource[us].pairs:
         # castling is still allowed
-        if (position.enPassantCastling and rookSource.toBitboard and homeRank[us]) == 0:
+        if rookSource == noSquare:
             continue
 
         # all necessary squares are empty

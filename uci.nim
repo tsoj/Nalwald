@@ -235,7 +235,7 @@ proc perft(uciState: UciState, params: seq[string]) =
             start = secondsSince1970()
             nodes = uciState.position.perft(params[0].parseInt, printRootMoveNodes = true)
             s = secondsSince1970() - start
-        echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
+        echo nodes, " nodes in ", fmt"{s.float:0.3f}", " seconds"
         echo (nodes.float / s.float).int, " nodes per second"
     else:
         echo "Missing depth parameter"

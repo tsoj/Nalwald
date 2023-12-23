@@ -40,7 +40,7 @@ func fen*(position: Position): string =
     for color in [white, black]:
         for castlingSide in queenside..kingside:
             let rookSource = position.rookSource[color][castlingSide]
-            if (position.enPassantCastling and rookSource.toBitboard and homeRank[color]) != 0:
+            if rookSource != noSquare and (rookSource.toBitboard and homeRank[color]) != 0:
                 result &= ($rookSource)[0]
 
                 if result[^1] == 'h':
@@ -56,8 +56,8 @@ func fen*(position: Position): string =
 
     result &= " "
 
-    if (position.enPassantCastling and (ranks[a3] or ranks[a6])) != 0:
-        result &= $((position.enPassantCastling and (ranks[a3] or ranks[a6])).toSquare)
+    if position.enPassantTarget != 0:
+        result &= $(position.enPassantTarget.toSquare)
     else:
         result &= "-"
 
@@ -80,8 +80,8 @@ func debugString*(position: Position): string =
     for color in white..black:
         result &= $color & ":\n"
         result &= position[color].bitboardString & "\n"
-    result &= "enPassantCastling:\n"
-    result &= position.enPassantCastling.bitboardString & "\n"
+    result &= "enPassantTarget:\n"
+    result &= position.enPassantTarget.bitboardString & "\n"
     result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
     result &= "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " & $position.halfmoveClock & "\n"
     result &= "zobristKey: " & $position.zobristKey & "\n"
@@ -104,12 +104,13 @@ func legalMoves*(position: Position): seq[Move] =
             break
 
 func isChess960*(position: Position): bool =
-    result = false
     for color in white..black:
-        result = result or (
-            (position.enPassantCastling and homeRank[color]) != 0 and
-            (position.rookSource[color] != classicalRookSource[color] or position.kingSquare(color) != classicalKingSource[color])
-        )
+        if position.rookSource[color] != [noSquare, noSquare] and position.kingSquare(color) != classicalKingSource[color]:
+            return true
+        for side in queenside..kingside:
+            if position.rookSource[color][side] notin [noSquare, classicalRookSource[color][side]]:
+                return true
+    false
 
 func toMove*(s: string, position: Position): Move =
 
@@ -192,8 +193,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
         raise newException(ValueError, "FEN active color notation does not exist: " & activeColor)
 
     # castling rights
-    result.enPassantCastling = 0
-    result.rookSource = [[d4,d4],[d4,d4]] # d4 should be ignored by castling and enpassant
+    result.rookSource = [[noSquare, noSquare], [noSquare, noSquare]]
     for castlingChar in castlingRights:
         if castlingChar == '-':
             continue
@@ -223,14 +223,13 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
             (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
 
         let castlingSide = if rookSource < kingSquare: queenside else: kingside
-        
-        result.enPassantCastling = result.enPassantCastling or rookSource.toBitboard
         result.rookSource[us][castlingSide] = rookSource
 
     # en passant square
+    result.enPassantTarget = 0
     if enPassant != "-":
         try:
-            result.enPassantCastling = result.enPassantCastling or parseEnum[Square](enPassant.toLowerAscii).toBitboard
+            result.enPassantTarget = parseEnum[Square](enPassant.toLowerAscii).toBitboard
         except ValueError:
             raise newException(ValueError, "FEN en passant target square is not correctly formatted: " &
                     getCurrentExceptionMsg())

@@ -57,3 +57,5 @@ echo """{
     \"threads\": $N_CORES
 }""" > cutechess.json
 
+
+python3 main.py

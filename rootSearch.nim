@@ -26,10 +26,12 @@ func launchSearch(position: Position, state: ptr SearchState, depth: Ply): int64
         return state[].countedNodes
     except CatchableError:
         {.cast(noSideEffect).}:
-            debugEcho "info string ", getCurrentExceptionMsg()
+            debugEcho "Caught exception: ", getCurrentExceptionMsg()
+            debugEcho getCurrentException().getStackTrace()
     except Exception:
         {.cast(noSideEffect).}:
-            debugEcho "info string ", getCurrentExceptionMsg()
+            debugEcho "Caught exception: ", getCurrentExceptionMsg()
+            debugEcho getCurrentException().getStackTrace()
             quit(QuitFailure)
 
 type Pv* = object
