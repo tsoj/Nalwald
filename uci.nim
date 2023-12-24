@@ -304,8 +304,11 @@ proc uciLoop*() =
                 try:
                     uciState.moves(params)
                 except CatchableError:
-                    echo "Unknown command: ", params[0]
-                    echo "Use 'help'"
+                    try:
+                        uciState.setPosition(@["fen"] & params)
+                    except CatchableError:
+                        echo "Unknown command: ", params[0]
+                        echo "Use 'help'"
         except CatchableError:
             echo "Error: ", getCurrentExceptionMsg()
 

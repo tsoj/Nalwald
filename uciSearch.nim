@@ -51,7 +51,7 @@ func printInfoString(
         let nps = int(nodes.float / time.float)
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
         
-        printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
+        printKeyValue("hashfull", fmt"{hashFull:>4}", fgCyan, if hashFull <= 500: {styleDim} else: {})
 
 
         if abs(value) >= valueCheckmate:
