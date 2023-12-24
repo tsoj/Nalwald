@@ -4,6 +4,7 @@ build:
   stage: build
   script:
     - choosenim update devel
+    - nimble install taskpools@0.0.5
     - nim default --cc:gcc -o:"Nalwald-default" Nalwald.nim
     - nim debug --cc:gcc -o:"Nalwald-debug" Nalwald.nim
     - cd parameterOptimization/
@@ -13,7 +14,6 @@ build:
     - nim c --cc:gcc labelPositions.nim
     - nim c --cc:gcc optimization.nim
     - nim c --cc:gcc calculatePieceValue.nim
-    - nimble install taskpools@0.0.5
     - nim c --cc:gcc generateTrainingData.nim
   artifacts:
     paths:
