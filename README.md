@@ -17,6 +17,11 @@ Pre-compiled executables for Windows and Linux can be found [here](https://gitla
 
 You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and the [Clang](https://clang.llvm.org/) compiler.
 
+**Prerequisites**
+```
+nimble install taskpools@0.0.5
+```
+
 **Compiling for native CPU**
 ```
 nim native Nalwald.nim
@@ -68,7 +73,7 @@ nim modern Nalwald.nim
 
 I began writing chess programs pretty much immediately after my first "Hello world!" in 2016. My first big project was *jht-chess*, a chess playing program with a console GUI for Linux. I used C++ but it looked more like messy C. Looking back I would say that it is hard to write worse spaghetti code than I did then, but it played good enough chess to win against amateur players. Since then, I wrote numerous chess engines, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *squared-chess*, and *Googleplex Starthinker*) but also one in Rust (*Hactar*) and now in Nim as well. While my first chess engine could barely beat me (and I am not a very good chess player, and was much less so in 2016), today Nalwald would beat Magnus Carlsen almost every time.
 
-On this journey from an at best mediocre chess program to a chess engine that can win against the best human players, the chessprogramming.org wiki and the talkchess.com forum have been a great source of information and motivation. At the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
+On this journey from an at best mediocre chess program to a chess engine that can win against the best human players, the [chessprogramming.org](https://www.chessprogramming.org/Main_Page) wiki, the [talkchess.com](https://talkchess.com/forum3/index.php) forum, and the [Engine Programming Discord server](https://discord.com/invite/F6W6mMsTGN) have been a great source of information and motivation. At the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
 Some noteworthy features of Nalwald:
 - **Piece-relative PSTs** are piece square tables that are different depending on which square another piece is. They are added together for all pieces of all piece types.
