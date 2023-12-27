@@ -19,7 +19,7 @@ You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and t
 
 **Prerequisites**
 ```
-nimble install taskpools@0.0.5
+nimble install https://github.com/mratsim/constantine@#master
 ```
 
 **Compiling for native CPU**
