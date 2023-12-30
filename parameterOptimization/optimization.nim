@@ -4,18 +4,17 @@ import
     dataUtils,
     calculatePieceValue
 
-import constantine/threadpool
-
 import std/[
     times,
     strformat,
+    threadpool,
     random,
     math
 ]
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
-proc calculateGradient(data: seq[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
+proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
     result.gradient = newEvalParametersFloat();
     for entry in data:        
         result.weight += 1.0
@@ -66,7 +65,6 @@ proc optimize(
         secondMomentum = newEvalParametersFloat()
         timeStep = 1
         alpha = alpha
-        threadpool = Threadpool.new(numThreads)
 
     for epoch in 1..maxNumEpochs:
         let startTime = now()
@@ -74,7 +72,7 @@ proc optimize(
         for batchId in 0..<data.len div batchSize:
             let data = data[batchId*batchSize..<min(data.len, (batchId+1)*batchSize)]
 
-            func batchSlize(data: openArray[Entry], i: int, numThreads: int): auto[Entry] =
+            func batchSlize(data: openArray[Entry], i: int, numThreads: int): auto =
                 let
                     batchSlizeSize = data.len div numThreads
                     b = data.len mod numThreads + (i+1)*batchSlizeSize
@@ -90,9 +88,8 @@ proc optimize(
             
             let solutionConverted = solution.convert
             for i, flowVar in threadSeq.mpairs:
-                let dataSlize = data.batchSlize(i, numThreads)
-                flowVar = threadpool.spawn calculateGradient(
-                    dataSlize,
+                flowVar = spawn calculateGradient(
+                    data.batchSlize(i, numThreads),
                     solutionConverted,
                     k, i > 0
                 )
@@ -100,7 +97,7 @@ proc optimize(
             var gradient = newEvalParametersFloat()
             var totalWeight: float = 0.0
             for flowVar in threadSeq.mitems:
-                let (threadWeight, threadGradient) = sync flowVar
+                let (threadWeight, threadGradient) = ^flowVar
                 totalWeight += threadWeight
                 gradient += threadGradient
             # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
@@ -151,6 +148,12 @@ data.loadDataBin "trainingSet_2023-10-03-23-14-51.bin"
 data.loadDataBin "trainingSet_2023-10-03-23-35-01.bin"
 data.loadDataBin "trainingSet_2023-10-04-00-47-53.bin"
 data.loadDataBin "trainingSet_2023-10-06-17-43-01.bin"
+data.loadDataBin "trainingSet_2023-12-22-16-08-28.bin"
+data.loadDataBin "trainingSet_2023-12-22-16-15-24.bin"
+data.loadDataBin "trainingSet_2023-12-22-16-16-28.bin"
+data.loadDataBin "trainingSet_2023-12-22-19-19-13.bin"
+data.loadDataBin "trainingSet_2023-12-24-02-31-35.bin"
+data.loadDataBin "trainingSet_2023-12-28-11-23-21.bin"
 data.shuffle
 
 echo "Total number of entries: ", data.len

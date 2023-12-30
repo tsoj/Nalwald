@@ -77,3 +77,4 @@ nim c --run calculatePieceValue.nim
 ###### trainingSet_*.bin
 - Self-play games using [`generateTrainingData.nim`](./generateTrainingData.nim)
 - 2023-10-03-18-29-44 to 2023-10-06-17-43-01 with cdd26b330c8d1c6ab765363d662a44c04087cb40
+- 2023-12-22-16-08-28 to 2023-12-28-11-23-21 with 65aa2f153635ab204d180f16199bed34b022f39b
