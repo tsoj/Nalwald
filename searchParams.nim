@@ -8,7 +8,7 @@ import std/[
     json
 ]
 
-const floatQuantizer = 1_000_000.0
+const floatQuantizer = 1_000.0
 
 type ParamEntry = object
     address: ptr int
@@ -77,19 +77,23 @@ proc getWeatherFactoryConfig(): string =
     result &= "}"
     result = result.parseJson.pretty
 
-addParam(deltaMargin, default = 95, min = 30, max = 300, step = 10)
-addParam(failHighDeltaMargin, default = 62, min = 10, max = 200, step = 8)
-addParam(aspirationWindowStartingOffset, default = 9, min = 2, max = 100, step = 1)
-addParam(aspirationWindowMultiplier, default = 1.9, min = 1.1, max = 10.0, step = 0.1)
-addParam(futilityReductionDiv, default = 85, min = 10, max = 500, step = 5)
-addParam(hashResultFutilityMarginMul, default = 280, min = 50, max = 1000, step = 5)
+addParam(deltaMargin, default = 92, min = 30, max = 300, step = 10)
+addParam(failHighDeltaMargin, default = 69, min = 10, max = 200, step = 10)
+addParam(aspirationWindowStartingOffset, default = 9, min = 2, max = 100, step = 2)
+addParam(aspirationWindowMultiplier, default = 1.9, min = 1.1, max = 10.0, step = 0.2)
+addParam(futilityReductionDiv, default = 83, min = 10, max = 500, step = 10)
+addParam(hashResultFutilityMarginMul, default = 280, min = 50, max = 1000, step = 10)
 addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.Ply)
 addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
-addParam(lmrDepthHalfLife, default = 34, min = 5, max = 60, step = 3)
+addParam(lmrDepthHalfLife, default = 36, min = 5, max = 60, step = 5)
 addParam(lmrDepthSub, default = 1.Ply, min = 0.Ply, max = 5.Ply, step = 1.Ply)
-addParam(iirMinDepth, default = 5.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
+addParam(iirMinDepth, default = 4.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
 addParam(minMoveCounterLmr, default = 5, min = 1, max = 15, step = 1)
 addParam(minMoveCounterFutility, default = 2, min = 1, max = 10, step = 1)
+addParam(maxHistoryTableValue, default = 104000, min = 1000, max = 10000000, step = 50000)
+addParam(historyTableBadMoveDivider, default = 8.5, min = 1.0, max = 100.0, step = 10.0)
+addParam(historyTableCounterMul, default = 72.0, min = 1.0, max = 200.0, step = 20.0)
+addParam(historyTableShrinkDiv, default = 1.9, min = 1.1, max = 10.0, step = 0.5)
 
 when isMainModule:
     echo getWeatherFactoryConfig()
