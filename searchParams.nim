@@ -4,7 +4,6 @@ import std/[
     tables,
     macros,
     typetraits,
-    strformat,
     json
 ]
 
@@ -63,20 +62,6 @@ proc printUciSearchParams*() =
     for name, param in paramTable:
         echo "option name ", name, " type spin default ", param.address[], " min ", param.min, " max ", param.max
 
-proc getWeatherFactoryConfig(): string =
-    result = "{"
-    for name, param in paramTable:
-        result &= "\"" & name & "\": {"
-        result &= fmt"""
-        "value": {param.address[]},
-        "min_value": {param.min},
-        "max_value": {param.max},
-        "step": {param.step}
-        """
-        result &= "},"
-    result &= "}"
-    result = result.parseJson.pretty
-
 addParam(deltaMargin, default = 92, min = 30, max = 300, step = 10)
 addParam(failHighDeltaMargin, default = 69, min = 10, max = 200, step = 10)
 addParam(aspirationWindowStartingOffset, default = 9, min = 2, max = 100, step = 2)
@@ -96,6 +81,24 @@ addParam(historyTableCounterMul, default = 72.0, min = 1.0, max = 200.0, step = 
 addParam(historyTableShrinkDiv, default = 1.9, min = 1.1, max = 10.0, step = 0.5)
 
 when isMainModule:
+
+    import std/strformat
+
+    proc getWeatherFactoryConfig(): string =
+        result = "{"
+        for name, param in paramTable:
+            result &= "\"" & name & "\": {"
+            result &= fmt"""
+            "value": {param.address[]},
+            "min_value": {param.min},
+            "max_value": {param.max},
+            "step": {param.step}
+            """
+            result &= "},"
+        result &= "}"
+        result = result.parseJson.pretty
+
     echo getWeatherFactoryConfig()
+
 
         
