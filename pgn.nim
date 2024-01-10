@@ -196,6 +196,12 @@ type ParseState = enum
 
 parsePGN(pgn: string): seq[ParsedPGN] =
     # TODO start again to support multiple pgn sequences in one file
+    # var parseState = inMoveList
+    # while true:
+    #     case parseState:
+    #     of inMoveList:
+    #     of inTag:
+    #     of inTagQuotes:, inBraceComment, inLineComment, inMoveList
     discard
 
 

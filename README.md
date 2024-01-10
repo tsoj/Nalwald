@@ -1,7 +1,7 @@
 <div align="center">
 <p><h1>Nalwald</h1>
 <i><h4>Chess engine written in Nim ♜</h4></i>
-<img src="./logo.jpg" height="352">
+<img src="./logo.png" height="384px" style="border-radius: 20px;">
 </h1>
 </div>
 
@@ -71,7 +71,7 @@ nim modern Nalwald.nim
 
 ### About
 
-I began writing chess programs pretty much immediately after my first "Hello world!" in 2016. My first big project was *jht-chess*, a chess playing program with a console GUI for Linux. I used C++ but it looked more like messy C. Looking back I would say that it is hard to write worse spaghetti code than I did then, but it played good enough chess to win against amateur players. Since then, I wrote numerous chess engines, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *squared-chess*, and *Googleplex Starthinker*) but also one in Rust (*Hactar*) and now in Nim as well. While my first chess engine could barely beat me (and I am not a very good chess player, and was much less so in 2016), today Nalwald would beat Magnus Carlsen almost every time.
+I began writing chess programs pretty much immediately after my first "Hello world!" in 2016. My first big project was *jht-chess*, a chess playing program with a console GUI for Linux. I used C++ but it looked more like messy C. Looking back I would say that it's hard to write worse spaghetti code than I did then, but it played good enough chess to win against amateur players. Since then, I wrote numerous chess engines, most in C++ (*jht-chess*, *zebra-chess*, *jht-chess 2*, *squared-chess*, and *Googleplex Starthinker*) but also one in Rust (*Hactar*) and now in Nim as well. While my first chess engine could barely beat me (and I am not a very good chess player, and was much less so in 2016), today Nalwald would beat Magnus Carlsen almost every time.
 
 On this journey from an at best mediocre chess program to a chess engine that can win against the best human players, the [chessprogramming.org](https://www.chessprogramming.org/Main_Page) wiki, the [talkchess.com](https://talkchess.com/forum3/index.php) forum, and the [Engine Programming Discord server](https://discord.com/invite/F6W6mMsTGN) have been a great source of information and motivation. At the beginning, the Wikipedia article "Schachprogramm" was really helpful, too.
 
@@ -86,27 +86,27 @@ Some noteworthy features of Nalwald:
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
-| 18      |       3198 |      3275 |        3143 |   Aug 13, 2023 |
-| 17.1    |       3146 |         – |           – |  June 20, 2023 |
-| 17      |          – |      3197 |        3052 |   June 5, 2023 |
-| 16      |       2946 |      3012 |        2994 |  July 11, 2022 |
-| 15      |       2881 |      2932 |        2921 |    Feb 8, 2022 |
-| 14      |       2826 |         – |        2825 |   Sep 16, 2021 |
+| 18      |       3254 |      3280 |        3144 |   Aug 13, 2023 |
+| 17.1    |       3188 |         – |           – |  June 20, 2023 |
+| 17      |          – |      3201 |        3046 |   June 5, 2023 |
+| 16      |       2974 |      3019 |        2991 |  July 11, 2022 |
+| 15      |       2899 |      2938 |        2920 |    Feb 8, 2022 |
+| 14      |       2840 |         – |        2825 |   Sep 16, 2021 |
 | 1.12    |          – |         – |        2736 |    Aug 9, 2021 |
-| 1.11    |          – |      2813 |           – |  July 22, 2021 |
+| 1.11    |          – |      2818 |           – |  July 22, 2021 |
 | 1.10    |          – |         – |           – |   July 3, 2021 |
-| 1.9     |       2604 |      2673 |           – |  June 15, 2021 |
-| 1.8.1   |          – |      2549 |           – | April 29, 2021 |
-| 1.8     |          – |      2478 |           – | April 25, 2021 |
+| 1.9     |       2595 |      2675 |           – |  June 15, 2021 |
+| 1.8.1   |          – |      2555 |           – | April 29, 2021 |
+| 1.8     |          – |      2483 |           – | April 25, 2021 |
 | **Googleplex Starthinker**                                      |
-| 1.6     |       2393 |      2420 |           – |   Aug 16, 2019 |
-| 1.4     |       2322 |      2289 |           – |   Dec 11, 2018 |
+| 1.6     |       2357 |      2424 |           – |   Aug 16, 2019 |
+| 1.4     |       2279 |      2289 |           – |   Dec 11, 2018 |
 | **Squared-Chess**                                               |
-| 1.3.0   |       2046 |      2147 |           – |   Nov 24, 2018 |
-| 1.2.0   |       1980 |      1998 |           – |   Sep 24, 2018 |
+| 1.3.0   |       1979 |      2148 |           – |   Nov 24, 2018 |
+| 1.2.0   |       1907 |      1998 |           – |   Sep 24, 2018 |
 | 1.1.0   |          – |      1987 |           – |   Sep 20, 2018 |
 | **Hactar**                                                      |
-| 0.9.0   |          – |      1352 |           – |   Jan 13, 2018 |
+| 0.9.0   |          – |      1351 |           – |   Jan 13, 2018 |
 
 ### License
 

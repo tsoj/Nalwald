@@ -17,6 +17,9 @@ type Entry* = object
     position*: Position
     outcome*: float
 
+func validTrainingPosition(position: Position): bool =
+    not(position.inCheck(white) or position.inCheck(black))
+
 proc loadDataEpd*(data: var seq[Entry], fileName: string, maxLen = int.high, suppressOutput = false) =
     doAssert fileExists fileName, "File should exist"
 
@@ -30,8 +33,13 @@ proc loadDataEpd*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
         if words.len == 0 or words[0] == "LICENSE:":
             continue
         doAssert words.len >= 7
+        let position = line.toPosition(suppressWarnings = true)
+
+        if not position.validTrainingPosition:
+            continue
+
         numEntries += 1
-        data.add(Entry(position: line.toPosition(suppressWarnings = true), outcome: words[6].parseFloat))
+        data.add(Entry(position: position, outcome: words[6].parseFloat))
         if numEntries >= maxLen:
             break
     f.close()
@@ -49,8 +57,13 @@ proc loadDataBin*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
         let
             position = inFileStream.readPosition
             value = inFileStream.readFloat64
+
+        if not position.validTrainingPosition:
+            continue
+
         data.add Entry(position: position, outcome: value)
         numEntries += 1
+
 
         if numEntries >= maxLen:
             break
@@ -58,17 +71,17 @@ proc loadDataBin*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
     if not suppressOutput:
         debugEcho fileName & ": ", numEntries, " entries"
 
-func error*(evalParameters: EvalParameters, entry: Entry, k: float): float =
-    let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability(k)
+func error*(evalParameters: EvalParameters, entry: Entry): float =
+    let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
     error(entry.outcome, estimate)
 
-func errorTuple*(evalParameters: EvalParameters, data: openArray[Entry], k: float): tuple[error, summedWeight: float] =
+func errorTuple*(evalParameters: EvalParameters, data: openArray[Entry]): tuple[error, summedWeight: float] =
     result.error = 0.0    
     result.summedWeight = 0.0
     for entry in data:
-        result.error += evalParameters.error(entry, k)
+        result.error += evalParameters.error(entry)
         result.summedWeight += 1.0
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry], k: float): float =
-    let (error, summedWeight) = evalParameters.errorTuple(data, k)
+func error*(evalParameters: EvalParameters, data: openArray[Entry]): float =
+    let (error, summedWeight) = evalParameters.errorTuple(data)
     error / summedWeight

@@ -14,11 +14,11 @@ import std/[
 
 type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
 
-proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
+proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, suppressOutput = false): ThreadResult =
     result.gradient = newEvalParametersFloat();
     for entry in data:        
         result.weight += 1.0
-        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k)
+        result.gradient.addGradient(currentSolution, entry.position, entry.outcome)
 
 proc updateParams(params, momentum, secondMomentum: var EvalParametersFloat, timeStep: var int, gradient: EvalParametersFloat, beta1, beta2, alpha: float32) =
     
@@ -41,12 +41,12 @@ proc updateParams(params, momentum, secondMomentum: var EvalParametersFloat, tim
     )
 
     params += update
+
     timeStep += 1
 
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
-    k = 1.0,
     beta1 = 0.9,
     beta2 = 0.999,
     alpha = 0.1,
@@ -58,7 +58,7 @@ proc optimize(
 
     var solution = start
 
-    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", alpha
+    echo "starting error: ", fmt"{solution.convert.error(data):>9.7f}", ", starting lr: ", alpha
 
     var
         momentum = newEvalParametersFloat()
@@ -90,8 +90,7 @@ proc optimize(
             for i, flowVar in threadSeq.mpairs:
                 flowVar = spawn calculateGradient(
                     data.batchSlize(i, numThreads),
-                    solutionConverted,
-                    k, i > 0
+                    solutionConverted, i > 0
                 )
 
             var gradient = newEvalParametersFloat()
@@ -116,12 +115,12 @@ proc optimize(
             # solution += gradient
 
         let
-            error = solution.convert.error(data[0..<min(data.len, 1_000_000)], k)
+            error = solution.convert.error(data[0..<min(data.len, 1_000_000)])
             passedTime = now() - startTime
         echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {alpha:.3f}, batch size: {batchSize}, time: {passedTime.inSeconds} s"
         alpha *= lrDecay
     
-    let finalError = solution.convert.error(data, k)
+    let finalError = solution.convert.error(data)
     echo fmt"Final error: {finalError:>9.7f}"
         
     return solution
@@ -135,12 +134,7 @@ data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
 data.loadDataEpd "quietSetNalwald2.epd"
 data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
 data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald3.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald4.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald5.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald6.epd"
-data.loadDataEpd "quietSmallPoolGamesNalwald7.epd"
-data.loadDataEpd "gamesNalwald8.epd"
+data.loadDataEpd "selected.epd"
 
 data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
 data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"

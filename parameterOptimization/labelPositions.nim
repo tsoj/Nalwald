@@ -54,7 +54,7 @@ proc playGame(fen: string): (string, float) =
         var value = pvSeq[0].value
         if position.us == black:
             value = -value
-        return (fen, value.winningProbability(k = 1.0)) # 1.0 is what k is usually during optimization
+        return (fen, value.winningProbability)
 
 proc labelPositions() =
     var alreadyLabeled = block:

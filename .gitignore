@@ -43,6 +43,7 @@ processStuff.nim
 mergeDuplicateAndSelect
 *.pgn
 logo_backup.jpg
+logo_alt.svg
 tests
 generateTrainingData
 trainingSet*.bin*

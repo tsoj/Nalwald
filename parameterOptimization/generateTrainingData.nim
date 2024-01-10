@@ -110,7 +110,7 @@ proc playGameAndCollectTrainingSamples(startPos: Position, hashTable: ref HashTa
     while index < positionHistory.len - sampleGameMinLenPly:
         let
             (position, value) = positionHistory[index]
-            searchWinningProb = value.winningProbability(k = 1.0)
+            searchWinningProb = value.winningProbability
 
         if position.isValidSamplePosition:
             let label = when addSearchEvalToLabel:
