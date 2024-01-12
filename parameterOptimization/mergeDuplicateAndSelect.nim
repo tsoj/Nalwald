@@ -41,7 +41,7 @@ while not f.endOfFile:
             continue
         let words = line.splitWhitespace()
         doAssert words.len >= 7
-        # echo line
+        
         if words[^1] == "*;":
             continue
         let

@@ -268,9 +268,14 @@ func doMove*(position: Position, move: Move): Position =
     result.zobristKey ^= zobristSideToMoveBitmasks[white]
     result.zobristKey ^= zobristSideToMoveBitmasks[black]
 
+
+    assert result.zobristKey == result.calculateZobristKey
+
 func doNullMove*(position: Position): Position =
     result = position
-    result.zobristKey ^= result.enPassantTarget
+
+    result.zobristKey ^= cast[ZobristKey](result.enPassantTarget)
+    result.enPassantTarget = 0
 
     result.zobristKey ^= zobristSideToMoveBitmasks[white]
     result.zobristKey ^= zobristSideToMoveBitmasks[black]
@@ -278,6 +283,8 @@ func doNullMove*(position: Position): Position =
     result.halfmoveClock = 0
 
     result.us = result.enemy
+
+    assert result.zobristKey == result.calculateZobristKey
 
 func kingSquare*(position: Position, color: Color): Square =
     assert (position[king] and position[color]).countSetBits == 1

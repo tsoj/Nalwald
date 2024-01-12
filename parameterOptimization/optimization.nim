@@ -134,7 +134,7 @@ data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
 data.loadDataEpd "quietSetNalwald2.epd"
 data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
 data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
-data.loadDataEpd "selected.epd"
+data.loadDataEpd "selected2.epd"
 
 data.loadDataBin "trainingSet_2023-10-03-18-29-44.bin"
 data.loadDataBin "trainingSet_2023-10-03-18-30-48.bin"

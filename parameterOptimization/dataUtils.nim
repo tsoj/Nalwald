@@ -17,8 +17,8 @@ type Entry* = object
     position*: Position
     outcome*: float
 
-func validTrainingPosition(position: Position): bool =
-    not(position.inCheck(white) or position.inCheck(black))
+func validTrainingPosition*(position: Position): bool =
+    position[king, white].countSetBits == 1 and position[king, black].countSetBits == 1
 
 proc loadDataEpd*(data: var seq[Entry], fileName: string, maxLen = int.high, suppressOutput = false) =
     doAssert fileExists fileName, "File should exist"
