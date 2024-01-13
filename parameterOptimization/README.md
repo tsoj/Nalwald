@@ -1,17 +1,17 @@
 ##### Generate positions
 ```
-nim c --run generatePositions.nim
+nim r generatePositions.nim
 ```
 
 ##### Remove non-quiet positions
 
 ```
-nim c --run removeNonQuietPositions.nim
+nim r removeNonQuietPositions.nim <input.epd> <output.epd>
 ```
 
 ##### Merge duplicates and select random subset
 ```
-nim c --run mergeDuplicateAndSelect.nim
+nim r mergeDuplicateAndSelect.nim <input.epd> <output.epd> <selection_ratio, e.g. 0.05>
 ```
 
 ##### Label positions
@@ -26,17 +26,27 @@ touch quietSetNalwald.epd
 Label positions.
 
 ```
-nim c --run labelPositions.nim
+nim r labelPositions.nim
 ```
 
 ##### Run optimization
 ```
-nim c --run optimization.nim
+nim r optimization.nim
 ```
 
 ##### Get piece values
 ```
-nim c --run calculatePieceValue.nim
+nim r calculatePieceValue.nim
+```
+
+##### Generate positions and create label
+```
+nim r generateTrainingData.nim
+```
+
+##### Create epds with label from PGNs
+```
+./trainingDataFromPGNs.sh <output.epd> <input1.pgn> <input2.pgn> ... <inputN.pgn>
 ```
 
 ##### How data sets are generated
@@ -71,7 +81,7 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-###### quietSmallPoolGamesNalwald*.epd gamesNalwald8.epd
+###### gamesNalwald.epd
 - Used [`trainingDataFromPGNs.sh`](./trainingDataFromPGNs.sh) to extract positions from games played between Nalwald and other engines
 
 ###### trainingSet_*.bin

@@ -49,3 +49,4 @@ generateTrainingData
 trainingSet*.bin*
 showMeSomePositions
 weather-factory
+pgn-extract

@@ -15,8 +15,8 @@ randomize(epochTime().int64 mod 500_000)
 doAssert commandLineParams().len == 3
 
 let
-    readFilename = commandLineParams()[0]#"quietPoolGamesNalwald7.epd"
-    writeFilename = commandLineParams()[1]#"quietSmallPoolGamesNalwald7.epd"
+    readFilename = commandLineParams()[0]
+    writeFilename = commandLineParams()[1]
     selectFactor = commandLineParams()[2].parseFloat
 
 doAssert selectFactor in 0.0..1.0
