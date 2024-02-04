@@ -9,7 +9,7 @@ type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
     pieceRelativePst*: array[4, array[Relativity, array[pawn..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]] # here the pawn in the first dim stand for passed pawns
     pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
 
-type EvalParametersTemplate[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
+type EvalParametersTemplate*[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
 
 type EvalParametersFloat* {.requiresInit.} = EvalParametersTemplate[float32]
 

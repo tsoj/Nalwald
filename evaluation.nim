@@ -51,33 +51,31 @@ type Gradient* = object
     gamePhaseFactor*: float32
     g*: float32
     evalParams*: ptr EvalParametersFloat
-type GradientOrNothing = Gradient or Nothing
+type Params = EvalParametersTemplate or Gradient
 
 macro getParameter(phase, structName, parameter: untyped): untyped =
     parseExpr($toStrLit(quote do: `structName`[`phase`.int]) & "." & $toStrLit(quote do: `parameter`))
 
 template addValue(
     value: var array[Phase, Value],
-    evalParameters: EvalParameters,
-    gradient: GradientOrNothing,
+    params: Params,
     us: Color,
     parameter: untyped
 ) =
-    when gradient is Gradient:
-        let f = (if us == black: -1.0 else: 1.0) * gradient.g
-        getParameter(opening, gradient.evalParams[], parameter) += f * gradient.gamePhaseFactor
-        getParameter(endgame, gradient.evalParams[], parameter) += f * (1.0 - gradient.gamePhaseFactor)
+    when params is Gradient:
+        let f = (if us == black: -1.0 else: 1.0) * params.g
+        getParameter(opening, params.evalParams[], parameter) += f * params.gamePhaseFactor
+        getParameter(endgame, params.evalParams[], parameter) += f * (1.0 - params.gamePhaseFactor)
     else:
         for phase {.inject.} in Phase:
-            value[phase] += getParameter(phase, evalParameters, parameter)
+            value[phase] += getParameter(phase, params, parameter).Value
 
 func kingRelativePst(
-    evalParameters: EvalParameters,
+    params: Params,
     square: Square,
     piece: static Piece,
     us: static Color,
-    kingSquares: array[white..black, Square],
-    gradient: var GradientOrNothing
+    kingSquares: array[white..black, Square]
 ): array[Phase, Value] {.inline.} =
 
     let
@@ -91,29 +89,28 @@ func kingRelativePst(
     for side in relativeToUs..relativeToEnemy:
     
         result.addValue(
-            evalParameters, gradient, us,
+            params, us,
             kingRelativePst[side][kingSquares[side]][piece][square]
         )
 
-        when gradient isnot Nothing:
+        when params is Gradient:
             var dummy: array[Phase, Value]
             let
                 flippedSquare = square.mirrorHorizontally
                 flippedKingSquare = kingSquares[side].mirrorHorizontally
 
             dummy.addValue(
-                evalParameters, gradient, us,
+                params, us,
                 kingRelativePst[side][flippedKingSquare][piece][flippedSquare]
             )
 
 func pieceRelativePst(
-    evalParameters: EvalParameters,
+    params: Params,
     position: Position,
     ourPiece: static Piece,
     ourSquare: Square,
     us: static Color,
-    kingSquares: array[white..black, Square],
-    gradient: var GradientOrNothing
+    kingSquares: array[white..black, Square]
 ): array[Phase, Value] =
 
     let
@@ -130,18 +127,18 @@ func pieceRelativePst(
             for otherSquare in otherPieces[relativity] and position[otherPiece]:
                 let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
                 result.addValue(
-                    evalParameters, gradient, us,
+                    params, us,
                     pieceRelativePst[roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
                 )
 
-                when gradient isnot Nothing:
+                when params is Gradient:
                     var dummy: array[Phase, Value]
                     let
                         flippedOurSquare = ourSquare.mirrorHorizontally
                         flippedOtherSquare = otherSquare.mirrorHorizontally
                         flippedKingFile = 3 - roughEnemyKingFile
                     dummy.addValue(
-                        evalParameters, gradient, us,
+                        params, us,
                         pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
                     )
 
@@ -172,8 +169,7 @@ func pawnMaskIndex*(
 
 func evaluate3x3PawnStructureFromWhitesPerspective(
     position: Position,
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
+    params: Params
 ): array[Phase, Value] =
 
     for square in (
@@ -185,7 +181,7 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
         if (mask3x3[square] and position[pawn]).countSetBits >= 2:
             
             let index = position.pawnMaskIndex(square)
-            result.addValue(evalParameters, gradient, white, pawnStructureBonus[square][index])
+            result.addValue(params, white, pawnStructureBonus[square][index])
 
 func evaluatePieceFromPieceColorPerspective(
     position: Position,
@@ -193,38 +189,34 @@ func evaluatePieceFromPieceColorPerspective(
     square: Square,
     pieceColor: static Color,
     kingSquares: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
+    params: Params
 ): array[Phase, Value] {.inline.} =
     static: doAssert piece != noPiece
 
     # king-relative piece square table
-    result += evalParameters.kingRelativePst(
+    result += params.kingRelativePst(
         square, piece, pieceColor,
-        kingSquares,
-        gradient
+        kingSquares
     )
 
     when piece == pawn:
         if position.isPassedPawn(pieceColor, square):
-            result += evalParameters.kingRelativePst(
+            result += params.kingRelativePst(
                 square, noPiece, # noPiece stands for passed pawn
                 pieceColor,
-                kingSquares,
-                gradient
+                kingSquares
             )
-            result += evalParameters.pieceRelativePst(position, pawn, square, pieceColor, kingSquares, gradient)
+            result += params.pieceRelativePst(position, pawn, square, pieceColor, kingSquares)
 
     elif piece != king:
-        result += evalParameters.pieceRelativePst(position, piece, square, pieceColor, kingSquares, gradient)
+        result += params.pieceRelativePst(position, piece, square, pieceColor, kingSquares)
 
     
 func evaluatePieceTypeFromWhitesPerspective(
     position: Position,
     piece: static Piece,
     kingSquares: array[white..black, Square],
-    evalParameters: EvalParameters,
-    gradient: var GradientOrNothing
+    params: Params
 ): array[Phase, Value] {.inline.}  =
     
     for pieceColor in (white, black).fields:
@@ -233,7 +225,7 @@ func evaluatePieceTypeFromWhitesPerspective(
                 piece, square,
                 pieceColor,
                 kingSquares,
-                evalParameters, gradient
+                params
             )
 
             when pieceColor == black:
@@ -242,7 +234,7 @@ func evaluatePieceTypeFromWhitesPerspective(
             result += pieceValue
 
 
-func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value {.inline.} =
+func evaluate*(position: Position, params: Params): Value {.inline.} =
     if position.halfmoveClock >= 100:
         return 0.Value
 
@@ -255,10 +247,10 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
     
     # evaluating pieces
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
-        value += position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquares, evalParameters, gradient)
+        value += position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquares, params)
 
     # evaluating 3x3 pawn patters
-    value += position.evaluate3x3PawnStructureFromWhitesPerspective(evalParameters, gradient)
+    value += position.evaluate3x3PawnStructureFromWhitesPerspective(params)
 
     # interpolating between opening and endgame values
     result = position.gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
@@ -269,21 +261,15 @@ func evaluate*(position: Position, evalParameters: EvalParameters, gradient: var
 #-------------- sugar functions --------------#
 
 func evaluate*(position: Position): Value =
-    var gradient: Nothing = nothing
-    position.evaluate(defaultEvalParameters, gradient)
+    position.evaluate(defaultEvalParameters)
 
-func absoluteEvaluate*(position: Position, evalParameters: EvalParameters, gradient: var GradientOrNothing): Value =
-    result = position.evaluate(evalParameters, gradient)
+func absoluteEvaluate*(position: Position, params: Params): Value =
+    result = position.evaluate(params)
     if position.us == black:
         result = -result
 
-func absoluteEvaluate*(position: Position, evalParameters: EvalParameters): Value =
-    var gradient: Nothing = nothing
-    position.absoluteEvaluate(evalParameters, gradient)
-
 func absoluteEvaluate*(position: Position): Value =
-    var gradient: Nothing = nothing
-    position.absoluteEvaluate(defaultEvalParameters, gradient)
+    position.absoluteEvaluate(defaultEvalParameters)
 
 # import positionUtils
 

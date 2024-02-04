@@ -9,17 +9,17 @@ import
     ../utils
     
 func addGradient*(
-    gradient: var EvalParametersFloat,
-    currentSolution: EvalParameters,
+    params: var EvalParametersFloat,
+    lr: float,
     position: Position, outcome: float
 ) =
-    let currentValue = position.absoluteEvaluate(currentSolution)
+    let currentValue = position.absoluteEvaluate(params)
     var currentGradient = Gradient(
         gamePhaseFactor: position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
-        g: errorDerivative(outcome, currentValue.winningProbability) * currentValue.winningProbabilityDerivative,
-        evalParams: addr gradient
+        g: errorDerivative(outcome, currentValue.winningProbability) * currentValue.winningProbabilityDerivative * lr,
+        evalParams: addr params
     )
-    discard position.absoluteEvaluate(currentSolution, currentGradient)
+    discard position.absoluteEvaluate(currentGradient)
 
 
 
