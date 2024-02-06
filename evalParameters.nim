@@ -5,8 +5,7 @@ type Relativity* = enum
     relativeToUs, relativeToEnemy
 
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
-    kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pieceRelativePst*: array[4, array[Relativity, array[pawn..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]] # here the pawn in the first dim stand for passed pawns
+    pieceRelativePst*: array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]] # here the pawn in the first dim stand for passed pawns
     pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
 
 type EvalParametersTemplate*[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
@@ -23,15 +22,9 @@ func newEvalParameters*(): EvalParameters =
 
 template doForAll*[Out, In, F](output: var SinglePhaseEvalParametersTemplate[Out], input: SinglePhaseEvalParametersTemplate[In], f: F) =
 
-    for r in Relativity:
-        for s1 in a1..h8:
-            for p in pawn..noPiece:
-                for s2 in a1..h8:
-                    f(output.kingRelativePst[r][s1][p][s2], input.kingRelativePst[r][s1][p][s2])
-
     for i in 0..3:
         for r in Relativity:
-            for p1 in pawn..queen:
+            for p1 in pawn..king:
                 for s1 in a1..h8:
                     for p2 in pawn..queen:
                         for s2 in a1..h8:

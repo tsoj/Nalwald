@@ -70,40 +70,6 @@ template addValue(
         for phase {.inject.} in Phase:
             value[phase] += getParameter(phase, params, parameter).Value
 
-func kingRelativePst(
-    params: Params,
-    square: Square,
-    piece: static Piece,
-    us: static Color,
-    kingSquares: array[white..black, Square]
-): array[Phase, Value] {.inline.} =
-
-    let
-        enemy = us.opposite
-        square = square.colorConditionalMirrorVertically(us)
-        kingSquares = [
-            relativeToUs: kingSquares[us].colorConditionalMirrorVertically(us),
-            relativeToEnemy: kingSquares[enemy].colorConditionalMirrorVertically(us)
-        ]
-
-    for side in relativeToUs..relativeToEnemy:
-    
-        result.addValue(
-            params, us,
-            kingRelativePst[side][kingSquares[side]][piece][square]
-        )
-
-        when params is Gradient:
-            var dummy: array[Phase, Value]
-            let
-                flippedSquare = square.mirrorHorizontally
-                flippedKingSquare = kingSquares[side].mirrorHorizontally
-
-            dummy.addValue(
-                params, us,
-                kingRelativePst[side][flippedKingSquare][piece][flippedSquare]
-            )
-
 func pieceRelativePst(
     params: Params,
     position: Position,
@@ -121,9 +87,18 @@ func pieceRelativePst(
         ]
         # we do it just relative to the enemy king, as that's faster
         roughEnemyKingFile = (kingSquares[us.opposite].int mod 8) div 2
+
+    const pieceRange = when ourPiece in [pawn, king, queen]:
+        pawn..queen
+    elif ourPiece == knight:
+        [pawn, knight, bishop, rook]
+    elif ourPiece == bishop:
+        [pawn, bishop, rook]
+    elif ourPiece == rook:
+        [pawn, rook]
     
     for relativity in relativeToUs..relativeToEnemy:
-        for otherPiece in pawn..queen:
+        for otherPiece in pieceRange:
             for otherSquare in otherPieces[relativity] and position[otherPiece]:
                 let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
                 result.addValue(
@@ -193,22 +168,11 @@ func evaluatePieceFromPieceColorPerspective(
 ): array[Phase, Value] {.inline.} =
     static: doAssert piece != noPiece
 
-    # king-relative piece square table
-    result += params.kingRelativePst(
-        square, piece, pieceColor,
-        kingSquares
-    )
-
     when piece == pawn:
         if position.isPassedPawn(pieceColor, square):
-            result += params.kingRelativePst(
-                square, noPiece, # noPiece stands for passed pawn
-                pieceColor,
-                kingSquares
-            )
             result += params.pieceRelativePst(position, pawn, square, pieceColor, kingSquares)
 
-    elif piece != king:
+    else:
         result += params.pieceRelativePst(position, piece, square, pieceColor, kingSquares)
 
     

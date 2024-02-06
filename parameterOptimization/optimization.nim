@@ -7,7 +7,6 @@ import
 import std/[
     times,
     strformat,
-    threadpool,
     random,
     math
 ]
