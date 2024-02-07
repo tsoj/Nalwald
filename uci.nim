@@ -97,7 +97,7 @@ proc moves(uciState: var UciState, params: seq[string]) =
     if params.len < 1:
         echo "Missing moves"
 
-    var history = uciState.history
+    var history: seq[Position]
     var position = uciState.position
     
     for i in 0..<params.len:
@@ -110,9 +110,11 @@ proc moves(uciState: var UciState, params: seq[string]) =
 
 proc setPosition(uciState: var UciState, params: seq[string]) =
 
-    var index = 0
+    var
+        index = 0
+        position: Position
     if params.len >= 1 and params[0] == "startpos":
-        uciState.position = startpos
+        position = startpos
         index = 1
     elif params.len >= 1 and params[0] == "fen":
         var fen: string
@@ -123,12 +125,12 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
                 numFenWords += 1
                 fen &= " " & params[index]
             index += 1
-        uciState.position = fen.toPosition
+        position = fen.toPosition
     else:
         echo "Unknown parameters"
         return
 
-    uciState.history.setLen(0)
+    uciState.position = position
 
     if params.len > index and params[index] == "moves":
         index += 1
