@@ -323,7 +323,11 @@ func isPassedPawnMove*(newPosition: Position, move: Move): bool =
 func gamePhase*(position: Position): GamePhase =
     position.occupancy.countSetBits.clampToType(GamePhase)
 
-template mirror(position: Position, skipZobristKey: static bool, mirrorFn: untyped): Position =
+func mirror(
+    position: Position,
+    skipZobristKey: static bool,
+    mirrorFn: proc (bitboard: Bitboard): Bitboard {.noSideEffect.}
+): Position =
     var position = position
     
     for bitboard in position.pieces.mitems:
@@ -335,32 +339,30 @@ template mirror(position: Position, skipZobristKey: static bool, mirrorFn: untyp
 
     for color in white..black:
         for castlingSide in queenside..kingside:
-            result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].mirrorFn
+            result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].toBitboard.mirrorFn.toSquare
     
     when not skipZobristKey:
         position.zobristKey = position.calculateZobristKey
 
     position
 
-func mirrorVertically*(position: Position, skipZobristKey: static bool = false): Position =
+func mirrorVertically*(position: Position, skipZobristKey: static bool = false, swapColors: static bool = true): Position =
     result = position.mirror(skipZobristKey, mirrorVertically)
 
-    result.rookSource = [
-        white: result.rookSource[black],
-        black: result.rookSource[white]
-    ]
-    result.us = result.enemy
+    when swapColors:
+        swap result.rookSource[black], result.rookSource[white]
+        result.us = result.enemy
+        swap result.colors[white], result.colors[black]
 
 
 func mirrorHorizontally*(position: Position, skipZobristKey: static bool = false): Position =
     result = position.mirror(skipZobristKey, mirrorHorizontally)
 
     for color in white..black:
-        result.rookSource[color][kingside] = result.rookSource[color][queenside]
-        result.rookSource[color][queenside] = result.rookSource[color][kingside]
+        swap result.rookSource[color][kingside], result.rookSource[color][queenside]
 
-func rotate*(position: Position, skipZobristKey: static bool = false): Position =
-    result = position.mirrorHorizontally(skipZobristKey = true).mirrorVertically(skipZobristKey = true)
+func rotate*(position: Position, skipZobristKey: static bool = false, swapColors: static bool = true): Position =
+    result = position.mirrorHorizontally(skipZobristKey = true).mirrorVertically(skipZobristKey = true, swapColors = swapColors)
     
     when not skipZobristKey:
         result.zobristKey = position.calculateZobristKey

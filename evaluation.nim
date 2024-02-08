@@ -117,47 +117,6 @@ func pieceRelativePst(
                         pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
                     )
 
-func pawnMaskIndex*(
-    position: Position,
-    square: static Square
-): int =
-
-    assert not square.isEdge
-    assert square >= b2
-
-    let
-        whitePawns = position[white, pawn] shr (square.int8 - b2.int8)
-        blackPawns = position[black, pawn] shr (square.int8 - b2.int8)
-
-    var counter = 1
-
-    for bit in [
-        a3.toBitboard, b3.toBitboard, c3.toBitboard,
-        a2.toBitboard, b2.toBitboard, c2.toBitboard,
-        a1.toBitboard, b1.toBitboard, c1.toBitboard
-    ]:
-        if (whitePawns and bit) != 0:
-            result += counter * 2
-        elif (blackPawns and bit) != 0:
-            result += counter * 1
-        counter *= 3
-
-func evaluate3x3PawnStructureFromWhitesPerspective(
-    position: Position,
-    params: Params
-): array[Phase, Value] =
-
-    for square in (
-        b3, c3, d3, e3, f3, g3,
-        b4, c4, d4, e4, f4, g4,
-        b5, c5, d5, e5, f5, g5,
-        b6, c6, d6, e6, f6, g6
-    ).fields:
-        if (mask3x3[square] and position[pawn]).countSetBits >= 2:
-            
-            let index = position.pawnMaskIndex(square)
-            result.addValue(params, white, pawnStructureBonus[square][index])
-
 func evaluatePieceFromPieceColorPerspective(
     position: Position,
     piece: static Piece,
@@ -196,6 +155,59 @@ func evaluatePieceTypeFromWhitesPerspective(
                 pieceValue *= -1
 
             result += pieceValue
+
+
+
+func pawnMaskIndex*(
+    position: Position,
+    square: static Square
+): int =
+
+    assert not square.isEdge
+    assert square >= b2
+
+    let
+        whitePawns = position[white, pawn] shr (square.int8 - b2.int8)
+        blackPawns = position[black, pawn] shr (square.int8 - b2.int8)
+
+    var counter = 1
+
+    for bit in [
+        a3.toBitboard, b3.toBitboard, c3.toBitboard,
+        a2.toBitboard, b2.toBitboard, c2.toBitboard,
+        a1.toBitboard, b1.toBitboard, c1.toBitboard
+    ]:
+        if (whitePawns and bit) != 0:
+            result += counter * 2
+        elif (blackPawns and bit) != 0:
+            result += counter * 1
+        counter *= 3
+
+func evaluate3x3PawnStructureFromWhitesPerspective(
+    position: Position,
+    params: Params
+): array[Phase, Value] =
+
+    when params is Gradient:
+        let flippedPosition = position.mirrorVertically
+
+    for square in (
+        b3, c3, d3, e3, f3, g3,
+        b4, c4, d4, e4, f4, g4,
+        b5, c5, d5, e5, f5, g5,
+        b6, c6, d6, e6, f6, g6
+    ).fields:
+        if (mask3x3[square] and position[pawn]).countSetBits >= 2:
+            
+            let index = position.pawnMaskIndex(square)
+            result.addValue(params, white, pawnStructureBonus[square][index])
+
+            when params is Gradient:
+                const flippedSquare = square.mirrorVertically
+                let flippedIndex = flippedPosition.pawnMaskIndex(flippedSquare)
+
+                var dummy: array[Phase, Value]
+                dummy.addValue(params, black, pawnStructureBonus[flippedSquare][flippedIndex])
 
 
 func evaluate*(position: Position, params: Params): Value {.inline.} =

@@ -298,6 +298,15 @@ proc uciLoop*() =
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
+            of "flip": # TODO add to documentation (help command)
+                if params.len <= 1:
+                    echo "Need additionaly parameter" 
+                elif params[1] in "horizontally":
+                    uciState.position = uciState.position.mirrorHorizontally
+                elif params[1] in "vertically":
+                    uciState.position = uciState.position.mirrorVertically
+                else:
+                    echo "Unknown parameter: ", params[1]                
             of "about":
                 about(extra = params.len >= 1 and "extra" in params)
             of "help":
