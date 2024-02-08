@@ -4,7 +4,7 @@ build:
   stage: build
   script:
     - choosenim update devel
-    - nimble install https://github.com/mratsim/constantine@#master
+    - nimble install taskpools
     - nim default --cc:gcc -o:"Nalwald-default" Nalwald.nim
     - nim debug --cc:gcc -o:"Nalwald-debug" Nalwald.nim
     - cd parameterOptimization/
