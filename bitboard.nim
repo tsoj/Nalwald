@@ -85,8 +85,8 @@ proc collect64[T](f: (int -> T)): array[64, T] =
 
 const
     mainDiagonal: Bitboard = 0b1000000001000000001000000001000000001000000001000000001000000001u64
-    diagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-9, 9], (sq: Square, occ: Bitboard) => 0.uint8)
-    antiDiagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-7, 7], (sq: Square, occ: Bitboard) => 0.uint8)
+    diagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-9, 9], (sq, occ) => 0.uint8)
+    antiDiagonals: array[a1..h8, Bitboard] = collect64 (i) => attackForSquareAndKey(0, i.Square, [-7, 7], (sq, occ) => 0.uint8)
 
 func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
     (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8

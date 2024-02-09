@@ -87,6 +87,7 @@ func pieceRelativePst(
         ]
         # we do it just relative to the enemy king, as that's faster
         roughEnemyKingFile = (kingSquares[us.opposite].int mod 8) div 2
+        roughEnemyKingRank = (kingSquares[us.opposite].colorConditionalMirrorVertically(us).int div 8) div 4
 
     const pieceRange = when ourPiece in [pawn, king, queen]:
         pawn..queen
@@ -103,7 +104,7 @@ func pieceRelativePst(
                 let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
                 result.addValue(
                     params, us,
-                    pieceRelativePst[roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
+                    pieceRelativePst[roughEnemyKingRank][roughEnemyKingFile][relativity][ourPiece][ourSquare][otherPiece][otherSquare]
                 )
 
                 when params is Gradient:
@@ -114,7 +115,7 @@ func pieceRelativePst(
                         flippedKingFile = 3 - roughEnemyKingFile
                     dummy.addValue(
                         params, us,
-                        pieceRelativePst[flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
+                        pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][flippedOurSquare][otherPiece][flippedOtherSquare]
                     )
 
 func evaluatePieceFromPieceColorPerspective(
