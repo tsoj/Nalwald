@@ -75,8 +75,7 @@ func pieceRelativePst(
     position: Position,
     ourPiece: static Piece,
     ourSquare: Square,
-    us: static Color,
-    kingSquares: array[white..black, Square]
+    us: static Color
 ): array[Phase, Value] =
 
     let
@@ -86,8 +85,9 @@ func pieceRelativePst(
             relativeToEnemy: position[us.opposite]
         ]
         # we do it just relative to the enemy king, as that's faster
-        roughEnemyKingFile = (kingSquares[us.opposite].int mod 8) div 2
-        roughEnemyKingRank = (kingSquares[us.opposite].colorConditionalMirrorVertically(us).int div 8) div 4
+        enemyKingSquare = position[us.opposite, king].toSquare.colorConditionalMirrorVertically(us)
+        roughEnemyKingFile = (enemyKingSquare.int mod 8) div 2
+        roughEnemyKingRank = (enemyKingSquare.int div 8) div 4
 
     const pieceRange = when ourPiece in [pawn, king, queen]:
         pawn..queen
@@ -123,23 +123,21 @@ func evaluatePieceFromPieceColorPerspective(
     piece: static Piece,
     square: Square,
     pieceColor: static Color,
-    kingSquares: array[white..black, Square],
     params: Params
 ): array[Phase, Value] {.inline.} =
     static: doAssert piece != noPiece
 
     when piece == pawn:
         if position.isPassedPawn(pieceColor, square):
-            result += params.pieceRelativePst(position, pawn, square, pieceColor, kingSquares)
+            result += params.pieceRelativePst(position, pawn, square, pieceColor)
 
     else:
-        result += params.pieceRelativePst(position, piece, square, pieceColor, kingSquares)
+        result += params.pieceRelativePst(position, piece, square, pieceColor)
 
     
 func evaluatePieceTypeFromWhitesPerspective(
     position: Position,
     piece: static Piece,
-    kingSquares: array[white..black, Square],
     params: Params
 ): array[Phase, Value] {.inline.}  =
     
@@ -148,7 +146,6 @@ func evaluatePieceTypeFromWhitesPerspective(
             var pieceValue = position.evaluatePieceFromPieceColorPerspective(
                 piece, square,
                 pieceColor,
-                kingSquares,
                 params
             )
 
@@ -216,15 +213,10 @@ func evaluate*(position: Position, params: Params): Value {.inline.} =
         return 0.Value
 
     var value = [opening: 0.Value, endgame: 0.Value]
-
-    let kingSquares = [
-        white: position.kingSquare(white),
-        black: position.kingSquare(black)
-    ]
     
     # evaluating pieces
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
-        value += position.evaluatePieceTypeFromWhitesPerspective(piece, kingSquares, params)
+        value += position.evaluatePieceTypeFromWhitesPerspective(piece, params)
 
     # evaluating 3x3 pawn patters
     value += position.evaluate3x3PawnStructureFromWhitesPerspective(params)
