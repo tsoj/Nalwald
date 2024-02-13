@@ -89,7 +89,9 @@ func pieceRelativePst(
         roughEnemyKingFile = (enemyKingSquare.int mod 8) div 2
         roughEnemyKingRank = (enemyKingSquare.int div 8) div 4
 
-    const pieceRange = when ourPiece in [pawn, king, queen]:
+    const pieceRange = when ourPiece in [pawn, king]:
+        pawn..king
+    elif ourPiece == queen:
         pawn..queen
     elif ourPiece == knight:
         [pawn, knight, bishop, rook]
