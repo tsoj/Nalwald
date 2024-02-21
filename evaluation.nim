@@ -217,10 +217,10 @@ func pieceComboIndex(position: Position): int =
             result += pieceCount * counter
             counter *= 3
 
-func pieceComboScaleWhitePerspective(position: Position, params: Params): array[Phase, Value] =
+func pieceComboBonusWhitePerspective(position: Position, params: Params): array[Phase, Value] =
     if max(position[pawn, white].countSetBits, position[pawn, black].countSetBits) <= 2:
         let index = position.pieceComboIndex
-        result.addValue(params, white, pieceComboScalars[index])
+        result.addValue(params, white, pieceComboBonus[index])
 
 func evaluate*(position: Position, params: Params): Value {.inline.} =
     if position.halfmoveClock >= 100:
@@ -236,7 +236,7 @@ func evaluate*(position: Position, params: Params): Value {.inline.} =
     value += position.evaluate3x3PawnStructureFromWhitesPerspective(params)
 
     # piece combo bonus
-    value += position.pieceComboScaleWhitePerspective(params)
+    value += position.pieceComboBonusWhitePerspective(params)
 
     # interpolating between opening and endgame values
     result = position.gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
