@@ -46,10 +46,10 @@ func colorConditionalMirrorVertically(x: Square or Bitboard, color: Color): auto
     else:
         x
 
-type Nothing = enum nothing
 type Gradient* = object
     gamePhaseFactor*: float32
     g*: float32
+    evalValue*: Value
     evalParams*: ptr EvalParametersFloat
 type Params = EvalParametersTemplate or Gradient
 
@@ -209,6 +209,18 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
                 var dummy: array[Phase, Value]
                 dummy.addValue(params, black, pawnStructureBonus[flippedSquare][flippedIndex])
 
+func pieceComboIndex(position: Position): int =
+    var counter = 1
+    for color in white..black:
+        for piece in pawn..queen:
+            let pieceCount = min(2, position[color, piece].countSetBits)
+            result += pieceCount * counter
+            counter *= 3
+
+func pieceComboScaleWhitePerspective(position: Position, params: Params): array[Phase, Value] =
+    if max(position[pawn, white].countSetBits, position[pawn, black].countSetBits) <= 2:
+        let index = position.pieceComboIndex
+        result.addValue(params, white, pieceComboScalars[index])
 
 func evaluate*(position: Position, params: Params): Value {.inline.} =
     if position.halfmoveClock >= 100:
@@ -223,8 +235,13 @@ func evaluate*(position: Position, params: Params): Value {.inline.} =
     # evaluating 3x3 pawn patters
     value += position.evaluate3x3PawnStructureFromWhitesPerspective(params)
 
+    # piece combo bonus
+    value += position.pieceComboScaleWhitePerspective(params)
+
     # interpolating between opening and endgame values
     result = position.gamePhase.interpolate(forOpening = value[opening], forEndgame = value[endgame])
+
+
     if position.us == black:
         result *= -1
     doAssert result.abs < valueCheckmate

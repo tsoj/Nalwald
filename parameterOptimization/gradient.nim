@@ -17,6 +17,7 @@ func addGradient*(
     var currentGradient = Gradient(
         gamePhaseFactor: position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
         g: errorDerivative(outcome, currentValue.winningProbability) * currentValue.winningProbabilityDerivative * lr,
+        evalValue: currentValue,
         evalParams: addr params
     )
     discard position.absoluteEvaluate(currentGradient)
