@@ -222,6 +222,13 @@ func pieceComboBonusWhitePerspective(position: Position, params: Params): array[
         let index = position.pieceComboIndex
         result.addValue(params, white, pieceComboBonus[index])
 
+        when params is Gradient:
+            let
+                flippedPosition = position.mirrorVertically
+                flippedIndex = flippedPosition.pieceComboIndex
+            var dummy: array[Phase, Value]
+            dummy.addValue(params, black, pieceComboBonus[flippedIndex])
+
 func evaluate*(position: Position, params: Params): Value {.inline.} =
     if position.halfmoveClock >= 100:
         return 0.Value
