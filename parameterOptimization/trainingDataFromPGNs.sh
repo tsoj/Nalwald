@@ -28,9 +28,7 @@ for file in "$@"; do
   mkdir $WORKDIR
   ./pgn-extract -s -Wepd $file -o $WORKDIR/full.epd
 
-  #nim r removeNonQuietPositions.nim $WORKDIR/full.epd $WORKDIR/quiet.epd
-  #nim r mergeDuplicateAndSelect.nim $WORKDIR/quiet.epd $OUTPUT_EPD 0.038
-  nim r mergeDuplicateAndSelect.nim $WORKDIR/full.epd $WORKDIR/selected.epd 0.05
+  nim r mergeDuplicateAndSelect.nim $WORKDIR/full.epd $WORKDIR/selected.epd 0.05 true
   
   cat $WORKDIR/selected.epd >> $OUTPUT_EPD
   rm -rf $WORKDIR

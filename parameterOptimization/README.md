@@ -3,15 +3,9 @@
 nim r generatePositions.nim
 ```
 
-##### Remove non-quiet positions
-
-```
-nim r removeNonQuietPositions.nim <input.epd> <output.epd>
-```
-
 ##### Merge duplicates and select random subset
 ```
-nim r mergeDuplicateAndSelect.nim <input.epd> <output.epd> <selection_ratio, e.g. 0.05>
+nim r mergeDuplicateAndSelect.nim <input.epd> <output.epd> <selection_ratio, e.g. 0.05> <useOnlyQuiet, true or false>
 ```
 
 ##### Label positions
