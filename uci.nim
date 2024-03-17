@@ -320,6 +320,9 @@ proc uciLoop*() =
                     except CatchableError:
                         echo "Unknown command: ", params[0]
                         echo "Use 'help'"
+        except EOFError:
+            echo "Quitting because of reaching end of file"
+            break
         except CatchableError:
             echo "Error: ", getCurrentExceptionMsg()
 
