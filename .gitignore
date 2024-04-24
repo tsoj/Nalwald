@@ -21,13 +21,14 @@ massif.out
 !parameterOptimization/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd
 !parameterOptimization/quietSmallPoolGamesNalwald2Labeled.epd
 !parameterOptimization/blitzTesting-4moves-openings.epd
+!parameterOptimization/10ply-openings.epd
 !parameterOptimization/quietSmallPoolGamesNalwald3.epd
 !parameterOptimization/quietSmallPoolGamesNalwald4.epd
 !parameterOptimization/quietSmallPoolGamesNalwald5.epd
 !parameterOptimization/quietSmallPoolGamesNalwald6.epd
+!Pohl.epd
 optimization
 *.txt
-*.sh
 vgcore.*
 *ptimizationResult*
 network_*.json
@@ -42,4 +43,10 @@ processStuff.nim
 mergeDuplicateAndSelect
 *.pgn
 logo_backup.jpg
+logo_alt.svg
 tests
+generateTrainingData
+trainingSet*.bin*
+showMeSomePositions
+weather-factory
+pgn-extract

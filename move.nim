@@ -3,6 +3,8 @@ import
     bitboard,
     utils
 
+export types
+
 type Move* = distinct uint32
 # source: [0..6], target: [7..13], moved: [14..16], captured: [17..19], promoted: [20..22],
 # castled: 23, capturedEnPassant: 24, enPassantTarget: [25..31]

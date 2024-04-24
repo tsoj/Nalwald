@@ -10,22 +10,23 @@ import
     tests,
     evaluation,
     version,
-    utils
+    utils,
+    searchParams
 
 import std/[
-    times,
+    threadpool,
     strutils,
     strformat,
     atomics,
-    threadpool,
-    os
+    os,
+    sets
 ]
 
 const
     defaultHashSizeMB = 4
     maxHashSizeMB = 1_048_576
     defaultNumThreads = 1
-    maxNumThreads = MaxThreadPoolSize
+    maxNumThreads = 255 # nim-taskpools currently supports at most 255 threads
 
 type UciState = object
     position: Position
@@ -45,6 +46,7 @@ proc uci(uciState: var UciState) =
     echo "option name Threads type spin default ", defaultNumThreads, " min 1 max ", maxNumThreads
     echo "option name MultiPV type spin default 1 min 1 max 1000"
     echo "option name UCI_Chess960 type check default false"
+    printUciSearchParams()
     echo "uciok"
 
 proc setOption(uciState: var UciState, params: seq[string]) =
@@ -62,7 +64,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
             if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
                 echo "Invalid value"
             else:
-                uciState.hashTable.setSize(sizeInBytes = newHashSizeMB * megaByteToByte)
+                uciState.hashTable.setByteSize(sizeInBytes = newHashSizeMB * megaByteToByte)
         of "UCI_Chess960".toLowerAscii:
             discard
         of "Threads".toLowerAscii:
@@ -79,7 +81,10 @@ proc setOption(uciState: var UciState, params: seq[string]) =
                 uciState.multiPv = newMultiPv
                 uciState.hashTable.clear()
         else:
-            echo "Unknown option: ", params[1]
+            if hasSearchOption(params[1]):
+                setSearchOption(params[1], params[3].parseInt)
+            else:
+                echo "Unknown option: ", params[1]
     else:
         echo "Unknown parameters"
     
@@ -92,7 +97,7 @@ proc moves(uciState: var UciState, params: seq[string]) =
     if params.len < 1:
         echo "Missing moves"
 
-    var history = uciState.history
+    var history: seq[Position]
     var position = uciState.position
     
     for i in 0..<params.len:
@@ -105,9 +110,11 @@ proc moves(uciState: var UciState, params: seq[string]) =
 
 proc setPosition(uciState: var UciState, params: seq[string]) =
 
-    var index = 0
+    var
+        index = 0
+        position: Position
     if params.len >= 1 and params[0] == "startpos":
-        uciState.position = startpos
+        position = startpos
         index = 1
     elif params.len >= 1 and params[0] == "fen":
         var fen: string
@@ -118,12 +125,12 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
                 numFenWords += 1
                 fen &= " " & params[index]
             index += 1
-        uciState.position = fen.toPosition
+        position = fen.toPosition
     else:
         echo "Unknown parameters"
         return
 
-    uciState.history.setLen(0)
+    uciState.position = position
 
     if params.len > index and params[index] == "moves":
         index += 1
@@ -138,13 +145,12 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
         targetDepth: Ply.high,
         stop: addr uciState.stopFlag,
         movesToGo: int16.high,
-        increment: [white: DurationZero, black: DurationZero],
-        timeLeft: [white: initDuration(milliseconds = int64.high), black: initDuration(milliseconds = int64.high)],
-        moveTime: initDuration(milliseconds = int64.high),
+        increment: [white: 0.Seconds, black: 0.Seconds],
+        timeLeft: [white: Seconds.high, black: Seconds.high],
+        moveTime: Seconds.high,
         multiPv: uciState.multiPv,
-        searchMoves: newSeq[Move](0),
         numThreads: uciState.numThreads,
-        nodes: uint64.high,
+        nodes: int64.high,
         uciCompatibleOutput: uciState.uciCompatibleOutput
     )
 
@@ -156,28 +162,28 @@ proc go(uciState: var UciState, params: seq[string], searchThreadResult: var Flo
             of "movestogo":
                 searchInfo.movesToGo = params[i+1].parseInt.int16
             of "winc":
-                searchInfo.increment[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[white] = Seconds(params[i+1].parseFloat / 1000.0)
             of "binc":
-                searchInfo.increment[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.increment[black] = Seconds(params[i+1].parseFloat / 1000.0)
             of "wtime":
-                searchInfo.timeLeft[white] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[white] = Seconds(params[i+1].parseFloat / 1000.0)
             of "btime":
-                searchInfo.timeLeft[black] = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.timeLeft[black] = Seconds(params[i+1].parseFloat / 1000.0)
             of "movetime":
-                searchInfo.moveTime = initDuration(milliseconds = params[i+1].parseInt)
+                searchInfo.moveTime = Seconds(params[i+1].parseFloat / 1000.0)
             of "nodes":
-                searchInfo.nodes = params[i+1].parseUInt
+                searchInfo.nodes = params[i+1].parseBiggestInt
             else:
                 discard
         try:
             let move = params[i].toMove(uciState.position)
-            searchInfo.searchMoves.add move
+            searchInfo.searchMoves.incl move
         except CatchableError: discard
      
     uciState.stop()
     discard ^searchThreadResult
 
-    proc runSearch(searchInfo: SearchInfo, searchRunning: ptr Atomic[bool]): bool =
+    proc runSearch(searchInfo: SearchInfo, searchRunning: ptr Atomic[bool]): bool {.thread.} =
         searchRunning[].store(true)
         uciSearch(searchInfo)
         searchRunning[].store(false)
@@ -194,24 +200,45 @@ proc uciNewGame(uciState: var UciState) =
         uciState.hashTable.clear()
 
 proc test(params: seq[string]) =
-    if params.len == 0:
-        runTests()
-    else:
-        let numNodes = try:
-            params[0].parseInt.uint64
-        except CatchableError:
-            uint64.high
+    var
+        maxNodes = int64.high
+        testSee = false
+        testPerftSearch = false
+        testPerftSpeed = false
 
-        runTests(maxNodes = numNodes)
+    if "see" notin params and "perft" notin params and "speed" notin params:
+        testSee = true
+        testPerftSearch = true
+        testPerftSpeed = true
+    if "see" in params:
+        testSee = true
+    if "perft" in params:
+        testPerftSearch = true
+    if "speed" in params:
+        testPerftSpeed = true
+
+    for param in params:
+        maxNodes = min(maxNodes, try:
+            param.parseBiggestInt.int64
+        except CatchableError:
+            int64.high
+        )
+    
+    runTests(
+        maxNodes = maxNodes,
+        testSee = testSee,
+        testPerftSearch = testPerftSearch,
+        testPerftSpeed = testPerftSpeed
+    )
 
 proc perft(uciState: UciState, params: seq[string]) =
     if params.len >= 1:
         let
-            start = now()
+            start = secondsSince1970()
             nodes = uciState.position.perft(params[0].parseInt, printRootMoveNodes = true)
-            s = (now() - start).inMilliseconds.float / 1000.0
-        echo nodes, " nodes in ", fmt"{s:0.3f}", " seconds"
-        echo (nodes.float / s).int, " nodes per second"
+            s = secondsSince1970() - start
+        echo nodes, " nodes in ", fmt"{s.float:0.3f}", " seconds"
+        echo (nodes.float / s.float).int, " nodes per second"
     else:
         echo "Missing depth parameter"
 
@@ -226,7 +253,7 @@ proc uciLoop*() =
         multiPv: 1
     )
     uciState.searchRunningFlag.store(false)
-    uciState.hashTable.setSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
+    uciState.hashTable.setByteSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
     
     var searchThreadResult = FlowVar[bool]()
     while true:
@@ -271,6 +298,15 @@ proc uciLoop*() =
             of "piecevalues":
                 for p in pawn..queen:
                     echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
+            of "flip": # TODO add to documentation (help command)
+                if params.len <= 1:
+                    echo "Need additionaly parameter" 
+                elif params[1] in "horizontally":
+                    uciState.position = uciState.position.mirrorHorizontally
+                elif params[1] in "vertically":
+                    uciState.position = uciState.position.mirrorVertically
+                else:
+                    echo "Unknown parameter: ", params[1]                
             of "about":
                 about(extra = params.len >= 1 and "extra" in params)
             of "help":
@@ -279,8 +315,14 @@ proc uciLoop*() =
                 try:
                     uciState.moves(params)
                 except CatchableError:
-                    echo "Unknown command: ", params[0]
-                    echo "Use 'help'"
+                    try:
+                        uciState.setPosition(@["fen"] & params)
+                    except CatchableError:
+                        echo "Unknown command: ", params[0]
+                        echo "Use 'help'"
+        except EOFError:
+            echo "Quitting because of reaching end of file"
+            break
         except CatchableError:
             echo "Error: ", getCurrentExceptionMsg()
 

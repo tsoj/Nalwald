@@ -17,69 +17,51 @@ func checkAssumptions(): bool =
     true
 static: doAssert checkAssumptions()
 
-func getLeastValuableAttacker(position: Position, target: Square): (Square, Piece) =
-    let
-        us = position.us
-        enemy = position.enemy
-        occupancy = position.occupancy
+func see(position: var Position, target: Square, victim: Piece, us: Color): Value =
 
-    let attack = attackTablePawnCapture[enemy][target] and position[pawn] and position[us]
-    if attack != 0:
-        return (attack.toSquare, pawn)
-    
-    for piece in knight..king:
-        let attack = attackMask(piece, target, occupancy) and position[piece] and position[us]
+    let attackers = position.attackers(us, target)
+    for piece in (pawn, knight, bishop, rook, queen, king).fields:
+        let attack = position[piece, us] and attackers
         if attack != 0:
-            return (attack.toSquare, piece)
-    (noSquare, noPiece)
+            position.removePiece(us, piece, attack.toSquare)
 
-func see(position: var Position, target: Square, victim: Piece): Value =
-
-    let 
-        us = position.us
-        (source, attacker) = position.getLeastValuableAttacker(target)
-    var currentVictim = attacker
-    if source != noSquare:
-
-        if attacker == pawn and (target >= a8 or target <= h1):
-            position.removePiece(us, attacker, source.toBitboard)
-            result = queen.value - pawn.value
-            currentVictim = queen
-        else:
-            position.removePiece(us, attacker, source.toBitboard)
-        
-        position.us = position.enemy
-
-        result = max(0, result + victim.value - position.see(target, currentVictim))
+            var
+                collected = victim.value
+                newVictim = piece
+            
+            when piece == pawn:
+                if target notin a2..h7:
+                    newVictim = queen
+                    collected += queen.value - pawn.value
+            
+            return max(0, collected - position.see(target, newVictim, us.opposite))
 
 func see*(position: Position, move: Move): Value =
     let
         us = position.us
         enemy = position.enemy
-        captured = move.captured
         source = move.source
         target = move.target
         moved = move.moved
         promoted = move.promoted
 
-    var position = position
-    var currentVictim = moved
+    var
+        position = position
+        currentVictim = moved
 
-    position.removePiece(us, moved, source.toBitboard)
+    position.removePiece(us, moved, source)
 
     if move.capturedEnPassant:
-        position.removePiece(enemy, pawn, attackTablePawnQuiet[enemy][target])
-        position.removePiece(us, pawn, source.toBitboard)
+        position.removePiece(enemy, pawn, attackMaskPawnQuiet(target, enemy).toSquare)
+        position.removePiece(us, pawn, source)
     elif promoted != noPiece:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, source)
         result = promoted.value - pawn.value
         currentVictim = promoted
     else:
-        position.removePiece(us, moved, source.toBitboard)
+        position.removePiece(us, moved, source)
 
-    position.us = enemy
-
-    result += captured.value - position.see(target, currentVictim)
+    result += move.captured.value - position.see(target, currentVictim, enemy)
                 
 proc seeTest*() =
     const data =

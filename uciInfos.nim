@@ -121,11 +121,15 @@ proc help*(params: openArray[string]) =
             printMarkdownSubset "**perft <x>**"
             printMarkdownSubset "Calculates the perft of the current position to depth `<x>`."
         of "test":
-            printMarkdownSubset "**test [<x>]**"
+            printMarkdownSubset "**test [perft|see|speed|<x>]...**"
             printMarkdownSubset(
-                "Runs various tests. ",
-                "If a file `./perft_test.txt` exists then the positions from that file will be included for some of these tests. ",
-                "If `<x>` is given, perft tests will only test up to `<x>` nodes per position."
+                "Runs various tests.\n",
+                "If `perft`, `see` or `speed` are specified, only these tests are run. Otherwise all test are run.\n",
+                "If a file `./perft_test.txt` exists then the positions from that file will be included for some of these tests.\n",
+                "If `<x>` is given, perft tests will only test up to `<x>` nodes per position.\n",
+                "Example:```\n",
+                "test see perft 10000```\n",
+                "(Runs see and perft tests up to 10000 nodes per position.)"
             )
         of "eval":
             echo "Prints the static evaluation value for the current internal position."

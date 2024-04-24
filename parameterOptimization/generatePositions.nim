@@ -17,7 +17,7 @@ const
     maxNumNodes = 5_000
     approxNumOutPositionsPerSearch = 2.0
 
-var numEvaluatedPositions: uint64 = 0
+var numEvaluatedPositions: int64 = 0
 let g = open(writeFilename, fmWrite)
 
 func evaluationWriteToFile(position: Position): Value =
@@ -31,8 +31,7 @@ let f = open(openingFilename)
 var
     line: string
     i = 0
-    ht = newHashTable()
-ht.setSize(maxNumNodes*2)
+    ht = newHashTable(len = maxNumNodes*2)
 
 while f.readLine(line):
     let startingPosition = line.toPosition(suppressWarnings = true)

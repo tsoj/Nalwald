@@ -1,17 +1,11 @@
 ##### Generate positions
 ```
-nim c --run generatePositions.nim
-```
-
-##### Remove non-quiet positions
-
-```
-nim c --run removeNonQuietPositions.nim
+nim r generatePositions.nim
 ```
 
 ##### Merge duplicates and select random subset
 ```
-nim c --run mergeDuplicateAndSelect.nim
+nim r mergeDuplicateAndSelect.nim <input.epd> <output.epd> <selection_ratio, e.g. 0.05> <useOnlyQuiet, true or false>
 ```
 
 ##### Label positions
@@ -26,17 +20,27 @@ touch quietSetNalwald.epd
 Label positions.
 
 ```
-nim c --run labelPositions.nim
+nim r labelPositions.nim
 ```
 
 ##### Run optimization
 ```
-nim c --run optimization.nim
+nim r optimization.nim
 ```
 
 ##### Get piece values
 ```
-nim c --run calculatePieceValue.nim
+nim r calculatePieceValue.nim
+```
+
+##### Generate positions and create label
+```
+nim r generateTrainingData.nim
+```
+
+##### Create epds with label from PGNs
+```
+./trainingDataFromPGNs.sh <output.epd> <input1.pgn> <input2.pgn> ... <inputN.pgn>
 ```
 
 ##### How data sets are generated
@@ -71,6 +75,10 @@ nim c --run calculatePieceValue.nim
 - three copies of that set: labeled with original game result, labeled with Nalwald self-play result, labeled with search
 - merge three copies
 
-###### quietSmallPoolGamesNalwald3.epd to quietSmallPoolGamesNalwald7.epd
-- removed non-quiet positions from games played between Nalwald and other engines
-- randomly selected positions (1.5 million, 2.6 million, 4 million, 4.4 million, 5.5 million respectively)
+###### gamesNalwald.epd
+- Used [`trainingDataFromPGNs.sh`](./trainingDataFromPGNs.sh) to extract positions from games played between Nalwald and other engines
+
+###### trainingSet_*.bin
+- Self-play games using [`generateTrainingData.nim`](./generateTrainingData.nim)
+- 2023-10-03-18-29-44 to 2023-10-06-17-43-01 with cdd26b330c8d1c6ab765363d662a44c04087cb40
+- 2023-12-22-16-08-28 to 2023-12-28-11-23-21 with 65aa2f153635ab204d180f16199bed34b022f39b

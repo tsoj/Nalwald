@@ -4,7 +4,7 @@ import
     move,
     movegen
 
-func perft*(position: Position, depth: int, printRootMoveNodes = false): uint64 =
+func perft*(position: Position, depth: int, printRootMoveNodes = false): int64 =
     if depth <= 0:
         return 1
     var moves: array[320, Move]

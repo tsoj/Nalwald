@@ -5,26 +5,26 @@ import
     positionUtils,
     timeManagedSearch,
     hashTable,
-    evaluation
+    evaluation,
+    utils
 
 import std/[
     terminal,
     atomics,
-    times,
     strformat,
     strutils,
-    math,
     algorithm,
     sugar,
-    random
+    random,
+    sets
 ]
 
 func printInfoString(
     iteration: int,
     value: Value,
-    nodes: uint64,
+    nodes: int64,
     pv: string,
-    time: Duration,
+    time: Seconds,
     hashFull: int,
     beautiful: bool,
     multiPvIndex = -1
@@ -45,20 +45,20 @@ func printInfoString(
         if multiPvIndex != -1:
             printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
         printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
-        printKeyValue("time", fmt"{time.inMilliseconds:>6}", fgCyan)
+        printKeyValue("time", fmt"{int(time * 1000.0):>6}", fgCyan)
         printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-        let nps = 1000*(nodes div max(1, time.inMilliseconds).uint64)
+        let nps = int(nodes.float / time.float)
         printKeyValue("nps", fmt"{nps:>7}", fgGreen)
         
-        printKeyValue("hashfull", fmt"{hashFull:>5}", fgCyan, if hashFull <= 500: {styleDim} else: {})
+        printKeyValue("hashfull", fmt"{hashFull:>4}", fgCyan, if hashFull <= 500: {styleDim} else: {})
 
 
         if abs(value) >= valueCheckmate:
             
             print " score ", {styleItalic}
             let
-                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).ceil.int
+                valueString = (if value < 0: "mate -" else: "mate ") & $(value.plysUntilCheckmate.float / 2.0).int
                 color = if value > 0: fgGreen else: fgRed
 
             print valueString, {styleBright}, color
@@ -85,8 +85,8 @@ func printInfoString(
     iteration: int,
     position: Position,
     pvList: seq[Pv],
-    nodes: uint64,
-    time: Duration,
+    nodes: int64,
+    time: Seconds,
     hashFull: int,
     beautiful: bool
 ) =
@@ -107,7 +107,7 @@ func printInfoString(
 proc bestMoveString(move: Move, position: Position): string =
 
     # king's gambit
-    var r = initRand(epochTime().int64)
+    var r = initRand(secondsSince1970().int64)
     if r.rand(1.0) < 0.5:
         if "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition == position:
             return "bestmove e2e4"
@@ -132,12 +132,12 @@ type SearchInfo* = object
     targetDepth*: Ply
     stop*: ptr Atomic[bool]
     movesToGo*: int16
-    increment*, timeLeft*: array[white..black, Duration]
-    moveTime*: Duration
+    increment*, timeLeft*: array[white..black, Seconds]
+    moveTime*: Seconds
     multiPv*: int
-    searchMoves*: seq[Move]
+    searchMoves*: HashSet[Move]
     numThreads*: int
-    nodes*: uint64
+    nodes*: int64
     uciCompatibleOutput*: bool
 
 proc uciSearch*(searchInfo: SearchInfo) =

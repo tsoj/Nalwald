@@ -123,11 +123,14 @@ func parseTags(pgn: var string): Table[string, string] =
 
         pgn[pngIndex] = ' '
 
-func removeComments(pgn: var string) =
+func parseComments(pgn: var string): Table[int, string] =
     var
         insideBraceComment = false
         insideLineComment = false
-    for c in pgn.mitems:
+        currentComment = ""
+    for i, c in pgn.mpairs:
+        if insideBraceComment or insideLineComment:
+            currentComment += c
         if insideLineComment:
             insideLineComment = c != '\n'
         elif insideBraceComment:
@@ -139,6 +142,10 @@ func removeComments(pgn: var string) =
         else:
             continue
 
+        if currentComment.len > 0 and not (insideBraceComment or insideLineComment):
+            result[i] = currentComment
+            currentComment = ""
+
         c = ' '
 
 func removeNumbering(pgn: var string) =
@@ -149,11 +156,16 @@ func removeNumbering(pgn: var string) =
             while j > 0 and pgn[j].isDigit:
                 pgn[j] = ' '
                 j -= 1
+
+type ParsedPGN = object
+    tags: Table[string, string]
+    startPosition: Position
+    moves: seq[tuple[move: Move, comment: string]]
             
-proc parsePGN(pgn: string): tuple[tags: Table[string, string], startPosition: Position, moves: seq[Move]] =
+proc parsePGN(pgn: string): ParsedPGN =
     var pgn = pgn
     result.tags = pgn.parseTags
-    pgn.removeComments
+    let comments = pgn.parseComments
     pgn.removeNumbering
 
     var position: Position
@@ -162,20 +174,36 @@ proc parsePGN(pgn: string): tuple[tags: Table[string, string], startPosition: Po
     else:
         position = startpos
 
+    result.startPosition = position
     
-    var indexStartOfMoveString = 0
-    while indexStartOfMoveString < pgn.len:
+    for indexStartOfMoveString in 0..<pgn.len:
+        if indexStartOfMoveString in comments and result.moves.len > 0:
+            result.moves[^1].comment = comments[indexStartOfMoveString]
+
         if not pgn[indexStartOfMoveString].isSpaceAscii:
             var indexAfterEndOfMoveString = indexStartOfMoveString
             while indexAfterEndOfMoveString < pgn.len and not pgn[indexAfterEndOfMoveString].isSpaceAscii:
                 indexAfterEndOfMoveString += 1
             doAssert indexStartOfMoveString > indexAfterEndOfMoveString + 1
+
             let move = moveFromSANMove(position, pgn[indexStartOfMoveString ..< indexAfterEndOfMoveString])
-            result.moves.add move
+            result.moves.add (move: move, comment: "")
             position.doMove(move)
-    
 
-    result.startPosition = position
 
-    
+type ParseState = enum
+    inTag, inTagQuotes, inBraceComment, inLineComment, inMoveList
+
+parsePGN(pgn: string): seq[ParsedPGN] =
+    # TODO start again to support multiple pgn sequences in one file
+    # var parseState = inMoveList
+    # while true:
+    #     case parseState:
+    #     of inMoveList:
+    #     of inTag:
+    #     of inTagQuotes:, inBraceComment, inLineComment, inMoveList
     discard
+
+
+
+    

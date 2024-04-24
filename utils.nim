@@ -4,9 +4,9 @@ import
 import std/[
     options,
     strutils,
-    atomics,
     times,
-    os
+    os,
+    osproc
 ]
 
 const megaByteToByte* = 1_048_576
@@ -63,12 +63,6 @@ func toColoredPiece*(s: char): ColoredPiece =
     let color = if s.isLowerAscii: black else: white
     ColoredPiece(color: color, piece: piece)
 
-func mirrorVertically*(square: Square): Square =
-    (square.int8 xor 56).Square
-
-func mirrorHorizontally*(square: Square): Square =
-    (square.int8 xor 7).Square
-
 func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 
     type I = (when T is SomeInteger: BiggestInt else: float)
@@ -85,15 +79,39 @@ func interpolate*[T](gamePhase: GamePhase, forOpening, forEndgame: T): T =
 
     result = tmp.T
 
-proc stopwatch*(flag: ptr Atomic[bool], duration: Duration): bool =
-    const sleepTimeMs = 5
-    let
-        start = now()
-        duration = duration - initDuration(milliseconds = sleepTimeMs)
-    while not flag[].load:
-        if now() - start >= duration:
-            flag[].store(true)
-        sleep(sleepTimeMs)
-
 func clampToType*[In, Out](x: In, OutType: typedesc[Out]): Out =
     x.clamp(OutType.low.In, OutType.high.In).Out
+
+proc getCpuInfo*(): string =
+    when defined(posix):
+        var cpuName = execCmdEx("""
+        cat /proc/cpuinfo | awk -F '\\s*: | @' '/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ { cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' "$cpu_file"
+        """).output
+        return cpuName.strip
+
+
+type Seconds* = distinct float
+
+func `$`*(a: Seconds): string = $a.float & " s"
+
+func high*(T: typedesc[Seconds]): Seconds = float.high.Seconds
+func low*(T: typedesc[Seconds]): Seconds = float.low.Seconds
+
+func `==`*(a, b: Seconds): bool {.borrow.}
+func `<=`*(a, b: Seconds): bool {.borrow.}
+func `<`*(a, b: Seconds): bool {.borrow.}
+
+func `-`*(a, b: Seconds): Seconds {.borrow.}
+func `+`*(a, b: Seconds): Seconds {.borrow.}
+func `*`*(a: Seconds, b: SomeNumber): Seconds = Seconds(a.float * b.float)
+func `*`*(a: SomeNumber, b: Seconds): Seconds = Seconds(a.float * b.float)
+func `/`*(a: Seconds, b: SomeNumber): Seconds = Seconds(a.float / b.float)
+
+func `+=`*(a: var Seconds, b: Seconds) = a = a + b
+func `-=`*(a: var Seconds, b: Seconds) = a = a - b
+func `*=`*(a: var Seconds, b: SomeNumber) = a = a * b
+func `/=`*(a: var Seconds, b: SomeNumber) = a = a / b
+
+func secondsSince1970*(): Seconds =
+    {.cast(noSideEffect).}:
+        epochTime().Seconds

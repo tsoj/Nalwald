@@ -1,7 +1,8 @@
 import
     types,
     move,
-    position
+    position,
+    searchParams
 
 import std/[
     math
@@ -19,12 +20,10 @@ func newHistoryTable*(): HistoryTable =
     # allocating this on the heap, as it is too big for the stack
     result.counterTable = new array[pawn..king, array[a1..h8, HistoryArray]]
 
-const maxHistoryTableValue = 100000.0
-
 func halve(table: var HistoryArray, color: Color) =
     for piece in pawn..king:
         for square in a1..h8:
-            table[color][piece][square] /= 2.0
+            table[color][piece][square] /= historyTableShrinkDiv()
 
 func update*(historyTable: var HistoryTable, move, previous: Move, color: Color, depth: Ply, raisedAlpha: bool) =
     if move.isTactical:
@@ -40,18 +39,18 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         template entry(): auto = table[color][move.moved][move.target]
         entry = clamp(
             entry + addition,
-            -maxHistoryTableValue, maxHistoryTableValue
+            -maxHistoryTableValue().float, maxHistoryTableValue().float
         )    
-        if entry.abs >= maxHistoryTableValue:
+        if entry.abs >= maxHistoryTableValue().float:
             table.halve(color)
 
 
-    let addition = (if raisedAlpha: 1.0 else: -1.0/15.0) * depth.float^2
+    let addition = (if raisedAlpha: 1.0 else: -1.0/historyTableBadMoveDivider()) * depth.float^2
 
     historyTable.table.add(color, move, addition)
 
     if previous.moved in pawn..king and previous.target in a1..h8:
-        historyTable.counterTable[][previous.moved][previous.target].add(color, move, addition * 50.0)
+        historyTable.counterTable[][previous.moved][previous.target].add(color, move, addition * historyTableCounterMul())
 
 func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0..1.0 =
     var sum = historyTable.table[color][move.moved][move.target]
@@ -59,7 +58,7 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0.
     if previous.moved in pawn..king and previous.target in a1..h8:
         sum += historyTable.counterTable[][previous.moved][previous.target][color][move.moved][move.target]
 
-    sum / (2*maxHistoryTableValue)
+    sum / (2*maxHistoryTableValue().float)
 
 
 #-------------- killer heuristic --------------#
@@ -83,8 +82,8 @@ func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
 #-------------- repetition detection --------------#
 
 type GameHistory* = object
-    staticHistory: seq[uint64]
-    dynamicHistory: array[Ply, uint64]
+    staticHistory: seq[ZobristKey]
+    dynamicHistory: array[Ply, ZobristKey]
 
 func newGameHistory*(staticHistory: seq[Position]): GameHistory =
     for position in staticHistory:

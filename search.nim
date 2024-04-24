@@ -9,7 +9,8 @@ import
     hashTable,
     evaluation,
     utils,
-    see
+    see,
+    searchParams
 
 import std/[
     atomics,
@@ -18,46 +19,37 @@ import std/[
 
 static: doAssert pawn.value == 100.cp
 
-const
-    deltaMargin = 150.cp
-    failHighDeltaMargin = 50.cp
-    aspirationWindowStartingOffset = 10.cp
-    aspirationWindowMultiplier = 2.0
-
 func futilityReduction(value: Value): Ply =
-    clampToType(value.toCp div 100, Ply)
+    clampToType(value.toCp div futilityReductionDiv(), Ply)
 
 func hashResultFutilityMargin(depthDifference: Ply): Value =
-    depthDifference.Value * 300.cp
+    depthDifference.Value * hashResultFutilityMarginMul().cp
 
 func nullMoveDepth(depth: Ply): Ply =
-    depth - 3.Ply - depth div 4.Ply
+    depth - nullMoveDepthSub() - depth div nullMoveDepthDiv().Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-    const halfLife = 35
-    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply
-    if lmrMoveCounter >= 4:
-        if depth <= 8.Ply:
-            result -= 1.Ply
-        if depth <= 2.Ply:
-            result -= 1.Ply    
-    if lmrMoveCounter >= 16:
-        result -= 1.Ply
+    let halfLife = lmrDepthHalfLife()
+    result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
 
 type SearchState* = object
     stop*: ptr Atomic[bool]
     threadStop*: ptr Atomic[bool]
     hashTable*: ptr HashTable
     killerTable*: KillerTable
-    historyTable*: ptr HistoryTable
+    historyTable*: HistoryTable
     gameHistory*: GameHistory
-    countedNodes*: uint64
-    maxNodes*: uint64
+    countedNodes*: int64
+    maxNodes*: int64
+    stopTime*: Seconds
     skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
 func shouldStop(state: SearchState): bool =
-    state.stop[].load or state.threadStop[].load or state.countedNodes >= state.maxNodes
+    if state.countedNodes >= state.maxNodes or
+    ((state.countedNodes mod 2048) == 1107 and secondsSince1970() >= state.stopTime):
+        state.stop[].store(true)
+    state.stop[].load or state.threadStop[].load
 
 func update(
     state: var SearchState,
@@ -70,7 +62,7 @@ func update(
     if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
         if nodeType != allNode:
-            state.historyTable[].update(bestMove, previous, position.us, depth, raisedAlpha = true)
+            state.historyTable.update(bestMove, previous, position.us, depth, raisedAlpha = true)
         if nodeType == cutNode:
             state.killerTable.update(height, bestMove)
 
@@ -85,8 +77,7 @@ func quiesce(
 
     state.countedNodes += 1
 
-    if height == Ply.high or
-    position.insufficientMaterial:
+    if height == Ply.high or position.insufficientMaterial:
         return 0.Value
 
     let standPat = state.evaluation(position)
@@ -106,7 +97,7 @@ func quiesce(
         let seeEval = standPat + position.see(move)
         
         # delta pruning
-        if seeEval + deltaMargin < alpha and doPruning:
+        if seeEval + deltaMargin().cp < alpha and doPruning:
             # return instead of just continue, as later captures must have lower SEE value
             return bestValue
 
@@ -114,8 +105,8 @@ func quiesce(
             continue
         
         # fail-high delta pruning
-        if seeEval - failHighDeltaMargin >= beta and doPruning:
-            return seeEval - failHighDeltaMargin
+        if seeEval - failHighDeltaMargin().cp >= beta and doPruning:
+            return seeEval - failHighDeltaMargin().cp
 
         let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning)
 
@@ -179,7 +170,7 @@ func search(
             depth += 1.Ply
 
         # internal iterative reduction
-        if hashResult.isEmpty and depth >= 6.Ply:
+        if hashResult.isEmpty and depth >= iirMinDepth():
             depth -= 1.Ply
 
         depth
@@ -226,7 +217,7 @@ func search(
         detailStaticEval.get
 
     # iterate over all moves and recursively search the new positions
-    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable[], state.killerTable.get(height), previous):
+    for move in position.treeSearchMoveIterator(hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous):
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
             continue
@@ -245,12 +236,12 @@ func search(
         if not givingCheck:
 
             # late move reduction
-            if moveCounter > 3 and not move.isTactical:
+            if moveCounter >= minMoveCounterLmr() and not move.isTactical:
                 newDepth = lmrDepth(newDepth, lmrMoveCounter)
                 lmrMoveCounter += 1
 
             # futility reduction
-            if moveCounter > 1 and newDepth > 0:
+            if moveCounter >= minMoveCounterFutility() and newDepth > 0:
                 newDepth -= futilityReduction(alpha - staticEval - position.see(move))
             
             if newDepth <= 0:
@@ -287,14 +278,14 @@ func search(
             bestMove = move
 
         if value >= beta:
-            state.update(position, bestMove, previous = previous, depth = depth, height = height, cutNode, value)
-            return bestValue
+            nodeType = cutNode
+            break
 
         if value > alpha:
             nodeType = pvNode
             alpha = value
         else:
-            state.historyTable[].update(move, previous = previous, us, newDepth, raisedAlpha = false)
+            state.historyTable.update(move, previous = previous, us, newDepth, raisedAlpha = false)
 
     if moveCounter == 0:
         # checkmate
@@ -318,8 +309,8 @@ func search*(
 
     var
         estimatedValue = (if hashResult.isEmpty: 0.Value else: hashResult.value).float
-        alphaOffset = aspirationWindowStartingOffset.float
-        betaOffset = aspirationWindowStartingOffset.float
+        alphaOffset = aspirationWindowStartingOffset().cp.float
+        betaOffset = aspirationWindowStartingOffset().cp.float
 
     # growing alpha beta window
     while not state.shouldStop:
@@ -337,8 +328,8 @@ func search*(
 
         estimatedValue = result.float
         if result <= alpha:
-            alphaOffset *= aspirationWindowMultiplier
+            alphaOffset *= aspirationWindowMultiplier()
         elif result >= beta:
-            betaOffset *= aspirationWindowMultiplier
+            betaOffset *= aspirationWindowMultiplier()
         else:
             break

@@ -7,125 +7,91 @@ import
 import std/[
     times,
     strformat,
-    threadpool,
-    random
+    random,
+    math
 ]
-
-type ThreadResult = tuple[weight: float, gradient: EvalParametersFloat]
-
-proc calculateGradient(data: openArray[Entry], currentSolution: EvalParameters, k: float, suppressOutput = false): ThreadResult =
-    result.gradient = newEvalParametersFloat();
-    for entry in data:        
-        result.weight += entry.weight
-        result.gradient.addGradient(currentSolution, entry.position, entry.outcome, k = k, weight = entry.weight)
 
 proc optimize(
     start: EvalParametersFloat,
-    data: seq[Entry],
-    k: float,
-    lr = 51200.0,
-    lrDecay = 0.98,
-    minLearningRate = 500.0,
-    maxNumEpochs = 300,
-    gradientDecay = 0.9,
-    numThreads = 8,
-    batchSize = 50_000
-): EvalParametersFloat =
+    data: var seq[Entry],
+    maxNumEpochs = 30,
+    startLr = 10.0,
+    finalLr = 0.05
+): (EvalParametersFloat, float) =
 
-    var
-        solution = start
-        lr = lr
-        data = data
+    var solution = start
 
-    echo "starting error: ", fmt"{solution.convert.error(data, k):>9.7f}", ", starting lr: ", lr
+    echo "starting error: ", fmt"{solution.convert.error(data):>9.7f}", ", starting lr: ", startLr
 
-    var previousGradient = newEvalParametersFloat()
+    let lrDecay = pow(finalLr/startLr, 1.0/float(maxNumEpochs * data.len))
+    doAssert startLr > finalLr, "Starting learning rate must be strictly bigger than the final learning rate"
+    doAssert finalLr == startLr or lrDecay < 1.0, "lrDecay should be smaller than one if the learning rate should decrease"
+
+    var lr = startLr
 
     for epoch in 1..maxNumEpochs:
         let startTime = now()
         data.shuffle
-        for batchId in 0..<data.len div batchSize:
-            let data = data[batchId*batchSize..<min(data.len, (batchId+1)*batchSize)]
 
-            func batchSlize(data: openArray[Entry], i: int, numThreads: int): auto =
-                let
-                    batchSlizeSize = data.len div numThreads
-                    b = data.len mod numThreads + (i+1)*batchSlizeSize
-                    a = if i == 0: 0 else: b - batchSlizeSize
-                doAssert b > a
-                doAssert i < numThreads - 1 or b == data.len
-                doAssert i == 0 or b - a == batchSlizeSize
-                doAssert i > 0 or b - a == batchSlizeSize + data.len mod numThreads
-                doAssert b <= data.len
-                data[a..<b]
-
-            var threadSeq = newSeq[FlowVar[ThreadResult]](numThreads)
-            
-            let solutionConverted = solution.convert
-            for i, flowVar in threadSeq.mpairs:
-                flowVar = spawn calculateGradient(
-                    data.batchSlize(i, numThreads),
-                    solutionConverted,
-                    k, i > 0
-                )    
-
-            var gradient = newEvalParametersFloat()
-            var totalWeight: float = 0.0
-            for flowVar in threadSeq.mitems:
-                let (threadWeight, threadGradient) = ^flowVar
-                totalWeight += threadWeight
-                gradient += threadGradient
-            # smooth the gradient out over previous gradientDecayed gradients. Seems to help in optimization speed and the final
-            # result is better
-            gradient *= (1.0/totalWeight)
-            gradient *= 1.0 - gradientDecay
-            previousGradient *= gradientDecay
-            gradient += previousGradient
-            previousGradient = gradient
-
-            gradient *= lr
-
-            solution += gradient
+        for entry in data:
+            solution.addGradient(lr, entry.position, entry.outcome)
+            lr *= lrDecay
 
         let
-            errorString = if (epoch mod 20) == 1: fmt"{solution.convert.error(data, k):>9.7f}" else: "        ?"
+            error = solution.convert.error(data[0..<min(data.len, 1_000_000)])
             passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {errorString}, lr: {lr:.1f}, time: {passedTime.inSeconds} s"
-        lr *= lrDecay
-
-        if lr < minLearningRate:
-            break
+        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.3f}, time: {passedTime.inSeconds} s"
+    
+    let finalError = solution.convert.error(data)
+    echo fmt"Final error: {finalError:>9.7f}"
         
-    return solution
+    return (solution, finalError)
 
 let startTime = now()
 
 var data: seq[Entry]
-data.loadData("quietSetNalwald.epd")
-data.loadData("quietSetCombinedCCRL4040.epd")
-data.loadData("quietSmallPoolGamesNalwald.epd")
-data.loadData("quietSetNalwald2.epd")
-data.loadData("quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd")
-data.loadData("quietSmallPoolGamesNalwald2Labeled.epd", weight = 2.0)
-data.loadData("quietSmallPoolGamesNalwald3.epd")
-data.loadData("quietSmallPoolGamesNalwald4.epd")
-data.loadData("quietSmallPoolGamesNalwald5.epd")
-data.loadData("quietSmallPoolGamesNalwald6.epd")
-data.loadData("quietSmallPoolGamesNalwald7.epd")
+data.loadDataEpd "trainingSets/quietSetNalwald.epd"
+data.loadDataEpd "trainingSets/quietSetCombinedCCRL4040.epd"
+data.loadDataEpd "trainingSets/quietSmallPoolGamesNalwald.epd"
+data.loadDataEpd "trainingSets/quietSetNalwald2.epd"
+data.loadDataEpd "trainingSets/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+data.loadDataEpd "trainingSets/quietSmallPoolGamesNalwald2Labeled.epd"
+data.loadDataEpd "trainingSets/gamesNalwald.epd"
+
+data.loadDataBin "trainingSets/trainingSet_2023-10-03-18-29-44.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-10-03-18-30-48.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-10-03-23-14-51.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-10-03-23-35-01.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-10-04-00-47-53.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-10-06-17-43-01.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-22-16-08-28.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-22-16-15-24.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-22-16-16-28.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-22-19-19-13.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-24-02-31-35.bin"
+data.loadDataBin "trainingSets/trainingSet_2023-12-28-11-23-21.bin"
+data.shuffle
 
 echo "Total number of entries: ", data.len
 
-const k = 1.0
+let (ep, finalError) = newEvalParametersFloat().optimize(data)
 
-let ep = newEvalParametersFloat().optimize(data, k)
+let
+    timeString = now().format("yyyy-MM-dd-HH-mm-ss")
+    fileName = fmt"optimizationResult_{timeString}_{finalError:>9.7f}.txt"
 
-let filename = "optimizationResult_" & now().format("yyyy-MM-dd-HH-mm-ss") & ".txt"
-echo "filename: ", filename
-writeFile(
-    filename,
-    &"import evalParameters\n\nconst defaultEvalParameters* = {ep.convert}.convert(EvalParameters)\n"
-)
-printPieceValues(ep.convert, data)
+let fileContent = &"""
+import evalParameters
+
+const defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters
+
+func value*(piece: Piece): Value =
+    const table = [{ep.convert.pieceValuesAsString(data[0..<min(data.len, 10_000_000)])}king: valueCheckmate, noPiece: 0.Value]
+    table[piece]
+"""
+
+writeFile(fileName, fileContent)
+echo "filename: ", fileName
 
 echo "Total time: ", now() - startTime
 

@@ -7,13 +7,19 @@ import
     ../move,
     ../evaluation
 
+import std/[
+    tables
+]
+
 type
-    Game* = object
-        hashTable: HashTable
+    Game* {.requiresInit.} = object
+        hashTable: ref HashTable
         positionHistory: seq[Position]
-        maxNodes: uint64
+        evals: Table[Position, Value] = initTable[Position, Value]()
+        maxNodes: int64
         earlyResignMargin: Value
-        earlyAdjudicationPly: Ply
+        earlyAdjudicationMinConsistentPly: int
+        minAdjudicationGameLenPly: int
         evaluation: proc(position: Position): Value {.noSideEffect.}
     GameStatus* = enum
         running, fiftyMoveRule, threefoldRepetition, stalemate, checkmateWhite, checkmateBlack
@@ -32,92 +38,104 @@ func gameStatus*(positionHistory: openArray[Position]): GameStatus =
     for p in positionHistory:
         if p.zobristKey == position.zobristKey:
             repetitions += 1
-    doAssert repetitions >= 1
-    doAssert repetitions <= 3
+    doAssert repetitions in 1..3
     if repetitions == 3:
         return threefoldRepetition
     running
 
-proc makeNextMove*(game: var Game): (GameStatus, Value, Move) =
+func getPositionHistory*(game: Game): seq[(Position, Value)] =
+    for position in game.positionHistory:
+        let value = if position in game.evals: game.evals[position] else: valueInfinity
+        result.add (position, value)
+
+proc makeNextMove(game: var Game): (GameStatus, Value, Move) =
     doAssert game.positionHistory.len >= 1
-    try:
-        doAssert game.positionHistory.gameStatus == running, $game.positionHistory.gameStatus
-        let position = game.positionHistory[^1]
-        let pvSeq = position.timeManagedSearch(
-            hashTable = game.hashTable,
+    if game.positionHistory.gameStatus != running:
+        return (game.positionHistory.gameStatus, 0.Value, noMove)
+
+    let
+        position = game.positionHistory[^1]
+        pvSeq = position.timeManagedSearch(
+            hashTable = game.hashTable[],
             positionHistory = game.positionHistory,
             evaluation = game.evaluation,
             maxNodes = game.maxNodes
         )
-        doAssert pvSeq.len >= 1
-        let
-            pv = pvSeq[0].pv
-            value = pvSeq[0].value
-        doAssert pv.len >= 1
-        doAssert pv[0] != noMove
-        game.positionHistory.add position.doMove(pv[0])
-        return (game.positionHistory.gameStatus, value * (if position.us == white: 1 else: -1), pv[0])
-        
-    except CatchableError:
-        var s = getCurrentExceptionMsg() & "\n"
-        s &= game.positionHistory[^1].fen & "\n"
-        s &= $game.positionHistory[^1] & "\n"
-        s &= game.positionHistory[^1].debugString & "\n"
-        raise newException(AssertionDefect, s)
+    doAssert pvSeq.len >= 1
+    let
+        pv = pvSeq[0].pv
+        value = pvSeq[0].value
+        absoluteValue = if position.us == white: value else: -value
+    doAssert pv.len >= 1
+    doAssert pv[0] != noMove
+    doAssert position notin game.evals
 
+    game.evals[position] = absoluteValue
+    game.positionHistory.add position.doMove pv[0]
 
-
+    (game.positionHistory.gameStatus, absoluteValue, pv[0])
+    
 func newGame*(
     startingPosition: Position,
-    maxNodes = 20_000'u64,
-    earlyResignMargin = 800.Value,
-    earlyAdjudicationPly = 8.Ply,
-    hashSize = 4_000_000,
+    maxNodes = 20_000,
+    earlyResignMargin = 800.cp,
+    earlyAdjudicationMinConsistentPly = 8,
+    minAdjudicationGameLenPly = 30,
+    hashTable: ref HashTable = nil,
     evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): Game =
     result = Game(
-        hashTable: newHashTable(),
+        hashTable: hashTable,
         positionHistory: @[startingPosition],
         maxNodes: maxNodes,
         earlyResignMargin: earlyResignMargin,
-        earlyAdjudicationPly: earlyAdjudicationPly,
+        earlyAdjudicationMinConsistentPly: earlyAdjudicationMinConsistentPly,
+        minAdjudicationGameLenPly: minAdjudicationGameLenPly,
         evaluation: evaluation
     )
-    result.hashTable.setSize(hashSize)
+    if result.hashTable == nil:
+        {.warning[ProveInit]:off.}:
+            result.hashTable = new HashTable
+        result.hashTable[] = newHashTable(len = maxNodes*2)
+    
 
-proc playGame*(game: var Game, suppressOutput = false): float =
-    doAssert game.positionHistory.len >= 1
-    if not suppressOutput:
-        echo "-----------------------------"
-        echo "starting position:"
-        echo game.positionHistory[0]
+proc playGame*(game: var Game, suppressOutput = true): float =
+    doAssert game.positionHistory.len >= 1, "Need a starting position"
 
-    var drawPlies = 0.Ply
-    var whiteResignPlies = 0.Ply
-    var blackResignPlies = 0.Ply
+    template echoSuppressed(x: typed) =
+        if not suppressOutput:
+            echo $x
+
+    echoSuppressed "-----------------------------"
+    echoSuppressed "starting position:"
+    echoSuppressed game.positionHistory[0]
+
+    var
+        drawPlies = 0
+        whiteResignPlies = 0
+        blackResignPlies = 0
 
     while true:
         var (gameStatus, value, move) = game.makeNextMove()
         if value == 0.Value:
-            drawPlies += 1.Ply
+            drawPlies += 1
         else:
-            drawPlies = 0.Ply
+            drawPlies = 0
 
         if value >= game.earlyResignMargin:
-            blackResignPlies += 1.Ply
+            blackResignPlies += 1
         else:
-            blackResignPlies = 0.Ply
+            blackResignPlies = 0
         if -value >= game.earlyResignMargin:
-            whiteResignPlies += 1.Ply
+            whiteResignPlies += 1
         else:
-            whiteResignPlies = 0.Ply
+            whiteResignPlies = 0
 
-        if not suppressOutput:
-            echo "Move: ", move
-            echo game.positionHistory[^1]
-            echo "Value: ", value
-            if gameStatus != running:
-                echo gameStatus
+        echoSuppressed "Move: " & $move
+        echoSuppressed game.positionHistory[^1]
+        echoSuppressed "Value: " & $value
+        if gameStatus != running:
+            echoSuppressed gameStatus
 
         if gameStatus != running:
             case gameStatus:
@@ -128,14 +146,18 @@ proc playGame*(game: var Game, suppressOutput = false): float =
             of checkmateBlack:
                 return 0.0
             else:
-                doAssert false
+                doAssert false, $gameStatus
 
-        if drawPlies >= game.earlyAdjudicationPly:
-            return 0.5
-        if whiteResignPlies >= game.earlyAdjudicationPly:
-            return 0.0
-        if blackResignPlies >= game.earlyAdjudicationPly:
-            return 1.0
+        if game.positionHistory.len >= game.minAdjudicationGameLenPly:
+            if drawPlies >= game.earlyAdjudicationMinConsistentPly:
+                echoSuppressed "Adjudicated draw"
+                return 0.5
+            if whiteResignPlies >= game.earlyAdjudicationMinConsistentPly:
+                echoSuppressed "White resigned"
+                return 0.0
+            if blackResignPlies >= game.earlyAdjudicationMinConsistentPly:
+                echoSuppressed "Black resigned"
+                return 1.0
 
 
 

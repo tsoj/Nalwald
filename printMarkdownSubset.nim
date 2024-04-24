@@ -73,7 +73,7 @@ proc printMarkdownSubsetNoNewline(markdown: string) =
             isItalic = not isItalic
             markdown.popFront
 
-        elif markdown.len > 0 and markdown[0..2] == "```":
+        elif markdown.len >= 3 and markdown[0..2] == "```":
             printCurrentString()
             isCodeBlock = not isCodeBlock
             markdown.popFront

@@ -1,16 +1,16 @@
 import types
-
-import std/random
+export types
 
 type Relativity* = enum
     relativeToUs, relativeToEnemy
 
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
-    kingRelativePst*: array[Relativity, array[a1..h8, array[pawn..noPiece, array[a1..h8, ValueType]]]] # noPiece for passed pawns
-    pieceRelativePst*: array[4, array[Relativity, array[pawn..queen, array[a1..h8, array[pawn..queen, array[a1..h8, ValueType]]]]]] # here the pawn in the first dim stand for passed pawns
+    # here the pawn in the first dim stand for passed pawns
+    pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]]]
     pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
+    pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, ValueType]
 
-type EvalParametersTemplate[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
+type EvalParametersTemplate*[ValueType] {.requiresInit.} = seq[SinglePhaseEvalParametersTemplate[ValueType]]
 
 type EvalParametersFloat* {.requiresInit.} = EvalParametersTemplate[float32]
 
@@ -22,77 +22,67 @@ func newEvalParametersFloat*(): EvalParametersFloat =
 func newEvalParameters*(): EvalParameters =
     newSeq[SinglePhaseEvalParametersTemplate[Value]](2)
 
+template doForAll*[Out, In, F](output: var SinglePhaseEvalParametersTemplate[Out], input: SinglePhaseEvalParametersTemplate[In], f: F) =
 
-func transform[Out, In](output: var Out, input: In, floatOp: proc(a: var float32, b: float32) {.noSideEffect.}) =
+    for h in 0..1:
+        for i in 0..3:
+            for r in Relativity:
+                for p1 in pawn..king:
+                    for s1 in a1..h8:
+                        for p2 in pawn..king:
+                            for s2 in a1..h8:
+                                f(output.pieceRelativePst[h][i][r][p1][s1][p2][s2], input.pieceRelativePst[h][i][r][p1][s1][p2][s2])
 
-    when Out is AtomType:
-        static: doAssert In is AtomType, "Transforming types must have the same structure."
-        var tmp = output.float32
-        floatOp(tmp, input.float32)
-        output = tmp.Out
-        
-    elif Out is (tuple or object):
-        static: doAssert In is (tuple or object), "Transforming types must have the same structure."
-        for inName, inValue in fieldPairs(input):
-            var found = false
-            for outName, outValue in fieldPairs(output):
-                when inName == outName:
-                    transform(outValue, inValue, floatOp)
-                    found = true
-                    break
-            assert found, "Transforming types must have the same structure."
+    for s in b3..g6:
+        for i in 0..<3*3*3 * 3*3*3 * 3*3*3:
+            f(output.pawnStructureBonus[s][i], input.pawnStructureBonus[s][i])
 
-    elif Out is array:
-        static: doAssert In is array, "Transforming types must have the same structure."
-        static: doAssert input.len == output.len, "Transforming types must have the same structure."
-        for i in 0..<input.len:
-            var outputIndex = (typeof(output.low))((output.low.int + i))
-            var inputIndex = (typeof(input.low))((input.low.int + i))
-            transform(output[outputIndex], input[inputIndex], floatOp)
+    for i in 0..<3*3*3*3*3 * 3*3*3*3*3:
+        f(output.pieceComboBonus[i], input.pieceComboBonus[i])
 
-    elif Out is seq:
-        static: doAssert In is seq, "Transforming types must have the same structure."
-        output.setLen input.len
-        for i in 0..<input.len:
-            transform(output[i], input[i], floatOp)
-    
-    else:
-        static: doAssert false, "Type is not not implemented for transforming"
 
-func transform[Out, In](output: var Out, input: In) =
-    transform(output, input, proc(a: var float32, b: float32) = a = b)
+template doForAll*[Out, In, F](output: var EvalParametersTemplate[Out], input: EvalParametersTemplate[In], f: F) =
+    for phase in 0..1:
+        doForAll(output[phase], input[phase], f)
 
 func `*=`*(a: var SinglePhaseEvalParametersTemplate[float32], b: float32) =
-    transform(a, a, proc(x: var float32, y: float32) = x *= b)
-
-func convert*(a: auto, T: typedesc): T =
-    when T is EvalParametersFloat:
-        result = newEvalParametersFloat()
-    elif T is EvalParameters:
-        result = newEvalParameters()
-    transform(result, a)
-
+    doForAll(a, a, proc(x: var float32, y: float32){.noSideEffect.} = x *= b)
 
 func convert*(a: EvalParameters): EvalParametersFloat =
-    a.convert(EvalParametersFloat)
+    result = newEvalParametersFloat()
+    doForAll(result, a, proc(a: var float32, b: Value) {.noSideEffect.} = a = b.float32)
 
 func convert*(a: EvalParametersFloat): EvalParameters =
-    a.convert(EvalParameters)
+    result = newEvalParameters()
+    doForAll(result, a, proc(a: var Value, b: float32) {.noSideEffect.} = a = b.Value)
 
 func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(x: var float32, y: float32) = x += y)
+    doForAll(a, b, proc(x: var float32, y: float32) = x += y)
 
 func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
-    transform(a, b, proc(x: var float32, y: float32) = x *= y)
+    doForAll(a, b, proc(x: var float32, y: float32) = x *= y)
 
 func `*=`*(a: var EvalParametersFloat, b: float32) =
-    transform(a, a, proc(x: var float32, y: float32) = x *= b)
+    doForAll(a, a, proc(x: var float32, y: float32) = x *= b)
 
 func setAll*(a: var EvalParametersFloat, b: float32) =
-    transform(a, a, proc(x: var float32, y: float32) = x = b)
+    doForAll(a, a, proc(x: var float32, y: float32) = x = b)
 
-proc addRand*(a: var EvalParametersFloat, amplitude: float32) =
-    func floatOp(x: var float32, y: float32) =
-        {.cast(noSideEffect).}:
-            x += rand(-amplitude..amplitude)
-    transform(a, a, floatOp)
+func getMask*(a: EvalParametersFloat, margin: float32): EvalParametersFloat =
+    result = newEvalParametersFloat()
+    doForAll(result, a, proc(x: var float32, y: float32) = x = if y.abs < margin: 0.0 else: 1.0 )
+
+proc toSeq*(a: EvalParameters): seq[int] =
+    var tmp = a
+    let resultAddr = addr result
+    doForAll(tmp, a, proc(x: var Value, y: Value) = resultAddr[].add x.int)
+
+proc toEvalParameters*(s: seq[int]): EvalParameters =
+    result = newEvalParameters()
+    var i = 0
+    let sAddr = addr s
+    doForAll(result, result, proc(x: var Value, y: Value) =
+        x = sAddr[][i].Value
+        i += 1
+    )
+
