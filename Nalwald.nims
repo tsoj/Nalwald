@@ -82,4 +82,12 @@ task tests, "Runs tests":
   setBinaryName("tests")
   setCommand "c", "src/tests.nim"
 
+task tuneEvalParams, "Optimizes eval parameters":
+  highPerformance()
+  --passC:"-march=native"
+  --passC:"-mtune=native"
+  --define:release
+  setBinaryName("tuneEvalParams")
+  setCommand "c", "src/tuning/optimization.nim"
+
 #!fmt: on

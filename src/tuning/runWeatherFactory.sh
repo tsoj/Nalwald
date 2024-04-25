@@ -19,8 +19,8 @@ cd ./weather-factory
 mkdir tuner
 
 cd ../../
-nim native -o:./parameterOptimization/weather-factory/tuner/Nalwald Nalwald.nim
-cd parameterOptimization/weather-factory
+nim native -o:./tuning/weather-factory/tuner/Nalwald Nalwald.nim
+cd tuning/weather-factory
 
 CUTECHESS_BINARY=$(whereis -b cutechess-cli)
 CUTECHESS_BINARY=${CUTECHESS_BINARY#cutechess-cli: }

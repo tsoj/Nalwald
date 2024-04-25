@@ -71,17 +71,17 @@ proc loadDataBin*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
     if not suppressOutput:
         debugEcho fileName & ": ", numEntries, " entries"
 
-func error*(evalParameters: EvalParameters, entry: Entry): float =
+func error*(evalParameters: EvalParametersTemplate, entry: Entry): float =
     let estimate = entry.position.absoluteEvaluate(evalParameters).winningProbability
     error(entry.outcome, estimate)
 
-func errorTuple*(evalParameters: EvalParameters, data: openArray[Entry]): tuple[error, summedWeight: float] =
+func errorTuple*(evalParameters: EvalParametersTemplate, data: openArray[Entry]): tuple[error, summedWeight: float] =
     result.error = 0.0    
     result.summedWeight = 0.0
     for entry in data:
         result.error += evalParameters.error(entry)
         result.summedWeight += 1.0
 
-func error*(evalParameters: EvalParameters, data: openArray[Entry]): float =
+func error*(evalParameters: EvalParametersTemplate, data: openArray[Entry]): float =
     let (error, summedWeight) = evalParameters.errorTuple(data)
     error / summedWeight

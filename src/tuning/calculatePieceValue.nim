@@ -6,10 +6,7 @@ import
     ../evalParameters,
     dataUtils
 
-when isMainModule:
-    import ../defaultParameters
-
-func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray[Entry]): Value =
+func getPieceValue(piece: Piece, evalParameters: EvalParametersTemplate, data: openArray[Entry]): Value =
     var sum: int64 = 0
     var numPieceEvals: int64 = 0
     for entry in data:
@@ -27,16 +24,17 @@ func getPieceValue(piece: Piece, evalParameters: EvalParameters, data: openArray
             numPieceEvals += 1
     (sum div numPieceEvals).Value
 
-proc pieceValuesAsString*(evalParameters: EvalParameters, data: openArray[Entry]): string =
+proc pieceValuesAsString*(evalParameters: EvalParametersTemplate, data: openArray[Entry]): string =
     for piece in pawn..queen:
         result &= $piece & ": " & $getPieceValue(piece, evalParameters, data) & ".Value, "
 
 when isMainModule:
     var data: seq[Entry]
-    data.loadDataEpd "quietSetNalwald.epd"
-    data.loadDataEpd "quietSetCombinedCCRL4040.epd"
-    data.loadDataEpd "quietSmallPoolGamesNalwald.epd"
-    data.loadDataEpd "quietSetNalwald2.epd"
-    data.loadDataEpd "quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
-    data.loadDataEpd "quietSmallPoolGamesNalwald2Labeled.epd"
+    # data.loadDataEpd "rtainingSets/quietSetNalwald.epd"
+    # data.loadDataEpd "rtainingSets/quietSetCombinedCCRL4040.epd"
+    # data.loadDataEpd "rtainingSets/quietSmallPoolGamesNalwald.epd"
+    # data.loadDataEpd "rtainingSets/quietSetNalwald2.epd"
+    # data.loadDataEpd "rtainingSets/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+    # data.loadDataEpd "rtainingSets/quietSmallPoolGamesNalwald2Labeled.epd"
+    data.loadDataBin "trainingSets/trainingSet_2023-12-28-11-23-21.bin"
     echo pieceValuesAsString(defaultEvalParameters, data)

@@ -5,11 +5,11 @@ import
     bitops,
     evalParameters,
     utils,
-    defaultParameters,
+    pieceValues,
     algorithm,
     macros
 
-export defaultParameters
+export pieceValues
 
 func cp*(cp: int): Value {.inline.} =
     (pawn.value * cp.Value) div 100.Value
