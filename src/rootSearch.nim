@@ -39,22 +39,24 @@ type Pv* = object
     pv*: seq[Move]
 
 iterator iterativeDeepeningSearch*(
-    position: Position,
+    positionHistory: seq[Position],
     hashTable: var HashTable,
     stop: ptr Atomic[bool],
-    positionHistory: seq[Position] = @[],
     targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = int64.high,
     stopTime = Seconds.high,
     multiPv = 1,
-    searchMoves = initSet[Move](),
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    requireRootPv = false
+    searchMoves = initHashSet[Move](),
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 ): tuple[pvList: seq[Pv], nodes: int64, canStop: bool] {.noSideEffect.} =
     {.cast(noSideEffect).}:
 
-        let legalMoves = position.legalMoves
+        doAssert positionHistory.len >= 1, "Need at least the current position in positionHistory"
+
+        let
+            position = positionHistory[^1]
+            legalMoves = position.legalMoves
 
         if legalMoves.len == 0:
             yield (pvList: @[], nodes: 0'i64, canStop: true)
@@ -138,13 +140,9 @@ iterator iterativeDeepeningSearch*(
                         value = hashTable.get(position.zobristKey).value
                     
                     if pv.len == 0:
-                        let msg = &"WARNING: Couldn't find PV at root node.\n{position.fen = }"
-                        if requireRootPv:
-                            doAssert false, msg
-                        else:
-                            debugEcho msg
-                            doAssert position.legalMoves.len > 0
-                            pv = @[position.legalMoves[0]]
+                        debugEcho &"WARNING: Couldn't find PV at root node.\n{position.fen = }"
+                        doAssert position.legalMoves.len > 0
+                        pv = @[position.legalMoves[0]]
 
                     skipMoves.add pv[0]
 

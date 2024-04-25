@@ -1,147 +1,121 @@
-import
-    types,
-    move,
-    position,
-    hashTable,
-    rootSearch,
-    evaluation,
-    utils
+import types, move, position, hashTable, rootSearch, evaluation, utils
 
-import std/[
-    atomics,
-    sets
-]
+import std/[atomics, sets]
 
 export Pv
 
 type MoveTime = object
-    maxTime, approxTime: Seconds
-func calculateMoveTime(moveTime, timeLeft, incPerMove: Seconds, movesToGo, halfmovesPlayed: int16): MoveTime = 
+  maxTime, approxTime: Seconds
 
-    doAssert movesToGo >= 0
-    let
-        estimatedGameLength = 70
-        estimatedMovesToGo = max(20, estimatedGameLength - halfmovesPlayed div 2)
-        newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
+func calculateMoveTime(
+    moveTime, timeLeft, incPerMove: Seconds, movesToGo, halfmovesPlayed: int16
+): MoveTime =
+  doAssert movesToGo >= 0
+  let
+    estimatedGameLength = 70
+    estimatedMovesToGo = max(20, estimatedGameLength - halfmovesPlayed div 2)
+    newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
-    result.maxTime = min(timeLeft / 2, moveTime)
-    result.approxTime = incPerMove + timeLeft/newMovesToGo
+  result.maxTime = min(timeLeft / 2, moveTime)
+  result.approxTime = incPerMove + timeLeft / newMovesToGo
 
-    if incPerMove >= 2.Seconds or timeLeft > 180.Seconds:
-        result.approxTime = result.approxTime * 1.2
-    elif incPerMove < 0.2.Seconds and timeLeft < 30.Seconds:
-        result.approxTime = result.approxTime * 0.8
-        if movesToGo > 2:
-            result.maxTime = min(timeLeft / 4, moveTime)
+  if incPerMove >= 2.Seconds or timeLeft > 180.Seconds:
+    result.approxTime = result.approxTime * 1.2
+  elif incPerMove < 0.2.Seconds and timeLeft < 30.Seconds:
+    result.approxTime = result.approxTime * 0.8
+    if movesToGo > 2:
+      result.maxTime = min(timeLeft / 4, moveTime)
+
+type SearchInfo* {.requiresInit.} = object
+  stop*: ptr Atomic[bool] = nil
+  positionHistory*: seq[Position]
+  hashTable*: ptr HashTable
+  targetDepth*: Ply = Ply.high
+  movesToGo*: int = int.high
+  increment*: array[white .. black, Seconds] = [white: 0.Seconds, black: 0.Seconds]
+  timeLeft*: array[white .. black, Seconds] = [white: Seconds.high, black: Seconds.high]
+  moveTime*: Seconds = Seconds.high
+  maxNodes*: int = int.high
+  numThreads*: int = 1
+  multiPv*: int = 1
+  searchMoves*: HashSet[Move] = initHashSet[Move]()
+  evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
 
 iterator iterativeTimeManagedSearch*(
-    position: Position,
-    hashTable: var HashTable,
-    positionHistory: seq[Position] = newSeq[Position](0),
-    targetDepth: Ply = Ply.high,
-    stop: ptr Atomic[bool] = nil,
-    movesToGo: int16 = int16.high,
-    increment = [white: 0.Seconds, black: 0.Seconds],
-    timeLeft = [white: Seconds.high, black: Seconds.high],
-    moveTime = Seconds.high,
-    numThreads: int,
-    maxNodes: int64 = int64.high,
-    multiPv = 1,
-    searchMoves = initHashSet[Move](),
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    requireRootPv = false
+    searchInfo: SearchInfo
 ): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
+  var
+    stopFlag: Atomic[bool]
+    stop =
+      if searchInfo.stop == nil:
+        addr stopFlag
+      else:
+        searchInfo.stop
 
-    var stopFlag: Atomic[bool]
-    var stop = if stop == nil: addr stopFlag else: stop
+  stop[].store(false)
 
-    stop[].store(false)
+  doAssert searchInfo.positionHistory.len >= 1,
+    "Need at least the current position in positionHistory"
 
-    let calculatedMoveTime = calculateMoveTime(
-        moveTime, timeLeft[position.us], increment[position.us], movesToGo, position.halfmovesPlayed)
+  let
+    position = searchInfo.positionHistory[^1]
+    calculatedMoveTime = calculateMoveTime(
+      searchInfo.moveTime,
+      searchInfo.timeLeft[position.us],
+      searchInfo.increment[position.us],
+      searchInfo.movesToGo.int16,
+      position.halfmovesPlayed.int16,
+    )
 
-    let start = secondsSince1970()
-    var
-        startLastIteration = secondsSince1970()
-        branchingFactors = newSeq[float](targetDepth.int)
-        lastNumNodes = int64.high
+  let start = secondsSince1970()
+  var
+    startLastIteration = secondsSince1970()
+    branchingFactors = newSeq[float](searchInfo.targetDepth.int)
+    lastNumNodes = int64.high
 
-    var iteration = -1
-    for (pvList, nodes, canStop) in iterativeDeepeningSearch(
-        position,
-        hashTable,
-        stop,
-        positionHistory,
-        targetDepth,
-        numThreads = if calculatedMoveTime.approxTime <= 0.1.Seconds: 1 else: numThreads,
-        maxNodes = maxNodes,
-        stopTime = start + calculatedMoveTime.maxTime,
-        multiPv = multiPv,
-        searchMoves = searchMoves,
-        evaluation = evaluation,
-        requireRootPv = requireRootPv
-    ):
-        iteration += 1
-        let
-            totalPassedTime = secondsSince1970() - start
-            iterationPassedTime = (secondsSince1970() - startLastIteration)
-        startLastIteration = secondsSince1970()
+  var iteration = -1
+  for (pvList, nodes, canStop) in iterativeDeepeningSearch(
+    positionHistory = searchInfo.positionHistory,
+    hashTable = searchInfo.hashTable[],
+    stop = stop,
+    targetDepth = searchInfo.targetDepth,
+    numThreads = searchInfo.numThreads,
+    maxNodes = searchInfo.maxNodes,
+    stopTime = start + calculatedMoveTime.maxTime,
+    multiPv = searchInfo.multiPv,
+    searchMoves = searchInfo.searchMoves,
+    evaluation = searchInfo.evaluation,
+  ):
+    iteration += 1
+    let
+      totalPassedTime = secondsSince1970() - start
+      iterationPassedTime = (secondsSince1970() - startLastIteration)
+    startLastIteration = secondsSince1970()
 
-        yield (pvList: pvList, nodes: nodes, passedTime: iterationPassedTime)
+    yield (pvList: pvList, nodes: nodes, passedTime: iterationPassedTime)
 
-        doAssert calculatedMoveTime.approxTime >= 0.Seconds
-        
-        branchingFactors[iteration] = nodes.float / lastNumNodes.float;
-        lastNumNodes = if nodes <= 100_000: int64.high else: nodes
-        var averageBranchingFactor = branchingFactors[iteration]
-        if iteration >= 4:
-            averageBranchingFactor =
-                (branchingFactors[iteration] +
-                branchingFactors[iteration - 1] +
-                branchingFactors[iteration - 2] +
-                branchingFactors[iteration - 3])/4.0
+    doAssert calculatedMoveTime.approxTime >= 0.Seconds
 
-        let estimatedTimeNextIteration = iterationPassedTime * averageBranchingFactor
-        if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and iteration >= 4:
-            break;
+    branchingFactors[iteration] = nodes.float / lastNumNodes.float
+    lastNumNodes = if nodes <= 100_000: int64.high else: nodes
+    var averageBranchingFactor = branchingFactors[iteration]
+    if iteration >= 4:
+      averageBranchingFactor =
+        (
+          branchingFactors[iteration] + branchingFactors[iteration - 1] +
+          branchingFactors[iteration - 2] + branchingFactors[iteration - 3]
+        ) / 4.0
 
-        if timeLeft[position.us] < Seconds.high and canStop:
-            break
+    let estimatedTimeNextIteration = iterationPassedTime * averageBranchingFactor
+    if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and
+        iteration >= 4:
+      break
 
-    stop[].store(true)
+    if searchInfo.timeLeft[position.us] < Seconds.high and canStop:
+      break
 
-proc timeManagedSearch*(
-    position: Position,
-    hashTable: var HashTable,
-    positionHistory: seq[Position] = newSeq[Position](0),
-    targetDepth: Ply = Ply.high,
-    stop: ptr Atomic[bool] = nil,
-    movesToGo: int16 = int16.high,
-    increment = [white: 0.Seconds, black: 0.Seconds],
-    timeLeft = [white: Seconds.high, black: Seconds.high],
-    moveTime = Seconds.high,
-    numThreads = 1,
-    maxNodes: int64 = int64.high,
-    multiPv = 1,
-    searchMoves = initHashSet[Move](),
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
-    requireRootPv = false
-): seq[Pv] =
-    for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(
-        position,
-        hashTable,
-        positionHistory,
-        targetDepth,
-        stop,
-        movesToGo = movesToGo,
-        increment = increment,
-        timeLeft = timeLeft,
-        moveTime = moveTime,
-        numThreads = numThreads,
-        maxNodes = maxNodes,
-        multiPv = multiPv,
-        searchMoves = searchMoves,
-        evaluation = evaluation,
-        requireRootPv = requireRootPv
-    ):
-        result = pvList
+  stop[].store(true)
+
+proc timeManagedSearch*(searchInfo: SearchInfo): seq[Pv] =
+  for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(searchInfo):
+    result = pvList

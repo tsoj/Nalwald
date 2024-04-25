@@ -188,9 +188,8 @@ proc testSearchAndPerft(
         # testing real search
         echo "Search test:"
         hashTable.clear()
-        let searchResult = position.timeManagedSearch(
-            hashTable, requireRootPv = true, moveTime = 2.Seconds
-        )
+
+        let searchResult = timeManagedSearch(SearchInfo(positionHistory: @[position], hashTable: addr hashTable, moveTime: 2.Seconds))
         doAssert searchResult.len > 0
         doAssert searchResult[0].value in -checkmateValue(Ply.low)..checkmateValue(Ply.low), $searchResult[0].value
         doAssert searchResult[0].pv.len > 0
