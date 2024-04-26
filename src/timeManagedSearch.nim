@@ -26,7 +26,7 @@ func calculateMoveTime(
     if movesToGo > 2:
       result.maxTime = min(timeLeft / 4, moveTime)
 
-type SearchInfo* {.requiresInit.} = object
+type SearchInfo* #[ {.requiresInit.} ]# = object
   stop*: ptr Atomic[bool] = nil
   positionHistory*: seq[Position]
   hashTable*: ptr HashTable
@@ -39,7 +39,7 @@ type SearchInfo* {.requiresInit.} = object
   numThreads*: int = 1
   multiPv*: int = 1
   searchMoves*: HashSet[Move] = initHashSet[Move]()
-  evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+  evaluation*: proc(position: Position): Value {.noSideEffect.}# = evaluate # TODO default eval breaks Nim
 
 iterator iterativeTimeManagedSearch*(
     searchInfo: SearchInfo

@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-nimble install taskpools@0.0.5
+nimble install taskpools@0.0.5 # TODO change everything to malebolgia
+nimble install malebolgia@1.3.2
 nim Nalwald.nims | grep -v "^Hint:" | cut -d' ' -f1 | xargs -I {} nim {} Nalwald.nims
 find . -name *.nim -print0 | xargs -n 1 -0 nim check $1
 

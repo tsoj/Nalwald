@@ -2,7 +2,7 @@ import
   types, move, position, positionUtils, hashTable, uciSearch, uciInfos, perft, tests,
   evaluation, version, utils, searchParams, timeManagedSearch
 
-import std/[threadpool, strutils, strformat, atomics, os, sets]
+import std/[strutils, strformat, atomics, os, sets]
 
 const
   defaultHashSizeMB = 4
@@ -10,14 +10,18 @@ const
   defaultNumThreads = 1
   maxNumThreads = 255 # nim-taskpools currently supports at most 255 threads
 
-type UciState = object
-  history: seq[Position]
-  hashTable: HashTable
-  stopFlag: Atomic[bool]
-  searchRunningFlag: Atomic[bool]
-  numThreads: int
-  multiPv: int
-  uciCompatibleOutput: bool = false
+type
+  UciState = object
+    history: seq[Position]
+    hashTable: HashTable
+    stopFlag: Atomic[bool]
+    searchRunningFlag: Atomic[bool]
+    numThreads: int
+    multiPv: int
+    uciCompatibleOutput: bool = false
+
+  SearchThreadInput = tuple[searchInfo: SearchInfo, uciCompatibleOutput: bool]
+  SearchThread = Thread[SearchThreadInput]
 
 func currentPosition(uciState: UciState): Position =
   doAssert uciState.history.len >= 1, "Need at least the current position in history"
@@ -89,7 +93,6 @@ proc moves(history: seq[Position], params: seq[string]): seq[Position] =
     let position = result[^1]
     result.add position.doMove(params[i].toMove(position))
 
-
 proc setPosition(uciState: var UciState, params: seq[string]) =
   var
     index = 0
@@ -111,17 +114,23 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
     echo "Unknown parameters"
     return
 
-
   if params.len > index and params[index] == "moves":
     index += 1
     uciState.history = moves(@[position], params[index ..^ 1])
   else:
     uciState.history = @[position]
 
+proc runSearch(searchThreadInput: SearchThreadInput) {.thread, nimcall.} =
+  uciSearch(searchThreadInput.searchInfo, searchThreadInput.uciCompatibleOutput)
 
-proc go(
-    uciState: var UciState, params: seq[string], searchThreadResult: var FlowVar[bool]
-) =
+proc joinSearchThread(searchThread: var SearchThread) =
+  # if searchThread.isSome:
+  #   joinThread searchThread.get
+  #   searchThread = none SearchThread # TODO breaks if SearchInfos is {.requiresInit.}
+  if searchThread.running:
+    joinThread searchThread
+
+proc go(uciState: var UciState, params: seq[string], searchThread: var SearchThread) =
   var searchInfo = SearchInfo(
     positionHistory: uciState.history,
     hashTable: addr uciState.hashTable,
@@ -164,19 +173,17 @@ proc go(
       discard
 
   uciState.stop()
-  discard ^searchThreadResult
+  joinSearchThread searchThread
 
-  proc runSearch(
-      searchInfo: SearchInfo, uciCompatibleOutput: bool, searchRunning: ptr Atomic[bool]
-  ): bool {.thread.} =
-    searchRunning[].store(true)
-    uciSearch(searchInfo, uciCompatibleOutput)
-    searchRunning[].store(false)
+  createThread(
+    searchThread,
+    runSearch,
+    (searchInfo: searchInfo, uciCompatibleOutput: uciState.uciCompatibleOutput),
+  )
 
-  searchThreadResult = spawn runSearch(searchInfo, uciState.uciCompatibleOutput, addr uciState.searchRunningFlag)
-
-  while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
-    sleep(1)
+  # TODO check if this is still necessary
+  # while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
+  #   sleep(1)
 
 proc uciNewGame(uciState: var UciState) =
   if uciState.searchRunningFlag.load:
@@ -223,7 +230,8 @@ proc perft(uciState: UciState, params: seq[string]) =
   if params.len >= 1:
     let
       start = secondsSince1970()
-      nodes = uciState.currentPosition.perft(params[0].parseInt, printRootMoveNodes = true)
+      nodes =
+        uciState.currentPosition.perft(params[0].parseInt, printRootMoveNodes = true)
       s = secondsSince1970() - start
     echo nodes, " nodes in ", fmt"{s.float:0.3f}", " seconds"
     echo (nodes.float / s.float).int, " nodes per second"
@@ -242,7 +250,7 @@ proc uciLoop*() =
   uciState.searchRunningFlag.store(false)
   uciState.hashTable.setByteSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
 
-  var searchThreadResult = FlowVar[bool]()
+  var searchThread: SearchThread
   while true:
     try:
       let command = readLine(stdin)
@@ -259,7 +267,7 @@ proc uciLoop*() =
       of "position":
         uciState.setPosition(params[1 ..^ 1])
       of "go":
-        uciState.go(params[1 ..^ 1], searchThreadResult)
+        uciState.go(params[1 ..^ 1], searchThread)
       of "stop":
         uciState.stop()
       of "quit":
@@ -281,7 +289,8 @@ proc uciLoop*() =
       of "test":
         test(params[1 ..^ 1])
       of "eval":
-        echo uciState.currentPosition.absoluteEvaluate, " centipawns from whites perspective"
+        echo uciState.currentPosition.absoluteEvaluate,
+          " centipawns from whites perspective"
       of "piecevalues":
         for p in pawn .. queen:
           echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
@@ -313,4 +322,4 @@ proc uciLoop*() =
     except CatchableError:
       echo "Error: ", getCurrentExceptionMsg()
 
-  discard ^searchThreadResult
+  joinSearchThread searchThread

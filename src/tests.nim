@@ -6,6 +6,7 @@ import
     hashTable,
     moveIterator,
     positionUtils,
+    evaluation,
     utils,
     timeManagedSearch,
     see
@@ -189,7 +190,7 @@ proc testSearchAndPerft(
         echo "Search test:"
         hashTable.clear()
 
-        let searchResult = timeManagedSearch(SearchInfo(positionHistory: @[position], hashTable: addr hashTable, moveTime: 2.Seconds))
+        let searchResult = timeManagedSearch(SearchInfo(positionHistory: @[position], hashTable: addr hashTable, moveTime: 2.Seconds, evaluation: evaluate))
         doAssert searchResult.len > 0
         doAssert searchResult[0].value in -checkmateValue(Ply.low)..checkmateValue(Ply.low), $searchResult[0].value
         doAssert searchResult[0].pv.len > 0
