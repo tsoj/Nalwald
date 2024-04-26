@@ -26,6 +26,8 @@ massif.out
 !tuning/quietSmallPoolGamesNalwald4.epd
 !tuning/quietSmallPoolGamesNalwald5.epd
 !tuning/quietSmallPoolGamesNalwald6.epd
+!res/openings/10ply-openings.epd
+!res/openings/blitzTesting-4moves-openings.epd
 !Pohl.epd
 optimization
 *.txt

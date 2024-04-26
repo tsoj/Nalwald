@@ -1,42 +1,27 @@
 import
-    types,
-    position,
-    positionUtils,
-    move,
-    search,
-    hashTable,
-    searchUtils,
-    evaluation,
-    utils
+  types, position, positionUtils, move, search, hashTable, searchUtils, evaluation,
+  utils
 
-import taskpools
+import malebolgia
 
-import std/[
-    os,
-    atomics,
-    strformat,
-    options,
-    sets
-]
+import std/[os, atomics, strformat, sets]
 
-func launchSearch(position: Position, state: ptr SearchState, depth: Ply): int64 =
-    try:
-        discard position.search(state[], depth = depth)
-        state[].threadStop[].store(true)
-        return state[].countedNodes
-    except CatchableError:
-        {.cast(noSideEffect).}:
-            debugEcho "Caught exception: ", getCurrentExceptionMsg()
-            debugEcho getCurrentException().getStackTrace()
-    except Exception:
-        {.cast(noSideEffect).}:
-            debugEcho "Caught exception: ", getCurrentExceptionMsg()
-            debugEcho getCurrentException().getStackTrace()
-            quit(QuitFailure)
+func launchSearch(position: Position, state: ptr SearchState, depth: Ply) =
+  try:
+    discard position.search(state[], depth = depth)
+  except CatchableError:
+    {.cast(noSideEffect).}:
+      debugEcho "Caught exception: ", getCurrentExceptionMsg()
+      debugEcho getCurrentException().getStackTrace()
+  except Exception:
+    {.cast(noSideEffect).}:
+      debugEcho "Caught exception: ", getCurrentExceptionMsg()
+      debugEcho getCurrentException().getStackTrace()
+      quit(QuitFailure)
 
 type Pv* = object
-    value*: Value
-    pv*: seq[Move]
+  value*: Value
+  pv*: seq[Move]
 
 iterator iterativeDeepeningSearch*(
     positionHistory: seq[Position],
@@ -48,121 +33,111 @@ iterator iterativeDeepeningSearch*(
     stopTime = Seconds.high,
     multiPv = 1,
     searchMoves = initHashSet[Move](),
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate
+    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
 ): tuple[pvList: seq[Pv], nodes: int64, canStop: bool] {.noSideEffect.} =
-    {.cast(noSideEffect).}:
+  {.cast(noSideEffect).}:
+    doAssert positionHistory.len >= 1,
+      "Need at least the current position in positionHistory"
 
-        doAssert positionHistory.len >= 1, "Need at least the current position in positionHistory"
+    let
+      position = positionHistory[^1]
+      legalMoves = position.legalMoves
 
-        let
-            position = positionHistory[^1]
-            legalMoves = position.legalMoves
+    if legalMoves.len == 0:
+      yield (pvList: @[], nodes: 0'i64, canStop: true)
+    elif (position[king, white] == 0) or (position[king, black] == 0):
+      yield (
+        pvList: @[Pv(value: 0.Value, pv: @[legalMoves[0]])], nodes: 0'i64, canStop: true
+      )
+    else:
+      let
+        numThreads = max(1, numThreads)
+        gameHistory = newGameHistory(positionHistory)
+      var
+        totalNodes = 0'i64
+        searchStates: seq[SearchState]
+        threadpool = createMaster()
 
-        if legalMoves.len == 0:
-            yield (pvList: @[], nodes: 0'i64, canStop: true)
-        elif (position[king, white] == 0) or (position[king, black] == 0):
-            yield (pvList: @[Pv(value: 0.Value, pv: @[legalMoves[0]])], nodes: 0'i64, canStop: true)
-        else:
+      for _ in 0 ..< numThreads:
+        searchStates.add SearchState(
+          externalStopFlag: externalStopFlag,
+          hashTable: addr hashTable,
+          historyTable: newHistoryTable(),
+          gameHistory: gameHistory,
+          maxNodes: maxNodes,
+          stopTime: stopTime,
+          skipMovesAtRoot: @[],
+          evaluation: evaluation,
+        )
 
-            let
-                numThreads = max(1, numThreads)
-                gameHistory = newGameHistory(positionHistory)
-            var
-                totalNodes = 0'i64
-                searchStates: seq[SearchState]
-                threadpool = none(Taskpool)
-                threadStop: Atomic[bool]
+      hashTable.age()
 
-            for _ in 0..<numThreads:
-                searchStates.add SearchState(
-                    externalStopFlag: externalStopFlag,
-                    threadStop: addr threadStop,
-                    hashTable: addr hashTable,
-                    historyTable: newHistoryTable(),
-                    gameHistory: gameHistory,
-                    maxNodes: maxNodes,
-                    stopTime: stopTime,
-                    skipMovesAtRoot: @[],
-                    evaluation: evaluation
-                )                
-                
+      for depth in 1.Ply .. targetDepth:
+        var
+          foundCheckmate = false
+          pvList: seq[Pv]
+          skipMoves: seq[Move]
+          multiPvNodes = 0'i64
 
-            hashTable.age()        
+        for move in position.legalMoves:
+          if move notin searchMoves and searchMoves.len > 0:
+            skipMoves.add move
 
-            for depth in 1.Ply..targetDepth:
+        for multiPvNumber in 1 .. multiPv:
+          for move in skipMoves:
+            doAssert move in position.legalMoves
 
-                var
-                    foundCheckmate = false
-                    pvList: seq[Pv]
-                    skipMoves: seq[Move]
-                    multiPvNodes = 0'i64
+          if skipMoves.len == position.legalMoves.len:
+            break
 
-                for move in position.legalMoves:
-                    if move notin searchMoves and searchMoves.len > 0:
-                        skipMoves.add move
+          for searchState in searchStates.mitems:
+            searchState.skipMovesAtRoot = skipMoves
+            searchState.countedNodes = 0
+            searchState.maxNodes = (maxNodes - totalNodes) div numThreads.int64
 
-                for multiPvNumber in 1..multiPv:
+          if numThreads == 1:
+            launchSearch(position, addr searchStates[0], depth)
+          else:
+            threadpool.awaitAll:
+              discard
+              for i in 0 ..< numThreads:
+                if i > 0:
+                  # We sleep a bit to make Lazy SMP more effective TODO needs testing
+                  sleep(1)
 
-                    for move in skipMoves:
-                        doAssert move in position.legalMoves
-                    
-                    if skipMoves.len == position.legalMoves.len:
-                        break
+                threadpool.spawn launchSearch(position, addr searchStates[i], depth)
 
-                    var currentPvNodes = 0'i64
-                    
-                    threadStop.store(false)
+          for state in searchStates:
+            totalNodes += state.countedNodes
+            multiPvNodes += state.countedNodes
 
-                    for searchState in searchStates.mitems:
-                        searchState.skipMovesAtRoot = skipMoves
-                        searchState.countedNodes = 0
-                        searchState.maxNodes = (maxNodes - totalNodes) div numThreads.int64
+            if state.internalStopFlag:
+              externalStopFlag[].store(true)
 
-                    if numThreads == 1:
-                        currentPvNodes = launchSearch(position, addr searchStates[0], depth)
-                    else:
-                        if not threadpool.isSome:
-                            threadpool = some Taskpool.new(numThreads)
-                        var threadSeq: seq[FlowVar[int64]]
-                        for i in 0..<numThreads:
-                            if i > 0:
-                                sleep(1)
-                            threadSeq.add threadpool.get.spawn launchSearch(position, addr searchStates[i], depth)
-               
-                        for flowVar in threadSeq.mitems:
-                            currentPvNodes += sync flowVar
+          var
+            pv = hashTable.getPv(position)
+            value = hashTable.get(position.zobristKey).value
 
-                    totalNodes += currentPvNodes
-                    multiPvNodes += currentPvNodes
+          if pv.len == 0:
+            debugEcho &"WARNING: Couldn't find PV at root node.\n{position.fen = }"
+            doAssert position.legalMoves.len > 0
+            pv = @[position.legalMoves[0]]
 
-                    var
-                        pv = hashTable.getPv(position)
-                        value = hashTable.get(position.zobristKey).value
-                    
-                    if pv.len == 0:
-                        debugEcho &"WARNING: Couldn't find PV at root node.\n{position.fen = }"
-                        doAssert position.legalMoves.len > 0
-                        pv = @[position.legalMoves[0]]
+          skipMoves.add pv[0]
 
-                    skipMoves.add pv[0]
+          pvList.add Pv(value: value, pv: pv)
 
-                    pvList.add Pv(value: value, pv: pv)
+          foundCheckmate = abs(value) >= valueCheckmate
 
-                    foundCheckmate = abs(value) >= valueCheckmate
-                
-                    if externalStopFlag[].load or totalNodes >= maxNodes:
-                        break
-                
+          if externalStopFlag[].load or totalNodes >= maxNodes:
+            break
 
-                if pvList.len >= min(multiPv, legalMoves.len):
-                    yield (
-                        pvList: pvList,
-                        nodes: multiPvNodes,
-                        canStop: legalMoves.len == 1 or foundCheckmate
-                    )
+        if pvList.len >= min(multiPv, legalMoves.len):
+          yield (
+            pvList: pvList,
+            nodes: multiPvNodes,
+            canStop: legalMoves.len == 1 or foundCheckmate,
+          )
 
-                if externalStopFlag[].load or totalNodes >= maxNodes:
-                    break
-
-            if threadpool.isSome:
-                threadpool.get.shutdown()
+        if externalStopFlag[].load or totalNodes >= maxNodes:
+          break

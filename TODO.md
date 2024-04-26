@@ -5,3 +5,4 @@
 - make data gen like in moon bird
 - change int16 to int where sensible
 - make types distinct e.g. bitboard or value and such
+- update readme with all commands and such

@@ -1,5 +1,7 @@
 import src/version
 
+import std/[strutils, strformat]
+
 #!fmt: off
 
 # Default flags
@@ -9,6 +11,18 @@ import src/version
 --cc:clang
 --threads:on
 --styleCheck:hint
+
+var threadPoolSize = 1024
+
+doAssert defined(linux) or not (defined(halfCPU) or defined(almostFullCPU)), "Switches halfCPU and almostFullCPU are only supported on Linux"
+
+if defined(halfCPU):
+  threadPoolSize = max(1, staticExec("nproc").parseInt div 2)
+elif defined(almostFullCPU):
+  threadPoolSize = max(1, staticExec("nproc").parseInt - 2)
+
+echo fmt"ThreadPoolSize = {threadPoolSize}"
+switch("define", fmt"ThreadPoolSize={threadPoolSize}")
 
 func lto() =
   --passC:"-flto"
@@ -81,6 +95,13 @@ task tests, "Runs tests":
   fullDebuggerInfo()
   setBinaryName("tests")
   setCommand "c", "src/tests.nim"
+
+task genData, "Generates training data by playing games":
+  highPerformance()
+  --passC:"-march=native"
+  --passC:"-mtune=native"
+  setBinaryName("genData")
+  setCommand "c", "src/tuning/generateTrainingData.nim"
 
 task tuneEvalParams, "Optimizes eval parameters":
   highPerformance()

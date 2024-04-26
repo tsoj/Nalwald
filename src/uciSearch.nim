@@ -1,7 +1,7 @@
 import
   types, move, position, positionUtils, timeManagedSearch, hashTable, evaluation, utils
 
-import std/[terminal, atomics, strformat, strutils, algorithm, sugar, random, sets]
+import std/[terminal, strformat, strutils, algorithm, sugar, random]
 
 func printInfoString(
     iteration: int,
@@ -34,7 +34,7 @@ func printInfoString(
     printKeyValue("time", fmt"{int(time * 1000.0):>6}", fgCyan)
     printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-    let nps = int(nodes.float / time.float)
+    let nps = int(nodes.float / max(0.0001, time.float))
     printKeyValue("nps", fmt"{nps:>7}", fgGreen)
 
     printKeyValue(

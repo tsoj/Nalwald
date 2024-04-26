@@ -4,11 +4,12 @@ import
 
 import std/[strutils, strformat, atomics, os, sets]
 
+import malebolgia
+
 const
   defaultHashSizeMB = 4
   maxHashSizeMB = 1_048_576
   defaultNumThreads = 1
-  maxNumThreads = 255 # nim-taskpools currently supports at most 255 threads
 
 type
   SearchThreadInput = tuple[searchInfo: SearchInfo, uciCompatibleOutput: bool]
@@ -34,7 +35,7 @@ proc uci(uciState: var UciState) =
   echo "option name Hash type spin default ",
     defaultHashSizeMB, " min 1 max ", maxHashSizeMB
   echo "option name Threads type spin default ",
-    defaultNumThreads, " min 1 max ", maxNumThreads
+    defaultNumThreads, " min 1 max ", ThreadPoolSize
   echo "option name MultiPV type spin default 1 min 1 max 1000"
   echo "option name UCI_Chess960 type check default false"
   printUciSearchParams()
@@ -57,7 +58,7 @@ proc setOption(uciState: var UciState, params: seq[string]) =
       discard
     of "Threads".toLowerAscii:
       let newNumThreads = params[3].parseInt
-      if newNumThreads < 1 or newNumThreads > maxNumThreads:
+      if newNumThreads < 1 or newNumThreads > ThreadPoolSize:
         echo "Invalid value"
       else:
         uciState.numThreads = newNumThreads
