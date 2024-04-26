@@ -11,6 +11,8 @@ const
   maxNumThreads = 255 # nim-taskpools currently supports at most 255 threads
 
 type
+  SearchThreadInput = tuple[searchInfo: SearchInfo, uciCompatibleOutput: bool]
+  SearchThread = Thread[SearchThreadInput]
   UciState = object
     history: seq[Position]
     hashTable: HashTable
@@ -19,9 +21,7 @@ type
     numThreads: int
     multiPv: int
     uciCompatibleOutput: bool = false
-
-  SearchThreadInput = tuple[searchInfo: SearchInfo, uciCompatibleOutput: bool]
-  SearchThread = Thread[SearchThreadInput]
+    searchThread: ref SearchThread
 
 func currentPosition(uciState: UciState): Position =
   doAssert uciState.history.len >= 1, "Need at least the current position in history"
@@ -77,9 +77,10 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     echo "Unknown parameters"
 
 proc stop(uciState: var UciState) =
-  while uciState.searchRunningFlag.load:
-    uciState.stopFlag.store(true)
-    sleep(1)
+  uciState.stopFlag.store(true)
+  if uciState.searchThread != nil:
+    joinThread uciState.searchThread[]
+  uciState.searchThread = nil
 
 proc moves(history: seq[Position], params: seq[string]): seq[Position] =
   if params.len < 1:
@@ -123,19 +124,12 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
 proc runSearch(searchThreadInput: SearchThreadInput) {.thread, nimcall.} =
   uciSearch(searchThreadInput.searchInfo, searchThreadInput.uciCompatibleOutput)
 
-proc joinSearchThread(searchThread: var SearchThread) =
-  # if searchThread.isSome:
-  #   joinThread searchThread.get
-  #   searchThread = none SearchThread # TODO breaks if SearchInfos is {.requiresInit.}
-  if searchThread.running:
-    joinThread searchThread
-
-proc go(uciState: var UciState, params: seq[string], searchThread: var SearchThread) =
+proc go(uciState: var UciState, params: seq[string]) =
   var searchInfo = SearchInfo(
     positionHistory: uciState.history,
     hashTable: addr uciState.hashTable,
     targetDepth: Ply.high,
-    stop: addr uciState.stopFlag,
+    stopFlag: addr uciState.stopFlag,
     movesToGo: int16.high,
     increment: [white: 0.Seconds, black: 0.Seconds],
     timeLeft: [white: Seconds.high, black: Seconds.high],
@@ -143,6 +137,7 @@ proc go(uciState: var UciState, params: seq[string], searchThread: var SearchThr
     multiPv: uciState.multiPv,
     numThreads: uciState.numThreads,
     maxNodes: int64.high,
+    evaluation: evaluate,
   )
 
   for i in 0 ..< params.len:
@@ -173,17 +168,16 @@ proc go(uciState: var UciState, params: seq[string], searchThread: var SearchThr
       discard
 
   uciState.stop()
-  joinSearchThread searchThread
 
+  doAssert uciState.searchThread == nil
+  uciState.stopFlag.store(false)
+  uciState.searchThread = new SearchThread
   createThread(
-    searchThread,
+    uciState.searchThread[],
     runSearch,
     (searchInfo: searchInfo, uciCompatibleOutput: uciState.uciCompatibleOutput),
   )
 
-  # TODO check if this is still necessary
-  # while not (uciState.searchRunningFlag.load or searchThreadResult.isReady):
-  #   sleep(1)
 
 proc uciNewGame(uciState: var UciState) =
   if uciState.searchRunningFlag.load:
@@ -250,7 +244,6 @@ proc uciLoop*() =
   uciState.searchRunningFlag.store(false)
   uciState.hashTable.setByteSize(sizeInBytes = defaultHashSizeMB * megaByteToByte)
 
-  var searchThread: SearchThread
   while true:
     try:
       let command = readLine(stdin)
@@ -267,7 +260,7 @@ proc uciLoop*() =
       of "position":
         uciState.setPosition(params[1 ..^ 1])
       of "go":
-        uciState.go(params[1 ..^ 1], searchThread)
+        uciState.go(params[1 ..^ 1])
       of "stop":
         uciState.stop()
       of "quit":
@@ -322,4 +315,4 @@ proc uciLoop*() =
     except CatchableError:
       echo "Error: ", getCurrentExceptionMsg()
 
-  joinSearchThread searchThread
+  doAssert uciState.searchThread == nil

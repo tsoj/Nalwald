@@ -33,7 +33,7 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
     result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
 
 type SearchState* = object
-    stop*: ptr Atomic[bool]
+    externalStopFlag*: ptr Atomic[bool]
     threadStop*: ptr Atomic[bool]
     hashTable*: ptr HashTable
     killerTable*: KillerTable
@@ -48,8 +48,8 @@ type SearchState* = object
 func shouldStop(state: SearchState): bool =
     if state.countedNodes >= state.maxNodes or
     ((state.countedNodes mod 2048) == 1107 and secondsSince1970() >= state.stopTime):
-        state.stop[].store(true)
-    state.stop[].load or state.threadStop[].load
+        state.threadStop[].store(true)
+    state.externalStopFlag[].load or state.threadStop[].load
 
 func update(
     state: var SearchState,
@@ -121,7 +121,7 @@ func quiesce(
 
 func materialQuiesce*(position: Position): Value =
     var state = SearchState(
-        stop: nil,
+        externalStopFlag: nil,
         hashTable: nil,
         gameHistory: newGameHistory(@[]),
         evaluation: material

@@ -41,7 +41,7 @@ type Pv* = object
 iterator iterativeDeepeningSearch*(
     positionHistory: seq[Position],
     hashTable: var HashTable,
-    stop: ptr Atomic[bool],
+    externalStopFlag: ptr Atomic[bool],
     targetDepth: Ply = Ply.high,
     numThreads = 1,
     maxNodes = int64.high,
@@ -75,7 +75,7 @@ iterator iterativeDeepeningSearch*(
 
             for _ in 0..<numThreads:
                 searchStates.add SearchState(
-                    stop: stop,
+                    externalStopFlag: externalStopFlag,
                     threadStop: addr threadStop,
                     hashTable: addr hashTable,
                     historyTable: newHistoryTable(),
@@ -150,7 +150,7 @@ iterator iterativeDeepeningSearch*(
 
                     foundCheckmate = abs(value) >= valueCheckmate
                 
-                    if stop[].load or totalNodes >= maxNodes:
+                    if externalStopFlag[].load or totalNodes >= maxNodes:
                         break
                 
 
@@ -161,7 +161,7 @@ iterator iterativeDeepeningSearch*(
                         canStop: legalMoves.len == 1 or foundCheckmate
                     )
 
-                if stop[].load or totalNodes >= maxNodes:
+                if externalStopFlag[].load or totalNodes >= maxNodes:
                     break
 
             if threadpool.isSome:

@@ -27,7 +27,7 @@ func calculateMoveTime(
       result.maxTime = min(timeLeft / 4, moveTime)
 
 type SearchInfo* #[ {.requiresInit.} ]# = object
-  stop*: ptr Atomic[bool] = nil
+  stopFlag*: ptr Atomic[bool] = nil
   positionHistory*: seq[Position]
   hashTable*: ptr HashTable
   targetDepth*: Ply = Ply.high
@@ -46,13 +46,13 @@ iterator iterativeTimeManagedSearch*(
 ): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
   var
     stopFlag: Atomic[bool]
-    stop =
-      if searchInfo.stop == nil:
+    externalStopFlag =
+      if searchInfo.stopFlag == nil:
         addr stopFlag
       else:
-        searchInfo.stop
+        searchInfo.stopFlag
 
-  stop[].store(false)
+  stopFlag.store(false)
 
   doAssert searchInfo.positionHistory.len >= 1,
     "Need at least the current position in positionHistory"
@@ -63,8 +63,8 @@ iterator iterativeTimeManagedSearch*(
       searchInfo.moveTime,
       searchInfo.timeLeft[position.us],
       searchInfo.increment[position.us],
-      searchInfo.movesToGo.int16,
-      position.halfmovesPlayed.int16,
+      searchInfo.movesToGo.clampToType(int16),
+      position.halfmovesPlayed.clampToType(int16),
     )
 
   let start = secondsSince1970()
@@ -77,7 +77,7 @@ iterator iterativeTimeManagedSearch*(
   for (pvList, nodes, canStop) in iterativeDeepeningSearch(
     positionHistory = searchInfo.positionHistory,
     hashTable = searchInfo.hashTable[],
-    stop = stop,
+    externalStopFlag = externalStopFlag,
     targetDepth = searchInfo.targetDepth,
     numThreads = searchInfo.numThreads,
     maxNodes = searchInfo.maxNodes,
@@ -113,8 +113,6 @@ iterator iterativeTimeManagedSearch*(
 
     if searchInfo.timeLeft[position.us] < Seconds.high and canStop:
       break
-
-  stop[].store(true)
 
 proc timeManagedSearch*(searchInfo: SearchInfo): seq[Pv] =
   for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(searchInfo):
