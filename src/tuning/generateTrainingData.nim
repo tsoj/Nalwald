@@ -40,6 +40,10 @@ let
   outputFilename =
     fmt"{outDir}trainingSet_{startDate}_{sampleGameSearchNodes}_{versionOrId()}.bin"
 
+createDir outDir
+doAssert not fileExists outputFilename,
+  "Can't overwrite existing file: " & outputFilename
+
 func isValidSamplePosition(position: Position): bool =
   position.material == position.materialQuiesce and position.legalMoves.len > 0 and
     position.halfmoveClock < 20 # otherwise the position is probably just shuffling
@@ -100,6 +104,8 @@ var
   outFileMutex = Lock()
   openingSearchNodes: Atomic[float]
 initLock outFileMutex
+
+doAssert not outFileStream.isNil, "Filename: " & outputFilename
 
 const expectedNumPliesPerGame = 120
 # This is just a first very rough guess:

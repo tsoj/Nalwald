@@ -100,6 +100,7 @@ task genData, "Generates training data by playing games":
   highPerformance()
   --passC:"-march=native"
   --passC:"-mtune=native"
+  # --define:release
   setBinaryName("genData")
   setCommand "c", "src/tuning/generateTrainingData.nim"
 
@@ -107,7 +108,7 @@ task tuneEvalParams, "Optimizes eval parameters":
   highPerformance()
   --passC:"-march=native"
   --passC:"-mtune=native"
-  --define:release
+  # --define:release
   setBinaryName("tuneEvalParams")
   setCommand "c", "src/tuning/optimization.nim"
 
