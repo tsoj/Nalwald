@@ -117,4 +117,9 @@ task runWeatherFactory, "Optimizes search parameters":
   setBinaryName("runWeatherFactory")
   setCommand "c", "src/tuning/runWeatherFactory.nim"
 
+task dataFromPGNs, "Converts a number of PGN files into training data":
+  highPerformance()
+  setBinaryName("dataFromPGNs")
+  setCommand "c", "src/tuning/trainingDataFromPGNs.nim"
+
 #!fmt: on

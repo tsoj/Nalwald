@@ -51,7 +51,8 @@ generateTrainingData
 trainingSet*.bin*
 showMeSomePositions
 weather-factory
-pgn-extract
+res/pgn-extract
+src/tuning/dataFromPGNsWorkDir
 
 bin
 res/data
