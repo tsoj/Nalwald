@@ -21,7 +21,6 @@ if defined(halfCPU):
 elif defined(almostFullCPU):
   threadPoolSize = max(1, staticExec("nproc").parseInt - 2)
 
-echo fmt"ThreadPoolSize = {threadPoolSize}"
 switch("define", fmt"ThreadPoolSize={threadPoolSize}")
 
 func lto() =
@@ -121,7 +120,7 @@ task dataFromPGNs, "Converts a number of PGN files into training data":
   highPerformance()
   setBinaryName("dataFromPGNs")
   setCommand "c", "src/tuning/trainingDataFromPGNs.nim"
-  
+
 task sprt, "Runs an SPRT test of the current branch against the main branch":
   --define:release
   setBinaryName("sprt")
