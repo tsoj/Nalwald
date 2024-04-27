@@ -5,6 +5,9 @@
 - make data gen like in moon bird
 - change int16 to int where sensible
 - make types distinct e.g. bitboard or value and such
+- clean up eval
+    - try out 4x2 + 2x4 tuples
+    - etc
 - update readme with all commands and such
 - check if taskpools / std/threadpool is replaced with threads or malebolgia everywhere
 - manually move releases from gitlab to github

@@ -44,6 +44,23 @@ type
 
   ZobristKey* = uint64
 
+template additive(typ: typedesc) =
+  proc `+`*(x, y: typ): typ {.borrow.}
+  proc `-`*(x, y: typ): typ {.borrow.}
+  proc `+`*(x: typ): typ {.borrow.}
+  proc `-`*(x: typ): typ {.borrow.}
+
+template multiplicative(typ, base: typedesc) =
+  proc `*`*(x: typ, y: base): typ {.borrow.}
+  proc `*`*(x: base, y: typ): typ {.borrow.}
+  proc `div`*(x: typ, y: base): typ {.borrow.}
+  proc `mod`*(x: typ, y: base): typ {.borrow.}
+
+template comparable(typ: typedesc) =
+  proc `<`*(x, y: typ): bool {.borrow.}
+  proc `<=`*(x, y: typ): bool {.borrow.}
+  proc `==`*(x, y: typ): bool {.borrow.}
+
 template isLeftEdge*(square: Square): bool =
   square.int8 mod 8 == 0
 
