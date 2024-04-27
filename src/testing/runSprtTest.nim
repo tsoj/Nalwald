@@ -64,8 +64,8 @@ let cuteChessArguments =
 -pgnout {pgnOutFile} min \
 -openings file={openingBook} format=epd order=random -repeat 2 \
 -each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./ \
--engine cmd=./{nalwaldBinary(currentBranch)} \
--engine cmd=./{nalwaldBinary(mainBranch)}
+-engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
+-engine name={mainBranch} cmd=./{nalwaldBinary(mainBranch)}
 """
 
 doAssert execCmd(cuteChessBinary & " " & cuteChessArguments) == 0
