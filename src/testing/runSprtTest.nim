@@ -8,7 +8,8 @@ const
   cuteChessBinary = "/usr/games/cutechess-cli"
   nalwaldBinaryFile = "bin/Nalwald-native"
   openingBook = "res/openings/Pohl.epd"
-  pgnOutFile = "res/pgns/sprtGames.pgn"
+  pgnOutDir = "res/pgns/"
+  pgnOutFile = pgnOutDir & "sprtGames.pgn"
   timeControlSeconds = 10.0
   maxNumGames = 100_000
   hashSizeMB = 6
@@ -54,6 +55,8 @@ try:
     copyFileWithPermissions nalwaldBinaryFile, nalwaldBinary(branch)
 finally:
   doAssert execCmd("git switch " & currentBranch) == 0
+
+createDir pgnOutDir
 
 let cuteChessArguments =
   fmt""" \
