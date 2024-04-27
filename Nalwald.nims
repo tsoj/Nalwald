@@ -121,5 +121,10 @@ task dataFromPGNs, "Converts a number of PGN files into training data":
   highPerformance()
   setBinaryName("dataFromPGNs")
   setCommand "c", "src/tuning/trainingDataFromPGNs.nim"
+  
+task sprt, "Runs an SPRT test of the current branch against the main branch":
+  --define:release
+  setBinaryName("sprt")
+  setCommand "c", "src/testing/runSprtTest.nim"
 
 #!fmt: on
