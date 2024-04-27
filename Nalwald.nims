@@ -112,4 +112,9 @@ task tuneEvalParams, "Optimizes eval parameters":
   setBinaryName("tuneEvalParams")
   setCommand "c", "src/tuning/optimization.nim"
 
+task runWeatherFactory, "Optimizes search parameters":
+  --define:release
+  setBinaryName("runWeatherFactory")
+  setCommand "c", "src/tuning/runWeatherFactory.nim"
+
 #!fmt: on
