@@ -3,7 +3,7 @@ import ../positionUtils
 import std/[osproc, os, strutils, strformat, json]
 
 const
-  mainBranch = "main"
+  mainBranch = "master"
   workDir = "src/testing/workdir/"
   cuteChessBinary = "/usr/games/cutechess-cli"
   nalwaldBinaryFile = "bin/Nalwad-native"
