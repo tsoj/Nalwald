@@ -1,6 +1,4 @@
-import ../positionUtils
-
-import std/[osproc, os, strutils, strformat, json]
+import std/[osproc, os, strutils, strformat]
 
 const
   mainBranch = "master"
@@ -66,6 +64,7 @@ let cuteChessArguments =
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
 -openings file={openingBook} format=epd order=random -repeat 2 \
+-sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./ \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
 -engine name={mainBranch} cmd=./{nalwaldBinary(mainBranch)}
@@ -73,4 +72,4 @@ let cuteChessArguments =
 
 doAssert execCmd(cuteChessBinary & " " & cuteChessArguments) == 0
 
-echo "Finished SPRT test"
+echo "\nFinished SPRT test\n"

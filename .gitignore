@@ -63,5 +63,6 @@ perf.data*
 src/testing/workdir
 src/tuning/weather-factory
 res/trainingSets
+res/pgns
 
 # TODO clean this file up
