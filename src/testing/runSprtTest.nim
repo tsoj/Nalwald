@@ -6,7 +6,7 @@ const
   mainBranch = "master"
   workDir = "src/testing/workdir/"
   cuteChessBinary = "/usr/games/cutechess-cli"
-  nalwaldBinaryFile = "bin/Nalwad-native"
+  nalwaldBinaryFile = "bin/Nalwald-native"
   openingBook = "res/openings/Pohl.epd"
   pgnOutFile = "res/pgns/sprtGames.pgn"
   timeControlSeconds = 10.0
