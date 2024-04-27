@@ -4,11 +4,12 @@ import
 
 import malebolgia
 
-import std/[os, atomics, strformat, sets]
+import std/[atomics, strformat, sets]
 
 func launchSearch(position: Position, state: ptr SearchState, depth: Ply) =
   try:
     discard position.search(state[], depth = depth)
+    state[].threadStop[].store(true)
   except CatchableError:
     {.cast(noSideEffect).}:
       debugEcho "Caught exception: ", getCurrentExceptionMsg()
@@ -57,10 +58,12 @@ iterator iterativeDeepeningSearch*(
         totalNodes = 0'i64
         searchStates: seq[SearchState]
         threadpool = createMaster()
+        threadStop: Atomic[bool]
 
       for _ in 0 ..< numThreads:
         searchStates.add SearchState(
           externalStopFlag: externalStopFlag,
+          threadStop: addr threadStop,
           hashTable: addr hashTable,
           historyTable: newHistoryTable(),
           gameHistory: gameHistory,
@@ -90,6 +93,8 @@ iterator iterativeDeepeningSearch*(
           if skipMoves.len == position.legalMoves.len:
             break
 
+          threadStop.store(false)
+
           for searchState in searchStates.mitems:
             searchState.skipMovesAtRoot = skipMoves
             searchState.countedNodes = 0
@@ -99,20 +104,12 @@ iterator iterativeDeepeningSearch*(
             launchSearch(position, addr searchStates[0], depth)
           else:
             threadpool.awaitAll:
-              discard
               for i in 0 ..< numThreads:
-                if i > 0:
-                  # We sleep a bit to make Lazy SMP more effective TODO needs testing
-                  sleep(1)
-
                 threadpool.spawn launchSearch(position, addr searchStates[i], depth)
 
           for state in searchStates:
             totalNodes += state.countedNodes
             multiPvNodes += state.countedNodes
-
-            if state.internalStopFlag:
-              externalStopFlag[].store(true)
 
           var
             pv = hashTable.getPv(position)

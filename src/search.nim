@@ -34,7 +34,7 @@ func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
 
 type SearchState* = object
     externalStopFlag*: ptr Atomic[bool]
-    internalStopFlag*: bool = false
+    threadStop*: ptr Atomic[bool]
     hashTable*: ptr HashTable
     killerTable*: KillerTable
     historyTable*: HistoryTable
@@ -45,11 +45,11 @@ type SearchState* = object
     skipMovesAtRoot*: seq[Move]
     evaluation*: proc(position: Position): Value {.noSideEffect.}
 
-func shouldStop(state: var SearchState): bool =
+func shouldStop(state: SearchState): bool =
     if state.countedNodes >= state.maxNodes or
     ((state.countedNodes mod 2048) == 1107 and secondsSince1970() >= state.stopTime):
-        state.internalStopFlag = true
-    state.externalStopFlag[].load or state.internalStopFlag
+        state.externalStopFlag[].store(true)
+    state.externalStopFlag[].load or state.threadStop[].load
 
 func update(
     state: var SearchState,
@@ -59,7 +59,7 @@ func update(
     nodeType: NodeType,
     bestValue: Value
 ) =
-    if bestMove != noMove and bestValue.abs < valueInfinity and not state.internalStopFlag:
+    if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
         state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
         if nodeType != allNode:
             state.historyTable.update(bestMove, previous, position.us, depth, raisedAlpha = true)
@@ -304,8 +304,6 @@ func search*(
     state: var SearchState,
     depth: Ply
 ): Value =
-
-    state.internalStopFlag = false
 
     let hashResult = state.hashTable[].get(position.zobristKey)
 

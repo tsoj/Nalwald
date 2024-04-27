@@ -7,3 +7,4 @@
 - make types distinct e.g. bitboard or value and such
 - update readme with all commands and such
 - check if taskpools / std/threadpool is replaced with threads or malebolgia everywhere
+- manually move releases from gitlab to github

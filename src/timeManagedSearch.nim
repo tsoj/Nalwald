@@ -1,6 +1,6 @@
 import types, move, position, hashTable, rootSearch, evaluation, utils
 
-import std/[atomics, sets]
+import std/[atomics, sets, sequtils]
 
 export Pv
 
@@ -44,6 +44,8 @@ type SearchInfo* #[ {.requiresInit.} ]# = object
 iterator iterativeTimeManagedSearch*(
     searchInfo: SearchInfo
 ): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
+  const numConsideredBranchingFactors = 4
+
   var
     stopFlag: Atomic[bool]
     externalStopFlag =
@@ -70,7 +72,7 @@ iterator iterativeTimeManagedSearch*(
   let start = secondsSince1970()
   var
     startLastIteration = secondsSince1970()
-    branchingFactors = newSeq[float](searchInfo.targetDepth.int)
+    branchingFactors = repeat(2.0, numConsideredBranchingFactors)
     lastNumNodes = int64.high
 
   var iteration = -1
@@ -96,19 +98,17 @@ iterator iterativeTimeManagedSearch*(
 
     doAssert calculatedMoveTime.approxTime >= 0.Seconds
 
-    branchingFactors[iteration] = nodes.float / lastNumNodes.float
-    lastNumNodes = if nodes <= 100_000: int64.high else: nodes
-    var averageBranchingFactor = branchingFactors[iteration]
-    if iteration >= 4:
-      averageBranchingFactor =
-        (
-          branchingFactors[iteration] + branchingFactors[iteration - 1] +
-          branchingFactors[iteration - 2] + branchingFactors[iteration - 3]
-        ) / 4.0
+    branchingFactors.add(nodes.float / lastNumNodes.float)
+    lastNumNodes = if nodes <= 100_000: int.high else: nodes
+
+    let averageBranchingFactor = block:
+      var average = 0.0
+      for f in branchingFactors[^numConsideredBranchingFactors ..^ 1]:
+        average += f
+      average / numConsideredBranchingFactors.float
 
     let estimatedTimeNextIteration = iterationPassedTime * averageBranchingFactor
-    if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime and
-        iteration >= 4:
+    if estimatedTimeNextIteration + totalPassedTime > calculatedMoveTime.approxTime:
       break
 
     if searchInfo.timeLeft[position.us] < Seconds.high and canStop:
