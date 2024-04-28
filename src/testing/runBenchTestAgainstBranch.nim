@@ -115,7 +115,7 @@ proc benchTestBinaryFile(branch: string): string =
 
 try:
   for branch in [otherBranch, currentBranch]:
-    if execCmd("git switch " & branch) != 0:
+    if execCmd("git checkout " & branch) != 0:
       raise newException(CatchableError, "Failed to switch to branch " & branch)
     if execCmd(
       fmt"nim c -d:release -f -o:{benchTestBinaryFile(branch)} src/testing/benchTest.nim"
