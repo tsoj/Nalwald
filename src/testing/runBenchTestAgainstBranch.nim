@@ -138,7 +138,7 @@ for fen in fens:
     let nodesOther = execProcess(benchTestBinaryFile(otherBranch) & fmt" {depth} {fen}")
 
     if nodesCurrent != nodesOther:
-      echo &"\nNodes don't match for \"{fen}\". {currentBranch}: {nodesCurrent}, {otherBranch}: {nodesOther}"
+      echo &"\nNodes don't match for \"{fen}\".\n{currentBranch}: {nodesCurrent}\n{otherBranch}: {nodesOther}"
       quit(QuitFailure)
 
     if secondsSince1970() - start >= approxTimePerPosition:
