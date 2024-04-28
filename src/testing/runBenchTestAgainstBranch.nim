@@ -9,7 +9,7 @@ const fens = [
   "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w qk - 0 1",
   "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w QK - 1 8",
   "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10",
-  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk -",
+  "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w QKqk - 0 1",
   "4k3/8/8/8/8/8/8/4K2R w K - 0 1",
   # Chess960 positions
   "n1nqkr1b/p1pp3p/4p1r1/1p1b1p2/P4Pp1/RN1NP3/1PPPQ1PP/1R2K1BB w Qk - 0 9",
