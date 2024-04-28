@@ -34,7 +34,7 @@ iterator iterativeDeepeningSearch*(
     stopTime = Seconds.high,
     multiPv = 1,
     searchMoves = initHashSet[Move](),
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    evaluation: proc(position: Position): Value {.noSideEffect.},
 ): tuple[pvList: seq[Pv], nodes: int64, canStop: bool] {.noSideEffect.} =
   {.cast(noSideEffect).}:
     doAssert positionHistory.len >= 1,
