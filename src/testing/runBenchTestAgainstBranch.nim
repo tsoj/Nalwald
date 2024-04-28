@@ -134,8 +134,9 @@ for fen in fens:
     stdout.write "."
     stdout.flushFile
     let nodesCurrent =
-      execProcess(benchTestBinaryFile(currentBranch) & fmt" {depth} {fen}")
-    let nodesOther = execProcess(benchTestBinaryFile(otherBranch) & fmt" {depth} {fen}")
+      execProcess(benchTestBinaryFile(currentBranch) & fmt" {depth} {fen}").parseInt
+    let nodesOther =
+      execProcess(benchTestBinaryFile(otherBranch) & fmt" {depth} {fen}").parseInt
 
     if nodesCurrent != nodesOther:
       echo &"\nNodes don't match for \"{fen}\".\n{currentBranch}: {nodesCurrent}\n{otherBranch}: {nodesOther}"
