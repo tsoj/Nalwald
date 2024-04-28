@@ -74,7 +74,7 @@ const fens = [
 const
   mainBranch = "master"
   workDir = "src/testing/benchWorkdir/"
-  approxTimePerPosition = 5.Seconds
+  approxTimePerPosition = 3.Seconds
 
 let otherBranch =
   if commandLineParams().len >= 1:
