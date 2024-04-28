@@ -1,15 +1,15 @@
 import
-    position,
-    types,
-    perft,
-    searchUtils,
-    hashTable,
-    moveIterator,
-    positionUtils,
-    evaluation,
-    utils,
-    timeManagedSearch,
-    see
+    ../position,
+    ../types,
+    ../perft,
+    ../searchUtils,
+    ../hashTable,
+    ../moveIterator,
+    ../positionUtils,
+    ../evaluation,
+    ../utils,
+    ../timeManagedSearch,
+    ../see
 
 import std/[
     random,

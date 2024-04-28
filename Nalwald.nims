@@ -93,7 +93,7 @@ task tests, "Runs tests":
   --define:release
   fullDebuggerInfo()
   setBinaryName("tests")
-  setCommand "c", "src/tests.nim"
+  setCommand "c", "src/testing/tests.nim"
 
 task genData, "Generates training data by playing games":
   highPerformance()
@@ -125,5 +125,10 @@ task sprt, "Runs an SPRT test of the current branch against the main branch":
   --define:release
   setBinaryName("sprt")
   setCommand "c", "src/testing/runSprtTest.nim"
+
+task bench, "Runs a bench test of the current branch against a selected branch or commit":
+  --define:release
+  setBinaryName("bench")
+  setCommand "c", "src/testing/runBenchTestAgainstBranch.nim"
 
 #!fmt: on

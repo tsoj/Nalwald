@@ -92,6 +92,16 @@ proc getCpuInfo*(): string =
     ).output
     return cpuName.strip
 
+proc askYesNo*(question: string): bool =
+  while true:
+    stdout.write question, " [y/n] "
+    stdout.flushFile
+    let answer = readLine(stdin).strip.toLowerAscii
+    if answer == "y":
+      return true
+    if answer == "n":
+      return false
+
 type Seconds* = distinct float
 
 func `$`*(a: Seconds): string =

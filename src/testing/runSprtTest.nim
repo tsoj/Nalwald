@@ -1,8 +1,10 @@
+import ../utils
+
 import std/[osproc, os, strutils, strformat]
 
 const
   mainBranch = "master"
-  workDir = "src/testing/workdir/"
+  workDir = "src/testing/sprtWorkdir/"
   cuteChessBinary = "/usr/games/cutechess-cli"
   nalwaldBinaryFile = "bin/Nalwald-native"
   openingBook = "res/openings/Pohl.epd"
@@ -27,14 +29,8 @@ let
 doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 
 if currentBranch == mainBranch:
-  while true:
-    stdout.write "You are about to test the main branch against itself. Are you sure you want to do this? [y/n] "
-    stdout.flushFile
-    let answer = readLine(stdin).strip.toLowerAscii
-    if answer == "y":
-      break
-    if answer == "n":
-      quit(QuitFailure)
+  if not askYesNo(question = "You are about to test the main branch against itself. Are you sure you want to do this?"):
+    quit(QuitFailure)
 
 discard existsOrCreateDir workDir
 

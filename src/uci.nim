@@ -1,6 +1,18 @@
 import
-  types, move, position, positionUtils, hashTable, uciSearch, uciInfos, perft, tests,
-  evaluation, version, utils, searchParams, timeManagedSearch
+  types,
+  move,
+  position,
+  positionUtils,
+  hashTable,
+  uciSearch,
+  uciInfos,
+  perft,
+  evaluation,
+  version,
+  utils,
+  searchParams,
+  timeManagedSearch,
+  testing/tests
 
 import std/[strutils, strformat, atomics, os, sets]
 
@@ -178,7 +190,6 @@ proc go(uciState: var UciState, params: seq[string]) =
     runSearch,
     (searchInfo: searchInfo, uciCompatibleOutput: uciState.uciCompatibleOutput),
   )
-
 
 proc uciNewGame(uciState: var UciState) =
   if uciState.searchRunningFlag.load:

@@ -16,3 +16,5 @@
     stop
     go
     print
+- rename EvalParametersTemplate and such
+- SearchInfo should be requiresInit
