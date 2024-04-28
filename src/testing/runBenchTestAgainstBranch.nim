@@ -74,8 +74,7 @@ const fens = [
 const
   mainBranch = "master"
   workDir = "src/testing/benchWorkdir/"
-
-  approxTimePerPosition = 1.Seconds
+  approxTimePerPosition = 5.Seconds
 
 let otherBranch =
   if commandLineParams().len >= 1:
@@ -146,4 +145,4 @@ for fen in fens:
       break
   echo ""
 
-echo "\nFinished SPRT test\n"
+echo "\nFinished bench test\n"
