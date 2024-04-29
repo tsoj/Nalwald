@@ -12,7 +12,8 @@ export move, position
 import std/[
     strutils,
     options,
-    bitops
+    bitops,
+    strformat
 ]
 
 func fen*(position: Position): string =
@@ -38,7 +39,7 @@ func fen*(position: Position): string =
     result &= (if position.us == white: " w " else: " b ")
 
     for color in [white, black]:
-        for castlingSide in queenside..kingside:
+        for castlingSide in [kingside, queenside]:
             let rookSource = position.rookSource[color][castlingSide]
             if rookSource != noSquare and (rookSource.toBitboard and homeRank[color]) != 0:
                 result &= ($rookSource)[0]
@@ -219,11 +220,13 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
             let rookSourceBit = files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]
         
             if rookSourceBit.countSetBits != 1:
-                raise newException(ValueError, "FEN castling ambiguous or erroneous: " & activeColor)
+                raise newException(ValueError, "FEN castling ambiguous or erroneous")
             (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
 
         let castlingSide = if rookSource < kingSquare: queenside else: kingside
         result.rookSource[us][castlingSide] = rookSource
+        if (rookSource.toBitboard and result[us, rook]) == 0:
+            raise newException(ValueError, fmt"FEN castling erroneous. Rook for {us} for {castlingSide} doesn't exist")
 
     # en passant square
     result.enPassantTarget = 0

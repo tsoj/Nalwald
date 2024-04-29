@@ -7,18 +7,8 @@ import malebolgia
 import std/[atomics, strformat, sets]
 
 func launchSearch(position: Position, state: ptr SearchState, depth: Ply) =
-  try:
-    discard position.search(state[], depth = depth)
-    state[].threadStop[].store(true)
-  except CatchableError:
-    {.cast(noSideEffect).}:
-      debugEcho "Caught exception: ", getCurrentExceptionMsg()
-      debugEcho getCurrentException().getStackTrace()
-  except Exception:
-    {.cast(noSideEffect).}:
-      debugEcho "Caught exception: ", getCurrentExceptionMsg()
-      debugEcho getCurrentException().getStackTrace()
-      quit(QuitFailure)
+  discard position.search(state[], depth = depth)
+  state[].threadStop[].store(true)
 
 type Pv* = object
   value*: Value

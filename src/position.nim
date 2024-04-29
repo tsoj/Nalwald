@@ -269,7 +269,7 @@ func doMove*(position: Position, move: Move): Position =
     result.zobristKey ^= zobristSideToMoveBitmasks[black]
 
 
-    assert result.zobristKey == result.calculateZobristKey
+    # assert result.zobristKey == result.calculateZobristKey
 
 func doNullMove*(position: Position): Position =
     result = position
@@ -341,8 +341,6 @@ func mirror(
         for castlingSide in queenside..kingside:
             result.rookSource[color][castlingSide] = result.rookSource[color][castlingSide].toBitboard.mirrorFn.toSquare
     
-    when not skipZobristKey:
-        position.zobristKey = position.calculateZobristKey
 
     position
 
@@ -354,6 +352,9 @@ func mirrorVertically*(position: Position, skipZobristKey: static bool = false, 
         result.us = result.enemy
         swap result.colors[white], result.colors[black]
 
+    when not skipZobristKey:
+        result.zobristKey = result.calculateZobristKey
+
 
 func mirrorHorizontally*(position: Position, skipZobristKey: static bool = false): Position =
     result = position.mirror(skipZobristKey, mirrorHorizontally)
@@ -361,11 +362,14 @@ func mirrorHorizontally*(position: Position, skipZobristKey: static bool = false
     for color in white..black:
         swap result.rookSource[color][kingside], result.rookSource[color][queenside]
 
+    when not skipZobristKey:
+        result.zobristKey = result.calculateZobristKey
+
 func rotate*(position: Position, skipZobristKey: static bool = false, swapColors: static bool = true): Position =
     result = position.mirrorHorizontally(skipZobristKey = true).mirrorVertically(skipZobristKey = true, swapColors = swapColors)
     
     when not skipZobristKey:
-        result.zobristKey = position.calculateZobristKey
+        result.zobristKey = result.calculateZobristKey
 
 proc writePosition*(stream: Stream, position: Position) =
     for pieceBitboard in position.pieces:

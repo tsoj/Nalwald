@@ -1,11 +1,4 @@
-import
-  ../position,
-  ../positionUtils,
-  ../types,
-  ../timeManagedSearch,
-  ../hashTable,
-  ../move,
-  ../evaluation
+import position, positionUtils, types, timeManagedSearch, hashTable, move, evaluation
 
 import std/[tables]
 
@@ -143,7 +136,7 @@ proc playGame*(game: var Game, suppressOutput = true): float =
       whiteResignPlies += 1
     else:
       whiteResignPlies = 0
-
+    
     echoSuppressed "Move: " & $move
     echoSuppressed game.positionHistory[^1]
     echoSuppressed "Value: " & $value

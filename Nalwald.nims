@@ -89,12 +89,6 @@ task modern, "BMI2 and POPCNT compile":
   setBinaryName(projectName() & "-modern")
   setCommand "c", projectNimFile
 
-task tests, "Runs tests":
-  --define:release
-  fullDebuggerInfo()
-  setBinaryName("tests")
-  setCommand "c", "src/testing/tests.nim"
-
 task genData, "Generates training data by playing games":
   highPerformance()
   --passC:"-march=native"
@@ -130,5 +124,19 @@ task bench, "Runs a bench test of the current branch against a selected branch o
   --define:release
   setBinaryName("bench")
   setCommand "c", "src/testing/runBenchTestAgainstBranch.nim"
+
+task tests, "Runs tests in release mode":
+  --define:release
+  switch("define", "maxNumPerftNodes=1_000_000")
+  setBinaryName("tests")
+  setCommand "c", "src/testing/tests.nim"
+
+task testsDanger, "Runs tests in danger mode":
+  highPerformance()
+  --passC:"-march=native"
+  --passC:"-mtune=native"
+  switch("define", "maxNumPerftNodes=10_000_000")  
+  setBinaryName("testsDanger")
+  setCommand "c", "src/testing/tests.nim"
 
 #!fmt: on

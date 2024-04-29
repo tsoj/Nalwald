@@ -1,4 +1,4 @@
-import ../utils, ../types, ../exampleFens
+import ../utils, ../types, exampleFens
 
 import std/[osproc, os, strutils, strformat]
 

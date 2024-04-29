@@ -6,7 +6,7 @@ import
   ../positionUtils,
   ../version,
   winningProbability,
-  game
+  ../game
 
 import malebolgia
 

@@ -8,13 +8,30 @@ proc printSeperatorLine() =
 proc help*(params: openArray[string]) =
   if params.len == 0:
     printSeperatorLine()
+    #!fmt: off
     printMarkdownSubset(
-      "Possible commands\n", "- *uci*\n", "- *setoption*\n", "- *isready*\n",
-      "- *position*\n", "- *go*\n", "- *stop*\n", "- *quit*\n", "- *ucinewgame*\n",
-      "- *moves*\n", "- *print*\n", "- *fen*\n", "- *perft*\n", "- *test*\n",
-      "- *eval*\n", "- *piecevalues*\n", "- *about*\n", "- *help*\n",
+      "Possible commands\n",
+      "- *uci*\n",
+      "- *setoption*\n",
+      "- *isready*\n",
+      "- *position*\n",
+      "- *go*\n",
+      "- *stop*\n",
+      "- *quit*\n",
+      "- *ucinewgame*\n",
+      "- *moves*\n",
+      "- *print*\n",
+      "- *fen*\n",
+      "- *perft*\n",
+      "- *test*\n",
+      "- *speedtest*\n",
+      "- *eval*\n",
+      "- *piecevalues*\n",
+      "- *about*\n",
+      "- *help*\n",
       "Use `help <command>` to get info about a specific command",
     )
+    #!fmt: on
     printSeperatorLine()
   else:
     printSeperatorLine()
@@ -92,15 +109,9 @@ proc help*(params: openArray[string]) =
       printMarkdownSubset "**perft <x>**"
       printMarkdownSubset "Calculates the perft of the current position to depth `<x>`."
     of "test":
-      printMarkdownSubset "**test [perft|see|speed|<x>]...**"
-      printMarkdownSubset(
-        "Runs various tests.\n",
-        "If `perft`, `see` or `speed` are specified, only these tests are run. Otherwise all test are run.\n",
-        "If a file `./perft_test.txt` exists then the positions from that file will be included for some of these tests.\n",
-        "If `<x>` is given, perft tests will only test up to `<x>` nodes per position.\n",
-        "Example:```\n", "test see perft 10000```\n",
-        "(Runs see and perft tests up to 10000 nodes per position.)",
-      )
+      echo "Runs a number of tests (can take some time)."
+    of "speedtest":
+      echo "Runs a speed tests to determine the NPS metric for move generation."
     of "eval":
       echo "Prints the static evaluation value for the current internal position."
     of "piecevalues":

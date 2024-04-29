@@ -221,8 +221,16 @@ func search(
 
         if height == 0.Ply and move in state.skipMovesAtRoot:
             continue
-
+        
         let newPosition = position.doMove(move)
+        if newPosition.zobristKey != newPosition.calculateZobristKey:
+            debugEcho position
+            debugEcho move
+            debugEcho newPosition
+            debugEcho position.debugString
+            debugEcho newPosition.debugString
+            doAssert false
+
         if newPosition.inCheck(us):
             continue
         moveCounter += 1
