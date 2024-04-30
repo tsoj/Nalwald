@@ -23,30 +23,18 @@ func absoluteMaterial*(position: Position): Value =
   if position.us == black:
     result = -result
 
-func `+=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
-  for phase in Phase:
-    a[phase] += b[phase]
-
-func `-=`[T: Value or float32](a: var array[Phase, T], b: array[Phase, T]) =
-  for phase in Phase:
-    a[phase] -= b[phase]
-
-func `*=`[T: Value or float32](a: var array[Phase, T], b: T) =
-  for phase in Phase:
-    a[phase] *= b
-
 func colorConditionalMirrorVertically(x: Square or Bitboard, color: Color): auto =
   if color == black: x.mirrorVertically else: x
 
 type
-  Gradient* = object
+  Gradient* {.requiresInit.} = object
     gradient*: ptr EvalParametersFloat
     g*: float32
     gamePhaseFactor*: float32
 
-  EvalValue[ValueType: float32 or Value] = object
+  EvalValue[ValueType: float32 or Value] {.requiresInit.} = object
     params: ptr EvalParametersTemplate[ValueType]
-    absoluteValue: ptr array[Phase, ValueType]
+    absoluteValue: ptr array[Phase, Value]
 
   EvalState = Gradient or EvalValue
 
@@ -75,7 +63,7 @@ template addValue(evalState: EvalState, goodFor: Color, parameter: untyped) =
     static:
       doAssert evalState is EvalValue
     for phase {.inject.} in Phase:
-      var value = getParameter(evalState.params[][phase.int], parameter)
+      var value = getParameter(evalState.params[][phase.int], parameter).Value
       if goodFor == black:
         value = -value
       evalState.absoluteValue[phase] += value
@@ -218,7 +206,7 @@ func pieceComboBonusWhitePerspective(evalState: EvalState, position: Position) =
       var dummy: array[Phase, Value]
       dummy.addValue(params, black, pieceComboBonus[flippedIndex])
 
-func absoluteEvaluate*(evalState: EvalState, position: Position) {.inline.} =
+func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   if position.halfmoveClock >= 100:
     return
 
@@ -233,11 +221,11 @@ func absoluteEvaluate*(evalState: EvalState, position: Position) {.inline.} =
   evalState.pieceComboBonusWhitePerspective(position)
 
 func absoluteEvaluate*[ValueType: float32 or Value](
-    params: EvalParametersTemplate[ValueType], position: Position
-): ValueType {.inline.} =
-  var value: array[Phase, ValueType]
+    position: Position, params: EvalParametersTemplate[ValueType]
+): Value {.inline.} =
+  var value: array[Phase, Value]
   let evalValue = EvalValue[ValueType](params: addr params, absoluteValue: addr value)
-  evalValue.absoluteEvaluate(position)
+  position.absoluteEvaluate(evalValue)
 
   result = position.gamePhase.interpolate(
     forOpening = value[opening], forEndgame = value[endgame]
@@ -246,7 +234,7 @@ func absoluteEvaluate*[ValueType: float32 or Value](
   doAssert result.abs < valueCheckmate
 
 func absoluteEvaluate*(position: Position): Value =
-  defaultEvalParameters.absoluteEvaluate(position)
+  position.absoluteEvaluate(defaultEvalParameters)
 
 func perspectiveEvaluate*(position: Position): Value =
   result = position.absoluteEvaluate

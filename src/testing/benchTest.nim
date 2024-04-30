@@ -28,7 +28,7 @@ for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(
     hashTable: addr ht,
     moveTime: hardTimeLimit,
     targetDepth: depth,
-    evaluation: evaluate,
+    evaluation: perspectiveEvaluate,
   )
 ):
   totalNodes += nodes
