@@ -1,4 +1,4 @@
-- make types distinct e.g. bitboard or value and such
+- clean up what should be in position and positionUtils
 - clean up eval
     - try out 4x2 + 2x4 tuples
     - etc
