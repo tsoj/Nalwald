@@ -147,6 +147,9 @@ static:
     100.Ply.checkmateValue.plysUntilCheckmate == 100.Ply and
     100.Ply.checkmateValue < 99.Ply.checkmateValue
 
+func `^=`*(a: var ZobristKey, b: ZobristKey) =
+  a = a xor b
+
 const
   exact* = pvNode
   upperBound* = allNode

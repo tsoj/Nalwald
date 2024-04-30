@@ -177,9 +177,9 @@ func pawnMaskIndex*(
         a2.toBitboard, b2.toBitboard, c2.toBitboard,
         a1.toBitboard, b1.toBitboard, c1.toBitboard
     ]:
-        if (whitePawns and bit) != 0:
+        if not empty(whitePawns and bit):
             result += counter * 2
-        elif (blackPawns and bit) != 0:
+        elif not empty(blackPawns and bit):
             result += counter * 1
         counter *= 3
 

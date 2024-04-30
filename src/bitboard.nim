@@ -10,16 +10,18 @@ func `==`*(a, b: Bitboard): bool {.borrow.}
 func `and`*(a, b: Bitboard): Bitboard {.borrow.}
 func `or`*(a, b: Bitboard): Bitboard {.borrow.}
 func `xor`*(a, b: Bitboard): Bitboard {.borrow.}
+func `not`*(a: Bitboard): Bitboard {.borrow.}
+func `*`*(a, b: Bitboard): Bitboard {.borrow.}
+func `shl`*(a: Bitboard, b: int): Bitboard {.borrow.}
+func `shr`*(a: Bitboard, b: int): Bitboard {.borrow.}
 func countSetBits*(a: Bitboard): int {.borrow.}
 
 func `&=`*(a: var Bitboard, b: Bitboard) =
   a = a and b
 func `|=`*(a: var Bitboard, b: Bitboard) =
   a = a or b
-func `^=`*(a: var Bitboard, b: Bitboard) =
-  a = a xor b
 
-func empty(bitboard: Bitboard): bool =
+func empty*(bitboard: Bitboard): bool =
   bitboard == 0.Bitboard
 
 func toSquare*(x: Bitboard): Square =
@@ -34,7 +36,7 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
   while not occ.empty:
     yield occ.uint64.countTrailingZeroBits.Square
     occ &= (occ.uint64 - 1).Bitboard
-    
+
 func bitboardString*(bitboard: Bitboard): string =
   boardString(
     proc(square: Square): Option[string] =
@@ -46,14 +48,14 @@ func bitboardString*(bitboard: Bitboard): string =
 const ranks*: array[a1 .. h8, Bitboard] = block:
   var ranks: array[a1 .. h8, Bitboard]
   for square in a1 .. h8:
-    ranks[square] = Bitboard(0b11111111u64 shl ((square.int8 div 8) * 8))
+    ranks[square] = 0b11111111u64.Bitboard shl ((square.int8 div 8) * 8)
   ranks
 
 const files*: array[a1 .. h8, Bitboard] = block:
   var files: array[a1 .. h8, Bitboard]
   for square in a1 .. h8:
     files[square] =
-      0b0000000100000001000000010000000100000001000000010000000100000001u64 shl
+      0b0000000100000001000000010000000100000001000000010000000100000001u64.Bitboard shl
       (square.int8 mod 8)
   files
 
@@ -78,7 +80,7 @@ proc attackForSquareAndKey(
     dirs: openArray[int],
     hashKeyFn: (Square, Bitboard) -> uint8,
 ): Bitboard =
-  result = 0
+  result = 0.Bitboard
   for dir in dirs:
     var square = startSquare.int
     while true:
@@ -95,25 +97,31 @@ proc collect64[T](f: (int -> T)): array[64, T] =
     result[i] = f(i)
 
 const
-  mainDiagonal: Bitboard =
-    0b1000000001000000001000000001000000001000000001000000001000000001u64
+  mainDiagonal =
+    0b1000000001000000001000000001000000001000000001000000001000000001u64.Bitboard
   diagonals: array[a1 .. h8, Bitboard] =
     collect64 (i) => attackForSquareAndKey(0, i.Square, [-9, 9], (sq, occ) => 0.uint8)
   antiDiagonals: array[a1 .. h8, Bitboard] =
     collect64 (i) => attackForSquareAndKey(0, i.Square, [-7, 7], (sq, occ) => 0.uint8)
 
 func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
-  (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111).uint8
+  (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111.Bitboard).uint8
 func hashkeyFile(square: Square, occupancy: Bitboard): uint8 =
   (
     (
       ((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1
-    ) and 0b111111
+    ) and 0b111111.Bitboard
   ).uint8
 func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
+  (
+    ((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and
+    0b111111.Bitboard
+  ).uint8
 func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111).uint8
+  (
+    ((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and
+    0b111111.Bitboard
+  ).uint8
 
 proc attackTable(
     dirs: array[2, int], hashKeyFn: (Square, Bitboard) -> uint8
@@ -126,7 +134,7 @@ proc attackTable(
 proc kingKnightAttackTable(a1Proto: Bitboard): array[a1 .. h8, Bitboard] =
   collect64(
     proc(sourceSq: int): Bitboard =
-      for target in rotateLeftBits(a1Proto, sourceSq):
+      for target in rotateLeftBits(a1Proto.uint64, sourceSq).Bitboard:
         if abs((target.int div 8) - (sourceSq div 8)) +
             abs((target.int mod 8) - (sourceSq mod 8)) <= 3:
           result |= target.toBitboard
@@ -137,8 +145,8 @@ const
   fileAttackTable = attackTable([8, -8], hashkeyFile)
   diagonalAttackTable = attackTable([9, -9], hashkeyDiagonal)
   antiDiagonalAttackTable = attackTable([7, -7], hashkeyAntiDiagonal)
-  knightAttackTable = kingKnightAttackTable(0x442800000028440u64)
-  kingAttackTable = kingKnightAttackTable(0x8380000000000383u64)
+  knightAttackTable = kingKnightAttackTable(0x442800000028440u64.Bitboard)
+  kingAttackTable = kingKnightAttackTable(0x8380000000000383u64.Bitboard)
 
 const attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]] = block:
   var attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]]

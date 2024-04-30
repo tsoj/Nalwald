@@ -75,7 +75,7 @@ template isTactical*(move: Move): bool =
   move.isCapture or move.isPromotion
 
 template isPawnMoveToSecondRank*(move: Move): bool =
-  (move.moved == pawn and (move.target.toBitboard and (ranks[a2] or ranks[a7])) != 0)
+  move.moved == pawn and not empty(move.target.toBitboard and (ranks[a2] or ranks[a7])) 
 
 func `$`*(move: Move): string =
   result = $move.source & $move.target

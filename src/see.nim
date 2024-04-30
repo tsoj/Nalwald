@@ -22,7 +22,7 @@ func see(position: var Position, target: Square, victim: Piece, us: Color): Valu
     let attackers = position.attackers(us, target)
     for piece in (pawn, knight, bishop, rook, queen, king).fields:
         let attack = position[piece, us] and attackers
-        if attack != 0:
+        if not empty attack:
             position.removePiece(us, piece, attack.toSquare)
 
             var
