@@ -6,6 +6,7 @@ import std/[osproc, os, strutils, strformat]
 const
   mainBranch = "master"
   workDir = "src/testing/benchWorkdir/"
+  minDepth = 12.Ply
   approxTimePerPosition = 3.Seconds
 
 let otherBranch =
@@ -74,7 +75,7 @@ for fen in someFens:
       echo &"\nNodes don't match for \"{fen}\".\n{currentBranch}: {nodesCurrent}\n{otherBranch}: {nodesOther}"
       quit(QuitFailure)
 
-    if secondsSince1970() - start >= approxTimePerPosition:
+    if secondsSince1970() - start >= approxTimePerPosition and depth >= minDepth:
       break
   echo ""
 
