@@ -7,7 +7,7 @@ type
     hashTable: ref HashTable
     positionHistory: seq[Position]
     evals: Table[Position, Value] = initTable[Position, Value]()
-    maxNodes: int64
+    maxNodes: int
     earlyResignMargin: Value
     earlyAdjudicationMinConsistentPly: int
     minAdjudicationGameLenPly: int

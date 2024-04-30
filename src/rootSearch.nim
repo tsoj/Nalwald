@@ -20,12 +20,12 @@ iterator iterativeDeepeningSearch*(
     externalStopFlag: ptr Atomic[bool],
     targetDepth: Ply = Ply.high,
     numThreads = 1,
-    maxNodes = int64.high,
+    maxNodes = int.high,
     stopTime = Seconds.high,
     multiPv = 1,
     searchMoves = initHashSet[Move](),
     evaluation: proc(position: Position): Value {.noSideEffect.},
-): tuple[pvList: seq[Pv], nodes: int64, canStop: bool] {.noSideEffect.} =
+): tuple[pvList: seq[Pv], nodes: int, canStop: bool] {.noSideEffect.} =
   {.cast(noSideEffect).}:
     doAssert positionHistory.len >= 1,
       "Need at least the current position in positionHistory"
@@ -88,7 +88,7 @@ iterator iterativeDeepeningSearch*(
           for searchState in searchStates.mitems:
             searchState.skipMovesAtRoot = skipMoves
             searchState.countedNodes = 0
-            searchState.maxNodes = (maxNodes - totalNodes) div numThreads.int64
+            searchState.maxNodes = (maxNodes - totalNodes) div numThreads
 
           if numThreads == 1:
             launchSearch(position, addr searchStates[0], depth)

@@ -143,13 +143,13 @@ proc go(uciState: var UciState, params: seq[string]) =
     hashTable: addr uciState.hashTable,
     targetDepth: Ply.high,
     stopFlag: addr uciState.stopFlag,
-    movesToGo: int16.high,
+    movesToGo: int.high,
     increment: [white: 0.Seconds, black: 0.Seconds],
     timeLeft: [white: Seconds.high, black: Seconds.high],
     moveTime: Seconds.high,
     multiPv: uciState.multiPv,
     numThreads: uciState.numThreads,
-    maxNodes: int64.high,
+    maxNodes: int.high,
     evaluation: evaluate,
   )
 
@@ -159,7 +159,7 @@ proc go(uciState: var UciState, params: seq[string]) =
       of "depth":
         searchInfo.targetDepth = params[i + 1].parseInt.clampToType(Ply)
       of "movestogo":
-        searchInfo.movesToGo = params[i + 1].parseInt.int16
+        searchInfo.movesToGo = params[i + 1].parseInt
       of "winc":
         searchInfo.increment[white] = Seconds(params[i + 1].parseFloat / 1000.0)
       of "binc":

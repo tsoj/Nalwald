@@ -8,7 +8,7 @@ type MoveTime = object
   maxTime, approxTime: Seconds
 
 func calculateMoveTime(
-    moveTime, timeLeft, incPerMove: Seconds, movesToGo, halfmovesPlayed: int16
+    moveTime, timeLeft, incPerMove: Seconds, movesToGo, halfmovesPlayed: int
 ): MoveTime =
   doAssert movesToGo >= 0
   let
@@ -43,7 +43,7 @@ type SearchInfo* {.requiresInit.} = object
 
 iterator iterativeTimeManagedSearch*(
     searchInfo: SearchInfo
-): tuple[pvList: seq[Pv], nodes: int64, passedTime: Seconds] =
+): tuple[pvList: seq[Pv], nodes: int, passedTime: Seconds] =
   const numConsideredBranchingFactors = 4
 
   var
@@ -65,15 +65,15 @@ iterator iterativeTimeManagedSearch*(
       searchInfo.moveTime,
       searchInfo.timeLeft[position.us],
       searchInfo.increment[position.us],
-      searchInfo.movesToGo.clampToType(int16),
-      position.halfmovesPlayed.clampToType(int16),
+      searchInfo.movesToGo,
+      position.halfmovesPlayed,
     )
 
   let start = secondsSince1970()
   var
     startLastIteration = secondsSince1970()
     branchingFactors = repeat(2.0, numConsideredBranchingFactors)
-    lastNumNodes = int64.high
+    lastNumNodes = int.high
 
   var iteration = -1
   for (pvList, nodes, canStop) in iterativeDeepeningSearch(

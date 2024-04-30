@@ -249,7 +249,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
   # halfmove clock and fullmove number
   try:
-    result.halfmoveClock = parseUInt(halfmoveClock).int16
+    result.halfmoveClock = halfmoveClock.parseInt
   except ValueError:
     raise newException(
       ValueError,
@@ -257,7 +257,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     )
 
   try:
-    result.halfmovesPlayed = parseUInt(fullmoveNumber).int16 * 2
+    result.halfmovesPlayed = fullmoveNumber.parseInt * 2
   except ValueError:
     raise newException(
       ValueError,

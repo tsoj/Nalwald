@@ -1,4 +1,3 @@
-- change int16 to int where sensible
 - make types distinct e.g. bitboard or value and such
 - clean up eval
     - try out 4x2 + 2x4 tuples

@@ -11,8 +11,8 @@ type Position* = object
   rookSource*: array[white .. black, array[CastlingSide, Square]]
   zobristKey*: ZobristKey
   us*: Color
-  halfmovesPlayed*: int16
-  halfmoveClock*: int16
+  halfmovesPlayed*: int
+  halfmoveClock*: int
 
 func enemy*(position: Position): Color =
   position.us.opposite
@@ -420,5 +420,5 @@ proc readPosition*(stream: Stream): Position =
 
   result.zobristKey = stream.readUint64.ZobristKey
   result.us = stream.readUint8.Color
-  result.halfmovesPlayed = stream.readInt16
-  result.halfmoveClock = stream.readInt16
+  result.halfmovesPlayed = stream.readInt64
+  result.halfmoveClock = stream.readInt64

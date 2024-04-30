@@ -6,7 +6,7 @@ import std/[terminal, strformat, strutils, algorithm, sugar, random]
 func printInfoString(
     iteration: int,
     value: Value,
-    nodes: int64,
+    nodes: int,
     pv: string,
     time: Seconds,
     hashFull: int,
@@ -81,7 +81,7 @@ func printInfoString(
     iteration: int,
     position: Position,
     pvList: seq[Pv],
-    nodes: int64,
+    nodes: int,
     time: Seconds,
     hashFull: int,
     beautiful: bool,

@@ -7,8 +7,8 @@ import
     dataUtils
 
 func getPieceValue(piece: Piece, evalParameters: EvalParametersTemplate, data: openArray[Entry]): Value =
-    var sum: int64 = 0
-    var numPieceEvals: int64 = 0
+    var sum: int = 0
+    var numPieceEvals: int = 0
     for entry in data:
         let position = entry.position
         let startEval = position.absoluteEvaluate(evalParameters)

@@ -31,7 +31,7 @@ func testPerft(
     depth: Ply,
     height: Ply,
     previous: Move,
-): int64 =
+): int =
   ## Returns number of nodes and also does a number of asserts on different systems
 
   if depth <= 0.Ply:
