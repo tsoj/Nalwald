@@ -97,6 +97,11 @@ task genData, "Generates training data by playing games":
   setBinaryName("genData")
   setCommand "c", "src/tuning/generateTrainingData.nim"
 
+task dataFromPGNs, "Converts a number of PGN files into training data":
+  highPerformance()
+  setBinaryName("dataFromPGNs")
+  setCommand "c", "src/tuning/trainingDataFromPGNs.nim"
+
 task tuneEvalParams, "Optimizes eval parameters":
   highPerformance()
   --passC:"-march=native"
@@ -109,11 +114,6 @@ task runWeatherFactory, "Optimizes search parameters":
   --define:release
   setBinaryName("runWeatherFactory")
   setCommand "c", "src/tuning/runWeatherFactory.nim"
-
-task dataFromPGNs, "Converts a number of PGN files into training data":
-  highPerformance()
-  setBinaryName("dataFromPGNs")
-  setCommand "c", "src/tuning/trainingDataFromPGNs.nim"
 
 task sprt, "Runs an SPRT test of the current branch against the main branch":
   --define:release

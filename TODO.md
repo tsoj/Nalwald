@@ -4,7 +4,6 @@
     - try out 4x2 + 2x4 tuples
     - etc
 - update readme with all commands and such
-- check if taskpools / std/threadpool is replaced with threads or malebolgia everywhere
 - manually move releases from gitlab to github
 - test this again:
     go

@@ -15,26 +15,26 @@ Pre-compiled executables for Windows and Linux can be found [here](https://gitla
 
 ### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 1.9 or higher) and the [Clang](https://clang.llvm.org/) compiler.
+You need the [Nim](https://nim-lang.org/) compiler (version 2.0 or higher) and the [Clang](https://clang.llvm.org/) compiler.
 
 **Prerequisites**
-```
-nimble install taskpools
+```bash
+nimble install malebolgia@1.3.2
 ```
 
 **Compiling for native CPU**
-```
-nim native Nalwald.nim
+```bash
+nim native Nalwald
 ```
 
 **Compiling for generic CPUs**
-```
-nim default Nalwald.nim
+```bash
+nim default Nalwald
 ```
 
 **Compiling for modern CPUs (BMI2 and POPCNT)**
-```
-nim modern Nalwald.nim
+```bash
+nim modern Nalwald
 ```
 
 ### Features
@@ -107,6 +107,46 @@ Some noteworthy features of Nalwald:
 | 1.1.0   |          – |      1800 |           – |   Sep 20, 2018 |
 | **Hactar**                                                      |
 | 0.9.0   |          – |      1351 |           – |   Jan 13, 2018 |
+
+### Other commands
+
+
+**Generate training data**
+```bash
+nim genData --run Nalwald
+```
+**Create training data from**
+```bash
+nim dataFromPGNs --run Nalwald input1.pgn input2.pgn ... inputN.pgn
+```
+
+**Optimize evaluation parameters**
+```bash
+nim tuneEvalParams --run Nalwald
+```
+
+**Optimize search parameters using weather-factory**
+```bash
+# Values need to be updated manually in source code.
+nim runWeatherFactory --run Nalwald
+```
+
+**Run SPRT test against the master branch**
+```bash
+# Requires cutechess to be at /usr/games/cutechess-cli
+nim sprt --run Nalwald
+```
+
+**Run bench test against commit**
+```bash
+nim bench --run Nalwald <branch, tag or commit hash>
+```
+
+**Run tests**
+```bash
+nim tests --run Nalwald
+nim testsDanger --run Nalwald
+```
 
 ### License
 
