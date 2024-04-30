@@ -89,7 +89,7 @@ func newGame*(
     earlyAdjudicationMinConsistentPly = 8,
     minAdjudicationGameLenPly = 30,
     hashTable: ref HashTable = nil,
-    evaluation: proc(position: Position): Value {.noSideEffect.} = evaluate,
+    evaluation: proc(position: Position): Value {.noSideEffect.} = perspectiveEvaluate,
 ): Game =
   result = Game(
     hashTable: hashTable,

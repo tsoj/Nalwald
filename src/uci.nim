@@ -150,7 +150,7 @@ proc go(uciState: var UciState, params: seq[string]) =
     multiPv: uciState.multiPv,
     numThreads: uciState.numThreads,
     maxNodes: int.high,
-    evaluation: evaluate,
+    evaluation: perspectiveEvaluate,
   )
 
   for i in 0 ..< params.len:

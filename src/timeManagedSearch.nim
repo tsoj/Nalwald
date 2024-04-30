@@ -39,7 +39,7 @@ type SearchInfo* {.requiresInit.} = object
   numThreads*: int = 1
   multiPv*: int = 1
   searchMoves*: HashSet[Move] = initHashSet[Move]()
-  evaluation*: proc(position: Position): Value {.noSideEffect.} = evaluate # TODO default eval breaks Nim
+  evaluation*: proc(position: Position): Value {.noSideEffect.} = perspectiveEvaluate # TODO default eval breaks Nim
 
 iterator iterativeTimeManagedSearch*(
     searchInfo: SearchInfo
