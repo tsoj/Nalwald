@@ -96,8 +96,8 @@ func pieceRelativePst(
     elif ourPiece == rook:
       [pawn, rook]
 
-  for relativity in relativeToUs .. relativeToEnemy:
-    for otherPiece in pieceRange:
+  for otherPiece in pieceRange:
+    for relativity in relativeToUs .. relativeToEnemy:
       for otherSquare in otherPieces[relativity] and position[otherPiece]:
         let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
         evalState.addValue(
