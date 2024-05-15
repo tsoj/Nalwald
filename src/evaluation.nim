@@ -52,7 +52,7 @@ macro getParameter(structName, parameter: untyped): untyped =
   let s = $structName.toStrLit & "." & $parameter.toStrLit
   parseExpr(s)
 
-template addValue(evalState: EvalState, goodFor: Color, parameter: untyped) =
+template addValue(evalState: EvalState, goodFor: static Color, parameter: untyped) =
   when evalState is Gradient:
     let f = (if goodFor == black: -1.0 else: 1.0) * evalState.g
     getParameter(evalState.gradient[][opening.int], parameter) +=
@@ -64,7 +64,7 @@ template addValue(evalState: EvalState, goodFor: Color, parameter: untyped) =
       doAssert evalState is EvalValue
     for phase {.inject.} in Phase:
       var value = getParameter(evalState.params[][phase.int], parameter).Value
-      if goodFor == black:
+      when goodFor == black:
         value = -value
       evalState.absoluteValue[phase] += value
 
