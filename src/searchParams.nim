@@ -24,19 +24,22 @@ func getAsInt[T](a: T): int =
   else:
     a.int
 
-macro addParam[T](name: untyped, default, min, max, step: T): untyped =
+macro addParam[T](
+    name: untyped, default, min, max, step: T, tunable: bool = false
+): untyped =
   let
     varName: NimNode = getVarName(name)
     varString: NimNode = getVarString(name)
   quote:
     var `varName`: int = `default`.getAsInt
 
-    paramTable[`varString`] = ParamEntry(
-      address: addr `varName`,
-      min: `min`.getAsInt,
-      max: `max`.getAsInt,
-      step: `step`.getAsInt,
-    )
+    if `tunable`:
+      paramTable[`varString`] = ParamEntry(
+        address: addr `varName`,
+        min: `min`.getAsInt,
+        max: `max`.getAsInt,
+        step: `step`.getAsInt,
+      )
 
     func `name`*(): auto =
       type R = typeof(`default`)
@@ -73,25 +76,34 @@ proc printUciSearchParams*() =
       " max ",
       param.max
 
+#!fmt: off
 addParam(deltaMargin, default = 92, min = 30, max = 300, step = 10)
 addParam(failHighDeltaMargin, default = 69, min = 10, max = 200, step = 10)
+
 addParam(aspirationWindowStartingOffset, default = 9, min = 2, max = 100, step = 2)
 addParam(aspirationWindowMultiplier, default = 1.9, min = 1.1, max = 10.0, step = 0.2)
+
+addParam(iirMinDepth, default = 4.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
+
 addParam(futilityReductionDiv, default = 83, min = 10, max = 500, step = 10)
+addParam(minMoveCounterFutility, default = 2, min = 1, max = 10, step = 1)
+
 addParam(hashResultFutilityMarginMul, default = 280, min = 50, max = 1000, step = 10)
+
 addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.Ply)
 addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
+
 addParam(lmrDepthHalfLife, default = 36, min = 5, max = 60, step = 5)
 addParam(lmrDepthSub, default = 1.Ply, min = 0.Ply, max = 5.Ply, step = 1.Ply)
-addParam(iirMinDepth, default = 4.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
 addParam(minMoveCounterLmr, default = 5, min = 1, max = 15, step = 1)
-addParam(minMoveCounterFutility, default = 2, min = 1, max = 10, step = 1)
-addParam(
-  maxHistoryTableValue, default = 104000, min = 1000, max = 10000000, step = 50000
-)
-addParam(historyTableBadMoveDivider, default = 8.5, min = 1.0, max = 100.0, step = 10.0)
-addParam(historyTableCounterMul, default = 72.0, min = 1.0, max = 200.0, step = 20.0)
-addParam(historyTableShrinkDiv, default = 1.9, min = 1.1, max = 10.0, step = 0.5)
+
+
+addParam(maxHistoryTableValue, default = 112000, min = 1000, max = 10000000, step = 50000, true)
+addParam(historyTableBadMoveDivider, default = 11.5, min = 1.0, max = 100.0, step = 10.0, true)
+addParam(historyTableCounterMul, default = 74.0, min = 1.0, max = 200.0, step = 20.0, true)
+addParam(historyTableShrinkDiv, default = 2.0, min = 1.1, max = 10.0, step = 0.5, true)
+addParam(historyTableUnexpectedDivider, default = 0.98, min = 0.1, max = 1.0, step = 0.1, true)
+#!fmt: on
 
 proc getWeatherFactoryConfig*(): string =
   result = "{"
