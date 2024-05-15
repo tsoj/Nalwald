@@ -37,10 +37,16 @@ func update*(historyTable: var HistoryTable, move, previous: Move, color: Color,
         color: Color, move: Move, addition: float
     ) =
         template entry(): auto = table[color][move.moved][move.target]
+        
+        if (entry >= 0) != (addition >= 0):
+            entry *= historyTableUnexpectedDivider()
+            discard
+
         entry = clamp(
             entry + addition,
             -maxHistoryTableValue().float, maxHistoryTableValue().float
-        )    
+        )
+
         if entry.abs >= maxHistoryTableValue().float:
             table.halve(color)
 
