@@ -7,12 +7,13 @@ const
   tc = 8
   hash = 32
   weatherFactoryUrl = "https://github.com/tsoj/weather-factory.git"
-  weatherFactoryCommit = "patch-1"
+  weatherFactoryCommit = "patch-2"
   workDir = "src/tuning/weather-factory/"
   cuteChessBinary = "/usr/games/cutechess-cli"
   openingBook = "Pohl.epd"
 
 let
+  outGamesFile = getCurrentDir() & "/res/pgns/weatherReport.pgn"
   numThreads = max(1, ((countProcessors() - 2) div 2) * 2)
   numGames = block:
     var numGames = 0
@@ -47,7 +48,8 @@ writeFile "cutechess.json",
     "games": {numGames},
     "tc": {tc},
     "hash": {hash},
-    "threads": {numThreads}
+    "threads": {numThreads},
+    "pgnout": "{outGamesFile}"
 }}"""
 
 doAssert execCmd(fmt"python3 main.py") == 0
