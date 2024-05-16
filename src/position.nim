@@ -403,8 +403,8 @@ proc writePosition*(stream: Stream, position: Position) =
 
   stream.write position.zobristKey.uint64
   stream.write position.us.uint8
-  stream.write position.halfmovesPlayed
-  stream.write position.halfmoveClock
+  stream.write position.halfmovesPlayed.int16
+  stream.write position.halfmoveClock.int16
 
 proc readPosition*(stream: Stream): Position =
   for pieceBitboard in result.pieces.mitems:
@@ -420,5 +420,5 @@ proc readPosition*(stream: Stream): Position =
 
   result.zobristKey = stream.readUint64.ZobristKey
   result.us = stream.readUint8.Color
-  result.halfmovesPlayed = stream.readInt64
-  result.halfmoveClock = stream.readInt64
+  result.halfmovesPlayed = stream.readInt16
+  result.halfmoveClock = stream.readInt16
