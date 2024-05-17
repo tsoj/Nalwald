@@ -104,24 +104,16 @@ const
   antiDiagonals: array[a1 .. h8, Bitboard] =
     collect64 (i) => attackForSquareAndKey(0, i.Square, [-7, 7], (sq, occ) => 0.uint8)
 
+#!fmt: off
 func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
   (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111.Bitboard).uint8
 func hashkeyFile(square: Square, occupancy: Bitboard): uint8 =
-  (
-    (
-      ((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1
-    ) and 0b111111.Bitboard
-  ).uint8
+  ((((((occupancy shr (square.int8 mod 8)) and files[a1]) * mainDiagonal) shr 56) shr 1) and 0b111111.Bitboard).uint8
 func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (
-    ((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and
-    0b111111.Bitboard
-  ).uint8
+  (((((occupancy and diagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111.Bitboard).uint8
 func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (
-    ((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and
-    0b111111.Bitboard
-  ).uint8
+  (((((occupancy and antiDiagonals[square]) * files[a1]) shr 56) shr 1) and 0b111111.Bitboard).uint8
+#!fmt: on
 
 proc attackTable(
     dirs: array[2, int], hashKeyFn: (Square, Bitboard) -> uint8
