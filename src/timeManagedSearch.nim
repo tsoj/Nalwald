@@ -1,6 +1,6 @@
 import types, move, position, hashTable, rootSearch, evaluation, utils
 
-import std/[atomics, sets, sequtils]
+import std/[atomics, sets, sequtils, options]
 
 export Pv
 
@@ -56,6 +56,17 @@ iterator iterativeTimeManagedSearch*(
 
   stopFlag.store(false)
 
+  var
+    hashTableAddr = searchInfo.hashTable
+    hashTable: Option[HashTable]
+  if hashTableAddr == nil:
+    const
+      maxByteSize = 64 * megaByteToByte
+      maxLen = maxByteSize div sizeof(HashTableEntry)
+    let len = min(maxLen, if searchInfo.maxNodes < int.high div 2: searchInfo.maxNodes * 2 else: int.high)
+    hashTable = some newHashTable(len = len)
+    hashTableAddr = addr hashTable.get
+
   doAssert searchInfo.positionHistory.len >= 1,
     "Need at least the current position in positionHistory"
 
@@ -78,7 +89,7 @@ iterator iterativeTimeManagedSearch*(
   var iteration = -1
   for (pvList, nodes, canStop) in iterativeDeepeningSearch(
     positionHistory = searchInfo.positionHistory,
-    hashTable = searchInfo.hashTable[],
+    hashTable = hashTableAddr[],
     externalStopFlag = externalStopFlag,
     targetDepth = searchInfo.targetDepth,
     numThreads = searchInfo.numThreads,

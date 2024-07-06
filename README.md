@@ -113,9 +113,9 @@ Some noteworthy features of Nalwald:
 
 **Generate training data**
 ```bash
-nim genData --run Nalwald
+nim genData --define:almostFullCPU --run Nalwald 6_000 50_000_000 false
 ```
-**Create training data from**
+**Create training data from PGNs**
 ```bash
 nim dataFromPGNs --run Nalwald input1.pgn input2.pgn ... inputN.pgn
 ```

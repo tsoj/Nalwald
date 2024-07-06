@@ -422,3 +422,5 @@ proc readPosition*(stream: Stream): Position =
   result.us = stream.readUint8.Color
   result.halfmovesPlayed = stream.readInt16
   result.halfmoveClock = stream.readInt16
+
+  doAssert result.zobristKey == result.calculateZobristKey

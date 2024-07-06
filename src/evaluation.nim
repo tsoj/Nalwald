@@ -1,6 +1,6 @@
-import
-  position, types, bitboard, bitops, evalParameters, utils, pieceValues, algorithm,
-  macros
+import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils
+
+import std/[algorithm, macros]
 
 export pieceValues
 

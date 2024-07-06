@@ -29,6 +29,7 @@ massif.out
 !res/openings/10ply-openings.epd
 !res/openings/blitzTesting-4moves-openings.epd
 !Pohl.epd
+!res/openings/DFRC_small.epd
 optimization
 *.txt
 vgcore.*
@@ -65,5 +66,6 @@ src/tuning/weather-factory
 res/trainingSets
 res/pgns
 src/testing/benchWorkdir
+cleanUpTrainingData.nim
 
 # TODO clean this file up

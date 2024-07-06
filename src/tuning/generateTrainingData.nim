@@ -20,12 +20,16 @@ let
   targetTrainingSamples = commandLineParams()[1].parseInt
   useOnlyHalfCPU = commandLineParams()[2].parseBool
 
-doAssert not useOnlyHalfCPU or ThreadPoolSize <= max(1, countProcessors() div 2),
-  "To use only half half of the CPU, the program must be compiled with the switch \"--define:halfCPU\""
+doAssert useOnlyHalfCPU == (ThreadPoolSize <= max(1, countProcessors() div 2)),
+  "To use only half half of the CPU, the program must be compiled with the switch \"--define:halfCPU\", otherwise you have to compile without that switch."
+
+doAssert ThreadPoolSize <= max(1, countProcessors() - 1),
+  "The thread pool size should be smaller than the number of cores available. Use the switch \"--define:almostFullCPU\" to make sure this is done."
 
 const
-  openingFilename = "res/openings/Pohl.epd"
-  randRatio = 0.0005
+  openingFilename = "res/openings/DFRC_small.epd"
+  maxRandRatio = 0.0005
+  minOpeningSearchNodes = 1000
   ratioGameResultSearchValue = 0.5
   sampleGameMinLenPly = 5
   sampleFrequencyInGamePly = 30 .. 40
@@ -36,7 +40,7 @@ doAssert not gitHasUnstagedChanges,
 
 let
   startDate = now().format("yyyy-MM-dd-HH-mm-ss")
-  outDir = "res/trainingSets/"
+  outDir = "res/trainingSetsXXX/"
   outputFilename =
     fmt"{outDir}trainingSet_{startDate}_{sampleGameSearchNodes}_{versionOrId()}.bin"
 
@@ -103,17 +107,20 @@ var
   outFileStream = newFileStream(outputFilename, fmWrite)
   outFileMutex = Lock()
   openingSearchNodes: Atomic[float]
+  randRatio: Atomic[float]
 initLock outFileMutex
 
 doAssert not outFileStream.isNil, "Filename: " & outputFilename
 
+randRatio.store maxRandRatio
 const expectedNumPliesPerGame = 120
 # This is just a first very rough guess:
 openingSearchNodes.store(
   targetTrainingSamples.float /
-    (expectedNumPliesPerGame.float * randRatio * openingPositions.len.float)
+    (expectedNumPliesPerGame.float * randRatio.load * openingPositions.len.float)
 )
 
+echo fmt"{ThreadPoolSize = }"
 echo fmt"{targetTrainingSamples = }"
 echo fmt"{sampleGameSearchNodes = }"
 echo fmt"{openingSearchNodes.load = }"
@@ -133,7 +140,8 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
     func specialEval(position: Position): Value =
       result = position.perspectiveEvaluate
       {.cast(noSideEffect).}:
-        if rg.rand(1.0) <= randRatio and position.isValidSamplePosition:
+        doAssert randRatio.load > 0.0
+        if rg.rand(1.0) <= randRatio.load and position.isValidSamplePosition:
           let samples = position.playGameAndCollectTrainingSamples(sampleGameHashTable)
           numSamples += samples.len
 
@@ -154,17 +162,23 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
     )
     discard game.playGame
 
-    echo fmt"Finished opening {stringIndex}, {numSamples = }"
 
     openingSearchNodes.store openingSearchNodes.load *
       clamp(expectedNumberSamplesPerOpening.float / numSamples.float, 0.99, 1.01)
+
+    if openingSearchNodes.load < minOpeningSearchNodes:
+      openingSearchNodes.store minOpeningSearchNodes
+      randRatio.store randRatio.load * 0.99
+
+    echo fmt"Finished opening {stringIndex}, {numSamples = }, randRatio = {randRatio.load}, openingSearchNodes = {openingSearchNodes.load}"
+
   except Exception:
     echo "ERROR: EXCEPTION: ", getCurrentExceptionMsg()
     quit(QuitFailure)
 
 let startTime = now()
 
-var threadpool = createMaster()
+var threadpool = createMaster(activeProducer = true)
 
 threadpool.awaitAll:
   for i, fen in openingPositions:

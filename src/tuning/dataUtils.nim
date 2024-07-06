@@ -35,8 +35,7 @@ proc loadDataEpd*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
         doAssert words.len >= 7
         let position = line.toPosition(suppressWarnings = true)
 
-        if not position.validTrainingPosition:
-            continue
+        doAssert position.validTrainingPosition
 
         numEntries += 1
         data.add(Entry(position: position, outcome: words[6].parseFloat))
@@ -58,8 +57,7 @@ proc loadDataBin*(data: var seq[Entry], fileName: string, maxLen = int.high, sup
             position = inFileStream.readPosition
             value = inFileStream.readFloat64
 
-        if not position.validTrainingPosition:
-            continue
+        doAssert position.validTrainingPosition
 
         data.add Entry(position: position, outcome: value)
         numEntries += 1
