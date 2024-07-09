@@ -11,7 +11,7 @@ import std/[strutils, strformat]
 --threads:on
 --styleCheck:hint
 
-var threadPoolSize = 1024
+var threadPoolSize = 128
 
 doAssert defined(linux) or not (defined(halfCPU) or defined(almostFullCPU)), "Switches halfCPU and almostFullCPU are only supported on Linux"
 
