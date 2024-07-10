@@ -38,16 +38,6 @@ type
 
   EvalState = Gradient or EvalValue
 
-# type Gradient* = object
-#     gamePhaseFactor*: float32
-#     g*: float32
-#     evalValue*: Value
-#     evalParams*: ptr EvalParametersFloat
-# type Params = EvalParametersTemplate or Gradient
-
-# macro getParameter(phase, structName, parameter: untyped): untyped =
-#     parseExpr($toStrLit(quote do: `structName`[`phase`.int]) & "." & $toStrLit(quote do: `parameter`))
-
 macro getParameter(structName, parameter: untyped): untyped =
   let s = $structName.toStrLit & "." & $parameter.toStrLit
   parseExpr(s)
@@ -240,26 +230,3 @@ func perspectiveEvaluate*(position: Position): Value =
   result = position.absoluteEvaluate
   if position.us == black:
     result = -result
-
-# func evaluate*(position: Position): Value =
-#   position.evaluate(defaultEvalParameters)
-
-# func absoluteEvaluate*(position: Position, params: Params): Value =
-#   result = position.evaluate(params)
-#   if position.us == black:
-#     result = -result
-
-# func absoluteEvaluate*(position: Position): Value =
-#   position.absoluteEvaluate(defaultEvalParameters)
-
-# import positionUtils
-
-# let sp = "1rbqk1nr/ppp2ppp/2nb4/4p3/4N3/3B1N2/PPP1QPPP/R1B2RK1 w k - 8 9".toPosition
-# echo sp
-# echo sp.absoluteEvaluate
-# echo sp.mirrorHorizontally
-# echo sp.mirrorHorizontally.absoluteEvaluate
-# echo sp.mirrorVertically
-# echo sp.mirrorVertically.absoluteEvaluate
-# echo sp.rotate
-# echo sp.rotate.absoluteEvaluate

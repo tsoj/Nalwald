@@ -255,6 +255,11 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
   result.zobristKey = result.calculateZobristKey
 
+  if result[white, king].countSetBits != 1 or result[black, king].countSetBits != 1:
+    raise newException(
+      ValueError, "FEN is not correctly formatted: Need exactly one king for each color"
+    )
+
 func notation*(move: Move, position: Position): string =
   if move.castled and not position.isChess960:
     return $move.source & $kingTarget[position.us][position.castlingSide(move)]

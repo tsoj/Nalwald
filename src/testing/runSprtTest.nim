@@ -25,15 +25,23 @@ doAssert "not a git repository" notin gitStatus
 let
   gitHasUnstagedChanges = execProcess("git status -suno").strip != ""
   currentBranch = execProcess("git rev-parse --abbrev-ref HEAD").strip
+  otherBranch =
+    if commandLineParams().len >= 1:
+      commandLineParams()[0].strip
+    else:
+      mainBranch
+      
+echo "Testing against ", otherBranch
 
-doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 
-if currentBranch == mainBranch:
+if currentBranch == otherBranch:
   if not askYesNo(
     question =
       "You are about to test the main branch against itself. Are you sure you want to do this?"
   ):
     quit(QuitFailure)
+    
+doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 
 discard existsOrCreateDir workDir
 
@@ -41,17 +49,17 @@ proc nalwaldBinary(branch: string): string =
   fmt"{workDir}Nalwald-{branch}"
 
 try:
-  for branch in [mainBranch, currentBranch]:
+  for branch in [otherBranch, currentBranch]:
     discard tryRemoveFile nalwaldBinaryFile
-    if execCmd("git switch " & branch) != 0:
-      raise newException(CatchableError, "Failed to switch to branch " & branch)
+    if execCmd("git checkout " & branch) != 0:
+      raise newException(CatchableError, "Failed to checkout to branch " & branch)
     if execCmd("nim native -f Nalwald") != 0:
       raise newException(
         CatchableError, "Failed to compile Nalwald binary for branch " & branch
       )
     copyFileWithPermissions nalwaldBinaryFile, nalwaldBinary(branch)
 finally:
-  doAssert execCmd("git switch " & currentBranch) == 0
+  doAssert execCmd("git checkout " & currentBranch) == 0
 
 createDir pgnOutDir
 
@@ -66,7 +74,7 @@ let cuteChessArguments =
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./ \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
--engine name={mainBranch} cmd=./{nalwaldBinary(mainBranch)}
+-engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)}
 """
 
 doAssert execCmd(cuteChessBinary & " " & cuteChessArguments) == 0
