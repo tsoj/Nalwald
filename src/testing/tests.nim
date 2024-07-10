@@ -55,7 +55,7 @@ proc perftAndTestPerft(): Option[string] =
       let fastPerftResult = position.perft(depth.Ply)
       if fastPerftResult != trueNumNodes:
         return some &"Fast perft to depth {depth} for \"{fen}\" should be {trueNumNodes} but is {fastPerftResult}"
-      
+
       try:
         let
           testPseudoLegality = trueNumNodes < 20_000 and position.legalMoves.len <= 256

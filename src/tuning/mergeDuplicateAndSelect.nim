@@ -88,4 +88,3 @@ proc mergeDuplicateAndSelect*(
 
   f.close
   g.close
-

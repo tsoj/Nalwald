@@ -29,7 +29,10 @@ let
 doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 
 if currentBranch == mainBranch:
-  if not askYesNo(question = "You are about to test the main branch against itself. Are you sure you want to do this?"):
+  if not askYesNo(
+    question =
+      "You are about to test the main branch against itself. Are you sure you want to do this?"
+  ):
     quit(QuitFailure)
 
 discard existsOrCreateDir workDir

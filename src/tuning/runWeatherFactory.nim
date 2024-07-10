@@ -22,9 +22,7 @@ let
     numGames
 
 if not dirExists workDir:
-  doAssert execCmd(
-    &"git clone \"{weatherFactoryUrl}\" {workDir}"
-  ) == 0
+  doAssert execCmd(&"git clone \"{weatherFactoryUrl}\" {workDir}") == 0
   doAssert execCmd(fmt"git -C {workDir} checkout {weatherFactoryCommit}") == 0
 
 removeDir workDir & "tuner"

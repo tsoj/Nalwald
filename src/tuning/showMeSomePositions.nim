@@ -1,12 +1,6 @@
+import ../position, ../positionUtils
 
-import
-    ../position,
-    ../positionUtils
-
-import std/[
-    os,
-    streams
-]
+import std/[os, streams]
 
 doAssert commandLineParams().len == 1, "Need file as commandline argument"
 
@@ -15,27 +9,25 @@ let fileName = commandLineParams()[0]
 doAssert fileExists fileName, "File should exist"
 
 var
-    inFileStream = newFileStream(fileName, fmRead)
-    content: seq[(Position, float)]
-    numSamples = 0
+  inFileStream = newFileStream(fileName, fmRead)
+  content: seq[(Position, float)]
+  numSamples = 0
 
 const numExamples = 10
 
 while not inFileStream.atEnd:
-    let
-        position = inFileStream.readPosition
-        value = inFileStream.readFloat64
-    content.add (position, value)
-    numSamples += 1
+  let
+    position = inFileStream.readPosition
+    value = inFileStream.readFloat64
+  content.add (position, value)
+  numSamples += 1
 
-    if content.len >= numExamples + 10_000:
-        content = content[^numExamples..^1]
+  if content.len >= numExamples + 10_000:
+    content = content[^numExamples ..^ 1]
 
-for (position, value) in content[^min(numExamples, content.len - 1)..^1]:
-    echo "--------------"
-    echo position
-    echo value
-
-
+for (position, value) in content[^min(numExamples, content.len - 1) ..^ 1]:
+  echo "--------------"
+  echo position
+  echo value
 
 echo numSamples, " positions"

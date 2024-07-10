@@ -39,7 +39,8 @@ type SearchInfo* {.requiresInit.} = object
   numThreads*: int = 1
   multiPv*: int = 1
   searchMoves*: HashSet[Move] = initHashSet[Move]()
-  evaluation*: proc(position: Position): Value {.noSideEffect.} = perspectiveEvaluate # TODO default eval breaks Nim
+  evaluation*: proc(position: Position): Value {.noSideEffect.} = perspectiveEvaluate
+    # TODO default eval breaks Nim
 
 iterator iterativeTimeManagedSearch*(
     searchInfo: SearchInfo
@@ -63,7 +64,11 @@ iterator iterativeTimeManagedSearch*(
     const
       maxByteSize = 64 * megaByteToByte
       maxLen = maxByteSize div sizeof(HashTableEntry)
-    let len = min(maxLen, if searchInfo.maxNodes < int.high div 2: searchInfo.maxNodes * 2 else: int.high)
+    var len = maxLen
+
+    if searchInfo.maxNodes < int.high div 2:
+      len = min(len, searchInfo.maxNodes * 2)
+
     hashTable = some newHashTable(len = len)
     hashTableAddr = addr hashTable.get
 

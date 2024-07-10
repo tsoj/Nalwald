@@ -21,7 +21,8 @@ doAssert not fileExists outputFilename,
 echo fmt"{outputFilename = }"
 
 for pgnFilename in commandLineParams():
-  doAssert not dirExists workDir, fmt"Temporary work directory already exists: {workDir}"
+  doAssert not dirExists workDir,
+    fmt"Temporary work directory already exists: {workDir}"
   createDir workDir
 
   echo "Using file: ", pgnFilename

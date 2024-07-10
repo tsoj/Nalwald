@@ -2,7 +2,6 @@ import ../utils, ../types, exampleFens
 
 import std/[osproc, os, strutils, strformat]
 
-
 const
   mainBranch = "master"
   workDir = "src/testing/benchWorkdir/"
@@ -66,8 +65,9 @@ for fen in someFens:
   for depth in 1.Ply .. Ply.high:
     stdout.write "."
     stdout.flushFile
-    let nodesCurrent =
-      execProcess(benchTestBinaryFile(currentBranch) & fmt" {depth} {fen}").strip.parseInt
+    let nodesCurrent = execProcess(
+      benchTestBinaryFile(currentBranch) & fmt" {depth} {fen}"
+    ).strip.parseInt
     let nodesOther =
       execProcess(benchTestBinaryFile(otherBranch) & fmt" {depth} {fen}").strip.parseInt
 

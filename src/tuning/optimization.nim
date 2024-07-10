@@ -1,10 +1,10 @@
 import
-    ../evalParameters,
-    gradient,
-    dataUtils,
-    ../bitboard, # TODO this is only necessary because Nim bug (TODO check)
-    calculatePieceValue,
-    ../version
+  ../evalParameters,
+  gradient,
+  dataUtils,
+  ../bitboard, # TODO this is only necessary because Nim bug (TODO check)
+  calculatePieceValue,
+  ../version
 
 import std/[times, strformat, random, math, os]
 
@@ -13,36 +13,37 @@ proc optimize(
     data: var seq[Entry],
     maxNumEpochs = 30,
     startLr = 10.0,
-    finalLr = 0.05
+    finalLr = 0.05,
 ): (EvalParametersFloat, float) =
+  var solution = start
 
-    var solution = start
+  echo "starting error: ", fmt"{solution.error(data):>9.7f}", ", starting lr: ", startLr
 
-    echo "starting error: ", fmt"{solution.error(data):>9.7f}", ", starting lr: ", startLr
+  let lrDecay = pow(finalLr / startLr, 1.0 / float(maxNumEpochs * data.len))
+  doAssert startLr > finalLr,
+    "Starting learning rate must be strictly bigger than the final learning rate"
+  doAssert finalLr == startLr or lrDecay < 1.0,
+    "lrDecay should be smaller than one if the learning rate should decrease"
 
-    let lrDecay = pow(finalLr/startLr, 1.0/float(maxNumEpochs * data.len))
-    doAssert startLr > finalLr, "Starting learning rate must be strictly bigger than the final learning rate"
-    doAssert finalLr == startLr or lrDecay < 1.0, "lrDecay should be smaller than one if the learning rate should decrease"
+  var lr = startLr
 
-    var lr = startLr
+  for epoch in 1 .. maxNumEpochs:
+    let startTime = now()
+    data.shuffle
 
-    for epoch in 1..maxNumEpochs:
-        let startTime = now()
-        data.shuffle
+    for entry in data:
+      solution.addGradient(lr, entry.position, entry.outcome)
+      lr *= lrDecay
 
-        for entry in data:
-            solution.addGradient(lr, entry.position, entry.outcome)
-            lr *= lrDecay
+    let
+      error = solution.error(data[0 ..< min(data.len, 1_000_000)])
+      passedTime = now() - startTime
+    echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.3f}, time: {passedTime.inSeconds} s"
 
-        let
-            error = solution.error(data[0..<min(data.len, 1_000_000)])
-            passedTime = now() - startTime
-        echo fmt"Epoch {epoch}, error: {error:>9.7f}, lr: {lr:.3f}, time: {passedTime.inSeconds} s"
-    
-    let finalError = solution.error(data)
-    echo fmt"Final error: {finalError:>9.7f}"
-        
-    return (solution, finalError)
+  let finalError = solution.error(data)
+  echo fmt"Final error: {finalError:>9.7f}"
+
+  return (solution, finalError)
 
 let startTime = now()
 
@@ -84,15 +85,16 @@ var startEvalParams = newEvalParameters(float32)
 let (ep, finalError) = startEvalParams.optimize(data)
 
 const
-    epDir = "res/params/"
-    epFileName = epDir  & "default.bin"
-    pieceValueFileName = "src/pieceValues.nim"
+  epDir = "res/params/"
+  epFileName = epDir & "default.bin"
+  pieceValueFileName = "src/pieceValues.nim"
 
 createDir epDir
 
 let
-    pieceValueString = ep.pieceValuesAsString(data[0..<min(data.len, 10_000_000)])
-    pieceValueFileContent = &"""
+  pieceValueString = ep.pieceValuesAsString(data[0 ..< min(data.len, 10_000_000)])
+  pieceValueFileContent =
+    &"""
 import evalParameters
 
 func value*(piece: Piece): Value =
@@ -108,14 +110,7 @@ echo "Wrote to: ", epFileName
 
 echo "Total time: ", now() - startTime
 
-
-
-
 # TODO piece values
-
-
-
-
 
 #[ 
 let (ep, finalError) = newEvalParametersFloat().optimize(data)

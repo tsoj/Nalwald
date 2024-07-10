@@ -162,7 +162,6 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
     )
     discard game.playGame
 
-
     openingSearchNodes.store openingSearchNodes.load *
       clamp(expectedNumberSamplesPerOpening.float / numSamples.float, 0.99, 1.01)
 
@@ -171,7 +170,6 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
       randRatio.store randRatio.load * 0.99
 
     echo fmt"Finished opening {stringIndex}, {numSamples = }, randRatio = {randRatio.load}, openingSearchNodes = {openingSearchNodes.load}"
-
   except Exception:
     echo "ERROR: EXCEPTION: ", getCurrentExceptionMsg()
     quit(QuitFailure)
