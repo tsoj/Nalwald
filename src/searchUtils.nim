@@ -98,12 +98,12 @@ func newGameHistory*(staticHistory: seq[Position]): GameHistory =
     doAssert position.zobristKey == position.calculateZobristKey
     result.staticHistory.add(position.zobristKey)
 
-func update*(gameHistory: var GameHistory, position: Position, height: Ply) =
-  gameHistory.dynamicHistory[height] = position.zobristKey
 
 func checkForRepetition*(
-    gameHistory: GameHistory, position: Position, height: Ply
+    gameHistory: var GameHistory, position: Position, height: Ply
 ): bool =
+  gameHistory.dynamicHistory[height] = position.zobristKey
+
   var count = position.halfmoveClock
   for i in countdown(height - 1.Ply, 0.Ply):
     if count <= 0:
@@ -119,3 +119,7 @@ func checkForRepetition*(
       return true
     count -= 1
   false
+
+
+# func update*(gameHistory: var GameHistory, position: Position, height: Ply) =
+  

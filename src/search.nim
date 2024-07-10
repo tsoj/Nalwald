@@ -144,7 +144,7 @@ func search(
   ):
     return 0.Value
 
-  state.gameHistory.update(position, height)
+  # state.gameHistory.update(position, height)
 
   let
     us = position.us
