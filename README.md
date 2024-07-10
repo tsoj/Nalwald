@@ -15,7 +15,7 @@ Pre-compiled executables for Windows and Linux can be found [here](https://gitla
 
 ### Compile
 
-You need the [Nim](https://nim-lang.org/) compiler (version 2.0 or higher) and the [Clang](https://clang.llvm.org/) compiler.
+You need the [Nim](https://nim-lang.org/) compiler (version 2.1.1 or higher) and the [Clang](https://clang.llvm.org/) compiler.
 
 **Prerequisites**
 ```bash
@@ -40,9 +40,9 @@ nim modern Nalwald
 ### Features
 
 - Evaluation:
-  - King-relative piece square tables
   - Piece-relative piece square tables
   - 3x3 pawn structure tables
+  - Piece combinations
   - Passed pawns
   - Tapered parameters
   - Optimized using gradient descent
@@ -67,7 +67,6 @@ nim modern Nalwald
 - Supports Chess960/FRC
 - Multi PV support
 - UCI compatible
-  - Additional commands: `moves`, `print`, `fen`, `perft`, `test`, `eval`, `about`, `help`, `piecevalues`
 
 ### About
 
@@ -86,6 +85,7 @@ Some noteworthy features of Nalwald:
 | Version | CCRL 40/40 | CCRL 40/4 | CCRL 40/2 FRC | Release Date |
 | :------ | ---------: | --------: | ------------: | -----------: |
 | **Nalwald**                                                     |
+| 19      |          – |         – |           – |              – |
 | 18      |       3255 |      3286 |        3154 |   Aug 13, 2023 |
 | 17.1    |       3188 |         – |           – |  June 20, 2023 |
 | 17      |          – |      3201 |        3051 |   June 5, 2023 |
@@ -127,6 +127,7 @@ nim tuneEvalParams --run Nalwald
 
 **Optimize search parameters using weather-factory**
 ```bash
+# Requires cutechess to be at /usr/games/cutechess-cli
 # Values need to be updated manually in source code.
 nim runWeatherFactory --run Nalwald
 ```
