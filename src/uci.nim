@@ -14,7 +14,7 @@ import
   timeManagedSearch,
   testing/tests
 
-import std/[strutils, strformat, atomics, os, sets]
+import std/[strutils, strformat, atomics, sets]
 
 import malebolgia
 

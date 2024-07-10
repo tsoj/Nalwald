@@ -1,4 +1,4 @@
-import ../timeManagedSearch, ../hashTable, ../utils, ../positionUtils, ../evaluation
+import ../timeManagedSearch, ../hashTable, ../utils, ../positionUtils
 
 import std/[os, strutils]
 

@@ -2,7 +2,7 @@ import types, position, move, movegen, utils, bitboard, castling
 
 export move, position
 
-import std/[strutils, options, bitops, strformat, streams]
+import std/[strutils, options, strformat, streams]
 
 func fen*(position: Position): string =
   result = ""

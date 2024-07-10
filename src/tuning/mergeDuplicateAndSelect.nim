@@ -1,6 +1,6 @@
 import ../search, ../positionUtils, ../evaluation
 
-import std/[tables, strutils, random, times, os]
+import std/[tables, strutils, random, os]
 
 const maxTableSize = 100_000_000 # TODO rather base it of available RAM
 

@@ -2,25 +2,19 @@ import
   ../position,
   ../types,
   ../perft,
-  ../searchUtils,
   ../hashTable,
-  ../moveIterator,
   ../positionUtils,
   ../evaluation,
   ../utils,
-  ../timeManagedSearch,
   ../see,
   ../game,
   ../version,
   exampleFens,
   testPerft
 
-import std/[random, strutils, sequtils, terminal, options, strformat, streams]
+import std/[strutils, terminal, options, strformat, streams]
 
-const
-  maxNumPerftNodes {.intdefine.} = int.high
-  useInternalFens {.booldefine.} = true
-  useExternalFens {.booldefine.} = false
+const maxNumPerftNodes {.intdefine.} = int.high
 
 proc testFen(): Option[string] =
   for fen in someFens:

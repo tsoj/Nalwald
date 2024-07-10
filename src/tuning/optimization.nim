@@ -1,10 +1,9 @@
 import
   ../evalParameters,
+  ../bitboard, # TODO this is only necessary because Nim bug (TODO check),
   gradient,
   dataUtils,
-  ../bitboard, # TODO this is only necessary because Nim bug (TODO check)
-  calculatePieceValue,
-  ../version
+  calculatePieceValue
 
 import std/[times, strformat, random, math, os]
 
@@ -14,7 +13,7 @@ proc optimize(
     maxNumEpochs = 30,
     startLr = 10.0,
     finalLr = 0.05,
-): (EvalParametersFloat, float) =
+): EvalParametersFloat =
   var solution = start
 
   echo "starting error: ", fmt"{solution.error(data):>9.7f}", ", starting lr: ", startLr
@@ -43,7 +42,7 @@ proc optimize(
   let finalError = solution.error(data)
   echo fmt"Final error: {finalError:>9.7f}"
 
-  return (solution, finalError)
+  solution
 
 let startTime = now()
 
@@ -79,10 +78,8 @@ data.shuffle
 
 echo "Total number of entries: ", data.len
 
-let startDate = now().format("yyyy-MM-dd-HH-mm-ss")
-
 var startEvalParams = newEvalParameters(float32)
-let (ep, finalError) = startEvalParams.optimize(data)
+let ep = startEvalParams.optimize(data)
 
 const
   epDir = "res/params/"
@@ -109,28 +106,3 @@ writeFile epFileName, ep.toString
 echo "Wrote to: ", epFileName
 
 echo "Total time: ", now() - startTime
-
-# TODO piece values
-
-#[ 
-let (ep, finalError) = newEvalParametersFloat().optimize(data)
-
-let
-    timeString = now().format("yyyy-MM-dd-HH-mm-ss")
-    fileName = fmt"optimizationResult_{timeString}_{finalError:>9.7f}.txt"
-
-let fileContent = &"""
-import evalParameters
-
-const defaultEvalParameters* = {ep.convert.toSeq}.toEvalParameters
-
-func value*(piece: Piece): Value =
-    const table = [{ep.convert.pieceValuesAsString(data[0..<min(data.len, 10_000_000)])}king: valueCheckmate, noPiece: 0.Value]
-    table[piece]
-"""
-
-writeFile(fileName, fileContent)
-echo "filename: ", fileName
-
-echo "Total time: ", now() - startTime
- ]#

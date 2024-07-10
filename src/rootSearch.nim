@@ -1,6 +1,4 @@
-import
-  types, position, positionUtils, move, search, hashTable, searchUtils, evaluation,
-  utils
+import types, position, positionUtils, move, search, hashTable, searchUtils, utils
 
 import malebolgia
 

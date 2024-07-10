@@ -401,4 +401,3 @@ func isChess960*(position: Position): bool =
           [noSquare, classicalRookSource[color][side]]:
         return true
   false
-

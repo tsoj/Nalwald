@@ -1,18 +1,7 @@
 import
-  ../position,
-  ../types,
-  ../perft,
-  ../searchUtils,
-  ../hashTable,
-  ../moveIterator,
-  ../positionUtils,
-  ../evaluation,
-  ../utils,
-  ../timeManagedSearch,
-  ../see,
-  exampleFens
+  ../position, ../types, ../searchUtils, ../hashTable, ../moveIterator, ../positionUtils
 
-import std/[random, strutils, sequtils, terminal, options, strformat]
+import std/[random, strformat]
 
 type TestPerftState = object
   randomMoves: array[10000, Move]

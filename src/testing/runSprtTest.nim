@@ -30,9 +30,8 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
-      
-echo "Testing against ", otherBranch
 
+echo "Testing against ", otherBranch
 
 if currentBranch == otherBranch:
   if not askYesNo(
@@ -40,7 +39,7 @@ if currentBranch == otherBranch:
       "You are about to test the main branch against itself. Are you sure you want to do this?"
   ):
     quit(QuitFailure)
-    
+
 doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 
 discard existsOrCreateDir workDir
