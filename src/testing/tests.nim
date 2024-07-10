@@ -168,6 +168,14 @@ proc seeTest(): Option[string] =
     if seeResult != seeValue:
       return some fmt"Failed SEE test. Position: {fen}, move: {moveString}, target value {seeValue}, see value: {seeResult}"
 
+proc chess960DetectionTest*(): Option[string] =
+  for fen in classicalFens:
+    if fen.toPosition.isChess960:
+      return some fmt"Failed Chess960 detection test. {fen} is detected as Chess960 position."
+  for fen in chess960Fens:
+    if not fen.toPosition.isChess960:
+      return some fmt"Failed Chess960 detection test. {fen} is not detected as Chess960 position."
+
 proc speedPerftTest*() =
   var nodes = 0
   let start = secondsSince1970()
@@ -187,6 +195,7 @@ proc speedPerftTest*() =
 proc runTests*(): bool =
   const tests = [
     (testFen, "FEN parsing"),
+    (chess960DetectionTest, "Detecting Chess960 positions"),
     (seeTest, "Static exchange evaluation"),
     (positionTransforms, "Position transform"),
     (positionStreams, "Binary position streams"),
@@ -213,28 +222,6 @@ proc runTests*(): bool =
   else:
     styledEcho fgRed, styleBright, fmt"Failed {failedTests} of {tests.len} tests"
     false
-
-# proc runTests*() =
-#   doAssert "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1".toPosition.legalMoves.len ==
-#     265
-
-#   echo fmt"{maxNumPerftNodes = }"
-#   echo fmt"{useInternalFens = }"
-#   echo fmt"{useExternalFens = }"
-
-#   echo "---------------"
-#   styledEcho styleBright, "SEE test:"
-#   seeTest()
-
-#   echo "---------------"
-#   styledEcho styleBright, "Search and perft test:"
-#   testSearchAndPerft()
-
-#   echo "---------------"
-#   speedPerftTest()
-
-#   echo "---------------"
-#   styledEcho styleBright, fgGreen, "Finished all tests successfully"
 
 when isMainModule:
   echo "Version ", versionOrId()

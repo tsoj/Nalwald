@@ -1,6 +1,5 @@
-const someFens* = [
-  # classical positions
-  "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
+const classicalFens* = [
+"r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",
   "8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1",
   "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1",
   "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8",
@@ -8,13 +7,6 @@ const someFens* = [
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
   "4k3/8/8/8/8/8/8/4K2R w K - 0 1",
   "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1",
-  # Chess960 positions
-  "n1nqkr1b/p1pp3p/4p1r1/1p1b1p2/P4Pp1/RN1NP3/1PPPQ1PP/1R2K1BB w Qk - 0 9",
-  "nrnqkrbb/pppp1ppp/4p3/8/6P1/1N6/PPPPPP1P/1RNQKRBB b Kkq - 1 2",
-  "rnbqkbrn/p1pp1pp1/4p3/7p/2p4P/2P5/PP1PPPP1/R1BQKBRN w QGqg - 0 9",
-  "b1rkrbnq/1pp1pppp/2np4/p5N1/8/1P2P3/P1PP1PPP/BNRKRB1Q w CEce - 0 9",
-  "nrknbrqb/3p1ppp/ppN1p3/8/6P1/8/PPPPPP1P/1RKNBRQB w BFbf - 0 9",
-  "bbqrnnkr/1ppp1p1p/5p2/p5p1/P7/1P4P1/2PPPP1P/1BQRNNKR w DKdk - 0 9",
   # fens from stormphrax, taken from alexandria, ultimately from bitgenie
   "r3k2r/2pb1ppp/2pp1q2/p7/1nP1B3/1P2P3/P2N1PPP/R2QK2R w KQkq a6 0 14",
   "4rrk1/2p1b1p1/p1p3q1/4p3/2P2n1p/1P1NR2P/PB3PP1/3R1QK1 b - - 2 24",
@@ -67,6 +59,22 @@ const someFens* = [
   "3br1k1/p1pn3p/1p3n2/5pNq/2P1p3/1PN3PP/P2Q1PB1/4R1K1 w - - 0 23",
   "2r2b2/5p2/5k2/p1r1pP2/P2pB3/1P3P2/K1P3R1/7R w - - 23 93",
 ]
+
+const chess960Fens* = [
+  "n1nqkr1b/p1pp3p/4p1r1/1p1b1p2/P4Pp1/RN1NP3/1PPPQ1PP/1R2K1BB w Qk - 0 9",
+  "nrnqkrbb/pppp1ppp/4p3/8/6P1/1N6/PPPPPP1P/1RNQKRBB b Kkq - 1 2",
+  "rnbqkbrn/p1pp1pp1/4p3/7p/2p4P/2P5/PP1PPPP1/R1BQKBRN w QGqg - 0 9",
+  "b1rkrbnq/1pp1pppp/2np4/p5N1/8/1P2P3/P1PP1PPP/BNRKRB1Q w CEce - 0 9",
+  "nrknbrqb/3p1ppp/ppN1p3/8/6P1/8/PPPPPP1P/1RKNBRQB w BFbf - 0 9",
+  "bbqrnnkr/1ppp1p1p/5p2/p5p1/P7/1P4P1/2PPPP1P/1BQRNNKR w DKdk - 0 9",
+  "nrbknbqr/pppppppp/8/8/8/8/PPPPPPPP/RBNQBKRN w KQkq - 0 1",
+  "qrbknrnb/pppppppp/8/8/8/8/PPPPPPPP/RNQNBBKR w KQkq - 0 1",
+  "rnkbbnqr/pppppppp/8/8/8/8/PPPPPPPP/NNBRQKRB w KQkq - 0 1",
+  "rbnkrnbq/pppppppp/8/8/8/8/PPPPPPPP/RQBNKBRN w KQkq - 0 1",
+  "nbbqrkrn/pppppppp/8/8/8/8/PPPPPPPP/QBRKBNRN w KQkq - 0 1",
+]
+
+const someFens* = @chess960Fens & @classicalFens
 
 #!fmt: off
 const perftFens* = [

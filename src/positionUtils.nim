@@ -2,7 +2,7 @@ import types, position, move, movegen, utils, bitboard, castling
 
 export move, position
 
-import std/[strutils, options, bitops, strformat]
+import std/[strutils, options, bitops, strformat, streams]
 
 func fen*(position: Position): string =
   result = ""
@@ -95,17 +95,6 @@ func legalMoves*(position: Position): seq[Move] =
           continue
         result.add move
       break
-
-func isChess960*(position: Position): bool =
-  for color in white .. black:
-    if position.rookSource[color] != [noSquare, noSquare] and
-        position.kingSquare(color) != classicalKingSource[color]:
-      return true
-    for side in queenside .. kingside:
-      if position.rookSource[color][side] notin
-          [noSquare, classicalRookSource[color][side]]:
-        return true
-  false
 
 func toMove*(s: string, position: Position): Move =
   if s.len != 4 and s.len != 5:
@@ -277,8 +266,40 @@ func notation*(pv: seq[Move], position: Position): string =
     result &= move.notation(currentPosition) & " "
     currentPosition = currentPosition.doMove(move)
 
-func insufficientMaterial*(position: Position): bool =
-  empty(position[pawn] or position[rook] or position[queen]) and
-    (position[bishop] or position[knight]).countSetBits <= 1
+proc writePosition*(stream: Stream, position: Position) =
+  for pieceBitboard in position.pieces:
+    stream.write pieceBitboard.uint64
+  for colorBitboard in position.colors:
+    stream.write colorBitboard.uint64
+
+  stream.write position.enPassantTarget.uint64
+
+  for color in white .. black:
+    for castlingSide in CastlingSide:
+      stream.write position.rookSource[color][castlingSide].uint8
+
+  stream.write position.zobristKey.uint64
+  stream.write position.us.uint8
+  stream.write position.halfmovesPlayed.int16
+  stream.write position.halfmoveClock.int16
+
+proc readPosition*(stream: Stream): Position =
+  for pieceBitboard in result.pieces.mitems:
+    pieceBitboard = stream.readUint64.Bitboard
+  for colorBitboard in result.colors.mitems:
+    colorBitboard = stream.readUint64.Bitboard
+
+  result.enPassantTarget = stream.readUint64.Bitboard
+
+  for color in white .. black:
+    for castlingSide in CastlingSide:
+      result.rookSource[color][castlingSide] = stream.readUint8.Square
+
+  result.zobristKey = stream.readUint64.ZobristKey
+  result.us = stream.readUint8.Color
+  result.halfmovesPlayed = stream.readInt16
+  result.halfmoveClock = stream.readInt16
+
+  doAssert result.zobristKey == result.calculateZobristKey
 
 const startpos* = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition
