@@ -140,11 +140,9 @@ func search(
 
   if height > 0 and (
     height == Ply.high or position.insufficientMaterial or position.halfmoveClock >= 100 or
-    state.gameHistory.checkForRepetition(position, height)
+    state.gameHistory.checkForRepetitionAndAdd(position, height)
   ):
     return 0.Value
-
-  # state.gameHistory.update(position, height)
 
   let
     us = position.us
