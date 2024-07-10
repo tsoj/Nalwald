@@ -9,9 +9,9 @@ Nalwald is a superhuman chess engine for classical and fischer random chess. It 
 
 ### Download
 ```
-git clone https://gitlab.com/tsoj/Nalwald.git
+git clone https://github.com/tsoj/Nalwald.git
 ```
-Pre-compiled executables for Windows and Linux can be found [here](https://gitlab.com/tsoj/Nalwald/-/releases).
+Pre-compiled executables for Windows and Linux can be found [here](https://github.com/tsoj/Nalwald/releases).
 
 ### Compile
 
