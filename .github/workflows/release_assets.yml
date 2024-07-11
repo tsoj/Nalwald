@@ -59,14 +59,19 @@ jobs:
           nimble install malebolgia@1.3.2
           if [ ${{ runner.os }} = 'macOS' ]; then
             nim default Nalwald
+            nim modern Nalwald
           else
             nim default --passL:"-static" Nalwald
+            nim modern --passL:"-static" Nalwald
           fi
           mv bin/Nalwald${{ runner.os == 'Windows' && '.exe' || '' }} bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}${{ runner.os == 'Windows' && '.exe' || '' }}
+          mv bin/Nalwald-modern${{ runner.os == 'Windows' && '.exe' || '' }} bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}-modern${{ runner.os == 'Windows' && '.exe' || '' }}
 
       - name: Upload release asset
         uses: softprops/action-gh-release@v2
         with:
-          files: ./Nalwald/bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}${{ runner.os == 'Windows' && '.exe' || '' }}
+          files: |
+            ./Nalwald/bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}${{ runner.os == 'Windows' && '.exe' || '' }}
+            ./Nalwald/bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}-modern${{ runner.os == 'Windows' && '.exe' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
