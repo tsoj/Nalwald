@@ -77,31 +77,31 @@ proc printUciSearchParams*() =
       param.max
 
 #!fmt: off
-addParam(deltaMargin, default = 92, min = 30, max = 300, step = 30)
-addParam(failHighDeltaMargin, default = 69, min = 10, max = 200, step = 20)
+addParam(deltaMargin, default = 42, min = 30, max = 300, step = 20)
+addParam(failHighDeltaMargin, default = 72, min = 10, max = 200, step = 20)
 
-addParam(aspirationWindowStartingOffset, default = 9, min = 2, max = 100, step = 3)
-addParam(aspirationWindowMultiplier, default = 1.9, min = 1.1, max = 10.0, step = 0.2)
+addParam(aspirationWindowStartingOffset, default = 8, min = 2, max = 100, step = 3)
+addParam(aspirationWindowMultiplier, default = 2.0, min = 1.1, max = 10.0, step = 0.2)
 
 addParam(iirMinDepth, default = 4.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
 
-addParam(futilityReductionDiv, default = 83, min = 10, max = 500, step = 30)
+addParam(futilityReductionDiv, default = 80, min = 10, max = 500, step = 30)
 addParam(minMoveCounterFutility, default = 2, min = 1, max = 10, step = 1)
 
-addParam(hashResultFutilityMarginMul, default = 280, min = 50, max = 1000, step = 30)
+addParam(hashResultFutilityMarginMul, default = 299, min = 50, max = 1000, step = 30)
 
 addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.Ply)
 addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
 
-addParam(lmrDepthHalfLife, default = 36, min = 5, max = 60, step = 8)
+addParam(lmrDepthHalfLife, default = 35, min = 5, max = 60, step = 8)
 addParam(lmrDepthSub, default = 1.Ply, min = 0.Ply, max = 5.Ply, step = 1.Ply)
 addParam(minMoveCounterLmr, default = 5, min = 1, max = 15, step = 1)
 
-addParam(maxHistoryTableValue, default = 112000, min = 1000, max = 10000000, step = 50000)
-addParam(historyTableBadMoveDivider, default = 11.5, min = 1.0, max = 100.0, step = 10.0)
-addParam(historyTableCounterMul, default = 74.0, min = 1.0, max = 200.0, step = 20.0)
-addParam(historyTableShrinkDiv, default = 2.0, min = 1.1, max = 10.0, step = 0.5)
-addParam(historyTableUnexpectedDivider, default = 0.98, min = 0.1, max = 1.0, step = 0.1)
+addParam(maxHistoryTableValue, default = 129000, min = 1000, max = 10000000, step = 40000)
+addParam(historyTableBadMoveDivider, default = 25.5, min = 1.0, max = 100.0, step = 10.0)
+addParam(historyTableCounterMul, default = 90.0, min = 1.0, max = 200.0, step = 20.0)
+addParam(historyTableShrinkDiv, default = 2.1, min = 1.1, max = 10.0, step = 0.5)
+addParam(historyTableUnexpectedDivider, default = 0.95, min = 0.1, max = 1.0, step = 0.1)
 #!fmt: on
 
 proc getWeatherFactoryConfig*(): string =
