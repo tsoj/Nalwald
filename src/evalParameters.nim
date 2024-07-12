@@ -10,6 +10,18 @@ type Relativity* = enum
 #!fmt: off
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
   pst*: array[pawn..noPiece, array[a1..h8, ValueType]]
+  bonusIsolatedPawn*: ValueType
+  bonusPassedPawnCanMove*: array[8, ValueType]
+  bonusPawnHasTwoNeighbors*: ValueType
+  bonusKnightAttackingPiece*: ValueType
+  bonusPieceForkedMajorPieces*: ValueType
+  bonusBothBishops*: ValueType
+  bonusRookOnOpenFile*: ValueType
+  bonusMobility*: array[knight..queen, array[32, ValueType]]
+  bonusAttackingPiece*: array[knight..queen, array[pawn..king, ValueType]]
+  bonusTargetingKingArea*: array[bishop..queen, ValueType]
+  bonusKingSafety*: array[32, ValueType]
+  bonusAttackersNearKing*: array[5*5, ValueType]
 #!fmt: on
 
 type EvalParametersTemplate*[ValueType] {.requiresInit.} =

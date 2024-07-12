@@ -10,7 +10,7 @@ import std/[times, strformat, random, math, os]
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
-    maxNumEpochs = 2,
+    maxNumEpochs = 10,
     startLr = 10.0,
     finalLr = 0.05,
 ): EvalParametersFloat =

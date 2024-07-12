@@ -58,19 +58,197 @@ template addValue(evalState: EvalState, goodFor: static Color, parameter: untype
         value = -value
       evalState.absoluteValue[phase] += value
 
+func mobility(
+    evalState: EvalState,
+    position: Position,
+    piece: static Piece,
+    us: static Color,
+    attackMask: Bitboard,
+) =
+  let reachableSquares = (attackMask and not position[us]).countSetBits
+  evalState.addValue(goodFor = us, bonusMobility[piece][reachableSquares])
+
+func forkingMajorPieces(
+    evalState: EvalState, position: Position, us: static Color, attackMask: Bitboard
+) =
+  if (attackMask and position[us.opposite] and (position[queen] or position[rook])).countSetBits >=
+      2:
+    evalState.addValue(goodFor = us, bonusPieceForkedMajorPieces)
+
+func attackingPiece(
+    evalState: EvalState,
+    position: Position,
+    piece: static Piece,
+    us: static Color,
+    attackMask: Bitboard,
+) =
+  static:
+    doAssert piece in knight .. queen
+  for attackedPiece in pawn .. king:
+    if not empty(attackMask and position[us.opposite] and position[attackedPiece]):
+      evalState.addValue(goodFor = us, bonusAttackingPiece[piece][attackedPiece])
+
+func targetingKingArea(
+    evalState: EvalState,
+    position: Position,
+    piece: static Piece,
+    us: static Color,
+    attackMask: Bitboard,
+) =
+  static:
+    doAssert piece in bishop .. queen
+  let enemy = us.opposite
+  if not empty(
+    attackMask and king.attackMask(position[king, enemy].toSquare, 0.Bitboard)
+  ):
+    evalState.addValue(goodFor = us, bonusTargetingKingArea[piece])
+
+func evaluatePawn(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  # passed pawn
+  if position.isPassedPawn(us, square):
+    # passed pawn can move forward
+    let index = square.colorConditionalMirrorVertically(us).int div 8
+    evalState.addValue(goodFor = us, bonusPassedPawnCanMove[index])
+
+    # isolated pawn
+    if empty(position[pawn] and position[us] and adjacentFiles[square]):
+      evalState.addValue(goodFor = us, bonusIsolatedPawn)
+
+    # has two neighbors
+    elif not empty(position[us] and position[pawn] and rightFiles[square]) and
+        not empty(position[us] and position[pawn] and leftFiles[square]):
+      evalState.addValue(goodFor = us, bonusPawnHasTwoNeighbors)
+
+func evaluateKnight(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  return
+
+  let attackMask = knight.attackMask(square, position.occupancy)
+
+  # mobility
+  evalState.mobility(position, knight, us, attackMask)
+
+  # forks
+  evalState.forkingMajorPieces(position, us, attackMask)
+
+  # attacking pieces
+  evalState.attackingPiece(position, knight, us, attackMask)
+
+  # attacking bishop, rook, or queen
+  if not empty(
+    attackMask and position[us.opposite] and
+      (position[bishop] or position[rook] or position[queen])
+  ):
+    evalState.addValue(goodFor = us, bonusKnightAttackingPiece)
+
+func evaluateBishop(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  return
+
+  let attackMask = bishop.attackMask(square, position.occupancy)
+
+  # mobility
+  evalState.mobility(position, bishop, us, attackMask)
+
+  # forks
+  evalState.forkingMajorPieces(position, us, attackMask)
+
+  # attacking pieces
+  evalState.attackingPiece(position, bishop, us, attackMask)
+
+  # targeting enemy king area
+  evalState.targetingKingArea(position, bishop, us, attackMask)
+
+  # both bishops
+  if not empty(position[us] and position[bishop] and not square.toBitboard):
+    evalState.addValue(goodFor = us, bonusBothBishops)
+
+func evaluateRook(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  let attackMask = rook.attackMask(square, position.occupancy)
+
+  # mobility
+  evalState.mobility(position, rook, us, attackMask)
+
+  # attacking pieces
+  evalState.attackingPiece(position, rook, us, attackMask)
+
+  # targeting enemy king area
+  evalState.targetingKingArea(position, rook, us, attackMask)
+
+  # rook on open file
+  if empty(files[square] and position[pawn]):
+    evalState.addValue(goodFor = us, bonusRookOnOpenFile)
+
+func evaluateQueen(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  let attackMask = queen.attackMask(square, position.occupancy)
+
+  # mobility
+  evalState.mobility(position, queen, us, attackMask)
+
+  # attacking pieces
+  evalState.attackingPiece(position, queen, us, attackMask)
+
+  # targeting enemy king area
+  evalState.targetingKingArea(position, queen, us, attackMask)
+
+func evaluateKing(
+    evalState: EvalState, position: Position, square: Square, us: static Color
+) =
+  # kingsafety by pawn shielding
+  let numPossibleQueenAttack =
+    queen.attackMask(square, position[pawn] and position[us]).countSetBits
+  evalState.addValue(goodFor = us, bonusKingSafety[numPossibleQueenAttack])
+
+  # numbers of attackers near king
+  let numNearAttackers = (position[us.opposite] and mask5x5[square]).countSetBits
+  evalState.addValue(goodFor = us, bonusAttackersNearKing[numNearAttackers])
+
+func evaluatePieceTypeFromWhitesPerspective(
+    evalState: EvalState,
+    position: Position,
+    piece: static Piece,
+    color: static Color,
+    square: Square,
+) {.inline.} =
+  when piece == pawn:
+    evalState.evaluatePawn(position, square, color)
+  elif piece == knight:
+    evalState.evaluateKnight(position, square, color)
+  elif piece == bishop:
+    evalState.evaluateBishop(position, square, color)
+  elif piece == rook:
+    evalState.evaluateRook(position, square, color)
+  elif piece == queen:
+    evalState.evaluateQueen(position, square, color)
+  elif piece == king:
+    evalState.evaluateKing(position, square, color)
+
+  # pst
+  let piece =
+    when piece == pawn:
+      if position.isPassedPawn(color, square): noPiece else: pawn
+    else:
+      piece
+
+  let square = square.colorConditionalMirrorVertically(color)
+  evalState.addValue(goodFor = color, pst[piece][square])
+
 func evaluatePieceTypeFromWhitesPerspective(
     evalState: EvalState, position: Position, piece: static Piece
 ) {.inline.} =
   for pieceColor in (white, black).fields:
     for square in (position[piece] and position[pieceColor]):
-      let piece =
-        when piece == pawn:
-          if position.isPassedPawn(pieceColor, square): noPiece else: pawn
-        else:
-          piece
-
-      let square = square.colorConditionalMirrorVertically(pieceColor)
-      evalState.addValue(goodFor = pieceColor, pst[piece][square])
+      evalState.evaluatePieceTypeFromWhitesPerspective(
+        position, piece, pieceColor, square
+      )
 
 func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   if position.halfmoveClock >= 100:
