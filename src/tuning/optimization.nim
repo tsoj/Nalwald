@@ -10,7 +10,7 @@ import std/[times, strformat, random, math, os]
 proc optimize(
     start: EvalParametersFloat,
     data: var seq[Entry],
-    maxNumEpochs = 30,
+    maxNumEpochs = 2,
     startLr = 10.0,
     finalLr = 0.05,
 ): EvalParametersFloat =
@@ -55,11 +55,11 @@ data.loadDataEpd "res/trainingSets/quietLeavesSmallPoolGamesNalwaldSearchLabeled
 data.loadDataEpd "res/trainingSets/quietSmallPoolGamesNalwald2Labeled.epd"
 data.loadDataEpd "res/trainingSets/gamesNalwald.epd"
 
-data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-29-44.bin"
-data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-30-48.bin"
-data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-14-51.bin"
-data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-35-01.bin"
-data.loadDataBin "res/trainingSets/trainingSet_2023-10-04-00-47-53.bin"
+# data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-29-44.bin"
+# data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-30-48.bin"
+# data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-14-51.bin"
+# data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-35-01.bin"
+# data.loadDataBin "res/trainingSets/trainingSet_2023-10-04-00-47-53.bin"
 # data.loadDataBin "res/trainingSets/trainingSet_2023-10-06-17-43-01.bin" # because otherwise the training data doesn't really fit into RAM
 
 data.loadDataBin "res/trainingSets/trainingSet_2023-12-22-16-08-28.bin"

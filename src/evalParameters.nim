@@ -9,10 +9,7 @@ type Relativity* = enum
 
 #!fmt: off
 type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
-  # here the pawn in the first dim stand for passed pawns
-  pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]]]
-  pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
-  pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, ValueType]
+  pst*: array[pawn..noPiece, array[a1..h8, ValueType]]
 #!fmt: on
 
 type EvalParametersTemplate*[ValueType] {.requiresInit.} =
