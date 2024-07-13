@@ -81,6 +81,17 @@ iterator iterativeDeepeningSearch*(
           if skipMoves.len == position.legalMoves.len:
             break
 
+          if multiPvNumber > 1:
+            let hashResult = hashTable.get(position.zobristKey)
+            hashTable.add(
+              position.zobristKey,
+              hashResult.nodeType,
+              hashResult.value,
+              Ply.low,
+              hashResult.bestMove,
+              override = true,
+            )
+
           threadStop.store(false)
 
           for searchState in searchStates.mitems:
