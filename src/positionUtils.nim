@@ -384,14 +384,16 @@ func validSANMove(position: Position, move: Move, san: string): bool =
 
   var san = san.splitWhitespace()[0]
 
+  # let
+  #   queensideRook = position.rookSource[white][queenside]
+  #   kingsideRook = position.rookSource[white][queenside]
+
+  # e4 e6 d4 d5 exd5 exd5 Nf3 Nf6 Bd3 Bd6 Qe2+ Be7 O-O O-O Re1 Re8 Qd1 c5 c3
+
   if san.startsWith "O-O-O":
-    return
-      move.castled and files[move.target] == files[
-        position.rookSource[white][queenside]
-      ]
+    return move.castled and move.target == position.rookSource[position.us][queenside]
   elif san.startsWith "O-O":
-    return
-      move.castled and files[move.target] == files[position.rookSource[white][kingside]]
+    return move.castled and move.target == position.rookSource[position.us][kingside]
 
   doAssert san.len > 0
 

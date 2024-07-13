@@ -24,7 +24,12 @@ const
   defaultNumThreads = 1
 
 type
-  SearchThreadInput = tuple[searchInfo: SearchInfo, uciCompatibleOutput: bool]
+  SearchThreadInput =
+    tuple[
+      searchInfo: SearchInfo,
+      uciCompatibleOutput: bool,
+      searchRunningFlag: ptr Atomic[bool],
+    ]
   SearchThread = Thread[SearchThreadInput]
   UciState = object
     history: seq[Position]
@@ -95,7 +100,9 @@ proc stop(uciState: var UciState) =
     joinThread uciState.searchThread[]
   uciState.searchThread = nil
 
-proc moves(history: seq[Position], params: seq[string], sanMoves = false): seq[Position] =
+proc moves(
+    history: seq[Position], params: seq[string], sanMoves = false
+): seq[Position] =
   if params.len < 1:
     echo "Missing moves"
 
@@ -106,7 +113,11 @@ proc moves(history: seq[Position], params: seq[string], sanMoves = false): seq[P
   for i in 0 ..< params.len:
     let
       position = result[^1]
-      move = if sanMoves: params[i].toMoveFromSAN(position) else: params[i].toMove(position)
+      move =
+        if sanMoves:
+          params[i].toMoveFromSAN(position)
+        else:
+          params[i].toMove(position)
     result.add position.doMove move
 
 proc setPosition(uciState: var UciState, params: seq[string]) =
@@ -137,7 +148,9 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
     uciState.history = @[position]
 
 proc runSearch(searchThreadInput: SearchThreadInput) {.thread, nimcall.} =
+  searchThreadInput.searchRunningFlag[].store(true)
   uciSearch(searchThreadInput.searchInfo, searchThreadInput.uciCompatibleOutput)
+  searchThreadInput.searchRunningFlag[].store(false)
 
 proc go(uciState: var UciState, params: seq[string]) =
   var searchInfo = SearchInfo(
@@ -189,7 +202,11 @@ proc go(uciState: var UciState, params: seq[string]) =
   createThread(
     uciState.searchThread[],
     runSearch,
-    (searchInfo: searchInfo, uciCompatibleOutput: uciState.uciCompatibleOutput),
+    (
+      searchInfo: searchInfo,
+      uciCompatibleOutput: uciState.uciCompatibleOutput,
+      searchRunningFlag: addr uciState.searchRunningFlag,
+    ),
   )
 
 proc uciNewGame(uciState: var UciState) =

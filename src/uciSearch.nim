@@ -45,20 +45,34 @@ proc printBeautifulSingleInfoString(
 ) =
   if multiPvIndex != -1:
     stdout.styledWrite fmt"{multiPvIndex+1:>2}. "
-  # printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
 
-  let (scoreType, scoreValue) = value.mateOrScore
+  let
+    color =
+      if value.abs <= 10.cp:
+        fgDefault
+      elif value > 0:
+        fgGreen
+      else:
+        fgRed
+    style: set[Style] =
+      if value.abs >= 100.cp:
+        {styleBright}
+      elif value.abs <= 20.cp:
+        {styleDim}
+      else:
+        {}
+    (scoreType, scoreValue) = value.mateOrScore
 
   if scoreType == centipawnScore:
     let scoreString =
       (if scoreValue > 0: "+" else: "") & fmt"{scoreValue.float / 100.0:.2f}"
-    stdout.styledWrite fmt"{scoreString} "
-    # printKeyValue "score cp", fmt"{scoreValue:>4}"
+    stdout.styledWrite style, color, fmt"{scoreString:>10} "
   else:
-    doAssert false
-    # printKeyValue (if scoreType == mated: "score mate -" else: "score mate "), fmt"{scoreValue}"
+    let extra = if scoreType == mating: ":D" else: ":("
+    stdout.styledWrite styleBright,
+      color, fmt"    #{scoreValue}  ", resetStyle, color, styleDim, extra
 
-  stdout.styledWrite pv.notationSAN(position)
+  stdout.styledWrite "    ", pv.notationSAN(position)
 
 proc printBeautifulInfoString(
     iteration: int,
@@ -70,12 +84,15 @@ proc printBeautifulInfoString(
 ) =
   let kiloNps = (nodes.float / max(0.0001, time.float)).int div 1_000
 
-  stdout.styledWrite fmt"iteration {iteration+1:>2}: "
+  stdout.styledWrite styleDim,
+    "iteration ", resetStyle, styleBright, fmt"{iteration+1:>2} "
 
-  stdout.styledWrite fmt"{time.stringForHuman:>6} "
-  stdout.styledWrite fmt"{nodes.stringForHuman:>6} nodes "
-  stdout.styledWrite fmt"{kiloNps:>4} knps "
-  stdout.styledWrite fmt"TT: {hashFull div 10:>2}% "
+  stdout.styledWrite styleDim, fmt"{time.stringForHuman:>10} "
+  stdout.styledWrite styleDim, styleBright, fmt"{nodes.stringForHuman:>9}"
+  stdout.styledWrite styleDim, " nodes "
+  stdout.styledWrite styleDim, styleBright, fmt"{kiloNps:>7}"
+  stdout.styledWrite styleDim, " knps "
+  stdout.styledWrite styleDim, fmt"    TT: {hashFull div 10:>2}% "
 
   if pvList.len > 1:
     for i, pv in pvList:
@@ -110,8 +127,7 @@ proc printInfoString(
     pv: seq[Move],
     time: Seconds,
     hashFull: int,
-    beautiful: bool,
-    multiPvIndex = -1,
+    multiPvIndex: int,
 ) =
   proc printKeyValue(key, value: string) =
     stdout.write " ", key, " ", value
@@ -171,7 +187,6 @@ proc printInfoString(
         nodes = nodes,
         time = time,
         hashFull = hashFull,
-        beautiful = beautiful,
         multiPvIndex =
           if pvList.len > 1:
             i + 1
