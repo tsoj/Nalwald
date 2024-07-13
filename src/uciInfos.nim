@@ -20,12 +20,14 @@ proc help*(params: openArray[string]) =
       "- *quit*\n",
       "- *ucinewgame*\n",
       "- *moves*\n",
+      "- *multipv*\n",
       "- *print*\n",
       "- *fen*\n",
       "- *perft*\n",
       "- *test*\n",
       "- *speedtest*\n",
       "- *eval*\n",
+      "- *flip*\n",
       "- *piecevalues*\n",
       "- *about*\n",
       "- *help*\n",
@@ -98,6 +100,9 @@ proc help*(params: openArray[string]) =
         "Example:\n",
         "`e2e4 c7c6 d2d4 d7d5` will have the same effect as `moves e2e4 c7c6 d2d4 d7d5`",
       )
+    of "multipv":
+      printMarkdownSubset "**multipv <x>**"
+      printMarkdownSubset "Enables multi PV search of the `<x>` best moves. Equivalent to `setoption name MultiPV value <x>`."
     of "print":
       printMarkdownSubset "**print [debug]**"
       printMarkdownSubset(
@@ -116,6 +121,12 @@ proc help*(params: openArray[string]) =
       echo "Prints the static evaluation value for the current internal position."
     of "piecevalues":
       echo "Prints the values for each piece type."
+    of "flip":
+      printMarkdownSubset "**flip [horizontally|vertically]**"
+      printMarkdownSubset(
+        "Flips the current board. If `horizontally` is used, then the pieces will be mirrored from left to right, when ",
+        "`vertically` is selected, pieces are mirrored from top to bottom and additionally the colors of pieces are swapped."
+      )
     of "about":
       printMarkdownSubset "**about [extra]**"
       printMarkdownSubset(

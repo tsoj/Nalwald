@@ -307,4 +307,143 @@ proc readPosition*(stream: Stream): Position =
 
   doAssert result.zobristKey == result.calculateZobristKey
 
+func toSAN*(move: Move, position: Position): string =
+  let
+    newPosition = position.doMove move
+    moveFile = ($move.source)[0]
+    moveRank = ($move.source)[1]
+
+  if move.moved != pawn:
+    result = move.moved.notation.toUpperAscii
+
+  for (fromFile, fromRank) in [
+    (none char, none char),
+    (some moveFile, none char),
+    (none char, some moveRank),
+    (some moveFile, some moveRank),
+  ]:
+    proc isDisambiguated(): bool =
+      if move.moved == pawn and fromFile.isNone and move.captured != noPiece:
+        return false
+
+      for otherMove in position.legalMoves:
+        let
+          otherMoveFile = ($otherMove.source)[0]
+          otherMoveRank = ($otherMove.source)[1]
+
+        if otherMove.moved == move.moved and otherMove.target == move.target and
+            otherMove.source != move.source and
+            fromFile.get(otherwise = otherMoveFile) == otherMoveFile and
+            fromRank.get(otherwise = otherMoveRank) == otherMoveRank:
+          return false
+
+      true
+
+    if isDisambiguated():
+      if fromFile.isSome:
+        result &= $get(fromFile)
+      if fromRank.isSome:
+        result &= $get(fromRank)
+      break
+
+  if move.captured != noPiece:
+    result &= "x"
+
+  result &= $move.target
+
+  if move.promoted != noPiece:
+    result &= "=" & move.promoted.notation.toUpperAscii
+
+  if move.castled:
+    if position.castlingSide(move) == queenside:
+      result = "O-O-O"
+    else:
+      result = "O-O"
+
+  let inCheck = newPosition.inCheck(newPosition.us)
+  if newPosition.legalMoves.len == 0:
+    if inCheck:
+      result &= "#"
+    else:
+      result &= " 1/2-1/2"
+  else:
+    if inCheck:
+      result &= "+"
+    if newPosition.halfmoveClock > 100:
+      result &= " 1/2-1/2"
+
+func notationSAN*(pv: seq[Move], position: Position): string =
+  var currentPosition = position
+  for move in pv:
+    result &= move.toSAN(currentPosition) & " "
+    currentPosition = currentPosition.doMove(move)
+
+func validSANMove(position: Position, move: Move, san: string): bool =
+  if san.len == 0:
+    return false
+
+  var san = san.splitWhitespace()[0]
+
+  if san.startsWith "O-O-O":
+    return
+      move.castled and files[move.target] == files[
+        position.rookSource[white][queenside]
+      ]
+  elif san.startsWith "O-O":
+    return
+      move.castled and files[move.target] == files[position.rookSource[white][kingside]]
+
+  doAssert san.len > 0
+
+  if not san[0].isUpperAscii:
+    san = "P" & san
+  let moved = san[0].toColoredPiece.piece
+  san = san[1 ..^ 1]
+
+  let isCapture = "x" in san
+
+  san = san.replace("+")
+  san = san.replace("#")
+  san = san.replace("x")
+
+  var promoted = noPiece
+
+  if "=" in san:
+    doAssert san.len >= 2 and san[^2] == '='
+    promoted = san[^1].toColoredPiece.piece
+    san = san[0 ..^ 3]
+
+  doAssert san.len >= 2
+  let target = parseEnum[Square] san[^2 ..^ 1]
+
+  san = san[0 ..^ 3]
+
+  var
+    sourceRank = not 0.Bitboard
+    sourceFile = not 0.Bitboard
+
+  for i, s in san:
+    if i <= 1:
+      if s in "12345678":
+        sourceRank = ranks[parseEnum[Square]("a" & $s)]
+      if s in "abcdefgh":
+        sourceFile = files[parseEnum[Square]($s & "1")]
+
+  move.moved == moved and (move.captured != noPiece) == isCapture and
+    move.promoted == promoted and move.target == target and
+    not empty(sourceRank and sourceFile and move.source.toBitboard)
+
+func toMoveFromSAN*(sanMove: string, position: Position): Move =
+  result = noMove
+  for move in position.legalMoves:
+    if validSANMove(position, move, sanMove):
+      if result != noMove:
+        raise newException(
+          ValueError,
+          fmt"Ambiguous SAN move notation: {sanMove} (possible moves: {result}, {move}",
+        )
+      result = move
+  if result == noMove:
+    raise newException(ValueError, fmt"Illegal SAN notation: {sanMove}")
+
 const startpos* = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition

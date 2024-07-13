@@ -3,81 +3,145 @@ import
 
 import std/[terminal, strformat, strutils, algorithm, sugar, random]
 
-func printInfoString(
+func stringForHuman(time: Seconds): string =
+  if time < 1.Seconds:
+    fmt"{int(time * 1000.0)} ms"
+  elif time < 10.Seconds:
+    fmt"{time.float:.1f} s"
+  elif time < 300.Seconds:
+    fmt"{int(time)} s"
+  else:
+    fmt"{int(time / 60.0)} min"
+
+func stringForHuman(n: SomeInteger): string =
+  if n < 100_000: # up to 99,999
+    $n
+  elif n < 10_000_000: # up to 10,000k
+    $(n div 1000) & "k"
+  elif n < 10_000_000_000: # up to 10,000M
+    $(n div 1_000_000) & "M"
+  else:
+    $(n div 1_000_000_000) & "G"
+
+type ScoreType = enum
+  centipawnScore
+  mating
+  mated
+
+func mateOrScore(value: Value): (ScoreType, int) =
+  if abs(value) >= valueCheckmate:
+    ((if value < 0: mated else: mating), (value.plysUntilCheckmate.float / 2.0).int)
+  else:
+    (centipawnScore, value.toCp)
+
+proc printBeautifulSingleInfoString(
+    value: Value,
+    nodes: int,
+    position: Position,
+    pv: seq[Move],
+    time: Seconds,
+    hashFull: int,
+    multiPvIndex = -1,
+) =
+  if multiPvIndex != -1:
+    stdout.styledWrite fmt"{multiPvIndex+1:>2}. "
+  # printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
+
+  let (scoreType, scoreValue) = value.mateOrScore
+
+  if scoreType == centipawnScore:
+    let scoreString =
+      (if scoreValue > 0: "+" else: "") & fmt"{scoreValue.float / 100.0:.2f}"
+    stdout.styledWrite fmt"{scoreString} "
+    # printKeyValue "score cp", fmt"{scoreValue:>4}"
+  else:
+    doAssert false
+    # printKeyValue (if scoreType == mated: "score mate -" else: "score mate "), fmt"{scoreValue}"
+
+  stdout.styledWrite pv.notationSAN(position)
+
+proc printBeautifulInfoString(
+    iteration: int,
+    position: Position,
+    pvList: seq[Pv],
+    nodes: int,
+    time: Seconds,
+    hashFull: int,
+) =
+  let kiloNps = (nodes.float / max(0.0001, time.float)).int div 1_000
+
+  stdout.styledWrite fmt"iteration {iteration+1:>2}: "
+
+  stdout.styledWrite fmt"{time.stringForHuman:>6} "
+  stdout.styledWrite fmt"{nodes.stringForHuman:>6} nodes "
+  stdout.styledWrite fmt"{kiloNps:>4} knps "
+  stdout.styledWrite fmt"TT: {hashFull div 10:>2}% "
+
+  if pvList.len > 1:
+    for i, pv in pvList:
+      stdout.write "\n  "
+      printBeautifulSingleInfoString(
+        value = pv.value,
+        nodes = nodes,
+        position = position,
+        pv = pv.pv,
+        time = time,
+        hashFull = hashFull,
+        multiPvIndex = i,
+      )
+  else:
+    doAssert pvList.len >= 1
+    printBeautifulSingleInfoString(
+      value = pvList[0].value,
+      nodes = nodes,
+      position = position,
+      pv = pvList[0].pv,
+      time = time,
+      hashFull = hashFull,
+    )
+
+  echo ""
+
+proc printInfoString(
     iteration: int,
     value: Value,
     nodes: int,
-    pv: string,
+    position: Position,
+    pv: seq[Move],
     time: Seconds,
     hashFull: int,
     beautiful: bool,
     multiPvIndex = -1,
 ) =
-  {.cast(noSideEffect).}:
-    proc print(text: string, style: set[Style] = {}, color = fgDefault) =
-      if beautiful:
-        stdout.styledWrite color, style, text
-      else:
-        stdout.write text
+  proc printKeyValue(key, value: string) =
+    stdout.write " ", key, " ", value
 
-    proc printKeyValue(
-        key, value: string, valueColor: ForegroundColor, style: set[Style] = {}
-    ) =
-      print " " & key & " ", {styleItalic}
-      print value, style, valueColor
+  stdout.write "info"
 
-    print "info", {styleDim}
+  if multiPvIndex != -1:
+    printKeyValue "multipv", fmt"{multiPvIndex:>2}"
+  printKeyValue "depth", fmt"{iteration+1:>2}"
+  printKeyValue "time", fmt"{int(time * 1000.0):>6}"
+  printKeyValue "nodes", fmt"{nodes:>9}"
 
-    if multiPvIndex != -1:
-      printKeyValue("multipv", fmt"{multiPvIndex:>2}", fgMagenta)
-    printKeyValue("depth", fmt"{iteration+1:>2}", fgBlue)
-    printKeyValue("time", fmt"{int(time * 1000.0):>6}", fgCyan)
-    printKeyValue("nodes", fmt"{nodes:>9}", fgYellow)
+  let nps = int(nodes.float / max(0.0001, time.float))
+  printKeyValue "nps", fmt"{nps:>7}"
 
-    let nps = int(nodes.float / max(0.0001, time.float))
-    printKeyValue("nps", fmt"{nps:>7}", fgGreen)
+  printKeyValue "hashfull", fmt"{hashFull:>4}"
 
-    printKeyValue(
-      "hashfull",
-      fmt"{hashFull:>4}",
-      fgCyan,
-      if hashFull <= 500:
-        {styleDim}
-      else:
-        {}
-      ,
-    )
+  let (scoreType, scoreValue) = value.mateOrScore
 
-    if abs(value) >= valueCheckmate:
-      print " score ", {styleItalic}
-      let
-        valueString =
-          (if value < 0: "mate -" else: "mate ") &
-          $(value.plysUntilCheckmate.float / 2.0).int
-        color = if value > 0: fgGreen else: fgRed
+  if scoreType == centipawnScore:
+    printKeyValue "score cp", fmt"{scoreValue:>4}"
+  else:
+    printKeyValue (if scoreType == mated: "score mate -" else: "score mate "),
+      fmt"{scoreValue}"
 
-      print valueString, {styleBright}, color
-    else:
-      let
-        valueString = fmt"{value.toCp:>4}"
-        style: set[Style] =
-          if value.abs < 100.cp:
-            {styleDim}
-          else:
-            {}
+  printKeyValue "pv", pv.notation(position)
 
-      print " score cp ", {styleItalic}
-      if value.abs <= 10.cp:
-        print valueString, style
-      else:
-        let color = if value > 0: fgGreen else: fgRed
-        print valueString, style, color
+  echo ""
 
-      printKeyValue("pv", pv, fgBlue, {styleBright})
-
-    echo ""
-
-func printInfoString(
+proc printInfoString(
     iteration: int,
     position: Position,
     pvList: seq[Pv],
@@ -88,22 +152,33 @@ func printInfoString(
 ) =
   doAssert pvList.isSorted((x, y) => cmp(x.value, y.value), Descending)
 
-  for i, pv in pvList:
-    printInfoString(
+  if beautiful:
+    printBeautifulInfoString(
       iteration = iteration,
-      value = pv.value,
-      pv = pv.pv.notation(position),
+      position = position,
+      pvList = pvList,
       nodes = nodes,
       time = time,
       hashFull = hashFull,
-      beautiful = beautiful,
-      multiPvIndex =
-        if pvList.len > 1:
-          i + 1
-        else:
-          -1
-      ,
     )
+  else:
+    for i, pv in pvList:
+      printInfoString(
+        iteration = iteration,
+        value = pv.value,
+        position = position,
+        pv = pv.pv,
+        nodes = nodes,
+        time = time,
+        hashFull = hashFull,
+        beautiful = beautiful,
+        multiPvIndex =
+          if pvList.len > 1:
+            i + 1
+          else:
+            -1
+        ,
+      )
 
 proc bestMoveString(move: Move, position: Position): string =
   # king's gambit

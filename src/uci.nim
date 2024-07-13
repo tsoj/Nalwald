@@ -95,7 +95,7 @@ proc stop(uciState: var UciState) =
     joinThread uciState.searchThread[]
   uciState.searchThread = nil
 
-proc moves(history: seq[Position], params: seq[string]): seq[Position] =
+proc moves(history: seq[Position], params: seq[string], sanMoves = false): seq[Position] =
   if params.len < 1:
     echo "Missing moves"
 
@@ -104,8 +104,10 @@ proc moves(history: seq[Position], params: seq[string]): seq[Position] =
   result = history
 
   for i in 0 ..< params.len:
-    let position = result[^1]
-    result.add position.doMove(params[i].toMove(position))
+    let
+      position = result[^1]
+      move = if sanMoves: params[i].toMoveFromSAN(position) else: params[i].toMove(position)
+    result.add position.doMove move
 
 proc setPosition(uciState: var UciState, params: seq[string]) =
   var
@@ -246,6 +248,11 @@ proc uciLoop*() =
         uciState.uciNewGame()
       of "moves":
         uciState.history = moves(uciState.history, params[1 ..^ 1])
+      of "multipv":
+        if params.len >= 2:
+          uciState.setOption(@["name", "MultiPV", "value", params[1]])
+        else:
+          echo "Missing parameter"
       of "print":
         if params.len >= 2 and params[1] == "debug":
           echo uciState.currentPosition.debugString
@@ -274,6 +281,7 @@ proc uciLoop*() =
           uciState.history = @[uciState.currentPosition.mirrorVertically]
         else:
           echo "Unknown parameter: ", params[1]
+          echo uciState.currentPosition.debugString
       of "about":
         about(extra = params.len >= 1 and "extra" in params)
       of "help":
@@ -283,10 +291,13 @@ proc uciLoop*() =
           uciState.history = moves(uciState.history, params)
         except CatchableError:
           try:
-            uciState.setPosition(@["fen"] & params)
+            uciState.history = moves(uciState.history, params, sanMoves = true)
           except CatchableError:
-            echo "Unknown command: ", params[0]
-            echo "Use 'help'"
+            try:
+              uciState.setPosition(@["fen"] & params)
+            except CatchableError:
+              echo "Unknown command: ", params[0]
+              echo "Use 'help'"
     except EOFError:
       echo "Quitting because of reaching end of file"
       break

@@ -185,7 +185,7 @@ func calculateZobristKey*(position: Position): ZobristKey =
 
 func doMove*(position: Position, move: Move): Position =
   result = position
-  assert result.isPseudoLegal(move)
+  assert result.isPseudoLegal(move), $position & ", " & $move
   let
     target = move.target
     source = move.source
@@ -333,21 +333,20 @@ func mirror(
     skipZobristKey: static bool,
     mirrorFn: proc(bitboard: Bitboard): Bitboard {.noSideEffect.},
 ): Position =
-  var position = position
+  result = position
 
-  for bitboard in position.pieces.mitems:
+  for bitboard in result.pieces.mitems:
     bitboard = bitboard.mirrorFn
-  for bitboard in position.colors.mitems:
+  for bitboard in result.colors.mitems:
     bitboard = bitboard.mirrorFn
 
-  position.enPassantTarget = position.enPassantTarget.mirrorFn
+  result.enPassantTarget = result.enPassantTarget.mirrorFn
 
   for color in white .. black:
     for castlingSide in queenside .. kingside:
-      result.rookSource[color][castlingSide] =
-        result.rookSource[color][castlingSide].toBitboard.mirrorFn.toSquare
-
-  position
+      if result.rookSource[color][castlingSide] != noSquare:
+        result.rookSource[color][castlingSide] =
+          result.rookSource[color][castlingSide].toBitboard.mirrorFn.toSquare
 
 func mirrorVertically*(
     position: Position,
