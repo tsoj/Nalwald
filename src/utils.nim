@@ -105,7 +105,7 @@ proc askYesNo*(question: string): bool =
 type Seconds* = distinct float
 
 func `$`*(a: Seconds): string =
-  $a.float & " s"    
+  $a.float & " s"
 
 func high*(T: typedesc[Seconds]): Seconds =
   float.high.Seconds

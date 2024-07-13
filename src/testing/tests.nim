@@ -252,7 +252,7 @@ proc runTests*(): bool =
   const tests = [
     (testFen, "FEN parsing"),
     (chess960DetectionTest, "Detecting Chess960 positions"),
-    (moveToSAN, "UCI to SAN"),
+    (moveToSAN, "Algebraic notation"),
     (seeTest, "Static exchange evaluation"),
     (positionTransforms, "Position transform"),
     (positionStreams, "Binary position streams"),
