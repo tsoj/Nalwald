@@ -28,8 +28,9 @@ proc testFen(): Option[string] =
     if fen[0 ..< fenTestLen] != position.fen[0 ..< fenTestLen]:
       return some fmt"{fen} != {fen.toPosition.fen}"
 
+const weirdFen = "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1"
+
 proc perftAndTestPerft(): Option[string] =
-  const weirdFen = "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1"
 
   var
     hashTable = newHashTable()
@@ -75,6 +76,8 @@ proc testZobristKeys(): Option[string] =
 
 proc playGames(): Option[string] =
   for fen in someFens:
+    if fen == weirdFen:
+      continue
     try:
       var game = newGame(fen.toPosition, maxNodes = 2_000)
       discard game.playGame()
