@@ -122,7 +122,32 @@ proc positionTransforms(): Option[string] =
         transformed = transform(position)
 
       if position != transformed:
+
+        echo "position: ", position.fen
+        echo "transformed: ", transformed.fen
+
         return some &"Failed position transform number {i} for position {fen}"
+
+    for i, transform in [
+      (
+        proc(position: Position): Position =
+          position.mirrorVertically
+      ),
+      (
+        proc(position: Position): Position =
+          position.mirrorHorizontally
+      ),
+      (
+        proc(position: Position): Position =
+          position.rotate
+      ),
+    ]: 
+      let
+        position = fen.toPosition
+        transformed = transform(position)
+
+      if transformed.fen.toPosition != transformed:
+        return some &"Transform number {i} for position {fen} is causing corrupt position state"
 
 proc seeTest(): Option[string] =
   #!fmt: off
@@ -170,6 +195,43 @@ proc chess960DetectionTest*(): Option[string] =
     if not fen.toPosition.isChess960:
       return some fmt"Failed Chess960 detection test. {fen} is not detected as Chess960 position."
 
+proc moveToSAN*(): Option[string] =
+  const testCases = [
+    ("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 1 1", "e1g1", "O-O"),
+    ("r3k2r/8/8/8/8/8/8/R3K2R w KQkq - 1 1", "e1c1", "O-O-O"),
+    ("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 1 1", "e8g8", "O-O"),
+    ("r3k2r/8/8/8/8/8/8/R3K2R b KQkq - 1 1", "e8c8", "O-O-O"),
+    ("3r1k1r/4pp2/8/8/8/8/8/4RKR1 w Gd - 1 1", "f1g1", "O-O"),
+    ("6bk/7b/8/3pP3/8/8/8/Q3K3 w - d6 0 2", "e5d6", "exd6#"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "e1f1", "Kf1"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "c3c2", "Rcc2"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "b2c2", "Rbc2"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "a4b6", "N4b6"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "h8g6", "N8g6"),
+    ("N3k2N/8/8/3N4/N4N1N/2R5/1R6/4K3 w - - 0 1", "h4g6", "Nh4g6"),
+    ("8/2KN1p2/5p2/3N1B1k/5PNp/7P/7P/8 w - -", "d5f6", "N5xf6#"),
+    ("8/8/8/R2nkn2/8/8/2K5/8 b - - 0 1", "f5e3", "Ne3+"),
+    ("7k/1p2Npbp/8/2P5/1P1r4/3b2QP/3q1pPK/2RB4 b - - 1 29", "f2f1q", "f1=Q"),
+    ("7k/1p2Npbp/8/2P5/1P1r4/3b2QP/3q1pPK/2RB4 b - - 1 29", "f2f1n", "f1=N+"),
+    ("4r3/3k4/8/8/8/8/q5PP/1R1KR3 w Q - 2 2", "d1b1", "O-O-O+"),
+    ("8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1", "g2h1", "Kxh1"),
+    ("8/8/rk6/8/8/6KR/8/8 w - - 100 10", "h3h6", "Rh6+ 1/2-1/2"),
+    ("8/8/rk6/8/8/6KR/8/8 w - - 100 10", "h3h5", "Rh5 1/2-1/2"),
+    ("8/8/8/8/8/1k6/3r4/K7 b - - 31 117", "d2b2", "Rb2 1/2-1/2")
+  ]
+
+  for (fen, uciMove, sanMove) in testCases:
+    let
+      position = fen.toPosition
+      claimedSAN = uciMove.toMove(position).toSAN(position)
+      claimedUCI = sanMove.toMoveFromSAN(position).notation(position)
+
+    if claimedSAN != sanMove:
+      return some fmt"Failed SAN test. {uciMove} is converted to {claimedSAN} instead of {sanMove} in the position {fen}"
+
+    if claimedUCI != uciMove:
+      return some fmt"Failed SAN test. {sanMove} is converted to {claimedUCI} instead of {uciMove} in the position {fen}"
+
 proc speedPerftTest*() =
   var nodes = 0
   let start = secondsSince1970()
@@ -190,6 +252,7 @@ proc runTests*(): bool =
   const tests = [
     (testFen, "FEN parsing"),
     (chess960DetectionTest, "Detecting Chess960 positions"),
+    (moveToSAN, "Algebraic notation"),
     (seeTest, "Static exchange evaluation"),
     (positionTransforms, "Position transform"),
     (positionStreams, "Binary position streams"),
