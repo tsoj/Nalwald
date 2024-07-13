@@ -124,7 +124,6 @@ func evaluatePawn(
 func evaluateKnight(
     evalState: EvalState, position: Position, square: Square, us: static Color
 ) =
-  return
 
   let attackMask = knight.attackMask(square, position.occupancy)
 
@@ -147,7 +146,6 @@ func evaluateKnight(
 func evaluateBishop(
     evalState: EvalState, position: Position, square: Square, us: static Color
 ) =
-  return
 
   let attackMask = bishop.attackMask(square, position.occupancy)
 
