@@ -72,7 +72,9 @@ proc printBeautifulSingleInfoString(
     stdout.styledWrite styleBright,
       color, fmt"    #{scoreValue}  ", resetStyle, color, styleDim, extra
 
-  stdout.styledWrite "    ", pv.notationSAN(position)
+  stdout.styledWrite "    ", styleBright, styleItalic, pv[0].toSAN(position)
+  if pv.len > 1:
+    stdout.styledWrite " ", pv[1 ..^ 1].notationSAN(position.doMove pv[0])
 
 proc printBeautifulInfoString(
     iteration: int,
