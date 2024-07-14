@@ -87,14 +87,14 @@ proc printBeautifulInfoString(
   let kiloNps = (nodes.float / max(0.0001, time.float)).int div 1_000
 
   stdout.styledWrite styleDim,
-    "iteration ", resetStyle, styleBright, fmt"{iteration+1:>2} "
+    "iteration ", resetStyle, styleBright, fmt"{iteration+1:>3} "
 
   stdout.styledWrite styleDim, fmt"{time.stringForHuman:>10} "
   stdout.styledWrite styleDim, styleBright, fmt"{nodes.stringForHuman:>9}"
   stdout.styledWrite styleDim, " nodes "
   stdout.styledWrite styleDim, styleBright, fmt"{kiloNps:>7}"
   stdout.styledWrite styleDim, " knps "
-  stdout.styledWrite styleDim, fmt"    TT: {hashFull div 10:>2}% "
+  stdout.styledWrite styleDim, fmt"    TT: {hashFull div 10:>3}% "
 
   if pvList.len > 1:
     for i, pv in pvList:
