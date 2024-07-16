@@ -2,7 +2,9 @@ import types
 
 import std/[tables, macros, typetraits, json, strformat]
 
-const floatQuantizer = 1_000.0
+const
+  tunableSearchParams {.booldefine.} = false
+  floatQuantizer = 1_000.0
 
 type ParamEntry = object
   address: ptr int
@@ -33,7 +35,7 @@ macro addParam[T](
   quote:
     var `varName`: int = `default`.getAsInt
 
-    if `tunable`:
+    if `tunable` and tunableSearchParams:
       paramTable[`varString`] = ParamEntry(
         address: addr `varName`,
         min: `min`.getAsInt,

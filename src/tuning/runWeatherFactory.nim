@@ -28,7 +28,7 @@ if not dirExists workDir:
 removeDir workDir & "tuner"
 createDir workDir & "tuner"
 
-doAssert execCmd("nim native -f Nalwald") == 0
+doAssert execCmd("nim native -f -d:tunableSearchParams Nalwald") == 0
 copyFileWithPermissions "bin/Nalwald-native", workDir & "tuner/Nalwald-native"
 
 copyFileWithPermissions cuteChessBinary, workDir & "tuner/cutechess-cli"

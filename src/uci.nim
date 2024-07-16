@@ -12,6 +12,7 @@ import
   utils,
   searchParams,
   timeManagedSearch,
+  printMarkdownSubset,
   testing/tests
 
 import std/[strutils, strformat, atomics, sets]
@@ -71,6 +72,8 @@ proc setOption(uciState: var UciState, params: seq[string]) =
         echo "Invalid value"
       else:
         uciState.hashTable.setByteSize(sizeInBytes = newHashSizeMB * megaByteToByte)
+        if not uciState.uciCompatibleOutput:
+          printMarkdownSubset fmt"*Set hash size to* **`{newHashSizeMB} MB`**"
     of "UCI_Chess960".toLowerAscii:
       discard
     of "Threads".toLowerAscii:
@@ -79,6 +82,8 @@ proc setOption(uciState: var UciState, params: seq[string]) =
         echo "Invalid value"
       else:
         uciState.numThreads = newNumThreads
+        if not uciState.uciCompatibleOutput:
+          printMarkdownSubset fmt"*Set number of search threads to* **`{newNumThreads}`**"
     of "MultiPV".toLowerAscii:
       let newMultiPv = params[3].parseInt
       if newMultiPv < 1 or newMultiPv > 1000:
@@ -86,6 +91,8 @@ proc setOption(uciState: var UciState, params: seq[string]) =
       else:
         uciState.multiPv = newMultiPv
         uciState.hashTable.clear()
+        if not uciState.uciCompatibleOutput:
+          printMarkdownSubset fmt"*Set multi pv to * **`{newMultiPv}`**"
     else:
       if hasSearchOption(params[1]):
         setSearchOption(params[1], params[3].parseInt)
@@ -265,9 +272,9 @@ proc uciLoop*() =
         uciState.uciNewGame()
       of "moves":
         uciState.history = moves(uciState.history, params[1 ..^ 1])
-      of "multipv":
+      of "multipv", "hash", "threads":
         if params.len >= 2:
-          uciState.setOption(@["name", "MultiPV", "value", params[1]])
+          uciState.setOption(@["name", params[0], "value", params[1]])
         else:
           echo "Missing parameter"
       of "print":
