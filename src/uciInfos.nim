@@ -21,6 +21,8 @@ proc help*(params: openArray[string]) =
       "- *ucinewgame*\n",
       "- *moves*\n",
       "- *multipv*\n",
+      "- *hash*\n",
+      "- *threads*\n",
       "- *print*\n",
       "- *fen*\n",
       "- *perft*\n",
@@ -100,13 +102,16 @@ proc help*(params: openArray[string]) =
         "Example:\n",
         "`e2e4 c7c6 d2d4 d7d5` will have the same effect as `moves e2e4 c7c6 d2d4 d7d5`",
       )
-    of "multipv":
-      printMarkdownSubset "**multipv <x>**"
-      printMarkdownSubset "Enables multi PV search of the `<x>` best moves. Equivalent to `setoption name MultiPV value <x>`."
+    of "multipv", "hash", "threads":
+      printMarkdownSubset "**multipv|hash|threads <x>**"
+      printMarkdownSubset(
+        "Sets the respective option \"MultiPV\", \"Hash\", or \"Threads\" with value `<x>`. ",
+        "Shortcut for the longer `setoption name <Option> value <x>`."
+      )
     of "print":
       printMarkdownSubset "**print [debug]**"
       printMarkdownSubset(
-        "Prints the current internal board. If `debug` is added, a debug repepresentation of the board is printed."
+        "Prints the current internal board. If `debug` is added, a debug representation of the board is printed."
       )
     of "fen":
       echo "Prints the FEN notation of the current internal board."

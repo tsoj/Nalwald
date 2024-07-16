@@ -46,6 +46,12 @@ func currentPosition(uciState: UciState): Position =
   doAssert uciState.history.len >= 1, "Need at least the current position in history"
   uciState.history[^1]
 
+proc info(uciState: UciState, s: string) =
+  if not uciState.uciCompatibleOutput:
+    printMarkdownSubset s
+  else:
+    echo "info string ", s
+
 proc uci(uciState: var UciState) =
   uciState.uciCompatibleOutput = true
   echo "id name Nalwald " & versionOrId()
@@ -61,7 +67,7 @@ proc uci(uciState: var UciState) =
 
 proc setOption(uciState: var UciState, params: seq[string]) =
   if uciState.searchRunningFlag.load:
-    echo "Can't set options when search is running"
+    uciState.info "*Can't set options when search is running*"
     return
 
   if params.len == 4 and params[0] == "name" and params[2] == "value":
@@ -69,37 +75,34 @@ proc setOption(uciState: var UciState, params: seq[string]) =
     of "Hash".toLowerAscii:
       let newHashSizeMB = params[3].parseInt
       if newHashSizeMB < 1 or newHashSizeMB > maxHashSizeMB:
-        echo "Invalid value"
+        uciState.info "*Invalid value*"
       else:
         uciState.hashTable.setByteSize(sizeInBytes = newHashSizeMB * megaByteToByte)
-        if not uciState.uciCompatibleOutput:
-          printMarkdownSubset fmt"*Set hash size to* **`{newHashSizeMB} MB`**"
+        uciState.info fmt"*Set hash size to* **{newHashSizeMB} MB**"
     of "UCI_Chess960".toLowerAscii:
       discard
     of "Threads".toLowerAscii:
       let newNumThreads = params[3].parseInt
       if newNumThreads < 1 or newNumThreads > ThreadPoolSize:
-        echo "Invalid value"
+        uciState.info "*Invalid value*"
       else:
         uciState.numThreads = newNumThreads
-        if not uciState.uciCompatibleOutput:
-          printMarkdownSubset fmt"*Set number of search threads to* **`{newNumThreads}`**"
+        uciState.info fmt"*Set number of search threads to* **{newNumThreads}**"
     of "MultiPV".toLowerAscii:
       let newMultiPv = params[3].parseInt
       if newMultiPv < 1 or newMultiPv > 1000:
-        echo "Invalid value"
+        uciState.info "*Invalid value*"
       else:
         uciState.multiPv = newMultiPv
         uciState.hashTable.clear()
-        if not uciState.uciCompatibleOutput:
-          printMarkdownSubset fmt"*Set multi pv to * **`{newMultiPv}`**"
+        uciState.info fmt"*Set multi pv to* **{newMultiPv}**"
     else:
       if hasSearchOption(params[1]):
         setSearchOption(params[1], params[3].parseInt)
       else:
-        echo "Unknown option: ", params[1]
+        uciState.info fmt"Unknown option: {params[1]}"
   else:
-    echo "Unknown parameters"
+    uciState.info "Unknown parameters"
 
 proc stop(uciState: var UciState) =
   uciState.stopFlag.store(true)
@@ -145,7 +148,7 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
       index += 1
     position = fen.toPosition
   else:
-    echo "Unknown parameters"
+    uciState.info "*Unknown parameters*"
     return
 
   if params.len > index and params[index] == "moves":
@@ -218,7 +221,7 @@ proc go(uciState: var UciState, params: seq[string]) =
 
 proc uciNewGame(uciState: var UciState) =
   if uciState.searchRunningFlag.load:
-    echo "Can't start new UCI game when search is still running"
+    uciState.info "*Can't start new UCI game when search is still running*"
   else:
     uciState.hashTable.clear()
 
@@ -229,10 +232,10 @@ proc perft(uciState: UciState, params: seq[string]) =
       nodes =
         uciState.currentPosition.perft(params[0].parseInt, printRootMoveNodes = true)
       s = secondsSince1970() - start
-    echo nodes, " nodes in ", fmt"{s.float:0.3f}", " seconds"
-    echo (nodes.float / s.float).int, " nodes per second"
+    uciState.info fmt"**{nodes}** nodes in **{s.float:0.3f}** seconds"
+    uciState.info fmt"**{(nodes.float / s.float).int}** nodes per second"
   else:
-    echo "Missing depth parameter"
+    uciState.info "*Missing depth parameter*"
 
 proc uciLoop*() =
   printLogo()
@@ -276,14 +279,14 @@ proc uciLoop*() =
         if params.len >= 2:
           uciState.setOption(@["name", params[0], "value", params[1]])
         else:
-          echo "Missing parameter"
+          uciState.info "*Missing value parameter*"
       of "print":
         if params.len >= 2 and params[1] == "debug":
           echo uciState.currentPosition.debugString
         else:
           echo uciState.currentPosition
       of "fen":
-        echo uciState.currentPosition.fen
+        uciState.info uciState.currentPosition.fen
       of "perft":
         uciState.perft(params[1 ..^ 1])
       of "test":
@@ -291,21 +294,19 @@ proc uciLoop*() =
       of "speedtest":
         speedPerftTest()
       of "eval":
-        echo uciState.currentPosition.absoluteEvaluate,
-          " centipawns from whites perspective"
+        uciState.info fmt"**{uciState.currentPosition.absoluteEvaluate}** centipawns from whites perspective"
       of "piecevalues":
         for p in pawn .. queen:
-          echo $p, ": ", p.value.toCp, " cp (", p.value, ")"
-      of "flip": # TODO add to documentation (help command)
+          uciState.info fmt"{p}: **{p.value.toCp}** cp `({p.value})`"
+      of "flip":
         if params.len <= 1:
-          echo "Need additionaly parameter"
+          uciState.info "*Need additionaly parameter*"
         elif params[1] in "horizontally":
           uciState.history = @[uciState.currentPosition.mirrorHorizontally]
         elif params[1] in "vertically":
           uciState.history = @[uciState.currentPosition.mirrorVertically]
         else:
-          echo "Unknown parameter: ", params[1]
-          echo uciState.currentPosition.debugString
+          uciState.info fmt"*Unknown parameter:* {params[1]}"
       of "about":
         about(extra = params.len >= 1 and "extra" in params)
       of "help":
@@ -320,12 +321,12 @@ proc uciLoop*() =
             try:
               uciState.setPosition(@["fen"] & params)
             except CatchableError:
-              echo "Unknown command: ", params[0]
-              echo "Use 'help'"
+              uciState.info fmt"*Unknown command:* {params[0]}"
+              uciState.info "*Use* `help`"
     except EOFError:
-      echo "Quitting because of reaching end of file"
+      uciState.info "*Quitting because of reaching end of file*"
       break
     except CatchableError:
-      echo "Error: ", getCurrentExceptionMsg()
+      uciState.info fmt"*Error:* {getCurrentExceptionMsg()}"
 
   doAssert uciState.searchThread == nil
