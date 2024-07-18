@@ -2,7 +2,7 @@ import
   types, bitboard, position, positionUtils, move, searchUtils, moveIterator, hashTable,
   evaluation, utils, see, searchParams
 
-import std/[atomics, options]
+import std/[atomics, options, math]
 
 static:
   doAssert pawn.value == 100.cp
@@ -17,8 +17,14 @@ func nullMoveDepth(depth: Ply): Ply =
   depth - nullMoveDepthSub() - depth div nullMoveDepthDiv().Ply
 
 func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-  let halfLife = lmrDepthHalfLife()
-  result = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
+
+
+  # let halfLife = lmrDepthHalfLife()
+  # let oldResult = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
+  result = depth - (lmrFixedFactor() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor()).clampToType(Ply)
+
+  # debugEcho "----------------"
+  # debugEcho "old result: ", oldResult, "    new result: ", result
 
 type SearchState* = object
   externalStopFlag*: ptr Atomic[bool]

@@ -99,6 +99,9 @@ addParam(lmrDepthHalfLife, default = 35, min = 5, max = 60, step = 8)
 addParam(lmrDepthSub, default = 1.Ply, min = 0.Ply, max = 5.Ply, step = 1.Ply)
 addParam(minMoveCounterLmr, default = 5, min = 1, max = 15, step = 1)
 
+addParam(lmrFixedFactor, default = 2.0, min = -100.0, max = 100.0, step = 0.8)
+addParam(lmrDivisor, default = 2.0, min = 0.1, max = 100.0, step = 0.5)
+
 addParam(maxHistoryTableValue, default = 129000, min = 1000, max = 10000000, step = 40000)
 addParam(historyTableBadMoveDivider, default = 25.5, min = 1.0, max = 100.0, step = 10.0)
 addParam(historyTableCounterMul, default = 90.0, min = 1.0, max = 200.0, step = 20.0)
