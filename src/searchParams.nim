@@ -96,8 +96,8 @@ addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.
 addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
 
 addParam(minMoveCounterLmr, default = 4, min = 1, max = 15, step = 1)
-addParam(lmrAddition, default = 1.7, min = -100.0, max = 100.0, step = 0.8)
-addParam(lmrDivisor, default = 2.0, min = 0.1, max = 100.0, step = 0.5)
+addParam(lmrAddition, default = 1.73, min = -100.0, max = 100.0, step = 0.8)
+addParam(lmrDivisor, default = 2.03, min = 0.1, max = 100.0, step = 0.5)
 
 addParam(maxHistoryTableValue, default = 135000, min = 1000, max = 10000000, step = 40000)
 addParam(historyTableBadMoveDivider, default = 24.0, min = 1.0, max = 100.0, step = 10.0)
