@@ -46,7 +46,7 @@ proc perftAndTestPerft(): Option[string] =
       if trueNumNodes > maxNumPerftNodes:
         break
 
-      let fastPerftResult = position.perft(depth.Ply)
+      let fastPerftResult = position.perft(depth)
       if fastPerftResult != trueNumNodes:
         return some &"Fast perft to depth {depth} for \"{fen}\" should be {trueNumNodes} but is {fastPerftResult}"
 
@@ -54,7 +54,7 @@ proc perftAndTestPerft(): Option[string] =
         let
           testPseudoLegality = trueNumNodes < 20_000 and position.legalMoves.len <= 256
           testPerftResult = position.runTestPerft(
-            testPerftState, depth = depth.Ply, testPseudoLegality = testPseudoLegality
+            testPerftState, depth = depth, testPseudoLegality = testPseudoLegality
           )
 
         if testPerftResult != trueNumNodes and fen != weirdFen:
@@ -240,7 +240,7 @@ proc speedPerftTest*() =
     var depth = 0
     while depth + 1 < numNodeList.len and numNodeList[depth] <= maxNumPerftNodes:
       depth += 1
-    nodes += position.perft(depth.Ply)
+    nodes += position.perft(depth)
   let time = secondsSince1970() - start
   let nps = nodes.float / max(0.00001, time.float)
 

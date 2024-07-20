@@ -30,7 +30,6 @@ type
     piece*: Piece
     color*: Color
 
-  Ply* = 0.int8 .. int8.high
   Value* = int32
   NodeType* = enum
     pvNode
@@ -111,41 +110,27 @@ func mirrorHorizontally*(square: Square): Square =
 func opposite*(color: Color): Color =
   (color.uint8 xor 1).Color
 
-func `-`*(a: Ply, b: SomeNumber or Ply): Ply =
-  max(a.BiggestInt - b.BiggestInt, Ply.low.BiggestInt).Ply
-func `-`*(a: SomeNumber, b: Ply): Ply =
-  max(a.BiggestInt - b.BiggestInt, Ply.low.BiggestInt).Ply
-
-func `+`*(a: Ply, b: SomeNumber or Ply): Ply =
-  min(a.BiggestInt + b.BiggestInt, Ply.high.BiggestInt).Ply
-func `+`*(a: SomeNumber, b: Ply): Ply =
-  min(a.BiggestInt + b.BiggestInt, Ply.high.BiggestInt).Ply
-
-func `-=`*(a: var Ply, b: Ply or SomeNumber) =
-  a = a - b
-func `+=`*(a: var Ply, b: Ply or SomeNumber) =
-  a = a + b
-
 const
+  maxHeight* = uint8.high.int
   valueInfinity* = min(-(int16.low.Value), int16.high.Value)
-  valueCheckmate* = valueInfinity - Ply.high.Value - 1.Value
+  valueCheckmate* = valueInfinity - maxHeight.Value - 1.Value
 
-func checkmateValue*(height: Ply): Value =
-  valueCheckmate + (Ply.high - height).Value
+func checkmateValue*(height: int): Value =
+  valueCheckmate + (maxHeight - height).Value
 
-func plysUntilCheckmate*(value: Value): Ply =
-  (-(((abs(value.int32) - (valueCheckmate.int32 + Ply.high.int32))))).Ply
+func plysUntilCheckmate*(value: Value): int =
+  (-(((abs(value.int32) - (valueCheckmate.int32 + maxHeight.int32))))).int
 
 static:
   doAssert -valueInfinity <= valueInfinity
-  doAssert Ply.high.checkmateValue >= valueCheckmate
-  doAssert Ply.low.checkmateValue < valueInfinity
-  doAssert 0.Ply.checkmateValue.plysUntilCheckmate == 0.Ply and
-    1.Ply.checkmateValue.plysUntilCheckmate == 1.Ply and
-    9.Ply.checkmateValue.plysUntilCheckmate == 9.Ply and
-    10.Ply.checkmateValue.plysUntilCheckmate == 10.Ply and
-    100.Ply.checkmateValue.plysUntilCheckmate == 100.Ply and
-    100.Ply.checkmateValue < 99.Ply.checkmateValue
+  doAssert maxHeight.checkmateValue >= valueCheckmate
+  doAssert 0.checkmateValue < valueInfinity
+  doAssert 0.checkmateValue.plysUntilCheckmate == 0 and
+    1.checkmateValue.plysUntilCheckmate == 1 and
+    9.checkmateValue.plysUntilCheckmate == 9 and
+    10.checkmateValue.plysUntilCheckmate == 10 and
+    100.checkmateValue.plysUntilCheckmate == 100 and
+    100.checkmateValue < 99.checkmateValue
 
 func `^=`*(a: var ZobristKey, b: ZobristKey) =
   a = a xor b

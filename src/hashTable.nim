@@ -5,7 +5,7 @@ import std/[tables, locks, random]
 type
   HashTableEntry* {.packed.} = object
     upperZobristKeyAndNodeTypeAndValue: uint64
-    depth*: Ply
+    depth*: float
     bestMove*: Move
 
   CountedHashTableEntry = object
@@ -21,7 +21,7 @@ type
 
 const
   noEntry = HashTableEntry(
-    upperZobristKeyAndNodeTypeAndValue: 0, depth: 0.Ply, bestMove: noMove
+    upperZobristKeyAndNodeTypeAndValue: 0, depth: 0.0, bestMove: noMove
   )
   sixteenBitMask = 0b1111_1111_1111_1111'u64
   eighteenBitMask = 0b11_1111_1111_1111_1111'u64
@@ -94,7 +94,7 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
   if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
     probability *= 0.5
 
-  if newEntry.depth + 2.Ply < oldEntry.depth:
+  if newEntry.depth + 2.0 < oldEntry.depth:
     probability *= 0.5
 
   ht.randState.rand(1.0) < probability
@@ -104,7 +104,7 @@ func add*(
     zobristKey: ZobristKey,
     nodeType: NodeType,
     value: Value,
-    depth: Ply,
+    depth: float,
     bestMove: Move,
     override: static bool = false,
 ) =

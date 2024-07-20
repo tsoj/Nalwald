@@ -166,7 +166,7 @@ proc go(uciState: var UciState, params: seq[string]) =
   var searchInfo = SearchInfo(
     positionHistory: uciState.history,
     hashTable: addr uciState.hashTable,
-    targetDepth: Ply.high,
+    targetDepth: maxHeight,
     stopFlag: addr uciState.stopFlag,
     movesToGo: int.high,
     increment: [white: 0.Seconds, black: 0.Seconds],
@@ -181,7 +181,7 @@ proc go(uciState: var UciState, params: seq[string]) =
     if i + 1 < params.len:
       case params[i]
       of "depth":
-        searchInfo.targetDepth = params[i + 1].parseInt.clampToType(Ply)
+        searchInfo.targetDepth = params[i + 1].parseInt.clamp(1, maxHeight)
       of "movestogo":
         searchInfo.movesToGo = params[i + 1].parseInt
       of "winc":

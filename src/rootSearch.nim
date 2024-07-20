@@ -4,7 +4,7 @@ import malebolgia
 
 import std/[atomics, strformat, sets]
 
-func launchSearch(position: Position, state: ptr SearchState, depth: Ply) =
+func launchSearch(position: Position, state: ptr SearchState, depth: int) =
   discard position.search(state[], depth = depth)
   state[].threadStop[].store(true)
 
@@ -16,7 +16,7 @@ iterator iterativeDeepeningSearch*(
     positionHistory: seq[Position],
     hashTable: var HashTable,
     externalStopFlag: ptr Atomic[bool],
-    targetDepth: Ply = Ply.high,
+    targetDepth: int = maxHeight,
     numThreads = 1,
     maxNodes = int.high,
     stopTime = Seconds.high,
@@ -63,7 +63,7 @@ iterator iterativeDeepeningSearch*(
 
       hashTable.age()
 
-      for depth in 1.Ply .. targetDepth:
+      for depth in 1 .. targetDepth:
         var
           foundCheckmate = false
           pvList: seq[Pv]
@@ -87,7 +87,7 @@ iterator iterativeDeepeningSearch*(
               position.zobristKey,
               hashResult.nodeType,
               hashResult.value,
-              Ply.low,
+              depth = 0.0,
               hashResult.bestMove,
               override = true,
             )

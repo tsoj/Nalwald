@@ -7,19 +7,17 @@ import std/[atomics, options, math]
 static:
   doAssert pawn.value == 100.cp
 
-func futilityReduction(value: Value): Ply =
-  clampToType(value.toCp div futilityReductionDiv(), Ply)
+func futilityReduction(value: Value): float =
+  max(0.0, value.toCp.float / futilityReductionDiv())
 
-func hashResultFutilityMargin(depthDifference: Ply): Value =
-  depthDifference.Value * hashResultFutilityMarginMul().cp
+func hashResultFutilityMargin(depthDifference: float): Value =
+  (depthDifference * hashResultFutilityMarginMul().cp.float).Value
 
-func nullMoveReduction(depth: Ply): Ply =
-  nullMoveDepthSub() + depth div nullMoveDepthDiv().Ply
+func nullMoveReduction(depth: float): float =
+  nullMoveDepthSub() + depth / nullMoveDepthDiv()
 
-func lmrReduction(depth: Ply, lmrMoveCounter: int): Ply =
-  clampToType(
-    lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor(), Ply
-  )
+func lmrReduction(depth: float, lmrMoveCounter: int): float =
+  max(0.0, lmrAddition() + ln(depth) * ln(lmrMoveCounter.float) / lmrDivisor())
 
 type SearchState* = object
   externalStopFlag*: ptr Atomic[bool]
@@ -44,7 +42,7 @@ func update(
     state: var SearchState,
     position: Position,
     bestMove, previous: Move,
-    depth, height: Ply,
+    depth: float, height: int,
     nodeType: NodeType,
     bestValue: Value,
 ) =
@@ -61,14 +59,14 @@ func quiesce(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    height: Ply,
+    height: int,
     doPruning: static bool = true,
 ): Value =
   assert alpha < beta
 
   state.countedNodes += 1
 
-  if height == Ply.high or position.insufficientMaterial:
+  if height == maxHeight or position.insufficientMaterial:
     return 0.Value
 
   let standPat = state.evaluation(position)
@@ -101,7 +99,7 @@ func quiesce(
 
     let value =
       -newPosition.quiesce(
-        state, alpha = -beta, beta = -alpha, height + 1.Ply, doPruning = doPruning
+        state, alpha = -beta, beta = -alpha, height + 1, doPruning = doPruning
       )
 
     if value > bestValue:
@@ -124,7 +122,7 @@ func materialQuiesce*(position: Position): Value =
     state = state,
     alpha = -valueInfinity,
     beta = valueInfinity,
-    height = 0.Ply,
+    height = 0,
     doPruning = false,
   )
 
@@ -132,7 +130,7 @@ func search(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    depth, height: Ply,
+    depth: float, height: int,
     previous: Move,
 ): Value =
   assert alpha < beta
@@ -140,7 +138,7 @@ func search(
   state.countedNodes += 1
 
   if height > 0 and (
-    height == Ply.high or position.insufficientMaterial or position.halfmoveClock >= 100 or
+    height == maxHeight or position.insufficientMaterial or position.halfmoveClock >= 100 or
     state.gameHistory.checkForRepetitionAndAdd(position, height)
   ):
     return 0.Value
@@ -163,11 +161,11 @@ func search(
 
     # check and passed pawn extension
     if (inCheck and depth <= 0) or previous.isPawnMoveToSecondRank:
-      depth += 1.Ply
+      depth += 1.0
 
     # internal iterative reduction
     if hashResult.isEmpty and depth >= iirMinDepth():
-      depth -= 1.Ply
+      depth -= 1.0
 
     depth
 
@@ -188,7 +186,7 @@ func search(
         return alpha
     beta
 
-  if depth <= 0:
+  if depth < 1.0:
     return position.quiesce(state, alpha = alpha, beta = beta, height)
 
   # null move reduction
@@ -202,7 +200,7 @@ func search(
         alpha = -beta,
         beta = -beta + 1.Value,
         depth = depth - nullMoveReduction(depth),
-        height = height + 1.Ply,
+        height = height + 1,
         previous = noMove,
       )
 
@@ -220,7 +218,7 @@ func search(
   for move in position.treeSearchMoveIterator(
     hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous
   ):
-    if height == 0.Ply and move in state.skipMovesAtRoot:
+    if height == 0 and move in state.skipMovesAtRoot:
       continue
 
     let newPosition = position.doMove(move)
@@ -266,8 +264,8 @@ func search(
         state,
         alpha = -newBeta,
         beta = -alpha,
-        depth = newDepth - 1.Ply,
-        height = height + 1.Ply,
+        depth = newDepth - 1.0,
+        height = height + 1,
         previous = move,
       )
 
@@ -279,8 +277,8 @@ func search(
           state,
           alpha = -beta,
           beta = -alpha,
-          depth = depth - 1.Ply,
-          height = height + 1.Ply,
+          depth = depth - 1.0,
+          height = height + 1,
           previous = move,
         )
 
@@ -320,7 +318,7 @@ func search(
 
   bestValue
 
-func search*(position: Position, state: var SearchState, depth: Ply): Value =
+func search*(position: Position, state: var SearchState, depth: int): Value =
   let hashResult = state.hashTable[].get(position.zobristKey)
 
   var
@@ -335,7 +333,7 @@ func search*(position: Position, state: var SearchState, depth: Ply): Value =
       beta = min(estimatedValue + betaOffset, valueInfinity.float).Value
 
     result = position.search(
-      state, alpha = alpha, beta = beta, depth = depth, height = 0, previous = noMove
+      state, alpha = alpha, beta = beta, depth = depth.float, height = 0, previous = noMove
     )
     doAssert result.abs <= valueInfinity
 

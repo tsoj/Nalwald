@@ -23,7 +23,7 @@ func update*(
     historyTable: var HistoryTable,
     move, previous: Move,
     color: Color,
-    depth: Ply,
+    depth: float,
     raisedAlpha: bool,
 ) =
   if move.isTactical:
@@ -71,9 +71,9 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0 
 #-------------- killer heuristic --------------#
 
 type KillerTable* = object
-  table: array[Ply, array[2, Move]]
+  table: array[maxHeight, array[2, Move]]
 
-func update*(killerTable: var KillerTable, height: Ply, move: Move) =
+func update*(killerTable: var KillerTable, height: int, move: Move) =
   if move.isTactical:
     return
 
@@ -84,14 +84,14 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
     list[1] = list[0]
     list[0] = move
 
-func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
+func get*(killerTable: KillerTable, height: int): array[2, Move] =
   killerTable.table[height]
 
 #-------------- repetition detection --------------#
 
 type GameHistory* = object
   staticHistory: seq[ZobristKey]
-  dynamicHistory: array[Ply, ZobristKey]
+  dynamicHistory: array[maxHeight, ZobristKey]
 
 func newGameHistory*(staticHistory: seq[Position]): GameHistory =
   for position in staticHistory:
@@ -99,12 +99,12 @@ func newGameHistory*(staticHistory: seq[Position]): GameHistory =
     result.staticHistory.add(position.zobristKey)
 
 func checkForRepetitionAndAdd*(
-    gameHistory: var GameHistory, position: Position, height: Ply
+    gameHistory: var GameHistory, position: Position, height: int
 ): bool =
   gameHistory.dynamicHistory[height] = position.zobristKey
 
   var count = position.halfmoveClock
-  for i in countdown(height - 1.Ply, 1.Ply):
+  for i in countdown(height - 1, 1):
     if count <= 0:
       return false
     if position.zobristKey == gameHistory.dynamicHistory[i]:

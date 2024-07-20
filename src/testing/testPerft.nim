@@ -17,13 +17,13 @@ func newTestPerftState*(hashTable: ptr HashTable): TestPerftState =
 func testPerft(
     position: Position,
     state: var TestPerftState,
-    depth: Ply,
-    height: Ply,
+    depth: int,
+    height: int,
     previous: Move,
 ): int =
   ## Returns number of nodes and also does a number of asserts on different systems
 
-  if depth <= 0.Ply:
+  if depth <= 0:
     return 1
 
   # Test for isPseudoLegal
@@ -99,9 +99,9 @@ func testPerft(
         CatchableError,
         fmt"Best move should be a legal move at the end of the move loop. {position.fen}",
       )
-    state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
+    state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth.float, bestMove)
     state.historyTable.update(
-      bestMove, previous, position.us, depth, raisedAlpha = nodeType != allNode
+      bestMove, previous, position.us, depth = depth.float, raisedAlpha = nodeType != allNode
     )
     if nodeType == cutNode:
       state.killerTable.update(height, bestMove)
@@ -118,8 +118,8 @@ func testPerft(
 func runTestPerft*(
     position: Position,
     perftState: var TestPerftState,
-    depth: Ply,
+    depth: int,
     testPseudoLegality: bool,
 ): int =
   perftState.testPseudoLegality = testPseudoLegality
-  position.testPerft(perftState, depth = depth, height = 0.Ply, previous = noMove)
+  position.testPerft(perftState, depth = depth, height = 0, previous = noMove)

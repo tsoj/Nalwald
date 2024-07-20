@@ -30,7 +30,7 @@ type SearchInfo* {.requiresInit.} = object
   stopFlag*: ptr Atomic[bool] = nil
   positionHistory*: seq[Position]
   hashTable*: ptr HashTable
-  targetDepth*: Ply = Ply.high
+  targetDepth*: int = maxHeight
   movesToGo*: int = int.high
   increment*: array[white .. black, Seconds] = [white: 0.Seconds, black: 0.Seconds]
   timeLeft*: array[white .. black, Seconds] = [white: Seconds.high, black: Seconds.high]

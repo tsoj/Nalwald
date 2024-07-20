@@ -62,7 +62,7 @@ for fen in someFens:
   let start = secondsSince1970()
   stdout.write fen, " "
   stdout.flushFile
-  for depth in 1.Ply .. Ply.high:
+  for depth in 1.Ply .. maxHeight:
     stdout.write "."
     stdout.flushFile
     let nodesCurrent = execProcess(
