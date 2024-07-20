@@ -13,18 +13,13 @@ func futilityReduction(value: Value): Ply =
 func hashResultFutilityMargin(depthDifference: Ply): Value =
   depthDifference.Value * hashResultFutilityMarginMul().cp
 
-func nullMoveDepth(depth: Ply): Ply =
-  depth - nullMoveDepthSub() - depth div nullMoveDepthDiv().Ply
+func nullMoveReduction(depth: Ply): Ply =
+  nullMoveDepthSub() + depth div nullMoveDepthDiv().Ply
 
-func lmrDepth(depth: Ply, lmrMoveCounter: int): Ply =
-
-
-  # let halfLife = lmrDepthHalfLife()
-  # let oldResult = ((depth.int * halfLife) div (halfLife + lmrMoveCounter)).Ply - lmrDepthSub()
-  result = depth - (lmrFixedFactor() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor()).clampToType(Ply)
-
-  # debugEcho "----------------"
-  # debugEcho "old result: ", oldResult, "    new result: ", result
+func lmrReduction(depth: Ply, lmrMoveCounter: int): Ply =
+  clampToType(
+    lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor(), Ply
+  )
 
 type SearchState* = object
   externalStopFlag*: ptr Atomic[bool]
@@ -206,7 +201,7 @@ func search(
         state,
         alpha = -beta,
         beta = -beta + 1.Value,
-        depth = nullMoveDepth(depth),
+        depth = depth - nullMoveReduction(depth),
         height = height + 1.Ply,
         previous = noMove,
       )
@@ -243,7 +238,7 @@ func search(
     if not givingCheck:
       # late move reduction
       if moveCounter >= minMoveCounterLmr() and not move.isTactical:
-        newDepth = lmrDepth(newDepth, lmrMoveCounter)
+        newDepth -= lmrReduction(newDepth, lmrMoveCounter)
         lmrMoveCounter += 1
 
         if newDepth <= 0:
