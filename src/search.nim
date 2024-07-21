@@ -17,7 +17,7 @@ func nullMoveReduction(depth: float): float =
   nullMoveDepthSub() + (depth / nullMoveDepthDiv()).floor
 
 func lmrReduction(depth: float, lmrMoveCounter: int): float =
-  max(0.0, floor(lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor()))
+  max(0.0, lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor())
 
 type SearchState* = object
   externalStopFlag*: ptr Atomic[bool]
