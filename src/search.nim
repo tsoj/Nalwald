@@ -132,7 +132,7 @@ func search(
     position: Position,
     state: var SearchState,
     alpha, beta: Value,
-    depth, height: Ply,
+    depth: float, height: Ply,
     previous: Move,
 ): Value =
   assert alpha < beta
@@ -163,11 +163,11 @@ func search(
 
     # check and passed pawn extension
     if (inCheck and depth <= 0) or previous.isPawnMoveToSecondRank:
-      depth += 1.Ply
+      depth += 1.0
 
     # internal iterative reduction
-    if hashResult.isEmpty and depth >= iirMinDepth():
-      depth -= 1.Ply
+    if hashResult.isEmpty and depth.int >= iirMinDepth():
+      depth -= 1.0
 
     depth
 
@@ -175,7 +175,7 @@ func search(
     # update alpha, beta or return immediatly based on hash table result
     var beta = beta
     if height > 0 and not hashResult.isEmpty:
-      if hashResult.nodeType == exact and hashResult.depth >= depth:
+      if hashResult.nodeType == exact and hashResult.depth >= depth.int:
         return hashResult.value
 
       let margin = hashResultFutilityMargin(depth - hashResult.depth)
@@ -188,7 +188,7 @@ func search(
         return alpha
     beta
 
-  if depth <= 0:
+  if depth <= 0.5:
     return position.quiesce(state, alpha = alpha, beta = beta, height)
 
   # null move reduction
@@ -201,7 +201,7 @@ func search(
         state,
         alpha = -beta,
         beta = -beta + 1.Value,
-        depth = depth - nullMoveReduction(depth),
+        depth = depth - nullMoveReduction(depth.clampToType(Ply)).float,
         height = height + 1.Ply,
         previous = noMove,
       )
@@ -238,7 +238,7 @@ func search(
     if not givingCheck:
       # late move reduction
       if moveCounter >= minMoveCounterLmr() and not move.isTactical:
-        newDepth -= lmrReduction(newDepth, lmrMoveCounter)
+        newDepth -= lmrReduction(newDepth.clampToType(Ply), lmrMoveCounter).float
         lmrMoveCounter += 1
 
         if newDepth <= 0:
@@ -246,7 +246,7 @@ func search(
 
       # futility reduction
       if moveCounter >= minMoveCounterFutility() and newDepth > 0:
-        newDepth -= futilityReduction(alpha - staticEval - position.see(move))
+        newDepth -= futilityReduction(alpha - staticEval - position.see(move)).float
 
         if newDepth <= 0:
           continue
@@ -266,7 +266,7 @@ func search(
         state,
         alpha = -newBeta,
         beta = -alpha,
-        depth = newDepth - 1.Ply,
+        depth = newDepth - 1.0,
         height = height + 1.Ply,
         previous = move,
       )
@@ -279,7 +279,7 @@ func search(
           state,
           alpha = -beta,
           beta = -alpha,
-          depth = depth - 1.Ply,
+          depth = depth - 1.0,
           height = height + 1.Ply,
           previous = move,
         )
@@ -297,7 +297,7 @@ func search(
       alpha = value
     else:
       state.historyTable.update(
-        move, previous = previous, us, newDepth, raisedAlpha = false
+        move, previous = previous, us, newDepth.clampToType(Ply), raisedAlpha = false
       )
 
   if moveCounter == 0:
@@ -312,7 +312,7 @@ func search(
     position,
     bestMove,
     previous = previous,
-    depth = depth,
+    depth = depth.clampToType(Ply),
     height = height,
     nodeType,
     bestValue,
@@ -335,7 +335,7 @@ func search*(position: Position, state: var SearchState, depth: Ply): Value =
       beta = min(estimatedValue + betaOffset, valueInfinity.float).Value
 
     result = position.search(
-      state, alpha = alpha, beta = beta, depth = depth, height = 0, previous = noMove
+      state, alpha = alpha, beta = beta, depth = depth.float, height = 0, previous = noMove
     )
     doAssert result.abs <= valueInfinity
 
