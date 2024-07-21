@@ -14,7 +14,7 @@ func hashResultFutilityMargin(depthDifference: float): Value =
   max(0.0, depthDifference).Value * hashResultFutilityMarginMul().cp
 
 func nullMoveReduction(depth: float): float =
-  nullMoveDepthSub().float + (depth / nullMoveDepthDiv().float).floor
+  nullMoveDepthSub() + (depth / nullMoveDepthDiv()).floor
 
 func lmrReduction(depth: float, lmrMoveCounter: int): float =
   max(0.0, floor(lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor()))
@@ -165,7 +165,7 @@ func search(
       depth += 1.0
 
     # internal iterative reduction
-    if hashResult.isEmpty and depth.int >= iirMinDepth():
+    if hashResult.isEmpty and depth >= iirMinDepth():
       depth -= 1.0
 
     depth

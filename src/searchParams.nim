@@ -85,15 +85,15 @@ addParam(failHighDeltaMargin, default = 73, min = 10, max = 200, step = 20)
 addParam(aspirationWindowStartingOffset, default = 7, min = 2, max = 100, step = 3)
 addParam(aspirationWindowMultiplier, default = 1.95, min = 1.1, max = 10.0, step = 0.2)
 
-addParam(iirMinDepth, default = 4.Ply, min = 0.Ply, max = 12.Ply, step = 1.Ply)
+addParam(iirMinDepth, default = 4.0, min = 0.0, max = 12.0, step = 1.0)
 
 addParam(futilityReductionDiv, default = 77, min = 10, max = 500, step = 30)
 addParam(minMoveCounterFutility, default = 2, min = 1, max = 10, step = 1)
 
 addParam(hashResultFutilityMarginMul, default = 298, min = 50, max = 1000, step = 30)
 
-addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.Ply)
-addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
+addParam(nullMoveDepthSub, default = 3.0, min = 0.0, max = 10.0, step = 1.0)
+addParam(nullMoveDepthDiv, default = 3.0, min = 1.0, max = 15.0, step = 1.0)
 
 addParam(minMoveCounterLmr, default = 4, min = 1, max = 15, step = 1)
 addParam(lmrAddition, default = 1.73, min = -100.0, max = 100.0, step = 0.8)
