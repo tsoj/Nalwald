@@ -8,13 +8,13 @@ static:
   doAssert pawn.value == 100.cp
 
 func futilityReduction(value: Value): float =
-  max(0.0, (value.toCp.float / futilityReductionDiv()).floor)
+  max(0.0, value.toCp.float / futilityReductionDiv())
 
 func hashResultFutilityMargin(depthDifference: float): Value =
   max(0.0, depthDifference).Value * hashResultFutilityMarginMul().cp
 
 func nullMoveReduction(depth: float): float =
-  nullMoveDepthSub() + (depth / nullMoveDepthDiv()).floor
+  nullMoveDepthSub() + depth / nullMoveDepthDiv()
 
 func lmrReduction(depth: float, lmrMoveCounter: int): float =
   max(0.0, lmrAddition() + ln(depth.float) * ln(lmrMoveCounter.float) / lmrDivisor())
