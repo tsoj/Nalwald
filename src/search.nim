@@ -13,8 +13,8 @@ func futilityReduction(value: Value): Ply =
 func hashResultFutilityMargin(depthDifference: Ply): Value =
   depthDifference.Value * hashResultFutilityMarginMul().cp
 
-func nullMoveReduction(depth: Ply): Ply =
-  nullMoveDepthSub() + depth div nullMoveDepthDiv().Ply
+func nullMoveReduction(depth: float): float =
+  nullMoveDepthSub().float + (depth / nullMoveDepthDiv().float).floor
 
 func lmrReduction(depth: Ply, lmrMoveCounter: int): Ply =
   clampToType(
@@ -201,7 +201,7 @@ func search(
         state,
         alpha = -beta,
         beta = -beta + 1.Value,
-        depth = depth - nullMoveReduction(depth.clampToType(Ply)).float,
+        depth = depth - nullMoveReduction(depth),
         height = height + 1.Ply,
         previous = noMove,
       )
