@@ -126,7 +126,8 @@ func add*(
 
   if nodeType == pvNode:
     withLock ht.pvTableMutex:
-      if not ht.pvNodes.hasKey(zobristKey) or ht.pvNodes[zobristKey].entry.depth <= depth or override:
+      if not ht.pvNodes.hasKey(zobristKey) or ht.pvNodes[zobristKey].entry.depth <= depth or
+          override:
         ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
   else:
     doAssert ht.nonPvNodes.len > 0

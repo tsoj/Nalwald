@@ -106,7 +106,7 @@ proc help*(params: openArray[string]) =
       printMarkdownSubset "**multipv|hash|threads <x>**"
       printMarkdownSubset(
         "Sets the respective option \"MultiPV\", \"Hash\", or \"Threads\" with value `<x>`. ",
-        "Shortcut for the longer `setoption name <Option> value <x>`."
+        "Shortcut for the longer `setoption name <Option> value <x>`.",
       )
     of "print":
       printMarkdownSubset "**print [debug]**"
@@ -130,7 +130,7 @@ proc help*(params: openArray[string]) =
       printMarkdownSubset "**flip [horizontally|vertically]**"
       printMarkdownSubset(
         "Flips the current board. If `horizontally` is used, then the pieces will be mirrored from left to right, when ",
-        "`vertically` is selected, pieces are mirrored from top to bottom and additionally the colors of pieces are swapped."
+        "`vertically` is selected, pieces are mirrored from top to bottom and additionally the colors of pieces are swapped.",
       )
     of "about":
       printMarkdownSubset "**about [extra]**"

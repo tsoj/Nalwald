@@ -28,6 +28,12 @@ proc testFen(): Option[string] =
     if fen[0 ..< fenTestLen] != position.fen[0 ..< fenTestLen]:
       return some fmt"{fen} != {fen.toPosition.fen}"
 
+  const
+    frcFen1 = "qrrk1bnn/8/4b3/pppppppp/PPPPPPPP/4B3/8/QRRK1BNN w Qq - 8 13"
+    frcFen2 = "qrrk1bnn/8/4b3/pppppppp/PPPPPPPP/4B3/8/QRRK1BNN w Bb - 8 13"
+  if frcFen1.toPosition(suppressWarnings = true).fen != frcFen2:
+    return some fmt"{frcFen1} should be converted to {frcFen2}"
+
 proc perftAndTestPerft(): Option[string] =
   const weirdFen = "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1"
 
@@ -122,7 +128,6 @@ proc positionTransforms(): Option[string] =
         transformed = transform(position)
 
       if position != transformed:
-
         echo "position: ", position.fen
         echo "transformed: ", transformed.fen
 
@@ -141,7 +146,7 @@ proc positionTransforms(): Option[string] =
         proc(position: Position): Position =
           position.rotate
       ),
-    ]: 
+    ]:
       let
         position = fen.toPosition
         transformed = transform(position)
@@ -217,7 +222,7 @@ proc moveToSAN*(): Option[string] =
     ("8/8/8/B2p3Q/2qPp1P1/b7/2P2PkP/4K2R b K - 0 1", "g2h1", "Kxh1"),
     ("8/8/rk6/8/8/6KR/8/8 w - - 100 10", "h3h6", "Rh6+ 1/2-1/2"),
     ("8/8/rk6/8/8/6KR/8/8 w - - 100 10", "h3h5", "Rh5 1/2-1/2"),
-    ("8/8/8/8/8/1k6/3r4/K7 b - - 31 117", "d2b2", "Rb2 1/2-1/2")
+    ("8/8/8/8/8/1k6/3r4/K7 b - - 31 117", "d2b2", "Rb2 1/2-1/2"),
   ]
 
   for (fen, uciMove, sanMove) in testCases:

@@ -193,8 +193,7 @@ proc printInfoString(
           if pvList.len > 1:
             i + 1
           else:
-            -1
-        ,
+            -1,
       )
 
 proc bestMoveString(move: Move, position: Position): string =

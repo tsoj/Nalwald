@@ -196,24 +196,23 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
     let rookSource =
       case castlingChar
-      of 'K', 'k':
-        var rookSource = kingSquare
-        while rookSource.goRight:
-          if not empty(result[rook, us] and rookSource.toBitboard):
-            break
-        rookSource
-      of 'Q', 'q':
-        var rookSource = kingSquare
-        while rookSource.goLeft:
-          if not empty(result[rook, us] and rookSource.toBitboard):
-            break
+      of 'K', 'k', 'Q', 'q':
+        let dir = if castlingChar in ['K', 'k']: goRight else: goLeft
+        var
+          square = kingSquare
+          rookSource = noSquare
+        while square.dir:
+          if not empty(result[rook, us] and square.toBitboard):
+            if rookSource != noSquare and not suppressWarnings:
+              echo fmt"WARNING: Ambiguous FEN castling notation. Rook for '{castlingChar}' could be on {rookSource} or {square}. Using Lichess convention of using the outer rook on {square}"
+            rookSource = square
         rookSource
       else:
         let rookSourceBit =
           files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]
 
-        if rookSourceBit.countSetBits != 1:
-          raise newException(ValueError, "FEN castling ambiguous or erroneous")
+        doAssert rookSourceBit.countSetBits == 1
+
         (files[parseEnum[Square](castlingChar.toLowerAscii & "1")] and homeRank[us]).toSquare
 
     let castlingSide = if rookSource < kingSquare: queenside else: kingside
