@@ -203,8 +203,6 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
           rookSource = noSquare
         while square.dir:
           if not empty(result[rook, us] and square.toBitboard):
-            if rookSource != noSquare and not suppressWarnings:
-              echo fmt"WARNING: Ambiguous FEN castling notation. Rook for '{castlingChar}' could be on {rookSource} or {square}. Using Lichess convention of using the outer rook on {square}"
             rookSource = square
         rookSource
       else:
@@ -217,7 +215,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
     let castlingSide = if rookSource < kingSquare: queenside else: kingside
     result.rookSource[us][castlingSide] = rookSource
-    if empty (rookSource.toBitboard and result[us, rook]):
+    if rookSource == noSquare or empty (rookSource.toBitboard and result[us, rook]):
       raise newException(
         ValueError,
         fmt"FEN castling erroneous. Rook for {us} for {castlingSide} doesn't exist",
