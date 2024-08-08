@@ -135,6 +135,17 @@ func search(
     depth, height: Ply,
     previous: Move,
 ): Value =
+  # {.cast(noSideEffect).}:
+  #   if height == 0:
+  #     let f = open("myTreeNumbers.txt", fmWrite)
+  #     f.writeLine("")
+  #     f.close()
+
+  #   let f = open("myTreeNumbers.txt", fmAppend)
+  #   f.writeLine($height)
+  #   f.close()
+  # open("/home/tsoj/Dokumente/Projects/Nalwald/myTreeNumbers.txt", fmAppend)
+  debugEcho height
   assert alpha < beta
 
   state.countedNodes += 1
