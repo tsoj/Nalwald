@@ -32,6 +32,7 @@ massif.out
 !res/openings/DFRC_small.epd
 optimization
 *.txt
+!myTreeNumbers.txt
 vgcore.*
 *ptimizationResult*
 network_*.json
