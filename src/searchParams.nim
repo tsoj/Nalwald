@@ -106,8 +106,8 @@ addParam(historyTableShrinkDiv, default = 2.2, min = 1.1, max = 10.0, step = 0.5
 addParam(historyTableUnexpectedDivider, default = 0.949, min = 0.1, max = 1.0, step = 0.1)
 
 
-addParam(evalSigmoidWidth, default = 340, min = 1, max = 20000, step = 60, true)
-addParam(evalSigmoidHeight, default = 2000, min = 1, max = 20000, step = 200, true)
+addParam(evalSigmoidWidth, default = 3.0, min = 0.1, max = 20.0, step = 0.6, true)
+addParam(evalSigmoidHeight, default = 1.4, min = 0.1, max = 5.0, step = 0.2, true)
 #!fmt: on
 
 proc getWeatherFactoryConfig*(): string =

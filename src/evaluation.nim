@@ -230,8 +230,14 @@ func perspectiveEvaluate*(position: Position): Value =
   result = position.absoluteEvaluate
 
   # TODO better signal in the function name that we are doing sigmoig stuff here
+  # TODO rename evalSigmoidHeight, rename to power
 
-  result = (1.0 / (1.0 + pow(2.0, -result.float / evalSigmoidWidth().float)) * evalSigmoidHeight().float - evalSigmoidHeight().float / 2.0).clampToType(Value)
+  let wasNegative = result < 0
+  result = (pow(result.abs.float / evalSigmoidWidth().float, evalSigmoidHeight())).clampToType(Value)
+
+  if wasNegative:
+    result = -result
+
 
 
   if position.us == black:
