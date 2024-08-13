@@ -1,6 +1,6 @@
-import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils
+import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils, searchParams
 
-import std/[algorithm, macros]
+import std/[algorithm, macros, math]
 
 export pieceValues
 
@@ -228,5 +228,11 @@ func absoluteEvaluate*(position: Position): Value =
 
 func perspectiveEvaluate*(position: Position): Value =
   result = position.absoluteEvaluate
+
+  # TODO better signal in the function name that we are doing sigmoig stuff here
+
+  result = (1.0 / (1.0 + pow(2.0, -result.float / evalSigmoidWidth().float)) * evalSigmoidHeight().float - evalSigmoidHeight().float / 2.0).clampToType(Value)
+
+
   if position.us == black:
     result = -result

@@ -27,7 +27,7 @@ func getAsInt[T](a: T): int =
     a.int
 
 macro addParam[T](
-    name: untyped, default, min, max, step: T, tunable: bool = true
+    name: untyped, default, min, max, step: T, tunable: bool = false
 ): untyped =
   let
     varName: NimNode = getVarName(name)
@@ -104,6 +104,10 @@ addParam(historyTableBadMoveDivider, default = 24.0, min = 1.0, max = 100.0, ste
 addParam(historyTableCounterMul, default = 85.0, min = 1.0, max = 200.0, step = 20.0)
 addParam(historyTableShrinkDiv, default = 2.2, min = 1.1, max = 10.0, step = 0.5)
 addParam(historyTableUnexpectedDivider, default = 0.949, min = 0.1, max = 1.0, step = 0.1)
+
+
+addParam(evalSigmoidWidth, default = 340, min = 1, max = 20000, step = 60, true)
+addParam(evalSigmoidHeight, default = 2000, min = 1, max = 20000, step = 200, true)
 #!fmt: on
 
 proc getWeatherFactoryConfig*(): string =
