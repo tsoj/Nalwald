@@ -8,12 +8,12 @@ import
 import std/[times, strformat, random, math, os]
 
 proc optimize(
-    start: EvalParametersFloat,
+    start: EvalParameters,
     data: var seq[Entry],
     maxNumEpochs = 30,
     startLr = 10.0,
     finalLr = 0.05,
-): EvalParametersFloat =
+): EvalParameters =
   var solution = start
 
   echo "starting error: ", fmt"{solution.error(data):>9.7f}", ", starting lr: ", startLr
@@ -78,7 +78,7 @@ data.shuffle
 
 echo "Total number of entries: ", data.len
 
-var startEvalParams = newEvalParameters(float32)
+var startEvalParams = newEvalParameters()
 let ep = startEvalParams.optimize(data)
 
 const

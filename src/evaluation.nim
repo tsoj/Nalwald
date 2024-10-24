@@ -28,13 +28,13 @@ func colorConditionalMirrorVertically(x: Square or Bitboard, color: Color): auto
 
 type
   Gradient* {.requiresInit.} = object
-    gradient*: ptr EvalParametersFloat
+    gradient*: ptr EvalParameters
     g*: float32
     gamePhaseFactor*: float32
 
-  EvalValue[ValueType: float32 or Value] {.requiresInit.} = object
-    params: ptr EvalParametersTemplate[ValueType]
-    absoluteValue: ptr array[Phase, Value]
+  EvalValue {.requiresInit.} = object
+    params: ptr EvalParameters
+    absoluteValue: ptr array[Phase, float32]
 
   EvalState = Gradient or EvalValue
 
@@ -53,7 +53,7 @@ template addValue(evalState: EvalState, goodFor: static Color, parameter: untype
     static:
       doAssert evalState is EvalValue
     for phase {.inject.} in Phase:
-      var value = getParameter(evalState.params[][phase.int], parameter).Value
+      var value = getParameter(evalState.params[][phase.int], parameter)
       when goodFor == black:
         value = -value
       evalState.absoluteValue[phase] += value
@@ -210,15 +210,15 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   # piece combo bonus
   evalState.pieceComboBonusWhitePerspective(position)
 
-func absoluteEvaluate*[ValueType: float32 or Value](
-    position: Position, params: EvalParametersTemplate[ValueType]
+func absoluteEvaluate*(
+    position: Position, params: EvalParameters
 ): Value {.inline.} =
-  var value: array[Phase, Value]
-  let evalValue = EvalValue[ValueType](params: addr params, absoluteValue: addr value)
+  var value: array[Phase, float32]
+  let evalValue = EvalValue(params: addr params, absoluteValue: addr value)
   position.absoluteEvaluate(evalValue)
 
   result = position.gamePhase.interpolate(
-    forOpening = value[opening], forEndgame = value[endgame]
+    forOpening = value[opening].Value, forEndgame = value[endgame].Value
   )
 
   doAssert result.abs < valueCheckmate

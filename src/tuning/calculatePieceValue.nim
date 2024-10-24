@@ -1,7 +1,7 @@
 import ../types, ../position, ../evaluation, ../bitboard, ../evalParameters, dataUtils
 
 func getPieceValue(
-    piece: Piece, evalParameters: EvalParametersTemplate, data: openArray[Entry]
+    piece: Piece, evalParameters: EvalParameters, data: openArray[Entry]
 ): Value =
   var sum: int = 0
   var numPieceEvals: int = 0
@@ -21,7 +21,7 @@ func getPieceValue(
   (sum div numPieceEvals).Value
 
 proc pieceValuesAsString*(
-    evalParameters: EvalParametersTemplate, data: openArray[Entry]
+    evalParameters: EvalParameters, data: openArray[Entry]
 ): string =
   for piece in pawn .. queen:
     result &= $piece & ": " & $getPieceValue(piece, evalParameters, data) & ".Value, "

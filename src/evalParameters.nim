@@ -8,24 +8,17 @@ type Relativity* = enum
   relativeToEnemy
 
 #!fmt: off
-type SinglePhaseEvalParametersTemplate[ValueType: Value or float32] = object
+type SinglePhaseEvalParameters = object
   # here the pawn in the first dim stand for passed pawns
-  pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..king, array[a1..h8, ValueType]]]]]]]
-  pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, ValueType]]
-  pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, ValueType]
+  pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..king, array[a1..h8, float32]]]]]]]
+  pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, float32]]
+  pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, float32]
 #!fmt: on
 
-type EvalParametersTemplate*[ValueType] {.requiresInit.} =
-  seq[SinglePhaseEvalParametersTemplate[ValueType]]
+type EvalParameters* {.requiresInit.} = seq[SinglePhaseEvalParameters]
 
-type EvalParametersFloat* {.requiresInit.} = EvalParametersTemplate[float32]
-
-type EvalParameters* {.requiresInit.} = EvalParametersTemplate[Value]
-
-func newEvalParameters*(
-    ValueType: typedesc[Value or float32]
-): EvalParametersTemplate[ValueType] =
-  newSeq[SinglePhaseEvalParametersTemplate[ValueType]](2)
+func newEvalParameters*(): EvalParameters =
+  newSeq[SinglePhaseEvalParameters](2)
 
 func doForAll[T](
     output: var T,
@@ -49,31 +42,31 @@ func doForAll[T](
     static:
       doAssert false, "Type is not not implemented for doForAll: " & $typeof(T)
 
-func `+=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
+func `+=`*(a: var EvalParameters, b: EvalParameters) =
   proc op(x: var float32, y: float32) =
     x += y
 
   doForAll(a, b, op)
 
-func `*=`*(a: var EvalParametersFloat, b: EvalParametersFloat) =
+func `*=`*(a: var EvalParameters, b: EvalParameters) =
   proc op(x: var float32, y: float32) =
     x *= y
 
   doForAll(a, b, op)
 
-func `*=`*(a: var EvalParametersFloat, b: float32) =
+func `*=`*(a: var EvalParameters, b: float32) =
   proc op(x: var float32, y: float32) =
     x *= b
 
   doForAll(a, a, op)
 
-func setAll*(a: var EvalParametersFloat, b: float32) =
+func setAll*(a: var EvalParameters, b: float32) =
   proc op(x: var float32, y: float32) =
     x = b
 
   doForAll(a, a, op)
 
-proc setRandom*(a: var EvalParametersFloat, b: Slice[float64]) =
+proc setRandom*(a: var EvalParameters, b: Slice[float64]) =
   proc op(x: var float32, y: float32) =
     {.cast(noSideEffect).}:
       x = rand(b).float32
@@ -82,7 +75,7 @@ proc setRandom*(a: var EvalParametersFloat, b: Slice[float64]) =
 
 const charWidth = 8
 
-proc toString*(params: EvalParametersTemplate): string =
+proc toString*(params: EvalParameters): string =
   var
     s: string
     params = params
@@ -98,11 +91,9 @@ proc toString*(params: EvalParametersTemplate): string =
   doForAll(params, params, op)
   s
 
-proc toEvalParameters*(
-    s: string, ValueType: typedesc[Value or float32]
-): EvalParametersTemplate[ValueType] =
+proc toEvalParameters*(s: string): EvalParameters =
   var
-    params = newEvalParameters(ValueType)
+    params = newEvalParameters()
     n = 0
 
   proc op(x: var float32, y: float32) =
@@ -128,12 +119,12 @@ const defaultEvalParametersString = block:
     echo "WARNING! Couldn't find default eval params at ", fileName
   s
 
-let defaultEvalParametersData* = block:
-  var ep = newEvalParameters(Value)
+var defaultEvalParametersData* = block:
+  var ep = newEvalParameters()
 
   if defaultEvalParametersString.len > 0:
     if defaultEvalParametersString.len == ep.toString.len:
-      ep = defaultEvalParametersString.toEvalParameters(Value)
+      ep = defaultEvalParametersString.toEvalParameters()
     else:
       echo "WARNING! Incompatible params format"
   else:
