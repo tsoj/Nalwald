@@ -1,6 +1,6 @@
 import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils
 
-import std/[algorithm, macros]
+import std/[algorithm, macros, math]
 
 export pieceValues
 
@@ -9,6 +9,17 @@ func cp*(cp: int): Value {.inline.} =
 
 func toCp*(value: Value): int {.inline.} =
   (100 * value.int) div pawn.value.int
+
+const k = 1.0
+
+func winningProbability*(centipawn: Value): float =
+  1.0 / (1.0 + pow(10.0, -((k * centipawn.float) / 400.0)))
+
+func winningProbabilityDerivative*(centipawn: Value): float =
+  (
+    ln(10.0) * pow(2.0, -2.0 - ((k * centipawn.float) / 400.0)) *
+    pow(5.0, -((k * centipawn.float) / 400.0))
+  ) / pow(1.0 + pow(10.0, -((k * centipawn.float) / 400.0)), 2.0)
 
 func material*(position: Position): Value =
   result = 0
@@ -210,9 +221,7 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   # piece combo bonus
   evalState.pieceComboBonusWhitePerspective(position)
 
-func absoluteEvaluate*(
-    position: Position, params: EvalParameters
-): Value {.inline.} =
+func absoluteEvaluate*(position: Position, params: EvalParameters): Value {.inline.} =
   var value: array[Phase, float32]
   let evalValue = EvalValue(params: addr params, absoluteValue: addr value)
   position.absoluteEvaluate(evalValue)
@@ -230,3 +239,16 @@ func perspectiveEvaluate*(position: Position): Value =
   result = position.absoluteEvaluate
   if position.us == black:
     result = -result
+
+func addGradient*(
+    params: var EvalParameters, lr: float, position: Position, outcome: float
+) =
+  let currentValue = position.absoluteEvaluate(params)
+  var currentGradient = Gradient(
+    gamePhaseFactor: position.gamePhase.interpolate(forOpening = 1.0, forEndgame = 0.0),
+    g:
+      errorDerivative(outcome, currentValue.winningProbability) *
+      currentValue.winningProbabilityDerivative * lr,
+    gradient: addr params,
+  )
+  position.absoluteEvaluate(currentGradient)

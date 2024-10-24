@@ -3,8 +3,7 @@ import
   ../positionUtils,
   ../evalParameters,
   ../evaluation,
-  winningProbability,
-  error
+  ../utils
 
 import std/[os, strutils, streams]
 

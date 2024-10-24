@@ -1,7 +1,7 @@
 import
   ../evalParameters,
+  ../evaluation,
   ../bitboard, # TODO this is only necessary because Nim bug (TODO check),
-  gradient,
   dataUtils,
   calculatePieceValue
 

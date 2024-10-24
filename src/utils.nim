@@ -1,6 +1,6 @@
 import types
 
-import std/[options, strutils, times, os, osproc]
+import std/[options, strutils, times, os, osproc, math]
 
 const megaByteToByte* = 1_048_576
 
@@ -101,6 +101,12 @@ proc askYesNo*(question: string): bool =
       return true
     if answer == "n":
       return false
+
+func error*(outcome, estimate: float): float =
+  (outcome - estimate) ^ 2
+
+func errorDerivative*(outcome, estimate: float): float =
+  2.0 * (outcome - estimate)
 
 type Seconds* = distinct float
 
