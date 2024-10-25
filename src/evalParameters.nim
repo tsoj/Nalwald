@@ -73,7 +73,9 @@ proc setRandom*(a: var EvalParameters, b: Slice[float64]) =
 
   doForAll(a, a, op)
 
-const charWidth = 8
+const
+  charWidth = 8
+  quantizeScalar: float32 = 10.0
 
 proc toString*(params: EvalParameters): string =
   var
@@ -81,11 +83,12 @@ proc toString*(params: EvalParameters): string =
     params = params
 
   proc op(x: var float32, y: float32) =
-    doAssert x in int16.low.float32 .. int16.high.float32
+    let value = x * quantizeScalar
+    doAssert value in int16.low.float32 .. int16.high.float32
     for i in 0 ..< sizeof(int16):
       let
         shift = charWidth * i
-        bits = cast[char]((x.int16 shr shift) and 0b1111_1111)
+        bits = cast[char]((value.int16 shr shift) and 0b1111_1111)
       s.add bits
 
   doForAll(params, params, op)
@@ -102,7 +105,7 @@ proc toEvalParameters*(s: string): EvalParameters =
       let shift = charWidth * i
       bits = bits or (cast[int16](s[n]) shl shift)
       n += 1
-    x = bits.float32
+    x = bits.float32 / quantizeScalar
 
   doForAll(params, params, op)
 
@@ -119,7 +122,7 @@ const defaultEvalParametersString = block:
     echo "WARNING! Couldn't find default eval params at ", fileName
   s
 
-var defaultEvalParametersData* = block:
+let defaultEvalParametersData* = block:
   var ep = newEvalParameters()
 
   if defaultEvalParametersString.len > 0:

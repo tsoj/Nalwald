@@ -2,7 +2,7 @@ import types, bitboard, move, zobristBitmasks, castling, utils
 
 export types, bitboard, move
 
-type Position* = object
+type Position* {.packed.} = object
   pieces*: array[pawn .. king, Bitboard]
   colors*: array[white .. black, Bitboard]
   enPassantTarget*: Bitboard

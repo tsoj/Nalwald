@@ -60,7 +60,7 @@ data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-30-48.bin"
 data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-14-51.bin"
 data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-23-35-01.bin"
 data.loadDataBin "res/trainingSets/trainingSet_2023-10-04-00-47-53.bin"
-# data.loadDataBin "res/trainingSets/trainingSet_2023-10-06-17-43-01.bin" # because otherwise the training data doesn't really fit into RAM
+data.loadDataBin "res/trainingSets/trainingSet_2023-10-06-17-43-01.bin"
 
 data.loadDataBin "res/trainingSets/trainingSet_2023-12-22-16-08-28.bin"
 data.loadDataBin "res/trainingSets/trainingSet_2023-12-22-16-15-24.bin"
