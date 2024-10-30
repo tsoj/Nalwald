@@ -294,7 +294,10 @@ proc uciLoop*() =
       of "speedtest":
         speedPerftTest()
       of "eval":
-        uciState.info fmt"**{uciState.currentPosition.absoluteEvaluate}** centipawns from whites perspective"
+        if params.len >= 2 and params[1] == "raw":
+          uciState.info fmt"**{uciState.currentPosition.absoluteEvaluate}** from whites perspective"
+        else:
+          uciState.info fmt"**{uciState.currentPosition.absoluteEvaluate.toCp}** centipawns from whites perspective"
       of "piecevalues":
         for p in pawn .. queen:
           uciState.info fmt"{p}: **{p.value.toCp}** cp `({p.value})`"
