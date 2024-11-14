@@ -152,8 +152,7 @@ proc printInfoString(
   if scoreType == centipawnScore:
     printKeyValue "score cp", fmt"{scoreValue:>4}"
   else:
-    printKeyValue (if scoreType == mated: "score mate -" else: "score mate "),
-      fmt"{scoreValue}"
+    stdout.write " ", (if scoreType == mated: "score mate -" else: "score mate "), scoreValue
 
   printKeyValue "pv", pv.notation(position)
 
