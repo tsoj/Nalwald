@@ -227,6 +227,7 @@ proc uciSearch*(searchInfo: SearchInfo, uciCompatibleOutput: bool) =
     iteration = 0
 
   if position.legalMoves.len == 0:
+    echo "info string why are you asking me this, the game is LITERALLY OVER what do you want from me"
     echo "0000"
     return
 
