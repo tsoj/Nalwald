@@ -226,6 +226,10 @@ proc uciSearch*(searchInfo: SearchInfo, uciCompatibleOutput: bool) =
     bestMove = noMove
     iteration = 0
 
+  if position.legalMoves.len == 0:
+    echo "0000"
+    return
+
   for (pvList, nodes, passedTime) in searchInfo.iterativeTimeManagedSearch():
     let pvList = pvList.sorted((x, y) => cmp(x.value, y.value), Descending)
     doAssert pvList.len >= 1
