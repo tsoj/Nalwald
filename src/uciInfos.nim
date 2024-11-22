@@ -31,6 +31,7 @@ proc help*(params: openArray[string]) =
       "- *eval*\n",
       "- *flip*\n",
       "- *piecevalues*\n",
+      "- *poem*\n",
       "- *about*\n",
       "- *help*\n",
       "Use `help <command>` to get info about a specific command",
@@ -142,6 +143,8 @@ proc help*(params: openArray[string]) =
       printMarkdownSubset(
         "Prints all possible commands, or if `<command>` is given, then help about `<command>` is printed."
       )
+    of "poem":
+      printMarkdownSubset("*Try it* :)")
     else:
       echo "Unknown command: ", params[0]
 

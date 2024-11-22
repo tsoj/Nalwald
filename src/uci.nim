@@ -13,6 +13,7 @@ import
   searchParams,
   timeManagedSearch,
   printMarkdownSubset,
+  poem,
   testing/tests
 
 import std/[strutils, strformat, atomics, sets]
@@ -312,6 +313,8 @@ proc uciLoop*() =
           uciState.info fmt"*Unknown parameter:* {params[1]}"
       of "about":
         about(extra = params.len >= 1 and "extra" in params)
+      of "poem":
+        printPoem()
       of "help":
         help(params[1 ..^ 1])
       else:
