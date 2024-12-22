@@ -1,0 +1,146 @@
+{
+    "resign": {
+        "move_count": 3,
+        "score": 400,
+        "twosided": false,
+        "enabled": true
+    },
+    "draw": {
+        "move_number": 40,
+        "move_count": 8,
+        "score": 10,
+        "enabled": true
+    },
+    "maxmoves": {
+        "move_count": 1,
+        "enabled": false
+    },
+    "opening": {
+        "file": "res/openings/Pohl.epd",
+        "format": 0,
+        "order": 0,
+        "plies": -1,
+        "start": 1
+    },
+    "pgn": {
+        "event_name": "Fastchess Tournament",
+        "site": "?",
+        "file": "res/pgns/sprtGames.pgn",
+        "notation": 0,
+        "track_nodes": false,
+        "track_seldepth": false,
+        "track_nps": false,
+        "track_hashfull": false,
+        "track_tbhits": false,
+        "track_timeleft": false,
+        "min": true
+    },
+    "epd": {
+        "file": ""
+    },
+    "sprt": {
+        "alpha": 0.05,
+        "beta": 0.05,
+        "elo0": 0.0,
+        "elo1": 5.0,
+        "model": "normalized",
+        "enabled": true
+    },
+    "config_name": "",
+    "output": 0,
+    "seed": 17673486654583285002,
+    "variant": 0,
+    "ratinginterval": 50,
+    "scoreinterval": 1,
+    "wait": 0,
+    "autosaveinterval": 20,
+    "games": 2,
+    "rounds": 100000,
+    "concurrency": 30,
+    "force_concurrency": false,
+    "recover": false,
+    "noswap": false,
+    "reverse": false,
+    "report_penta": true,
+    "affinity": false,
+    "log": {
+        "file": "",
+        "level": 2,
+        "compress": false,
+        "realtime": true
+    },
+    "engines": [
+        {
+            "name": "check_extensions",
+            "dir": "src/testing/sprtWorkdir/",
+            "cmd": "./Nalwald-check_extensions",
+            "args": "",
+            "options": [
+                [
+                    "Hash",
+                    "8"
+                ]
+            ],
+            "limit": {
+                "tc": {
+                    "increment": 100,
+                    "fixed_time": 0,
+                    "time": 10000,
+                    "moves": 0,
+                    "timemargin": 0
+                },
+                "nodes": 0,
+                "plies": 0
+            },
+            "variant": 0
+        },
+        {
+            "name": "master",
+            "dir": "src/testing/sprtWorkdir/",
+            "cmd": "./Nalwald-master",
+            "args": "",
+            "options": [
+                [
+                    "Hash",
+                    "8"
+                ]
+            ],
+            "limit": {
+                "tc": {
+                    "increment": 100,
+                    "fixed_time": 0,
+                    "time": 10000,
+                    "moves": 0,
+                    "timemargin": 0
+                },
+                "nodes": 0,
+                "plies": 0
+            },
+            "variant": 0
+        }
+    ],
+    "stats": {
+        "master vs check_extensions": {
+            "wins": 41,
+            "losses": 39,
+            "draws": 80,
+            "penta_WW": 2,
+            "penta_WD": 20,
+            "penta_WL": 17,
+            "penta_DD": 20,
+            "penta_LD": 20,
+            "penta_LL": 1
+        },
+        "check_extensions vs master": {
+            "wins": 32,
+            "losses": 48,
+            "draws": 78,
+            "penta_WW": 0,
+            "penta_WD": 11,
+            "penta_WL": 21,
+            "penta_DD": 22,
+            "penta_LD": 23,
+            "penta_LL": 2
+        }
+    }
+}
