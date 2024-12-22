@@ -74,7 +74,7 @@ let cuteChessArguments =
 -draw movenumber=40 movecount=8 score=10 \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
 -engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)} \
--each tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./
+-each tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir={workDir}
 """
 
 let command = engineTournamentBinary & " " & cuteChessArguments
