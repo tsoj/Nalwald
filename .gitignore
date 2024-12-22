@@ -67,5 +67,6 @@ res/trainingSets
 res/pgns
 src/testing/benchWorkdir
 cleanUpTrainingData.nim
+src/testing/sprtWorkdir
 
 # TODO clean this file up
