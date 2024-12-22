@@ -7,9 +7,9 @@ const
   tc = 8
   hash = 32
   weatherFactoryUrl = "https://github.com/tsoj/weather-factory.git"
-  weatherFactoryCommit = "patch-2"
+  weatherFactoryCommit = "patch-3"
   workDir = "src/tuning/weather-factory/"
-  cuteChessBinary = "/usr/games/cutechess-cli"
+  useFastchess = true
   openingBook = "Pohl.epd"
 
 let
@@ -31,8 +31,6 @@ createDir workDir & "tuner"
 doAssert execCmd("nim native -f -d:tunableSearchParams Nalwald") == 0
 copyFileWithPermissions "bin/Nalwald-native", workDir & "tuner/Nalwald-native"
 
-copyFileWithPermissions cuteChessBinary, workDir & "tuner/cutechess-cli"
-
 copyFile "res/openings/" & openingBook, workDir & "tuner/" & openingBook
 
 setCurrentDir workDir
@@ -47,7 +45,8 @@ writeFile "cutechess.json",
     "tc": {tc},
     "hash": {hash},
     "threads": {numThreads},
-    "pgnout": "{outGamesFile}"
+    "pgnout": "{outGamesFile}",
+    "use_fastchess": {useFastchess}
 }}"""
 
 doAssert execCmd(fmt"python3 main.py") == 0

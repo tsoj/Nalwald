@@ -69,7 +69,7 @@ let cuteChessArguments =
 -ratinginterval 50 \
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
--openings file={openingBook} format=epd order=random -repeat 2 \
+-openings file={openingBook} format=epd order=random \
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -resign movecount=3 score=400 \
 -draw movenumber=40 movecount=8 score=10 \
