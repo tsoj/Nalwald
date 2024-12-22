@@ -78,6 +78,7 @@ let cuteChessArguments =
 -engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)}
 """
 
-doAssert execCmd(engineTournamentBinary & " " & cuteChessArguments) == 0
+let command = engineTournamentBinary & " " & cuteChessArguments
+doAssert execCmd(command) == 0, "Command:\n" & command
 
 echo "\nFinished SPRT test\n"
