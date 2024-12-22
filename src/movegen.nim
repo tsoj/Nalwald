@@ -1,6 +1,6 @@
 import position, bitboard, move, types, castling
 
-template addMove(
+func addMove(
     moves: var openArray[Move],
     index: var int,
     source, target, enPassantTarget: Square,

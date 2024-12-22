@@ -37,7 +37,7 @@ iterator items*(bitboard: Bitboard): Square {.inline.} =
     yield occ.uint64.countTrailingZeroBits.Square
     occ &= (occ.uint64 - 1).Bitboard
 
-func bitboardString*(bitboard: Bitboard): string =
+func `$`*(bitboard: Bitboard): string =
   boardString(
     proc(square: Square): Option[string] =
       if not empty(square.toBitboard and bitboard):
@@ -145,29 +145,19 @@ const
   knightAttackTable = kingKnightAttackTable(0x442800000028440u64.Bitboard)
   kingAttackTable = kingKnightAttackTable(0x8380000000000383u64.Bitboard)
 
-const attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+const attackTablePawnQuiet*: array[white .. black, array[a1 .. h8, Bitboard]] = block:
   var attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]]
-  for square in a1 .. h8:
-    var targetSquare = square
-    if targetSquare.goUp:
-      attackTablePawnQuiet[white][square] = targetSquare.toBitboard
-    targetSquare = square
-    if targetSquare.goDown:
-      attackTablePawnQuiet[black][square] = targetSquare.toBitboard
+  for square in a2 .. h7:
+    attackTablePawnQuiet[white][square] = square.toBitboard shl 8
+    attackTablePawnQuiet[black][square] = square.toBitboard shr 8
   attackTablePawnQuiet
 
-const attackTablePawnCapture: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+const attackTablePawnCapture*: array[white .. black, array[a1 .. h8, Bitboard]] = block:
   var attackTablePawnCapture: array[white .. black, array[a1 .. h8, Bitboard]]
-  for square in a1 .. h8:
-    for direction in [goLeft, goRight]:
-      var targetSquare = square
-      if targetSquare.goUp and targetSquare.direction:
-        attackTablePawnCapture[white][square] =
-          attackTablePawnCapture[white][square] or targetSquare.toBitboard
-      targetSquare = square
-      if targetSquare.goDown and targetSquare.direction:
-        attackTablePawnCapture[black][square] =
-          attackTablePawnCapture[black][square] or targetSquare.toBitboard
+  for (color, range) in [(white, a1 .. h7), (black, a2 .. h8)]:
+    for square in range:
+      let attacks = diagonals[square] or antiDiagonals[square]
+      attackTablePawnCapture[color][square] = attacks and ranks[square.up(color)]
   attackTablePawnCapture
 
 const isPassedMask*: array[white .. black, array[a1 .. h8, Bitboard]] = block:

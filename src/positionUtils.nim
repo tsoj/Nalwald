@@ -68,12 +68,12 @@ func debugString*(position: Position): string =
   result = ""
   for piece in pawn .. king:
     result &= $piece & ":\n"
-    result &= position[piece].bitboardString & "\n"
+    result &= $position[piece] & "\n"
   for color in white .. black:
     result &= $color & ":\n"
-    result &= position[color].bitboardString & "\n"
+    result &= $position[color] & "\n"
   result &= "enPassantTarget:\n"
-  result &= position.enPassantTarget.bitboardString & "\n"
+  result &= $position.enPassantTarget & "\n"
   result &= "us: " & $position.us & ", enemy: " & $position.enemy & "\n"
   result &=
     "halfmovesPlayed: " & $position.halfmovesPlayed & ", halfmoveClock: " &
