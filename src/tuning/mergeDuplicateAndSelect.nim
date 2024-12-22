@@ -20,12 +20,12 @@ proc mergeDuplicateAndSelect*(
   let g = open(writeFilename, outFileMode)
 
   var
-    line: string
+    line = ""
     totalPositions = 0
     totalSelectedPositions = 0
   while not f.endOfFile:
     var
-      table: Table[string, tuple[count: float, sum: float]]
+      table = default(Table[string, tuple[count: float, sum: float]])
       numInputPositions = 0
 
     while f.readLine(line):

@@ -21,7 +21,7 @@ proc loadDataEpd*(
 
   let f = open(fileName)
   var
-    line: string
+    line = ""
     numEntries = 0
 
   while f.readLine(line):
@@ -73,8 +73,7 @@ func error*(evalParameters: EvalParameters, entry: Entry): float =
 func errorTuple*(
     evalParameters: EvalParameters, data: openArray[Entry]
 ): tuple[error, summedWeight: float] =
-  result.error = 0.0
-  result.summedWeight = 0.0
+  result = (error: 0.0, summedWeight: 0.0)
   for entry in data:
     result.error += evalParameters.error(entry)
     result.summedWeight += 1.0

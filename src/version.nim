@@ -35,7 +35,9 @@ else:
 
   func version*(): Option[string] =
     when not gitTag.isEmptyOrWhitespace and not gitHasUnstagedChanges:
-      some(gitTag)
+      some gitTag
+    else:
+      none string
 
   func id(): string =
     result = gitShortHash

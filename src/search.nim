@@ -321,6 +321,8 @@ func search(
   bestValue
 
 func search*(position: Position, state: var SearchState, depth: Ply): Value =
+  result = 0
+
   let hashResult = state.hashTable[].get(position.zobristKey)
 
   var

@@ -101,6 +101,7 @@ proc askYesNo*(question: string): bool =
       return true
     if answer == "n":
       return false
+  false
 
 func error*(outcome, estimate: float): float =
   (outcome - estimate) ^ 2

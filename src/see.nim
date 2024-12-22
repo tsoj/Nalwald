@@ -33,8 +33,11 @@ func see(position: var Position, target: Square, victim: Piece, us: Color): Valu
           collected += queen.value - pawn.value
 
       return max(0, collected - position.see(target, newVictim, us.opposite))
+  0
 
 func see*(position: Position, move: Move): Value =
+  result = 0
+
   let
     us = position.us
     enemy = position.enemy

@@ -41,6 +41,7 @@ func gameStatus*(positionHistory: openArray[Position]): GameStatus =
   running
 
 func getPositionHistory*(game: Game): seq[(Position, Value)] =
+  result = @[]
   for position in game.positionHistory:
     let value =
       if position in game.evals:

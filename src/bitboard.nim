@@ -60,9 +60,11 @@ const files*: array[a1 .. h8, Bitboard] = block:
   files
 
 func mirrorVertically*(bitboard: Bitboard): Bitboard =
+  result = 0.Bitboard
   swapEndian64(addr result, unsafeAddr bitboard)
 
 func mirrorHorizontally*(bitboard: Bitboard): Bitboard =
+  result = 0.Bitboard
   for i in 0 .. 3:
     let
       f1 = files[i.Square]
@@ -93,6 +95,7 @@ proc attackForSquareAndKey(
         break
 
 proc collect64[T](f: (int -> T)): array[64, T] =
+  result = default(array[64, T])
   for i in 0 .. 63:
     result[i] = f(i)
 
@@ -124,8 +127,10 @@ proc attackTable(
   )
 
 proc kingKnightAttackTable(a1Proto: Bitboard): array[a1 .. h8, Bitboard] =
+
   collect64(
     proc(sourceSq: int): Bitboard =
+      result = 0.Bitboard
       for target in rotateLeftBits(a1Proto.uint64, sourceSq).Bitboard:
         if abs((target.int div 8) - (sourceSq div 8)) +
             abs((target.int mod 8) - (sourceSq mod 8)) <= 3:

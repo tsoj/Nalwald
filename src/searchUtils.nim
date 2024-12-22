@@ -11,6 +11,7 @@ type
     counterTable: ref array[pawn .. king, array[a1 .. h8, HistoryArray]]
 
 func newHistoryTable*(): HistoryTable =
+  result = default(HistoryTable)
   # allocating this on the heap, as it is too big for the stack
   result.counterTable = new array[pawn .. king, array[a1 .. h8, HistoryArray]]
 
@@ -94,6 +95,7 @@ type GameHistory* = object
   dynamicHistory: array[Ply, ZobristKey]
 
 func newGameHistory*(staticHistory: seq[Position]): GameHistory =
+  result = default(GameHistory)
   for position in staticHistory:
     doAssert position.zobristKey == position.calculateZobristKey
     result.staticHistory.add(position.zobristKey)

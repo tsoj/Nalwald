@@ -139,7 +139,7 @@ proc setPosition(uciState: var UciState, params: seq[string]) =
     position = startpos
     index = 1
   elif params.len >= 1 and params[0] == "fen":
-    var fen: string
+    var fen = ""
     index = 1
     var numFenWords = 0
     while params.len > index and params[index] != "moves":

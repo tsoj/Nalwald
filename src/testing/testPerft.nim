@@ -22,12 +22,13 @@ func testPerft(
     previous: Move,
 ): int =
   ## Returns number of nodes and also does a number of asserts on different systems
+  result = 0
 
   if depth <= 0.Ply:
     return 1
 
   # Test for isPseudoLegal
-  var claimedPseudoLegalMoves: seq[Move]
+  var claimedPseudoLegalMoves: seq[Move] = @[]
   if state.testPseudoLegality:
     for move in state.randomMoves:
       if position.isPseudoLegal move:

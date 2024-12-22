@@ -23,6 +23,7 @@ func getPieceValue(
 proc pieceValuesAsString*(
     evalParameters: EvalParameters, data: openArray[Entry]
 ): string =
+  result = ""
   for piece in pawn .. queen:
     result &= $piece & ": " & $getPieceValue(piece, evalParameters, data) & ".Value, "
 

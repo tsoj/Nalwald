@@ -65,6 +65,7 @@ func `$`*(position: Position): string =
     result &= fenWords[i] & " "
 
 func debugString*(position: Position): string =
+  result = ""
   for piece in pawn .. king:
     result &= $piece & ":\n"
     result &= position[piece].bitboardString & "\n"
@@ -81,6 +82,7 @@ func debugString*(position: Position): string =
   result &= "rookSource: " & $position.rookSource
 
 func legalMoves*(position: Position): seq[Move] =
+  result = @[]
   var pseudoLegalMoves = newSeq[Move](64)
   while true:
     # 'generateMoves' silently stops generating moves if the given array is not big enough
@@ -119,6 +121,8 @@ func toMove*(s: string, position: Position): Move =
   raise newException(ValueError, "Move is illegal: " & s)
 
 proc toPosition*(fen: string, suppressWarnings = false): Position =
+  result = default(Position)
+
   var fenWords = fen.splitWhitespace()
   if fenWords.len < 4:
     raise newException(ValueError, "FEN must have at least 4 words")
@@ -138,7 +142,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
   let fullmoveNumber = fenWords[5]
 
   var squareList = block:
-    var squareList: seq[Square]
+    var squareList = default(seq[Square])
     for y in 0 .. 7:
       for x in countdown(7, 0):
         squareList.add Square(y * 8 + x)
@@ -263,6 +267,7 @@ func notation*(move: Move, position: Position): string =
   $move
 
 func notation*(pv: seq[Move], position: Position): string =
+  result = ""
   var currentPosition = position
   for move in pv:
     result &= move.notation(currentPosition) & " "
@@ -286,6 +291,8 @@ proc writePosition*(stream: Stream, position: Position) =
   stream.write position.halfmoveClock.int16
 
 proc readPosition*(stream: Stream): Position =
+  result = default(Position)
+
   for pieceBitboard in result.pieces.mitems:
     pieceBitboard = stream.readUint64.Bitboard
   for colorBitboard in result.colors.mitems:
@@ -305,6 +312,8 @@ proc readPosition*(stream: Stream): Position =
   doAssert result.zobristKey == result.calculateZobristKey
 
 func toSAN*(move: Move, position: Position): string =
+  result = ""
+
   let
     newPosition = position.doMove move
     moveFile = ($move.source)[0]
@@ -370,6 +379,7 @@ func toSAN*(move: Move, position: Position): string =
       result &= " 1/2-1/2"
 
 func notationSAN*(pv: seq[Move], position: Position): string =
+  result = ""
   var currentPosition = position
   for move in pv:
     result &= move.toSAN(currentPosition) & " "

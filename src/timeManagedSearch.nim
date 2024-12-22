@@ -16,8 +16,7 @@ func calculateMoveTime(
     estimatedMovesToGo = max(20, estimatedGameLength - halfmovesPlayed div 2)
     newMovesToGo = max(2, min(movesToGo, estimatedMovesToGo))
 
-  result.maxTime = min(timeLeft / 2, moveTime)
-  result.approxTime = incPerMove + timeLeft / newMovesToGo
+  result = MoveTime(maxTime: min(timeLeft / 2, moveTime), approxTime: incPerMove + timeLeft / newMovesToGo)
 
   if incPerMove >= 2.Seconds or timeLeft > 180.Seconds:
     result.approxTime = result.approxTime * 1.2
@@ -47,7 +46,7 @@ iterator iterativeTimeManagedSearch*(
   const numConsideredBranchingFactors = 4
 
   var
-    stopFlag: Atomic[bool]
+    stopFlag = default(Atomic[bool])
     externalStopFlag =
       if searchInfo.stopFlag == nil:
         addr stopFlag
@@ -130,5 +129,6 @@ iterator iterativeTimeManagedSearch*(
       break
 
 proc timeManagedSearch*(searchInfo: SearchInfo): seq[Pv] =
+  result = @[]
   for (pvList, nodes, passedTime) in iterativeTimeManagedSearch(searchInfo):
     result = pvList

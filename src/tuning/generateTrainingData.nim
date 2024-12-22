@@ -54,6 +54,8 @@ func isValidSamplePosition(position: Position): bool =
 proc playGameAndCollectTrainingSamples(
     startPos: Position, hashTable: ref HashTable
 ): seq[(Position, float)] =
+  result = @[]
+
   const
     earlyAdjudicationMinConsistentPly = 6
     minAdjudicationGameLenPly = 0

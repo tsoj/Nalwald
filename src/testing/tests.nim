@@ -34,6 +34,8 @@ proc testFen(): Option[string] =
   if frcFen1.toPosition(suppressWarnings = true).fen != frcFen2:
     return some fmt"{frcFen1} should be converted to {frcFen2}"
 
+  none string
+
 proc perftAndTestPerft(): Option[string] =
   const weirdFen = "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1"
 
@@ -67,6 +69,7 @@ proc perftAndTestPerft(): Option[string] =
           return some &"Test perft to depth {depth} for \"{fen}\" should be {trueNumNodes} but is {testPerftResult}"
       except Exception:
         return some getCurrentExceptionMsg()
+  none string
 
 proc testZobristKeys(): Option[string] =
   for fen1 in someFens:
@@ -78,6 +81,7 @@ proc testZobristKeys(): Option[string] =
       p1.halfmovesPlayed = p2.halfmovesPlayed
       if p1.fen != p2.fen and p1.zobristKey == p2.zobristKey:
         return some &"Zobrist key for both \"{fen1}\" and \"{fen2}\" is the same ({fen1.toPosition.zobristKey})"
+  none string
 
 proc playGames(): Option[string] =
   for fen in someFens:
@@ -86,6 +90,7 @@ proc playGames(): Option[string] =
       discard game.playGame()
     except Exception:
       return some &"Encountered error while playing a game from start position \"{fen}\": {getCurrentExceptionMsg()}"
+  none string
 
 proc positionStreams(): Option[string] =
   for fen in someFens:
@@ -98,6 +103,7 @@ proc positionStreams(): Option[string] =
     strm.close()
     if position2 != position:
       return some &"Failed to convert to binary stream and back for \"{fen}\""
+  none string
 
 proc positionTransforms(): Option[string] =
   for fen in someFens:
@@ -153,6 +159,7 @@ proc positionTransforms(): Option[string] =
 
       if transformed.fen.toPosition != transformed:
         return some &"Transform number {i} for position {fen} is causing corrupt position state"
+  none string
 
 proc seeTest(): Option[string] =
   #!fmt: off
@@ -191,6 +198,7 @@ proc seeTest(): Option[string] =
     let seeResult = position.see(move)
     if seeResult != seeValue:
       return some fmt"Failed SEE test. Position: {fen}, move: {moveString}, target value {seeValue}, see value: {seeResult}"
+  none string
 
 proc chess960DetectionTest*(): Option[string] =
   for fen in classicalFens:
@@ -199,6 +207,7 @@ proc chess960DetectionTest*(): Option[string] =
   for fen in chess960Fens:
     if not fen.toPosition.isChess960:
       return some fmt"Failed Chess960 detection test. {fen} is not detected as Chess960 position."
+  none string
 
 proc moveToSAN*(): Option[string] =
   const testCases = [
@@ -236,6 +245,7 @@ proc moveToSAN*(): Option[string] =
 
     if claimedUCI != uciMove:
       return some fmt"Failed SAN test. {sanMove} is converted to {claimedUCI} instead of {uciMove} in the position {fen}"
+  none string
 
 proc speedPerftTest*() =
   var nodes = 0

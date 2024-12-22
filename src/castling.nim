@@ -17,6 +17,8 @@ func connectOnFile(a, b: Square): Bitboard =
 func blockSensitive(
     target: array[white .. black, array[CastlingSide, Square]]
 ): array[white .. black, array[CastlingSide, array[a1 .. h8, Bitboard]]] =
+  result = default(array[white .. black, array[CastlingSide, array[a1 .. h8, Bitboard]]])
+
   for us in white .. black:
     for castlingSide in queenside .. kingside:
       for source in a1 .. h8:

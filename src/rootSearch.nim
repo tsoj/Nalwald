@@ -44,9 +44,9 @@ iterator iterativeDeepeningSearch*(
         gameHistory = newGameHistory(positionHistory)
       var
         totalNodes = 0'i64
-        searchStates: seq[SearchState]
+        searchStates: seq[SearchState] = @[]
         threadpool = createMaster()
-        threadStop: Atomic[bool]
+        threadStop = default(Atomic[bool])
 
       for _ in 0 ..< numThreads:
         searchStates.add SearchState(
@@ -66,8 +66,8 @@ iterator iterativeDeepeningSearch*(
       for depth in 1.Ply .. targetDepth:
         var
           foundCheckmate = false
-          pvList: seq[Pv]
-          skipMoves: seq[Move]
+          pvList: seq[Pv] = @[]
+          skipMoves: seq[Move] = @[]
           multiPvNodes = 0'i64
 
         for move in position.legalMoves:

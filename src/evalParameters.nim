@@ -79,7 +79,7 @@ const
 
 proc toString*(params: EvalParameters): string =
   var
-    s: string
+    s: string = ""
     params = params
 
   proc op(x: var float32, y: float32) =

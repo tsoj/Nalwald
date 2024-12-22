@@ -146,6 +146,8 @@ func evaluatePieceTypeFromWhitesPerspective(
       evalState.evaluatePiece(position, piece, square, pieceColor)
 
 func pawnMaskIndex*(position: Position, square: static Square): int =
+  result = 0
+
   assert not square.isEdge
   assert square >= b2
 
@@ -188,6 +190,7 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
         )
 
 func pieceComboIndex(position: Position): int =
+  result = 0
   var counter = 1
   for color in white .. black:
     for piece in pawn .. queen:
@@ -222,7 +225,7 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   evalState.pieceComboBonusWhitePerspective(position)
 
 func absoluteEvaluate*(position: Position, params: EvalParameters): Value {.inline.} =
-  var value: array[Phase, float32]
+  var value = default(array[Phase, float32])
   let evalValue = EvalValue(params: addr params, absoluteValue: addr value)
   position.absoluteEvaluate(evalValue)
 

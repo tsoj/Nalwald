@@ -70,7 +70,7 @@ template isEmpty*(entry: HashTableEntry): bool =
   entry == noEntry
 
 func age*(ht: var HashTable) =
-  var deleteQueue: seq[ZobristKey]
+  var deleteQueue: seq[ZobristKey] = @[]
   for (key, entry) in ht.pvNodes.mpairs:
     if entry.lookupCounter <= 0:
       deleteQueue.add(key)
@@ -158,12 +158,14 @@ func hashFull*(ht: HashTable): int =
   (ht.hashFullCounter * 1000) div ht.nonPvNodes.len
 
 func getPv*(ht: var HashTable, position: Position): seq[Move] =
-  var encounteredZobristKeys: seq[ZobristKey]
-  var currentPosition = position
+  result = @[]
+
+  var
+    encounteredZobristKeys: seq[ZobristKey] = @[]
+    currentPosition = position
   while true:
-    for key in encounteredZobristKeys:
-      if key == currentPosition.zobristKey:
-        return result
+    if currentPosition.zobristKey in encounteredZobristKeys:
+      return result
     encounteredZobristKeys.add(currentPosition.zobristKey)
     let entry = ht.get(currentPosition.zobristKey)
 

@@ -73,6 +73,8 @@ const firstPawnPushRank = [
 ]
 
 func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
+  result = 0
+
   proc addPromotions(
       moves: var openArray[Move],
       source, target: Square,
@@ -136,6 +138,8 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
     moves.addPromotions(source, target, result)
 
 func generatePawnQuiets(position: Position, moves: var openArray[Move]): int =
+  result = 0
+
   let
     us = position.us
     enemy = position.enemy
