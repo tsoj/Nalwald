@@ -5,14 +5,14 @@ import std/[osproc, os, strutils, strformat]
 const
   mainBranch = "master"
   workDir = "src/testing/sprtWorkdir/"
-  cuteChessBinary = "/usr/games/cutechess-cli"
+  engineTournamentBinary = "fastchess"
   nalwaldBinaryFile = "bin/Nalwald-native"
   openingBook = "res/openings/Pohl.epd"
   pgnOutDir = "res/pgns/"
   pgnOutFile = pgnOutDir & "sprtGames.pgn"
   timeControlSeconds = 10.0
   maxNumGames = 100_000
-  hashSizeMB = 6
+  hashSizeMB = 8
 
 let gitStatus = execProcess("git status")
 
@@ -71,11 +71,13 @@ let cuteChessArguments =
 -pgnout {pgnOutFile} min \
 -openings file={openingBook} format=epd order=random -repeat 2 \
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
+-resign movecount=3 score=400 \
+-draw movenumber=40 movecount=8 score=10 \
 -each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./ \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
 -engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)}
 """
 
-doAssert execCmd(cuteChessBinary & " " & cuteChessArguments) == 0
+doAssert execCmd(engineTournamentBinary & " " & cuteChessArguments) == 0
 
 echo "\nFinished SPRT test\n"
