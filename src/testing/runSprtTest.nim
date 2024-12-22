@@ -64,7 +64,6 @@ createDir pgnOutDir
 
 let cuteChessArguments =
   fmt""" \
--recover \
 -concurrency {max(1, countProcessors() - 2)} \
 -ratinginterval 50 \
 -games 2 -rounds {maxNumGames} \
@@ -73,9 +72,9 @@ let cuteChessArguments =
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -resign movecount=3 score=400 \
 -draw movenumber=40 movecount=8 score=10 \
--each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./ \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
--engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)}
+-engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)} \
+-each restart=on tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir=./
 """
 
 let command = engineTournamentBinary & " " & cuteChessArguments
