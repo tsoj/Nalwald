@@ -127,7 +127,7 @@ nim tuneEvalParams --run Nalwald
 
 **Optimize search parameters using weather-factory**
 ```bash
-# Requires cutechess to be at /usr/games/cutechess-cli
+# Requires fastchess to be in the PATH
 # Values need to be updated manually in source code.
 nim runWeatherFactory --run Nalwald
 ```
