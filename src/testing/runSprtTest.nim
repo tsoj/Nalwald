@@ -45,7 +45,7 @@ doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 discard existsOrCreateDir workDir
 
 proc nalwaldBinary(branch: string): string =
-  fmt"{workDir}Nalwald-{branch}"
+  fmt"Nalwald-{branch}"
 
 try:
   for branch in [otherBranch, currentBranch]:
