@@ -68,7 +68,7 @@ let cuteChessArguments =
 -ratinginterval 50 \
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
--config outname={workDir}/config.json \
+-config discard=true outname={workDir}/config.json \
 -openings file={openingBook} format=epd order=random -repeat 2 \
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -resign movecount=3 score=400 \
