@@ -5,7 +5,7 @@ export types, bitboard, move
 type Position* {.packed.} = object
   pieces*: array[pawn .. king, Bitboard]
   colors*: array[white .. black, Bitboard]
-  enPassantTarget*: Bitboard
+  enPassantTarget*: Square
   rookSource*: array[white .. black, array[CastlingSide, Square]]
   us*: Color
   halfmovesPlayed*: int
@@ -129,7 +129,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
 
   # handle the captured en passant case
   if capturedEnPassant:
-    if empty(target.toBitboard and position.enPassantTarget):
+    if target != position.enPassantTarget:
       return false
     if not empty(target.toBitboard and occupancy):
       return false
@@ -184,7 +184,7 @@ func isPseudoLegal*(position: Position, move: Move): bool =
   assert source != noSquare and target != noSquare and moved != noPiece
   true
 
-func calculateZobristKeysXXX(
+func calculateZobristKeys*(
     position: Position
 ): tuple[zobristKey: ZobristKey, pawnKey: ZobristKey] =
   result = (
@@ -204,10 +204,10 @@ func calculateZobristKeysXXX(
       result.zobristKey ^= rookSource.ZobristKey
 
 func zobristKeysAreOk*(position: Position): bool =
-  (position.zobristKey, position.pawnKey) == position.calculateZobristKeysXXX
+  (position.zobristKey, position.pawnKey) == position.calculateZobristKeys
 
 func setZobristKeys*(position: var Position) =
-  (position.zobristKey, position.pawnKey) = position.calculateZobristKeysXXX
+  (position.zobristKey, position.pawnKey) = position.calculateZobristKeys
 
 func doMove*(position: Position, move: Move): Position =
   result = position
@@ -224,9 +224,9 @@ func doMove*(position: Position, move: Move): Position =
 
   result.zobristKey ^= result.enPassantTarget.ZobristKey
   if enPassantTarget != noSquare:
-    result.enPassantTarget = enPassantTarget.toBitboard
+    result.enPassantTarget = enPassantTarget
   else:
-    result.enPassantTarget = 0.Bitboard
+    result.enPassantTarget = noSquare
   result.zobristKey ^= result.enPassantTarget.ZobristKey
 
   if moved == king:
@@ -294,7 +294,8 @@ func doNullMove*(position: Position): Position =
   result = position
 
   result.zobristKey ^= result.enPassantTarget.ZobristKey
-  result.enPassantTarget = 0.Bitboard
+  result.zobristKey ^= noSquare.ZobristKey
+  result.enPassantTarget = noSquare
 
   result.zobristKey ^= zobristSideToMoveBitmasks[white]
   result.zobristKey ^= zobristSideToMoveBitmasks[black]
@@ -356,7 +357,7 @@ func mirror(
   for bitboard in result.colors.mitems:
     bitboard = bitboard.mirrorFn
 
-  result.enPassantTarget = result.enPassantTarget.mirrorFn
+  result.enPassantTarget = result.enPassantTarget.toBitboard.mirrorFn.toSquare
 
   for color in white .. black:
     for castlingSide in queenside .. kingside:

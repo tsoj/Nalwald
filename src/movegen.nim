@@ -97,7 +97,7 @@ func generatePawnCaptures(position: Position, moves: var openArray[Move]): int =
   let
     us = position.us
     enemy = position.enemy
-    potentialTargets = position[enemy] or position.enPassantTarget
+    potentialTargets = position[enemy] or position.enPassantTarget.toBitboard
   for (targets, dir) in [
     (position[pawn, us].pawnLeftAttack(us) and potentialTargets, 1),
     (position[pawn, us].pawnRightAttack(us) and potentialTargets, -1),

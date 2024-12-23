@@ -53,7 +53,7 @@ proc loadDataBin*(
   while not inFileStream.atEnd:
     let
       position = inFileStream.readPosition
-      value = inFileStream.readFloat64
+      value = inFileStream.readFloat32
 
     doAssert position.validTrainingPosition
 

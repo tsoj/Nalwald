@@ -31,7 +31,10 @@ func toSquare*(x: Bitboard): Square =
     x.uint64.countTrailingZeroBits.Square
 
 func toBitboard*(square: Square): Bitboard =
-  Bitboard(1u64 shl square.int8)
+  if square == noSquare:
+    0.Bitboard
+  else:
+    Bitboard(1u64 shl square.int8)
 
 
 iterator items*(bitboard: Bitboard): Square {.inline.} =
@@ -47,8 +50,6 @@ func `$`*(bitboard: Bitboard): string =
         return some("●")
       none(string)
   )
-
-echo noSquare.toBitboard
 
 const ranks*: array[a1 .. h8, Bitboard] = block:
   var ranks: array[a1 .. h8, Bitboard]

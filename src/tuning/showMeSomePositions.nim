@@ -18,7 +18,7 @@ const numExamples = 10
 while not inFileStream.atEnd:
   let
     position = inFileStream.readPosition
-    value = inFileStream.readFloat64
+    value = inFileStream.readFloat32.float
   content.add (position, value)
   numSamples += 1
 

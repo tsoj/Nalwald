@@ -46,13 +46,13 @@ proc optimize(
 let startTime = now()
 
 var data: seq[Entry]
-data.loadDataEpd "res/trainingSets/quietSetNalwald.epd"
-data.loadDataEpd "res/trainingSets/quietSetCombinedCCRL4040.epd"
-data.loadDataEpd "res/trainingSets/quietSmallPoolGamesNalwald.epd"
-data.loadDataEpd "res/trainingSets/quietSetNalwald2.epd"
-data.loadDataEpd "res/trainingSets/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
-data.loadDataEpd "res/trainingSets/quietSmallPoolGamesNalwald2Labeled.epd"
-data.loadDataEpd "res/trainingSets/gamesNalwald.epd"
+data.loadDataEpd "res/trainingSets/fens/quietSetNalwald.epd"
+data.loadDataEpd "res/trainingSets/fens/quietSetCombinedCCRL4040.epd"
+data.loadDataEpd "res/trainingSets/fens/quietSmallPoolGamesNalwald.epd"
+data.loadDataEpd "res/trainingSets/fens/quietSetNalwald2.epd"
+data.loadDataEpd "res/trainingSets/fens/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
+data.loadDataEpd "res/trainingSets/fens/quietSmallPoolGamesNalwald2Labeled.epd"
+data.loadDataEpd "res/trainingSets/fens/gamesNalwald.epd"
 
 data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-29-44.bin"
 data.loadDataBin "res/trainingSets/trainingSet_2023-10-03-18-30-48.bin"

@@ -45,8 +45,8 @@ func fen*(position: Position): string =
 
   result &= " "
 
-  if not empty position.enPassantTarget:
-    result &= $(position.enPassantTarget.toSquare)
+  if position.enPassantTarget != noSquare:
+    result &= $position.enPassantTarget
   else:
     result &= "-"
 
@@ -226,10 +226,10 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
       )
 
   # en passant square
-  result.enPassantTarget = 0.Bitboard
+  result.enPassantTarget = noSquare
   if enPassant != "-":
     try:
-      result.enPassantTarget = parseEnum[Square](enPassant.toLowerAscii).toBitboard
+      result.enPassantTarget = parseEnum[Square](enPassant.toLowerAscii)
     except ValueError:
       raise newException(
         ValueError,
@@ -280,8 +280,7 @@ proc writePosition*(stream: Stream, position: Position) =
   for colorBitboard in position.colors:
     stream.write colorBitboard.uint64
 
-  let enPassantSquare = if position.enPassantTarget.empty: noSquare else: position.enPassantTarget.toSquare
-  stream.write enPassantSquare.uint8
+  stream.write position.enPassantTarget.uint8
 
   for color in white .. black:
     for castlingSide in CastlingSide:
@@ -299,9 +298,7 @@ proc readPosition*(stream: Stream): Position =
   for colorBitboard in result.colors.mitems:
     colorBitboard = stream.readUint64.Bitboard
 
-  let enPassantSquare = stream.readUint8.Square
-  if enPassantSquare != noSquare:
-    result.enPassantTarget = enPassantSquare.toBitboard
+  result.enPassantTarget = stream.readUint8.Square
 
   for color in white .. black:
     for castlingSide in CastlingSide:

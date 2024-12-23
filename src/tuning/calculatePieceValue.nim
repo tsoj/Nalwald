@@ -29,11 +29,5 @@ proc pieceValuesAsString*(
 
 when isMainModule:
   var data: seq[Entry]
-  # data.loadDataEpd "rtainingSets/quietSetNalwald.epd"
-  # data.loadDataEpd "rtainingSets/quietSetCombinedCCRL4040.epd"
-  # data.loadDataEpd "rtainingSets/quietSmallPoolGamesNalwald.epd"
-  # data.loadDataEpd "rtainingSets/quietSetNalwald2.epd"
-  # data.loadDataEpd "rtainingSets/quietLeavesSmallPoolGamesNalwaldSearchLabeled.epd"
-  # data.loadDataEpd "rtainingSets/quietSmallPoolGamesNalwald2Labeled.epd"
   data.loadDataBin "trainingSets/trainingSet_2023-12-28-11-23-21.bin"
   echo pieceValuesAsString(defaultEvalParameters, data)
