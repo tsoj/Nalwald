@@ -97,7 +97,7 @@ type GameHistory* = object
 func newGameHistory*(staticHistory: seq[Position]): GameHistory =
   result = default(GameHistory)
   for position in staticHistory:
-    doAssert position.zobristKey == position.calculateZobristKey
+    doAssert position.zobristKeysAreOk
     result.staticHistory.add(position.zobristKey)
 
 func checkForRepetitionAndAdd*(

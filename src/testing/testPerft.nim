@@ -59,7 +59,7 @@ func testPerft(
     let newPosition = position.doMove(move)
 
     # Test zobrist key incremental calculation
-    if newPosition.zobristKey != newPosition.calculateZobristKey:
+    if not newPosition.zobristKeysAreOk:
       raise newException(
         CatchableError,
         fmt"Incremental zobrist key calculation failed for move {move} at position {position.fen}",

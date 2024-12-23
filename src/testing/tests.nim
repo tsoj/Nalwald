@@ -80,7 +80,9 @@ proc testZobristKeys(): Option[string] =
       p1.halfmoveClock = p2.halfmoveClock
       p1.halfmovesPlayed = p2.halfmovesPlayed
       if p1.fen != p2.fen and p1.zobristKey == p2.zobristKey:
-        return some &"Zobrist key for both \"{fen1}\" and \"{fen2}\" is the same ({fen1.toPosition.zobristKey})"
+          return some &"Zobrist key for both \"{fen1}\" and \"{fen2}\" is the same ({fen1.toPosition.zobristKey})"
+      if (p1[pawn] == p2[pawn] and p1[white, pawn] == p2[white, pawn]) != (p1.pawnKey == p2.pawnKey):
+        return some &"Pawn key for both \"{fen1}\" and \"{fen2}\" is the same ({fen1.toPosition.pawnKey})"
   none string
 
 proc playGames(): Option[string] =

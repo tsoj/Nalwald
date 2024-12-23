@@ -254,7 +254,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
       "FEN fullmove number is not correctly formatted: " & getCurrentExceptionMsg(),
     )
 
-  result.zobristKey = result.calculateZobristKey
+  result.setZobristKeys
 
   if result[white, king].countSetBits != 1 or result[black, king].countSetBits != 1:
     raise newException(
@@ -273,22 +273,23 @@ func notation*(pv: seq[Move], position: Position): string =
     result &= move.notation(currentPosition) & " "
     currentPosition = currentPosition.doMove(move)
 
+# TODO update the training data
 proc writePosition*(stream: Stream, position: Position) =
   for pieceBitboard in position.pieces:
     stream.write pieceBitboard.uint64
   for colorBitboard in position.colors:
     stream.write colorBitboard.uint64
 
-  stream.write position.enPassantTarget.uint64
+  let enPassantSquare = if position.enPassantTarget.empty: noSquare else: position.enPassantTarget.toSquare
+  stream.write enPassantSquare.uint8
 
   for color in white .. black:
     for castlingSide in CastlingSide:
       stream.write position.rookSource[color][castlingSide].uint8
 
-  stream.write position.zobristKey.uint64
   stream.write position.us.uint8
   stream.write position.halfmovesPlayed.int16
-  stream.write position.halfmoveClock.int16
+  stream.write position.halfmoveClock.int8
 
 proc readPosition*(stream: Stream): Position =
   result = default(Position)
@@ -298,18 +299,21 @@ proc readPosition*(stream: Stream): Position =
   for colorBitboard in result.colors.mitems:
     colorBitboard = stream.readUint64.Bitboard
 
-  result.enPassantTarget = stream.readUint64.Bitboard
+  let enPassantSquare = stream.readUint8.Square
+  if enPassantSquare != noSquare:
+    result.enPassantTarget = enPassantSquare.toBitboard
 
   for color in white .. black:
     for castlingSide in CastlingSide:
       result.rookSource[color][castlingSide] = stream.readUint8.Square
 
-  result.zobristKey = stream.readUint64.ZobristKey
   result.us = stream.readUint8.Color
   result.halfmovesPlayed = stream.readInt16
-  result.halfmoveClock = stream.readInt16
+  result.halfmoveClock = stream.readInt8
 
-  doAssert result.zobristKey == result.calculateZobristKey
+  result.setZobristKeys
+
+  doAssert result.zobristKeysAreOk
 
 func toSAN*(move: Move, position: Position): string =
   result = ""
