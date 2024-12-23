@@ -148,7 +148,7 @@ proc findStartPositionsAndPlay(startPos: Position, stringIndex: string) =
 
           withLock outFileMutex:
             for (position, value) in samples:
-              outFileStream.writePosition position
+              outFileStream.write position.toMinimal
               outFileStream.write value.float32
               outFileStream.flush
 

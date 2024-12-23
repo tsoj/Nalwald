@@ -13,7 +13,7 @@ proc binToEpd*(inFileName, outFileName: string, maxLen = int.high) =
 
   while not inFileStream.atEnd:
     let
-      position = inFileStream.readPosition
+      position = inFileStream.readMinimalPosition.toPosition
       value = inFileStream.readFloat32
 
     if position[king, white].countSetBits != 1 or position[king, black].countSetBits != 1:

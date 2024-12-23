@@ -99,9 +99,9 @@ proc positionStreams(): Option[string] =
     let position = fen.toPosition
 
     var strm = newStringStream()
-    strm.writePosition position
+    strm.write position.toMinimal
     strm.setPosition(0)
-    let position2 = strm.readPosition
+    let position2 = strm.readMinimalPosition.toPosition
     strm.close()
     if position2 != position:
       return some &"Failed to convert to binary stream and back for \"{fen}\""

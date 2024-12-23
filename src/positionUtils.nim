@@ -239,7 +239,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
 
   # halfmove clock and fullmove number
   try:
-    result.halfmoveClock = halfmoveClock.parseInt
+    result.halfmoveClock = halfmoveClock.parseInt.int8
   except ValueError:
     raise newException(
       ValueError,
@@ -247,7 +247,7 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     )
 
   try:
-    result.halfmovesPlayed = fullmoveNumber.parseInt * 2
+    result.halfmovesPlayed = fullmoveNumber.parseInt.int16 * 2
   except ValueError:
     raise newException(
       ValueError,
@@ -274,43 +274,47 @@ func notation*(pv: seq[Move], position: Position): string =
     currentPosition = currentPosition.doMove(move)
 
 # TODO update the training data
-proc writePosition*(stream: Stream, position: Position) =
-  for pieceBitboard in position.pieces:
-    stream.write pieceBitboard.uint64
-  for colorBitboard in position.colors:
-    stream.write colorBitboard.uint64
+# proc writePosition*(stream: Stream, position: Position) =
+#   for pieceBitboard in position.pieces:
+#     stream.write pieceBitboard.uint64
+#   for colorBitboard in position.colors:
+#     stream.write colorBitboard.uint64
 
-  stream.write position.enPassantTarget.uint8
+#   stream.write position.enPassantTarget.uint8
 
-  for color in white .. black:
-    for castlingSide in CastlingSide:
-      stream.write position.rookSource[color][castlingSide].uint8
+#   for color in white .. black:
+#     for castlingSide in CastlingSide:
+#       stream.write position.rookSource[color][castlingSide].uint8
 
-  stream.write position.us.uint8
-  stream.write position.halfmovesPlayed.int16
-  stream.write position.halfmoveClock.int8
+#   stream.write position.us.uint8
+#   stream.write position.halfmovesPlayed.int16
+#   stream.write position.halfmoveClock.int8
 
-proc readPosition*(stream: Stream): Position =
-  result = default(Position)
+proc readMinimalPosition*(stream: Stream): MinimalPosition =
+  result = default(MinimalPosition)
+  stream.read result
 
-  for pieceBitboard in result.pieces.mitems:
-    pieceBitboard = stream.readUint64.Bitboard
-  for colorBitboard in result.colors.mitems:
-    colorBitboard = stream.readUint64.Bitboard
+# proc readPosition*(stream: Stream): Position =
+#   result = default(Position)
 
-  result.enPassantTarget = stream.readUint8.Square
+#   for pieceBitboard in result.pieces.mitems:
+#     pieceBitboard = stream.readUint64.Bitboard
+#   for colorBitboard in result.colors.mitems:
+#     colorBitboard = stream.readUint64.Bitboard
 
-  for color in white .. black:
-    for castlingSide in CastlingSide:
-      result.rookSource[color][castlingSide] = stream.readUint8.Square
+#   result.enPassantTarget = stream.readUint8.Square
 
-  result.us = stream.readUint8.Color
-  result.halfmovesPlayed = stream.readInt16
-  result.halfmoveClock = stream.readInt8
+#   for color in white .. black:
+#     for castlingSide in CastlingSide:
+#       result.rookSource[color][castlingSide] = stream.readUint8.Square
 
-  result.setZobristKeys
+#   result.us = stream.readUint8.Color
+#   result.halfmovesPlayed = stream.readInt16
+#   result.halfmoveClock = stream.readInt8
 
-  doAssert result.zobristKeysAreOk
+#   result.setZobristKeys
+
+#   doAssert result.zobristKeysAreOk
 
 func toSAN*(move: Move, position: Position): string =
   result = ""

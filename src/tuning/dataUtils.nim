@@ -8,8 +8,11 @@ import
 import std/[os, strutils, streams]
 
 type Entry* = object
-  position*: Position
-  outcome*: float
+  minPosition*: MinimalPosition
+  outcome*: float32
+
+func position*(entry: Entry): Position =
+  entry.minPosition.toPosition
 
 func validTrainingPosition*(position: Position): bool =
   position[king, white].countSetBits == 1 and position[king, black].countSetBits == 1
@@ -34,7 +37,7 @@ proc loadDataEpd*(
     doAssert position.validTrainingPosition
 
     numEntries += 1
-    data.add(Entry(position: position, outcome: words[6].parseFloat))
+    data.add(Entry(minPosition: position.toMinimal, outcome: words[6].parseFloat))
     if numEntries >= maxLen:
       break
   f.close()
@@ -52,12 +55,12 @@ proc loadDataBin*(
 
   while not inFileStream.atEnd:
     let
-      position = inFileStream.readPosition
+      minPosition = inFileStream.readMinimalPosition
       value = inFileStream.readFloat32
 
-    doAssert position.validTrainingPosition
+    assert minPosition.toPosition.validTrainingPosition
 
-    data.add Entry(position: position, outcome: value)
+    data.add Entry(minPosition: minPosition, outcome: value)
     numEntries += 1
 
     if numEntries >= maxLen:

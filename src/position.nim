@@ -2,20 +2,25 @@ import types, bitboard, move, zobristBitmasks, castling, utils
 
 export types, bitboard, move
 
-type Position* {.packed.} = object
-  pieces*: array[pawn .. king, Bitboard]
-  colors*: array[white .. black, Bitboard]
-  enPassantTarget*: Square
-  rookSource*: array[white .. black, array[CastlingSide, Square]]
-  us*: Color
-  halfmovesPlayed*: int
-  halfmoveClock*: int
-  zobristKey*: ZobristKey
-  # materialKey*: ZobristKey
-  pawnKey*: ZobristKey
-  # majorPieceKey*: ZobristKey
-  # minorPieceKey*: ZobristKey
-  # nonPawnKey*: ZobristKey
+type
+  PositionTemplate[minimal: static bool] {.packed.} = object
+    pieces*: array[pawn .. king, Bitboard]
+    colors*: array[white .. black, Bitboard]
+    enPassantTarget*: Square
+    rookSource*: array[white .. black, array[CastlingSide, Square]]
+    us*: Color
+    halfmovesPlayed*: int16
+    halfmoveClock*: int8
+    when not minimal:
+      zobristKey*: ZobristKey
+      # materialKey*: ZobristKey
+      pawnKey*: ZobristKey
+      # majorPieceKey*: ZobristKey
+      # minorPieceKey*: ZobristKey
+      # nonPawnKey*: ZobristKey
+
+  MinimalPosition* = PositionTemplate[true]
+  Position* = PositionTemplate[false]
 
 func enemy*(position: Position): Color =
   position.us.opposite
@@ -417,3 +422,26 @@ func isChess960*(position: Position): bool =
           [noSquare, classicalRookSource[color][side]]:
         return true
   false
+
+func toMinimal*(position: Position): MinimalPosition =
+  MinimalPosition(
+    pieces: position.pieces,
+    colors: position.colors,
+    enPassantTarget: position.enPassantTarget,
+    rookSource: position.rookSource,
+    us: position.us,
+    halfmovesPlayed: position.halfmovesPlayed,
+    halfmoveClock: position.halfmoveClock,
+  )
+
+func toPosition*(position: MinimalPosition): Position =
+  result = Position(
+    pieces: position.pieces,
+    colors: position.colors,
+    enPassantTarget: position.enPassantTarget,
+    rookSource: position.rookSource,
+    us: position.us,
+    halfmovesPlayed: position.halfmovesPlayed,
+    halfmoveClock: position.halfmoveClock,
+  )
+  result.setZobristKeys

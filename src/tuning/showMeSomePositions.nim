@@ -10,15 +10,15 @@ doAssert fileExists fileName, "File should exist"
 
 var
   inFileStream = newFileStream(fileName, fmRead)
-  content: seq[(Position, float)]
+  content: seq[(Position, float32)]
   numSamples = 0
 
 const numExamples = 10
 
 while not inFileStream.atEnd:
   let
-    position = inFileStream.readPosition
-    value = inFileStream.readFloat32.float
+    position = inFileStream.readMinimalPosition.toPosition
+    value = inFileStream.readFloat32
   content.add (position, value)
   numSamples += 1
 
