@@ -45,7 +45,7 @@ doAssert not gitHasUnstagedChanges, "Shouldn't do SPRT with unstaged changes"
 discard existsOrCreateDir workDir
 
 proc nalwaldBinary(branch: string): string =
-  fmt"./Nalwald-{branch}"
+  fmt"Nalwald-{branch}"
 
 try:
   for branch in [otherBranch, currentBranch]:
@@ -56,7 +56,7 @@ try:
       raise newException(
         CatchableError, "Failed to compile Nalwald binary for branch " & branch
       )
-    copyFileWithPermissions nalwaldBinaryFile, nalwaldBinary(branch)
+    copyFileWithPermissions nalwaldBinaryFile, fmt"{workDir}/{nalwaldBinary(branch)}"
 finally:
   doAssert execCmd("git checkout " & currentBranch) == 0
 
@@ -73,8 +73,8 @@ let cuteChessArguments =
 -sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
 -resign movecount=3 score=400 \
 -draw movenumber=40 movecount=8 score=10 \
--engine name={currentBranch} cmd={nalwaldBinary(currentBranch)} \
--engine name={otherBranch} cmd={nalwaldBinary(otherBranch)} \
+-engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
+-engine name={otherBranch} cmd=./{nalwaldBinary(otherBranch)} \
 -each tc={timeControlSeconds}+{timeControlSeconds / 100.0} option.Hash={hashSizeMB} proto=uci dir={workDir}
 """
 
