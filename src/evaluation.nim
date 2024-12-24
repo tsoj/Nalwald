@@ -214,7 +214,10 @@ type HashEntry = object
   key: ZobristKey
   value: array[Phase, float32]
 
-var pawnPatternHash = default(array[65536, HashEntry])
+var
+  pawnPatternHash = default(array[65536, HashEntry])
+  num_a = 0
+  num_b = 0
 
 func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   if position.halfmoveClock >= 100:
@@ -234,6 +237,13 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
         pawnPatternHash[index].value = default(array[Phase, float32])
         let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnPatternHash[index].value)
         middleManEvalValue.evaluate3x3PawnStructureFromWhitesPerspective(position)
+        num_a += 1
+      else:
+        num_b += 1
+
+      pawnPatternHash[index].key = position.pawnKey
+
+      # debugEcho num_a, " vs ", num_b
 
       for phase in Phase:
         evalState.absoluteValue[][phase] += pawnPatternHash[index].value[phase]
