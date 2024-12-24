@@ -273,48 +273,9 @@ func notation*(pv: seq[Move], position: Position): string =
     result &= move.notation(currentPosition) & " "
     currentPosition = currentPosition.doMove(move)
 
-# TODO update the training data
-# proc writePosition*(stream: Stream, position: Position) =
-#   for pieceBitboard in position.pieces:
-#     stream.write pieceBitboard.uint64
-#   for colorBitboard in position.colors:
-#     stream.write colorBitboard.uint64
-
-#   stream.write position.enPassantTarget.uint8
-
-#   for color in white .. black:
-#     for castlingSide in CastlingSide:
-#       stream.write position.rookSource[color][castlingSide].uint8
-
-#   stream.write position.us.uint8
-#   stream.write position.halfmovesPlayed.int16
-#   stream.write position.halfmoveClock.int8
-
 proc readMinimalPosition*(stream: Stream): MinimalPosition =
   result = default(MinimalPosition)
   stream.read result
-
-# proc readPosition*(stream: Stream): Position =
-#   result = default(Position)
-
-#   for pieceBitboard in result.pieces.mitems:
-#     pieceBitboard = stream.readUint64.Bitboard
-#   for colorBitboard in result.colors.mitems:
-#     colorBitboard = stream.readUint64.Bitboard
-
-#   result.enPassantTarget = stream.readUint8.Square
-
-#   for color in white .. black:
-#     for castlingSide in CastlingSide:
-#       result.rookSource[color][castlingSide] = stream.readUint8.Square
-
-#   result.us = stream.readUint8.Color
-#   result.halfmovesPlayed = stream.readInt16
-#   result.halfmoveClock = stream.readInt8
-
-#   result.setZobristKeys
-
-#   doAssert result.zobristKeysAreOk
 
 func toSAN*(move: Move, position: Position): string =
   result = ""

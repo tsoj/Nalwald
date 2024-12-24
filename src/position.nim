@@ -22,9 +22,6 @@ type
   MinimalPosition* {.packed.} = PositionTemplate[true]
   Position* = PositionTemplate[false]
 
-echo sizeof(Position)
-echo sizeof(MinimalPosition)
-
 func enemy*(position: Position): Color =
   position.us.opposite
 
