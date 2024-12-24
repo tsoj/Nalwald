@@ -3,7 +3,7 @@ import types, bitboard, move, zobristBitmasks, castling, utils
 export types, bitboard, move
 
 type
-  PositionTemplate[minimal: static bool] {.packed.} = object
+  PositionTemplate[minimal: static bool] = object
     pieces*: array[pawn .. king, Bitboard]
     colors*: array[white .. black, Bitboard]
     enPassantTarget*: Square
@@ -19,8 +19,11 @@ type
       # minorPieceKey*: ZobristKey
       # nonPawnKey*: ZobristKey
 
-  MinimalPosition* = PositionTemplate[true]
+  MinimalPosition* {.packed.} = PositionTemplate[true]
   Position* = PositionTemplate[false]
+
+echo sizeof(Position)
+echo sizeof(MinimalPosition)
 
 func enemy*(position: Position): Color =
   position.us.opposite
