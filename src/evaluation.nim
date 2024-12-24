@@ -210,6 +210,12 @@ func pieceComboBonusWhitePerspective(evalState: EvalState, position: Position) =
       var dummy: array[Phase, Value]
       dummy.addValue(params, black, pieceComboBonus[flippedIndex])
 
+type HashEntry = object
+  key: ZobristKey
+  value: array[Phase, float32]
+
+var pawnPatternHash = default(array[65536, HashEntry])
+
 func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   if position.halfmoveClock >= 100:
     return
@@ -219,7 +225,18 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
     evalState.evaluatePieceTypeFromWhitesPerspective(position, piece)
 
   # evaluating 3x3 pawn patters
-  evalState.evaluate3x3PawnStructureFromWhitesPerspective(position)
+  when evalState is Gradient:
+    evalState.evaluate3x3PawnStructureFromWhitesPerspective(position)
+  else:
+    {.cast(noSideEffect).}:
+      let index = (position.pawnKey.uint64 mod pawnPatternHash.len.uint64).int
+      if pawnPatternHash[index].key != position.pawnKey:
+        pawnPatternHash[index].value = default(array[Phase, float32])
+        let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnPatternHash[index].value)
+        middleManEvalValue.evaluate3x3PawnStructureFromWhitesPerspective(position)
+
+      for phase in Phase:
+        evalState.absoluteValue[][phase] += pawnPatternHash[index].value[phase]
 
   # piece combo bonus
   evalState.pieceComboBonusWhitePerspective(position)
