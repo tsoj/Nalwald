@@ -108,7 +108,7 @@ func pieceRelativePst(
           ][otherPiece][otherSquare],
         )
 
-        when params is Gradient:
+        when params is Gradient: # TODO check this (params is not defined anywhere???)
           var dummy: array[Phase, Value]
           let
             flippedOurSquare = ourSquare.mirrorHorizontally
