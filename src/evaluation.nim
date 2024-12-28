@@ -163,8 +163,8 @@ func pieceRelativePst(
         {.cast(noSideEffect).}:
           let key = (
             position.pawnKey xor
-            (roughEnemyKingRank + 30).ZobristKey xor
-            (roughEnemyKingFile + 20).ZobristKey xor
+            (zobristPieceBitmasks[white][knight][roughEnemyKingRank.Square] shr 32) xor
+            (zobristPieceBitmasks[black][knight][roughEnemyKingFile.Square] shr 32) xor
             zobristPieceBitmasks[us][ourPiece][ourSquare]
           )
           let index = (key.uint64 mod pawnRelativityHash.len.uint64).int
