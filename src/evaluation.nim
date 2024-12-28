@@ -146,7 +146,7 @@ func pieceRelativePst(
 
   for otherPiece in pieceRange:
 
-    if otherPiece != pawn or evalState is Gradient:
+    if otherPiece != pawn or ourPiece == pawn or evalState is Gradient:
       evalState.pieceRelativePstForOtherPiece(
             position= position,
             ourPiece= ourPiece,
