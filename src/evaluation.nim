@@ -174,7 +174,6 @@ func pieceRelativePst(
           if true or pawnRelativityHash[index].key != key:
             pawnRelativityHash[index].value = default(array[Phase, float32])
             let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnRelativityHash[index].value)
-            middleManEvalValue.evaluate3x3PawnStructureFromWhitesPerspective(position)
 
             middleManEvalValue.pieceRelativePstForOtherPiece(
               position= position,
