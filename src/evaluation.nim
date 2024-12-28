@@ -1,4 +1,6 @@
-import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils, zobristBitmasks
+import
+  position, types, bitboard, evalParameters, utils, pieceValues, positionUtils,
+  zobristBitmasks
 
 import std/[algorithm, macros, math]
 
@@ -69,8 +71,6 @@ template addValue(evalState: EvalState, goodFor: static Color, parameter: untype
         value = -value
       evalState.absoluteValue[phase] += value
 
-
-
 # TODO remove side effects (think about multithreading ...)
 type HashEntry = object
   key: ZobristKey
@@ -90,7 +90,7 @@ func pieceRelativePstForOtherPiece(
     enemyKingSquare: Square,
     roughEnemyKingFile: int,
     roughEnemyKingRank: int,
-    otherPiece: Piece
+    otherPiece: Piece,
 ) =
   for relativity in relativeToUs .. relativeToEnemy:
     for otherSquare in otherPieces[relativity] and position[otherPiece]:
@@ -145,19 +145,18 @@ func pieceRelativePst(
       [pawn, rook]
 
   for otherPiece in pieceRange:
-
     if otherPiece != pawn or ourPiece == pawn or evalState is Gradient:
       evalState.pieceRelativePstForOtherPiece(
-            position= position,
-            ourPiece= ourPiece,
-            ourSquare= ourSquare,
-            us= us,
-            otherPieces= otherPieces,
-            enemyKingSquare= enemyKingSquare,
-            roughEnemyKingFile= roughEnemyKingFile,
-            roughEnemyKingRank= roughEnemyKingRank,
-            otherPiece= otherPiece
-          )
+        position = position,
+        ourPiece = ourPiece,
+        ourSquare = ourSquare,
+        us = us,
+        otherPieces = otherPieces,
+        enemyKingSquare = enemyKingSquare,
+        roughEnemyKingFile = roughEnemyKingFile,
+        roughEnemyKingRank = roughEnemyKingRank,
+        otherPiece = otherPiece,
+      )
     else:
       when evalState is not Gradient:
         {.cast(noSideEffect).}:
@@ -173,26 +172,27 @@ func pieceRelativePst(
 
           if pawnRelativityHash[index].key != key:
             pawnRelativityHash[index].value = default(array[Phase, float32])
-            let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnRelativityHash[index].value)
-
-            middleManEvalValue.pieceRelativePstForOtherPiece(
-              position= position,
-              ourPiece= ourPiece,
-              ourSquare= ourSquare,
-              us= us,
-              otherPieces= otherPieces,
-              enemyKingSquare= enemyKingSquare,
-              roughEnemyKingFile= roughEnemyKingFile,
-              roughEnemyKingRank= roughEnemyKingRank,
-              otherPiece= otherPiece
+            let middleManEvalValue = EvalValue(
+              params: evalState.params,
+              absoluteValue: addr pawnRelativityHash[index].value,
             )
 
+            middleManEvalValue.pieceRelativePstForOtherPiece(
+              position = position,
+              ourPiece = ourPiece,
+              ourSquare = ourSquare,
+              us = us,
+              otherPieces = otherPieces,
+              enemyKingSquare = enemyKingSquare,
+              roughEnemyKingFile = roughEnemyKingFile,
+              roughEnemyKingRank = roughEnemyKingRank,
+              otherPiece = otherPiece,
+            )
 
           pawnRelativityHash[index].key = key
 
           for phase in Phase:
             evalState.absoluteValue[][phase] += pawnRelativityHash[index].value[phase]
-
 
 func evaluatePiece(
     evalState: EvalState,
@@ -298,7 +298,9 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
       let index = (position.pawnKey.uint64 mod pawnPatternHash.len.uint64).int
       if pawnPatternHash[index].key != position.pawnKey:
         pawnPatternHash[index].value = default(array[Phase, float32])
-        let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnPatternHash[index].value)
+        let middleManEvalValue = EvalValue(
+          params: evalState.params, absoluteValue: addr pawnPatternHash[index].value
+        )
         middleManEvalValue.evaluate3x3PawnStructureFromWhitesPerspective(position)
 
       pawnPatternHash[index].key = position.pawnKey
