@@ -1,4 +1,4 @@
-import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils
+import position, types, bitboard, evalParameters, utils, pieceValues, positionUtils, zobristBitmasks
 
 import std/[algorithm, macros, math]
 
@@ -69,6 +69,53 @@ template addValue(evalState: EvalState, goodFor: static Color, parameter: untype
         value = -value
       evalState.absoluteValue[phase] += value
 
+
+
+
+type HashEntry = object
+  key: ZobristKey
+  value: array[Phase, float32]
+
+var
+  pawnPatternHash = default(array[65536, HashEntry])
+  pawnRelativityHash = default(array[65536, HashEntry])
+
+func pieceRelativePstForOtherPiece(
+    evalState: EvalState,
+    position: Position,
+    ourPiece: static Piece,
+    ourSquare: Square,
+    us: static Color,
+    otherPieces: array[Relativity, Bitboard],
+    enemyKingSquare: Square,
+    roughEnemyKingFile: int,
+    roughEnemyKingRank: int,
+    otherPiece: Piece
+) =
+  for relativity in relativeToUs .. relativeToEnemy:
+    for otherSquare in otherPieces[relativity] and position[otherPiece]:
+      let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
+      evalState.addValue(
+        goodFor = us,
+        pieceRelativePst[roughEnemyKingRank][roughEnemyKingFile][relativity][ourPiece][
+          ourSquare
+        ][otherPiece][otherSquare],
+      )
+
+      when params is Gradient: # TODO check this (params is not defined anywhere???)
+        var dummy: array[Phase, Value]
+        let
+          flippedOurSquare = ourSquare.mirrorHorizontally
+          flippedOtherSquare = otherSquare.mirrorHorizontally
+          flippedKingFile = 3 - roughEnemyKingFile
+        dummy.addValue(
+          params,
+          us,
+          pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][
+            flippedOurSquare
+          ][otherPiece][flippedOtherSquare],
+        )
+
 func pieceRelativePst(
     evalState: EvalState,
     position: Position,
@@ -98,29 +145,31 @@ func pieceRelativePst(
       [pawn, rook]
 
   for otherPiece in pieceRange:
-    for relativity in relativeToUs .. relativeToEnemy:
-      for otherSquare in otherPieces[relativity] and position[otherPiece]:
-        let otherSquare = otherSquare.colorConditionalMirrorVertically(us)
-        evalState.addValue(
-          goodFor = us,
-          pieceRelativePst[roughEnemyKingRank][roughEnemyKingFile][relativity][ourPiece][
-            ourSquare
-          ][otherPiece][otherSquare],
-        )
 
-        when params is Gradient: # TODO check this (params is not defined anywhere???)
-          var dummy: array[Phase, Value]
-          let
-            flippedOurSquare = ourSquare.mirrorHorizontally
-            flippedOtherSquare = otherSquare.mirrorHorizontally
-            flippedKingFile = 3 - roughEnemyKingFile
-          dummy.addValue(
-            params,
-            us,
-            pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][
-              flippedOurSquare
-            ][otherPiece][flippedOtherSquare],
-          )
+    # if otherPiece == pawn:
+    #   let key = (
+    #     position.pawnKey ^
+    #     (roughEnemyKingRank + 30).ZobristKey ^
+    #     (roughEnemyKingFile + 20).ZobristKey ^
+    #     zobristPieceBitmasks[us][ourPiece][ourSquare]
+    #   )
+    #   let index = (position.pawnKey.uint64 mod pawnPatternHash.len.uint64).int
+
+    #   # if pawnPatternHash[index].key != position.pawnKey:
+
+
+    pieceRelativePstForOtherPiece(
+      evalState = evalState,
+      position= position,
+      ourPiece= ourPiece,
+      ourSquare= ourSquare,
+      us= us,
+      otherPieces= otherPieces,
+      enemyKingSquare= enemyKingSquare,
+      roughEnemyKingFile= roughEnemyKingFile,
+      roughEnemyKingRank= roughEnemyKingRank,
+      otherPiece= otherPiece
+    )
 
 func evaluatePiece(
     evalState: EvalState,
@@ -210,15 +259,6 @@ func pieceComboBonusWhitePerspective(evalState: EvalState, position: Position) =
       var dummy: array[Phase, Value]
       dummy.addValue(params, black, pieceComboBonus[flippedIndex])
 
-type HashEntry = object
-  key: ZobristKey
-  value: array[Phase, float32]
-
-var
-  pawnPatternHash = default(array[65536, HashEntry])
-  num_a = 0
-  num_b = 0
-
 func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
   if position.halfmoveClock >= 100:
     return
@@ -237,13 +277,8 @@ func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
         pawnPatternHash[index].value = default(array[Phase, float32])
         let middleManEvalValue = EvalValue(params: evalState.params, absoluteValue: addr pawnPatternHash[index].value)
         middleManEvalValue.evaluate3x3PawnStructureFromWhitesPerspective(position)
-        num_a += 1
-      else:
-        num_b += 1
 
       pawnPatternHash[index].key = position.pawnKey
-
-      # debugEcho num_a, " vs ", num_b
 
       for phase in Phase:
         evalState.absoluteValue[][phase] += pawnPatternHash[index].value[phase]
