@@ -2,6 +2,42 @@ import types, move, position, searchParams
 
 import std/[math]
 
+#-------------- correction heuristic --------------#
+
+type
+  CorrHistEntry = object
+    diffSum: int = 0
+    count: int = 0
+    key: ZobristKey
+  CorrHistory* = array[65536, CorrHistEntry]
+
+func update*(h: var CorrHistory, position: Position, rawEval: Value, searchEval: Value, nodeType: NodeType, depth: Ply) =
+  if (nodeType == upperBound and searchEval >= rawEval) or (nodeType == lowerBound and searchEval <= rawEval):
+    return
+
+  let
+    key = position.pawnKey
+    index = key.uint64 mod h.len.uint64
+    weight = depth.int * depth.int
+
+  if h[index].key != key:
+    h[index] = CorrHistEntry(diffSum: 0, count: 0, key: key)
+
+  h[index].count += weight
+  h[index].diffSum += weight * int(searchEval - rawEval)
+
+func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
+  let
+    key = position.pawnKey
+    index = key.uint64 mod h.len.uint64
+
+  if h[index].key != key:
+    return rawEval
+
+  let meanDiff = Value(h[index].diffSum div h[index].count)
+
+  rawEval + meanDiff
+
 #-------------- history heuristic --------------#
 
 type

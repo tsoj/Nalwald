@@ -27,6 +27,7 @@ type SearchState* = object
   hashTable*: ptr HashTable
   killerTable*: KillerTable
   historyTable*: HistoryTable
+  corrHist*: CorrHistory
   gameHistory*: GameHistory
   countedNodes*: int
   maxNodes*: int
@@ -57,6 +58,10 @@ func update(
     if nodeType == cutNode:
       state.killerTable.update(height, bestMove)
 
+    if not bestMove.isTactical:
+      # TODO check if it's unnecessary to make staticEval in search fancy lazy, if it is called here anyway
+      state.corrHist.update(position, rawEval = state.evaluation(position), searchEval = bestValue, nodeType = nodeType, depth = depth)
+
 func quiesce(
     position: Position,
     state: var SearchState,
@@ -71,7 +76,8 @@ func quiesce(
   if height == Ply.high or position.insufficientMaterial:
     return 0.Value
 
-  let standPat = state.evaluation(position)
+  # TODO make this nicer, think about other eval uses
+  let standPat = state.corrHist.getCorrEval(position, rawEval = state.evaluation(position))
 
   var
     alpha = alpha
