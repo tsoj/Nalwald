@@ -36,7 +36,7 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
 
   let meanDiff = h[index].diffSum div h[index].count
 
-  clampToType(rawEval.int + meanDiff, Value)
+  clampToType(rawEval.int - meanDiff, Value)
 
 #-------------- history heuristic --------------#
 
