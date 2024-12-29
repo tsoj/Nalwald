@@ -12,7 +12,7 @@ type
   CorrHistory* = array[65536, CorrHistEntry]
 
 func update*(h: var CorrHistory, position: Position, rawEval: Value, searchEval: Value, nodeType: NodeType, depth: Ply) =
-  if (nodeType == upperBound and searchEval >= rawEval) or (nodeType == lowerBound and searchEval <= rawEval):
+  if (nodeType == upperBound and searchEval >= rawEval) or (nodeType == lowerBound and searchEval <= rawEval) or searchEval.abs >= valueCheckmate:
     return
 
   let
