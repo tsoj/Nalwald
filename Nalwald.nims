@@ -30,7 +30,7 @@ func lto() =
     --passL:"-fuse-ld=lld"
 
 func highPerformance() =
-  --panics:on  
+  --panics:on
   --define:danger
   lto()
 
@@ -105,7 +105,11 @@ task tuneEvalParams, "Optimizes eval parameters":
   highPerformance()
   --passC:"-march=native"
   --passC:"-mtune=native"
-  # --define:release
+  setBinaryName("tuneEvalParams")
+  setCommand "c", "src/tuning/optimization.nim"
+
+task checkTuneEvalParams, "Optimizes eval parameters":
+  --define:release
   setBinaryName("tuneEvalParams")
   setCommand "c", "src/tuning/optimization.nim"
 
@@ -135,7 +139,7 @@ task testsDanger, "Runs tests in danger mode":
   highPerformance()
   --passC:"-march=native"
   --passC:"-mtune=native"
-  switch("define", "maxNumPerftNodes=10_000_000")  
+  switch("define", "maxNumPerftNodes=10_000_000")
   setBinaryName("testsDanger")
   setCommand "c", "src/testing/tests.nim"
 

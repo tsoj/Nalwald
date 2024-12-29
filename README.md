@@ -20,6 +20,7 @@ You need the [Nim](https://nim-lang.org/) compiler (version 2.1.1 or higher) and
 **Prerequisites**
 ```bash
 nimble install malebolgia@1.3.2
+nimble install zippy@0.10.16
 ```
 
 **Compiling for native CPU**

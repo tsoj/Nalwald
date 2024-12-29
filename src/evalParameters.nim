@@ -1,6 +1,8 @@
 import types
 export types
 
+import zippy
+
 import std/[os, random, math]
 
 type Relativity* = enum
@@ -10,7 +12,8 @@ type Relativity* = enum
 #!fmt: off
 type SinglePhaseEvalParameters = object
   # here the pawn in the first dim stand for passed pawns
-  pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[pawn..king, array[a1..h8, float32]]]]]]]
+  pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[knight..king, array[a1..h8, float32]]]]]]]
+  pawnRelativePst*: array[2, array[4, array[knight..king, array[a1..h8, array[Relativity, array[a1..h8, array[a1..h8, float32]]]]]]]
   pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, float32]]
   pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, float32]
 #!fmt: on
@@ -77,7 +80,7 @@ const
   charWidth = 8
   quantizeScalar: float32 = 10.0
 
-proc toString*(params: EvalParameters): string =
+proc toStringUncompressed(params: EvalParameters): string =
   var
     s: string = ""
     params = params
@@ -94,7 +97,7 @@ proc toString*(params: EvalParameters): string =
   doForAll(params, params, op)
   s
 
-proc toEvalParameters*(s: string): EvalParameters =
+proc toEvalParametersFromUncompressed(s: string): EvalParameters =
   var
     params = newEvalParameters()
     n = 0
@@ -111,6 +114,17 @@ proc toEvalParameters*(s: string): EvalParameters =
 
   params
 
+proc toString*(params: EvalParameters): string =
+  params.toStringUncompressed.compress
+
+proc toEvalParameters*(s: string): EvalParameters =
+  let uncompressed = s.uncompress
+  if uncompressed.len == 0:
+    raise newException(ValueError, "Empty eval params string")
+  if uncompressed.len != newEvalParameters().toStringUncompressed.len:
+    raise newException(ValueError, "Incompatible params format")
+  uncompressed.toEvalParametersFromUncompressed()
+
 const defaultEvalParametersString = block:
   var s = ""
 
@@ -124,16 +138,20 @@ const defaultEvalParametersString = block:
 
 let defaultEvalParametersData* = block:
   var ep = newEvalParameters()
-
-  if defaultEvalParametersString.len > 0:
-    if defaultEvalParametersString.len == ep.toString.len:
-      ep = defaultEvalParametersString.toEvalParameters()
-    else:
-      echo "WARNING! Incompatible params format"
-  else:
-    echo "WARNING! Empty eval params string"
+  try:
+    ep = defaultEvalParametersString.toEvalParameters()
+  except ValueError:
+    echo "WARNING! Default eval params not used: ", getCurrentExceptionMsg()
   ep
 
 template defaultEvalParameters*(): EvalParameters =
   {.cast(noSideEffect).}:
     defaultEvalParametersData
+
+
+# const
+#   epDir = "res/params/"
+#   epFileName = epDir & "default.bin"
+
+# writeFile epFileName, defaultEvalParameters().toString
+# echo "Wrote to: ", epFileName

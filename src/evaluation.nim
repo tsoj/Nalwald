@@ -134,65 +134,172 @@ func pieceRelativePst(
 
   const pieceRange =
     when ourPiece in [pawn, king]:
-      pawn .. king
+      knight .. king
     elif ourPiece == queen:
-      pawn .. queen
+      knight .. queen
     elif ourPiece == knight:
-      [pawn, knight, bishop, rook]
+      [knight, bishop, rook]
     elif ourPiece == bishop:
-      [pawn, bishop, rook]
+      [bishop, rook]
     elif ourPiece == rook:
-      [pawn, rook]
+      [rook]
 
   for otherPiece in pieceRange:
-    if otherPiece != pawn or ourPiece == pawn or position[pawn].countSetBits <= 8 or evalState is Gradient:
-      evalState.pieceRelativePstForOtherPiece(
-        position = position,
-        ourPiece = ourPiece,
-        ourSquare = ourSquare,
-        us = us,
-        otherPieces = otherPieces,
-        enemyKingSquare = enemyKingSquare,
-        roughEnemyKingFile = roughEnemyKingFile,
-        roughEnemyKingRank = roughEnemyKingRank,
-        otherPiece = otherPiece,
+    evalState.pieceRelativePstForOtherPiece(
+      position = position,
+      ourPiece = ourPiece,
+      ourSquare = ourSquare,
+      us = us,
+      otherPieces = otherPieces,
+      enemyKingSquare = enemyKingSquare,
+      roughEnemyKingFile = roughEnemyKingFile,
+      roughEnemyKingRank = roughEnemyKingRank,
+      otherPiece = otherPiece,
+    )
+
+# func pawnRelativePstWithInfo(
+#     evalState: EvalState,
+#     position: Position,
+#     ourPiece: static Piece,
+#     ourSquare: Square,
+#     us: static Color,
+#     otherPawns: array[Relativity, Bitboard],
+#     roughEnemyKingFile: int,
+#     roughEnemyKingRank: int,
+# ) =
+#   for relativity2 in relativeToUs .. relativeToEnemy:
+#     for otherSquare2 in otherPawns[relativity2]:
+#       let otherSquare2 = otherSquare2.colorConditionalMirrorVertically(us)
+
+#       evalState.addValue(
+#         goodFor = us,
+#         pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][ourSquare][relativity2][otherSquare2],
+#       )
+
+# when params is Gradient: # TODO check this (params is not defined anywhere???)
+#   var dummy: array[Phase, Value]
+#   let
+#     flippedOurSquare = ourSquare.mirrorHorizontally
+#     flippedOtherSquare1 = otherSquare1.mirrorHorizontally
+#     flippedOtherSquare2 = otherSquare2.mirrorHorizontally
+#     flippedKingFile = 3 - roughEnemyKingFile
+#   dummy.addValue(
+#     goodFor = us,
+#     pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][
+#       ourSquare
+#     ][relativity1][otherSquare1][relativity2][otherSquare2],
+#   )
+#
+
+func pawnRelativePstWithInfo(
+    evalState: EvalState,
+    position: Position,
+    ourPiece: static Piece,
+    ourSquare: Square,
+    us: static Color,
+    otherPieces: array[Relativity, Bitboard],
+    enemyKingSquare: Square,
+    roughEnemyKingFile: int,
+    roughEnemyKingRank: int,
+) =
+  for relativity in relativeToUs .. relativeToEnemy:
+    for otherSquare1 in otherPieces[relativity] and position[pawn]:
+      let otherSquare1 = otherSquare1.colorConditionalMirrorVertically(us)
+
+      for otherSquare2 in otherPieces[relativity] and position[pawn]:
+        let otherSquare2 = otherSquare2.colorConditionalMirrorVertically(us)
+        evalState.addValue(
+          goodFor = us,
+          pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][ourSquare][
+            relativity
+          ][otherSquare1][otherSquare2],
+        )
+
+      # when params is Gradient: # TODO check this (params is not defined anywhere???)
+      #   var dummy: array[Phase, Value]
+      #   let
+      #     flippedOurSquare = ourSquare.mirrorHorizontally
+      #     flippedOtherSquare = otherSquare.mirrorHorizontally
+      #     flippedKingFile = 3 - roughEnemyKingFile
+      #   dummy.addValue(
+      #     params,
+      #     us,
+      #     pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][
+      #       flippedOurSquare
+      #     ][otherPiece][flippedOtherSquare],
+      #   )
+
+func pawnRelativePst(
+    evalState: EvalState,
+    position: Position,
+    ourPiece: static Piece,
+    ourSquare: Square,
+    us: static Color,
+) =
+  let
+    ourSquare = ourSquare.colorConditionalMirrorVertically(us)
+    otherPieces = [relativeToUs: position[us], relativeToEnemy: position[us.opposite]]
+    # we do it just relative to the enemy king, as that's faster
+    enemyKingSquare =
+      position[us.opposite, king].toSquare.colorConditionalMirrorVertically(us)
+    roughEnemyKingFile = (enemyKingSquare.int mod 8) div 2
+    roughEnemyKingRank = (enemyKingSquare.int div 8) div 4
+
+  # evalState.pawnRelativePstWithInfo(
+  #   position = position,
+  #   ourPiece = ourPiece,
+  #   ourSquare = ourSquare,
+  #   us = us,
+  #   otherPieces = otherPieces,
+  #   enemyKingSquare = enemyKingSquare,
+  #   roughEnemyKingFile = roughEnemyKingFile,
+  #   roughEnemyKingRank = roughEnemyKingRank,
+  # )
+
+  when evalState is Gradient: # TODO what happens when it's a gradient
+    evalState.pawnRelativePstWithInfo(
+      position = position,
+      ourPiece = ourPiece,
+      ourSquare = ourSquare,
+      us = us,
+      otherPieces = otherPieces,
+      enemyKingSquare = enemyKingSquare,
+      roughEnemyKingFile = roughEnemyKingFile,
+      roughEnemyKingRank = roughEnemyKingRank,
+    )
+  else:
+    {.cast(noSideEffect).}:
+      let key = (
+        position.pawnKey xor
+        (zobristPieceBitmasks[white][knight][roughEnemyKingRank.Square] shr 32) xor
+        (zobristPieceBitmasks[black][knight][roughEnemyKingFile.Square] shr 32) xor
+        zobristPieceBitmasks[us][ourPiece][ourSquare]
       )
-    else:
-      when evalState is not Gradient:
-        {.cast(noSideEffect).}:
-          let key = (
-            position.pawnKey xor
-            (zobristPieceBitmasks[white][knight][roughEnemyKingRank.Square] shr 32) xor
-            (zobristPieceBitmasks[black][knight][roughEnemyKingFile.Square] shr 32) xor
-            zobristPieceBitmasks[us][ourPiece][ourSquare]
-          )
-          let index = (key.uint64 mod pawnRelativityHash.len.uint64).int
+      let index = (key.uint64 mod pawnRelativityHash.len.uint64).int
 
-          #   # if pawnPatternHash[index].key != position.pawnKey:
+      #   # if pawnPatternHash[index].key != position.pawnKey:
 
-          if pawnRelativityHash[index].key != key:
-            pawnRelativityHash[index].value = default(array[Phase, float32])
-            let middleManEvalValue = EvalValue(
-              params: evalState.params,
-              absoluteValue: addr pawnRelativityHash[index].value,
-            )
+      if pawnRelativityHash[index].key != key:
+        pawnRelativityHash[index].value = default(array[Phase, float32])
+        let middleManEvalValue = EvalValue(
+          params: evalState.params, absoluteValue: addr pawnRelativityHash[index].value
+        )
 
-            middleManEvalValue.pieceRelativePstForOtherPiece(
-              position = position,
-              ourPiece = ourPiece,
-              ourSquare = ourSquare,
-              us = us,
-              otherPieces = otherPieces,
-              enemyKingSquare = enemyKingSquare,
-              roughEnemyKingFile = roughEnemyKingFile,
-              roughEnemyKingRank = roughEnemyKingRank,
-              otherPiece = otherPiece,
-            )
+        middleManEvalValue.pawnRelativePstWithInfo(
+          position = position,
+          ourPiece = ourPiece,
+          ourSquare = ourSquare,
+          us = us,
+          otherPieces = otherPieces,
+          enemyKingSquare = enemyKingSquare,
+          roughEnemyKingFile = roughEnemyKingFile,
+          roughEnemyKingRank = roughEnemyKingRank,
+        )
 
-          pawnRelativityHash[index].key = key
+      pawnRelativityHash[index].key = key
 
-          for phase in Phase:
-            evalState.absoluteValue[][phase] += pawnRelativityHash[index].value[phase]
+      for phase in Phase:
+        evalState.absoluteValue[][phase] += pawnRelativityHash[index].value[phase]
 
 func evaluatePiece(
     evalState: EvalState,
@@ -209,6 +316,7 @@ func evaluatePiece(
       evalState.pieceRelativePst(position, pawn, square, pieceColor)
   else:
     evalState.pieceRelativePst(position, piece, square, pieceColor)
+    evalState.pawnRelativePst(position, piece, square, pieceColor)
 
 func evaluatePieceTypeFromWhitesPerspective(
     evalState: EvalState, position: Position, piece: static Piece

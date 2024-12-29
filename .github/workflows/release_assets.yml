@@ -57,6 +57,7 @@ jobs:
         run: |
           cd Nalwald
           nimble install malebolgia@1.3.2
+          nimble install zippy@0.10.16
           if [ ${{ runner.os }} = 'macOS' ]; then
             nim default Nalwald
             nim modern Nalwald
