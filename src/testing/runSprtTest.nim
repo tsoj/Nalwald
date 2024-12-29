@@ -66,7 +66,7 @@ let cuteChessArguments =
   fmt""" \
 -config discard=true outname={workDir}/config.json \
 -log file={workDir}/log.log level=warn compress=false \
--concurrency {max(1, countProcessors() - 2)} \
+-concurrency {1} \
 -ratinginterval 50 \
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
