@@ -31,7 +31,7 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
     key = position.pawnKey
     index = key.uint64 mod h.len.uint64
 
-  if h[index].key != key:
+  if h[index].key != key or h[index].count == 0:
     return rawEval
 
   let meanDiff = h[index].diffSum div h[index].count
