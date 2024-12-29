@@ -65,7 +65,7 @@ createDir pgnOutDir
 let cuteChessArguments =
   fmt""" \
 -config discard=true outname={workDir}/config.json \
--log file={workDir}/log.log level=warn compress=true \
+-log file={workDir}/log.log level=warn compress=false \
 -concurrency {max(1, countProcessors() - 2)} \
 -ratinginterval 50 \
 -games 2 -rounds {maxNumGames} \
