@@ -1,4 +1,4 @@
-import types, move, position, searchParams
+import types, move, position, searchParams, utils
 
 import std/[math]
 
@@ -34,9 +34,9 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   if h[index].key != key:
     return rawEval
 
-  let meanDiff = Value(h[index].diffSum div h[index].count)
+  let meanDiff = h[index].diffSum div h[index].count
 
-  rawEval + meanDiff
+  clampToType(rawEval.int + meanDiff, Value)
 
 #-------------- history heuristic --------------#
 
