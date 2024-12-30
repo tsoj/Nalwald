@@ -9,13 +9,23 @@ type
     diffSum: int = 0
     count: int = 0
     key: ZobristKey
-  CorrHistory* = seq[array[white..black, CorrHistEntry]]
+
+  CorrHistory* = seq[array[white .. black, CorrHistEntry]]
 
 func newCorrHistory*(): CorrHistory =
-  newSeq[array[white..black, CorrHistEntry]](65536)
+  newSeq[array[white .. black, CorrHistEntry]](65536)
 
-func update*(h: var CorrHistory, position: Position, rawEval: Value, searchEval: Value, nodeType: NodeType, depth: Ply) =
-  if (nodeType == upperBound and searchEval >= rawEval) or (nodeType == lowerBound and searchEval <= rawEval) or searchEval.abs >= valueCheckmate:
+func update*(
+    h: var CorrHistory,
+    position: Position,
+    rawEval: Value,
+    searchEval: Value,
+    nodeType: NodeType,
+    depth: Ply,
+) =
+  if (nodeType == upperBound and searchEval >= rawEval) or
+      (nodeType == lowerBound and searchEval <= rawEval) or
+      searchEval.abs >= valueCheckmate or position.inCheck(position.us):
     return
 
   let
@@ -23,7 +33,8 @@ func update*(h: var CorrHistory, position: Position, rawEval: Value, searchEval:
     index = key.uint64 mod h.len.uint64
     weight = depth.int * depth.int
 
-  template entry(): auto = h[index][position.us]
+  template entry(): auto =
+    h[index][position.us]
 
   if entry.key != key:
     entry = CorrHistEntry(diffSum: 0, count: 0, key: key)
@@ -36,12 +47,13 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
     key = position.pawnKey
     index = key.uint64 mod h.len.uint64
 
-  template entry(): auto = h[index][position.us]
+  template entry(): auto =
+    h[index][position.us]
 
   if entry.key != key or entry.count == 0:
     return rawEval
 
-  let meanDiff = entry.diffSum div max(1000, entry.count)
+  let meanDiff = entry.diffSum div max(500, entry.count)
 
   clampToType(rawEval.int + meanDiff, Value)
 
