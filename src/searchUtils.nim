@@ -41,7 +41,7 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   if entry.key != key or entry.count == 0:
     return rawEval
 
-  let meanDiff = entry.diffSum div max(100, entry.count)
+  let meanDiff = entry.diffSum div max(1000, entry.count)
 
   clampToType(rawEval.int + meanDiff, Value)
 
