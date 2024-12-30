@@ -5,15 +5,12 @@ import std/[math]
 #-------------- correction heuristic --------------#
 
 type
-  CorrHistEntry = object
-    diffSum: int = 0
-    count: int = 0
-    key: ZobristKey
+  CorrHistory* = seq[array[white .. black, float]]
 
-  CorrHistory* = seq[array[white .. black, CorrHistEntry]]
+const corrHistDecay = 0.99
 
 func newCorrHistory*(): CorrHistory =
-  newSeq[array[white .. black, CorrHistEntry]](65536)
+  newSeq[array[white .. black, float]](65536)
 
 func update*(
     h: var CorrHistory,
@@ -31,16 +28,13 @@ func update*(
   let
     key = position.pawnKey
     index = key.uint64 mod h.len.uint64
-    weight = depth.int * depth.int
+    # weight = depth.int * depth.int
 
   template entry(): auto =
     h[index][position.us]
 
-  if entry.key != key:
-    entry = CorrHistEntry(diffSum: 0, count: 0, key: key)
-
-  entry.count += weight
-  entry.diffSum += weight * int(searchEval - rawEval)
+  entry *= corrHistDecay
+  entry += (1.0 - corrHistDecay) * float(searchEval - rawEval)
 
 func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   let
@@ -50,12 +44,8 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   template entry(): auto =
     h[index][position.us]
 
-  if entry.key != key or entry.count == 0:
-    return rawEval
-
-  let meanDiff = entry.diffSum div max(500, entry.count)
-
-  clampToType(rawEval.int + meanDiff, Value)
+  result = clampToType(rawEval.int + entry.int, Value)
+  # debugEcho "result: ", result, ", rawEval: ", rawEval, ", entry: ", entry
 
 #-------------- history heuristic --------------#
 
