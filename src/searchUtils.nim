@@ -1,4 +1,4 @@
-import types, move, position, searchParams, utils
+import types, move, position, searchParams, utils, evaluation
 
 import std/[math]
 
@@ -22,7 +22,7 @@ func update*(
 ) =
   if (nodeType == upperBound and searchEval >= rawEval) or
       (nodeType == lowerBound and searchEval <= rawEval) or
-      searchEval.abs >= valueCheckmate or position.inCheck(position.us):
+      searchEval.abs >= valueCheckmate or position.inCheck(position.us) or (searchEval - rawEval).abs >= 200.cp:
     return
 
   let
