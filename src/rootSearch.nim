@@ -54,6 +54,7 @@ iterator iterativeDeepeningSearch*(
           threadStop: addr threadStop,
           hashTable: addr hashTable,
           historyTable: newHistoryTable(),
+          corrHist: newCorrHistory(),
           gameHistory: gameHistory,
           maxNodes: maxNodes,
           stopTime: stopTime,
