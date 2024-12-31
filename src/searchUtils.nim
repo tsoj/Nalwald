@@ -7,8 +7,6 @@ import std/[math]
 type
   CorrHistory* = seq[array[white .. black, float]]
 
-const corrHistDecay = 0.99
-
 func newCorrHistory*(): CorrHistory =
   newSeq[array[white .. black, float]](65536)
 
@@ -20,21 +18,26 @@ func update*(
     nodeType: NodeType,
     depth: Ply,
 ) =
+  let diff = searchEval - rawEval
+
   if (nodeType == upperBound and searchEval >= rawEval) or
       (nodeType == lowerBound and searchEval <= rawEval) or
-      searchEval.abs >= valueCheckmate or position.inCheck(position.us) or (searchEval - rawEval).abs >= 200.cp:
+      searchEval.abs >= valueCheckmate or position.inCheck(position.us) or diff.abs >= 200.cp:
     return
 
   let
     key = position.pawnKey
     index = key.uint64 mod h.len.uint64
-    # weight = depth.int * depth.int
+    weight = depth.float
+    decay = 1.0 - weight / 1000.0
+
+  # debugEcho decay
 
   template entry(): auto =
     h[index][position.us]
 
-  entry *= corrHistDecay
-  entry += (1.0 - corrHistDecay) * float(searchEval - rawEval)
+  entry *= decay
+  entry += (1.0 - decay) * diff.float
 
 func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   let
@@ -44,7 +47,7 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   template entry(): auto =
     h[index][position.us]
 
-  result = clampToType(rawEval.int + entry.int, Value)
+  result = clampToType(rawEval.int + (entry / 2.0).int, Value)
   # debugEcho "result: ", result, ", rawEval: ", rawEval, ", entry: ", entry
 
 #-------------- history heuristic --------------#
