@@ -219,7 +219,7 @@ func search(
   var detailStaticEval = none Value
   template staticEval(): auto =
     if detailStaticEval.isNone:
-      detailStaticEval = some state.evaluation(position)
+      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = state.evaluation(position))#state.evaluation(position)
     detailStaticEval.get
 
   # iterate over all moves and recursively search the new positions
