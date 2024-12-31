@@ -22,14 +22,16 @@ func update*(
 
   if (nodeType == upperBound and searchEval >= rawEval) or
       (nodeType == lowerBound and searchEval <= rawEval) or
-      searchEval.abs >= valueCheckmate or position.inCheck(position.us) or diff.abs >= 200.cp:
+      searchEval.abs >= valueCheckmate or position.inCheck(position.us):# or diff.abs >= 200.cp:
     return
 
   let
     key = position.pawnKey
     index = key.uint64 mod h.len.uint64
-    weight = depth.float
-    decay = 1.0 - weight / 1000.0
+    weight = min(depth.float + 1.0, 16.0)
+    decay = 1.0 - weight / 256.0
+
+  doAssert 0.0 < decay and decay < 1.0
 
   # debugEcho decay
 
