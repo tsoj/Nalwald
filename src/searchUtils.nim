@@ -49,7 +49,7 @@ func getCorrEval*(h: CorrHistory, position: Position, rawEval: Value): Value =
   template entry(): auto =
     h[index][position.us]
 
-  result = clampToType(rawEval.int + (entry / 2.0).int, Value)
+  result = clampToType(rawEval.int + (entry / 200000.0).int, Value)
   # debugEcho "result: ", result, ", rawEval: ", rawEval, ", entry: ", entry
 
 #-------------- history heuristic --------------#
