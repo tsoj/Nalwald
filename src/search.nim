@@ -41,26 +41,6 @@ func shouldStop(state: SearchState): bool =
     state.externalStopFlag[].store(true)
   state.externalStopFlag[].load or state.threadStop[].load
 
-func update(
-    state: var SearchState,
-    position: Position,
-    bestMove, previous: Move,
-    depth, height: Ply,
-    nodeType: NodeType,
-    bestValue: Value,
-) =
-  if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
-    state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
-    if nodeType != allNode:
-      state.historyTable.update(
-        bestMove, previous, position.us, depth, raisedAlpha = true
-      )
-    if nodeType == cutNode:
-      state.killerTable.update(height, bestMove)
-
-    if not bestMove.isTactical:
-      # TODO check if it's unnecessary to make staticEval in search fancy lazy, if it is called here anyway
-      state.corrHist.update(position, rawEval = state.evaluation(position), searchEval = bestValue, nodeType = nodeType, depth = depth)
 
 func quiesce(
     position: Position,
@@ -216,10 +196,17 @@ func search(
       return value
 
   # get static eval of current position, but only when necessary
+  var detailRawEval = none Value
+  template rawEval(): auto =
+    if detailRawEval.isNone:
+      detailRawEval = some state.evaluation(position)
+    detailRawEval.get
+
+  # get static eval of current position, but only when necessary
   var detailStaticEval = none Value
   template staticEval(): auto =
     if detailStaticEval.isNone:
-      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = state.evaluation(position))#state.evaluation(position)
+      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = rawEval)#state.evaluation(position)
     detailStaticEval.get
 
   # iterate over all moves and recursively search the new positions
@@ -314,15 +301,19 @@ func search(
     else:
       bestValue = 0.Value
 
-  state.update(
-    position,
-    bestMove,
-    previous = previous,
-    depth = depth,
-    height = height,
-    nodeType,
-    bestValue,
-  )
+
+  if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
+      state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
+      if nodeType != allNode:
+        state.historyTable.update(
+          bestMove, previous, position.us, depth, raisedAlpha = true
+        )
+      if nodeType == cutNode:
+        state.killerTable.update(height, bestMove)
+
+      if not bestMove.isTactical:
+        # TODO check if it's unnecessary to make staticEval in search fancy lazy, if it is called here anyway
+        state.corrHist.update(position, rawEval = rawEval, searchEval = bestValue, nodeType = nodeType, depth = depth)
 
   bestValue
 
