@@ -160,9 +160,7 @@ func search(
   let beta = block:
     # update alpha, beta or return immediatly based on hash table result
     var beta = beta
-    if height > 0 and not hashResult.isEmpty and alpha == beta + 1:
-      if hashResult.nodeType == exact and hashResult.depth >= depth:
-        return hashResult.value
+    if height > 0 and not hashResult.isEmpty:
 
       let margin = hashResultFutilityMargin(depth - hashResult.depth)
       if hashResult.nodeType != upperBound:
