@@ -76,17 +76,13 @@ func age*(ht: var HashTable) =
   for key in deleteQueue:
     ht.pvNodes.del(key)
 
-func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool =
-  if oldEntry.isEmpty:
-    return true
+func remove*(ht: var HashTable, zobristKey: ZobristKey) =
+  withLock ht.pvTableMutex:
+    if ht.pvNodes.hasKey(zobristKey):
+      ht.pvNodes.del(zobristKey)
 
-  if sameUpperZobristKey(
-    oldEntry.upperZobristKeyAndNodeTypeAndValue,
-    newEntry.upperZobristKeyAndNodeTypeAndValue,
-  ):
-    return oldEntry.depth <= newEntry.depth
-
-  return true
+  let i = zobristKey mod ht.nonPvNodes.len.ZobristKey
+  ht.nonPvNodes[i] = noEntry
 
 func add*(
     ht: var HashTable,
@@ -95,7 +91,6 @@ func add*(
     value: Value,
     depth: Ply,
     bestMove: Move,
-    override: static bool = false,
 ) =
   let entry = HashTableEntry(
     upperZobristKeyAndNodeTypeAndValue: (
@@ -115,16 +110,14 @@ func add*(
 
   if nodeType == pvNode:
     withLock ht.pvTableMutex:
-      if not ht.pvNodes.hasKey(zobristKey) or ht.pvNodes[zobristKey].entry.depth <= depth or
-          override:
+      if not ht.pvNodes.hasKey(zobristKey) or ht.pvNodes[zobristKey].entry.depth <= depth:
         ht.pvNodes[zobristKey] = CountedHashTableEntry(entry: entry, lookupCounter: 1)
   else:
     doAssert ht.nonPvNodes.len > 0
     let i = zobristKey mod ht.nonPvNodes.len.ZobristKey
-    if ht.shouldReplace(entry, ht.nonPvNodes[i]) or override:
-      if ht.nonPvNodes[i].isEmpty:
-        ht.hashFullCounter += 1
-      ht.nonPvNodes[i] = entry
+    if ht.nonPvNodes[i].isEmpty:
+      ht.hashFullCounter += 1
+    ht.nonPvNodes[i] = entry
 
 func get*(ht: var HashTable, zobristKey: ZobristKey): HashTableEntry =
   if ht.pvNodes.hasKey(zobristKey):

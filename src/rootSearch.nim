@@ -84,14 +84,7 @@ iterator iterativeDeepeningSearch*(
 
           if multiPvNumber > 1:
             let hashResult = hashTable.get(position.zobristKey)
-            hashTable.add(
-              position.zobristKey,
-              hashResult.nodeType,
-              hashResult.value,
-              Ply.low,
-              hashResult.bestMove,
-              override = true,
-            )
+            hashTable.remove(position.zobristKey)
 
           threadStop.store(false)
 
