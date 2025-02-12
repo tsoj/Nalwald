@@ -17,7 +17,6 @@ type
     hashFullCounter: int
     pvNodes: Table[ZobristKey, CountedHashTableEntry]
     pvTableMutex: Lock
-    randState: Rand
 
 const
   noEntry = HashTableEntry(
@@ -41,7 +40,6 @@ func sameUpperZobristKey(a: uint64, b: uint64): bool =
   (a and not eighteenBitMask) == (b and not eighteenBitMask)
 
 func clear*(ht: var HashTable) =
-  ht.randState = initRand(0)
   ht.pvNodes.clear
   ht.hashFullCounter = 0
   for entry in ht.nonPvNodes.mitems:
@@ -61,7 +59,6 @@ func newHashTable*(len = 0): HashTable =
     hashFullCounter: 0,
     pvNodes: Table[ZobristKey, CountedHashTableEntry](),
     pvTableMutex: Lock(),
-    randState: initRand(0),
   )
   initLock result.pvTableMutex
   result.setLen len
@@ -89,15 +86,7 @@ func shouldReplace(ht: var HashTable, newEntry, oldEntry: HashTableEntry): bool 
   ):
     return oldEntry.depth <= newEntry.depth
 
-  var probability = 1.0
-
-  if newEntry.nodeType == allNode and oldEntry.nodeType == cutNode:
-    probability *= 0.5
-
-  if newEntry.depth + 2.Ply < oldEntry.depth:
-    probability *= 0.5
-
-  ht.randState.rand(1.0) < probability
+  return true
 
 func add*(
     ht: var HashTable,
