@@ -13,6 +13,8 @@ const
   timeControlSeconds = 10.0
   maxNumGames = 100_000
   hashSizeMB = 8
+  improveBounds = "elo0=0 elo1=5"
+  regressionBounds = "elo0=-3 elo1=0"
 
 let gitStatus = execProcess("git status")
 
@@ -30,6 +32,8 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
+  useRegressionBounds = "--regression" in commandLineParams()
+  bounds = if useRegressionBounds: regressionBounds else: improveBounds
 
 echo "Testing against ", otherBranch
 
@@ -70,7 +74,7 @@ let cuteChessArguments =
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
 -openings file={openingBook} format=epd order=random \
--sprt elo0=0 elo1=5 alpha=0.05 beta=0.05 \
+-sprt {bounds} alpha=0.05 beta=0.05 \
 -resign movecount=3 score=400 \
 -draw movenumber=40 movecount=8 score=10 \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
@@ -79,6 +83,7 @@ let cuteChessArguments =
 """
 
 let command = engineTournamentBinary & " " & cuteChessArguments
-doAssert execCmd(command) == 0, "Command:\n" & command
+echo "Command:\n-----------------\n\n", command, "\n-----------------"
+doAssert execCmd(command) == 0
 
 echo "\nFinished SPRT test\n"
