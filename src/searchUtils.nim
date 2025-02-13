@@ -1,11 +1,10 @@
 import types, move, position, searchParams, utils, evaluation
 
-import std/[math]
+import std/[math, algorithm, sugar]
 
 #-------------- correction heuristic --------------#
 
-type
-  CorrHistory* = seq[array[white .. black, float]]
+type CorrHistory* = seq[array[white .. black, float]]
 
 func newCorrHistory*(): CorrHistory =
   newSeq[array[white .. black, float]](65536)
@@ -22,7 +21,8 @@ func update*(
 
   if (nodeType == upperBound and searchEval >= rawEval) or
       (nodeType == lowerBound and searchEval <= rawEval) or
-      searchEval.abs >= valueCheckmate or position.inCheck(position.us):# or diff.abs >= 200.cp:
+      searchEval.abs >= valueCheckmate or position.inCheck(position.us):
+    # or diff.abs >= 200.cp:
     return
 
   let
@@ -121,22 +121,63 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0 
 
 #-------------- killer heuristic --------------#
 
+const
+  numSortedKillers = 10
+  decay = 0.9
+
 type KillerTable* = object
-  table: array[Ply, array[2, Move]]
+  immediate: array[Ply, Move]
+  sorted: array[Ply, array[numSortedKillers, tuple[move: Move, score: float]]]
 
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
   if move.isTactical:
     return
 
+  killerTable.immediate[height] = move
+
   template list(): auto =
-    killerTable.table[height]
+    killerTable.sorted[height]
 
-  if list[0] != move:
-    list[1] = list[0]
-    list[0] = move
+  #if move notin list:
+  for i, x in list.mpairs:
+    if x.move == move:
+      x.score += 1.0
+      break
+    if i == list.len - 1:
+      x = (move, 1.0)
+      break
 
-func get*(killerTable: KillerTable, height: Ply): array[2, Move] =
-  killerTable.table[height]
+  list.sort((a, b) => cmp(a.score, b.score), Descending)
+
+  #list[^1] = (move, 1.0)
+
+  # if list[0] != move:
+  #   list[1] = list[0]
+  #   list[0] = move
+
+func get*(killerTable: var KillerTable, height: Ply): array[2, Move] =
+  template list(): auto =
+    killerTable.sorted[height]
+
+  result = [list[0].move, list[1].move]
+
+  let immediate = killerTable.immediate[height]
+
+  if immediate notin result:
+    result[0] = immediate
+
+  if immediate == result[1]:
+    swap(result[0], result[1])
+
+  for x in list.mitems:
+    x.score *= decay
+
+  # if height == 6:
+  #   debugEcho list, ", ", immediate
+  #   debugEcho result
+
+  doAssert result[0] != result[1] or result[0] == default(Move)
+
 
 #-------------- repetition detection --------------#
 
