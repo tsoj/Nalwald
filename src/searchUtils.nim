@@ -127,7 +127,7 @@ const
 
 type KillerTable* = object
   immediate: array[Ply, Move]
-  sorted: array[Ply, array[numSortedKillers, tuple[move: Move, score: float]]]
+  # sorted: array[Ply, array[numSortedKillers, tuple[move: Move, score: float]]]
 
 func update*(killerTable: var KillerTable, height: Ply, move: Move) =
   if move.isTactical:
@@ -135,19 +135,19 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
 
   killerTable.immediate[height] = move
 
-  template list(): auto =
-    killerTable.sorted[height]
+  # template list(): auto =
+  #   killerTable.sorted[height]
 
-  #if move notin list:
-  for i, x in list.mpairs:
-    if x.move == move:
-      x.score += 1.0
-      break
-    if i == list.len - 1:
-      x = (move, 1.0)
-      break
+  # #if move notin list:
+  # for i, x in list.mpairs:
+  #   if x.move == move:
+  #     x.score += 1.0
+  #     break
+  #   if i == list.len - 1:
+  #     x = (move, 1.0)
+  #     break
 
-  list.sort((a, b) => cmp(a.score, b.score), Descending)
+  # list.sort((a, b) => cmp(a.score, b.score), Descending)
 
   #list[^1] = (move, 1.0)
 
@@ -155,28 +155,29 @@ func update*(killerTable: var KillerTable, height: Ply, move: Move) =
   #   list[1] = list[0]
   #   list[0] = move
 
-func get*(killerTable: var KillerTable, height: Ply): array[2, Move] =
-  template list(): auto =
-    killerTable.sorted[height]
+func get*(killerTable: var KillerTable, height: Ply): Move =
+  killerTable.immediate[height]
+  # template list(): auto =
+  #   killerTable.sorted[height]
 
-  result = [list[0].move, list[1].move]
+  # result = [list[0].move, list[1].move]
 
-  let immediate = killerTable.immediate[height]
+  # let immediate = killerTable.immediate[height]
 
-  if immediate notin result:
-    result[0] = immediate
+  # if immediate notin result:
+  #   result[0] = immediate
 
-  if immediate == result[1]:
-    swap(result[0], result[1])
+  # if immediate == result[1]:
+  #   swap(result[0], result[1])
 
-  for x in list.mitems:
-    x.score *= decay
+  # for x in list.mitems:
+  #   x.score *= decay
 
   # if height == 6:
   #   debugEcho list, ", ", immediate
   #   debugEcho result
 
-  doAssert result[0] != result[1] or result[0] == default(Move)
+  # doAssert result[0] != result[1] or result[0] == default(Move)
 
 
 #-------------- repetition detection --------------#

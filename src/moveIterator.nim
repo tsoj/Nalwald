@@ -4,12 +4,12 @@ iterator treeSearchMoveIterator*(
     position: Position,
     tryFirstMove = noMove,
     historyTable: HistoryTable or tuple[] = (),
-    killers = [noMove, noMove],
+    killer = noMove,
     previous = noMove,
     doQuiets = true,
 ): Move =
   ## This iterator is optimized for speed and for good move ordering.
-  ## It does not guarantee to list all legal moves and may include 
+  ## It does not guarantee to list all legal moves and may include
   ## illegal moves that leave our own king in check.
 
   type OrderedMoveList[maxMoves: static int] = object
@@ -29,7 +29,7 @@ iterator treeSearchMoveIterator*(
         moveList.movePriorities[bestIndex] = float.low
         let move = moveList.moves[bestIndex]
 
-        if move != tryFirstMove and move notin killers:
+        if move notin [tryFirstMove, killer]:
           yield move
       else:
         break
@@ -49,9 +49,8 @@ iterator treeSearchMoveIterator*(
 
   # killers
   if doQuiets:
-    for i in killers.low .. killers.high:
-      if position.isPseudoLegal(killers[i]) and killers[i] != tryFirstMove:
-        yield killers[i]
+    if position.isPseudoLegal(killer) and killer != tryFirstMove:
+      yield killer
 
   # quiet moves
   if doQuiets:
