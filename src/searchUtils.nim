@@ -121,10 +121,6 @@ func get*(historyTable: HistoryTable, move, previous: Move, color: Color): -1.0 
 
 #-------------- killer heuristic --------------#
 
-const
-  numSortedKillers = 10
-  decay = 0.9
-
 type KillerTable* = object
   table: array[Ply, Move]
 
