@@ -1,6 +1,6 @@
 import types, move, position
 
-import std/[tables, locks, random]
+import std/[tables, locks]
 
 type
   HashTableEntry* {.packed.} = object
@@ -151,7 +151,7 @@ func getPv*(ht: var HashTable, position: Position): seq[Move] =
     encounteredZobristKeys.add(currentPosition.zobristKey)
     let entry = ht.get(currentPosition.zobristKey)
 
-    if entry.isEmpty or not currentPosition.isLegal(entry.bestMove):
+    if entry.isEmpty or not currentPosition.isLegal(entry.bestMove) or currentPosition.halfmoveClock >= 100:
       return result
     result.add(entry.bestMove)
     currentPosition = currentPosition.doMove(entry.bestMove)
