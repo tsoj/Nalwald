@@ -207,6 +207,9 @@ func search(
       detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = rawEval)#state.evaluation(position)
     detailStaticEval.get
 
+  if alpha + 1 == beta and not inCheck and depth <= 4 and staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
+    return staticEval
+
   # iterate over all moves and recursively search the new positions
   for move in position.treeSearchMoveIterator(
     hashResult.bestMove, state.historyTable, state.killerTable.get(height), previous
