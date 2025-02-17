@@ -95,7 +95,7 @@ addParam(hashResultFutilityMarginMul, default = 298, min = 50, max = 1000, step 
 addParam(nullMoveDepthSub, default = 3.Ply, min = 0.Ply, max = 10.Ply, step = 1.Ply)
 addParam(nullMoveDepthDiv, default = 3, min = 1, max = 15, step = 1)
 
-addParam(rfpMarginMultiplier, default = 200, min = 10, max = 1000, step = 30)
+addParam(rfpMarginMultiplier, default = 70, min = 10, max = 1000, step = 30)
 
 addParam(minMoveCounterLmr, default = 4, min = 1, max = 15, step = 1)
 addParam(lmrAddition, default = 1.73, min = -100.0, max = 100.0, step = 0.8)
