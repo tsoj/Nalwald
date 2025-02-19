@@ -175,6 +175,24 @@ func search(
   if depth <= 0:
     return position.quiesce(state, alpha = alpha, beta = beta, height)
 
+
+  # get static eval of current position, but only when necessary
+  var detailRawEval = none Value
+  template rawEval(): auto =
+    if detailRawEval.isNone:
+      detailRawEval = some state.evaluation(position)
+    detailRawEval.get
+
+  # get static eval of current position, but only when necessary
+  var detailStaticEval = none Value
+  template staticEval(): auto =
+    if detailStaticEval.isNone:
+      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = rawEval)#state.evaluation(position)
+    detailStaticEval.get
+
+  if alpha + 1 == beta and not inCheck and staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
+    return staticEval
+
   # null move reduction
   if height > 0 and (hashResult.isEmpty or hashResult.nodeType == cutNode) and
       not inCheck and
@@ -192,23 +210,6 @@ func search(
 
     if value >= beta:
       return value
-
-  # get static eval of current position, but only when necessary
-  var detailRawEval = none Value
-  template rawEval(): auto =
-    if detailRawEval.isNone:
-      detailRawEval = some state.evaluation(position)
-    detailRawEval.get
-
-  # get static eval of current position, but only when necessary
-  var detailStaticEval = none Value
-  template staticEval(): auto =
-    if detailStaticEval.isNone:
-      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = rawEval)#state.evaluation(position)
-    detailStaticEval.get
-
-  if alpha + 1 == beta and not inCheck and depth <= 4 and staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
-    return staticEval
 
   # iterate over all moves and recursively search the new positions
   for move in position.treeSearchMoveIterator(
