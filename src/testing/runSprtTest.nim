@@ -15,6 +15,7 @@ const
   hashSizeMB = 8
   improveBounds = "elo0=0 elo1=5"
   regressionBounds = "elo0=-3 elo1=0"
+  progressionBounds = "elo0=5 elo1=1000"
 
 let gitStatus = execProcess("git status")
 
@@ -33,7 +34,14 @@ let
     else:
       mainBranch
   useRegressionBounds = "--regression" in commandLineParams()
-  bounds = if useRegressionBounds: regressionBounds else: improveBounds
+  useProgressionBounds = "--progression" in commandLineParams()
+  bounds =
+    if useRegressionBounds:
+      regressionBounds
+    elif useProgressionBounds:
+      progressionBounds
+    else:
+      improveBounds
 
 echo "Testing against ", otherBranch
 
