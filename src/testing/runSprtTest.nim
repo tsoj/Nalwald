@@ -11,7 +11,9 @@ const
   pgnOutDir = "res/pgns/"
   pgnOutFile = pgnOutDir & "sprtGames.pgn"
   maxNumGames = 100_000
-  hashSizeMB = 8
+  stcHashSizeMB = 8
+  stcTimeControlSeconds = 10.0
+  ltcTimeControlSeconds = 100.0
   improveBounds = "elo0=0 elo1=5"
   regressionBounds = "elo0=-3 elo1=0"
 
@@ -31,7 +33,8 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
-  timeControlSeconds = if "--ltc" in commandLineParams(): 100.0 else: 10.0
+  timeControlSeconds = if "--ltc" in commandLineParams(): ltcTimeControlSeconds else: stcTimeControlSeconds
+  hashSizeMB = (stcHashSizeMB.float * timeControlSeconds / stcTimeControlSeconds).int
   useSPRT = "--progression" notin commandLineParams()
   useRegressionBounds = "--regression" in commandLineParams()
   bounds = if useRegressionBounds: regressionBounds else: improveBounds
