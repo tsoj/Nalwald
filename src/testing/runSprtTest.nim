@@ -31,7 +31,7 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
-  timeControlSeconds = if "--LTC" in commandLineParams(): 100.0 else: 10.0
+  timeControlSeconds = if "--ltc" in commandLineParams(): 100.0 else: 10.0
   useSPRT = "--progression" notin commandLineParams()
   useRegressionBounds = "--regression" in commandLineParams()
   bounds = if useRegressionBounds: regressionBounds else: improveBounds
