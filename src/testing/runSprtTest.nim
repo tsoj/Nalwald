@@ -15,7 +15,6 @@ const
   hashSizeMB = 8
   improveBounds = "elo0=0 elo1=5"
   regressionBounds = "elo0=-3 elo1=0"
-  progressionBounds = "elo0=5 elo1=1000"
 
 let gitStatus = execProcess("git status")
 
@@ -33,15 +32,9 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
+  useSPRT = "--progression" notin commandLineParams()
   useRegressionBounds = "--regression" in commandLineParams()
-  useProgressionBounds = "--progression" in commandLineParams()
-  bounds =
-    if useRegressionBounds:
-      regressionBounds
-    elif useProgressionBounds:
-      progressionBounds
-    else:
-      improveBounds
+  bounds = if useRegressionBounds: regressionBounds else: improveBounds
 
 echo "Testing against ", otherBranch
 
@@ -74,6 +67,8 @@ finally:
 
 createDir pgnOutDir
 
+let sprtString = if useSPRT: fmt"-sprt {bounds} alpha=0.05 beta=0.05" else: ""
+
 let cuteChessArguments =
   fmt""" \
 -config discard=true outname={workDir}/config.json \
@@ -82,7 +77,7 @@ let cuteChessArguments =
 -games 2 -rounds {maxNumGames} \
 -pgnout {pgnOutFile} min \
 -openings file={openingBook} format=epd order=random \
--sprt {bounds} alpha=0.05 beta=0.05 \
+{sprtString} \
 -resign movecount=3 score=400 \
 -draw movenumber=40 movecount=8 score=10 \
 -engine name={currentBranch} cmd=./{nalwaldBinary(currentBranch)} \
