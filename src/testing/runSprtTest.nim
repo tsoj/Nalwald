@@ -10,7 +10,6 @@ const
   openingBook = "res/openings/Pohl.epd"
   pgnOutDir = "res/pgns/"
   pgnOutFile = pgnOutDir & "sprtGames.pgn"
-  timeControlSeconds = 10.0
   maxNumGames = 100_000
   hashSizeMB = 8
   improveBounds = "elo0=0 elo1=5"
@@ -32,6 +31,7 @@ let
       commandLineParams()[0].strip
     else:
       mainBranch
+  timeControlSeconds = if "--LTC" in commandLineParams(): 100.0 else: 10.0
   useSPRT = "--progression" notin commandLineParams()
   useRegressionBounds = "--regression" in commandLineParams()
   bounds = if useRegressionBounds: regressionBounds else: improveBounds
