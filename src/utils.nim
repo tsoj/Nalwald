@@ -1,6 +1,6 @@
 import types
 
-import std/[options, strutils, times, os, osproc, math]
+import std/[options, strutils, times, os, osproc, math, macros]
 
 const megaByteToByte* = 1_048_576
 
@@ -144,3 +144,22 @@ func `/=`*(a: var Seconds, b: SomeNumber) =
 func secondsSince1970*(): Seconds =
   {.cast(noSideEffect).}:
     epochTime().Seconds
+
+macro lazyEval*(assignmentStmt: untyped): untyped =
+  expectKind(assignmentStmt, nnkStmtList)
+  expectLen(assignmentStmt, 1)
+
+  let assignment = assignmentStmt[0]
+  expectKind(assignment, nnkAsgn)
+
+  let
+    identifier = assignment[0]
+    initExpr = assignment[1]
+    storageIdent = genSym(nskVar, "lazy_" & $identifier)
+
+  quote:
+    var `storageIdent` = none(type(`initExpr`))
+    template `identifier`(): auto =
+      if `storageIdent`.isNone:
+        `storageIdent` = some `initExpr`
+      `storageIdent`.get()

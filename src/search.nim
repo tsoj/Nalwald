@@ -177,18 +177,8 @@ func search(
 
 
   # get static eval of current position, but only when necessary
-  var detailRawEval = none Value
-  template rawEval(): auto =
-    if detailRawEval.isNone:
-      detailRawEval = some state.evaluation(position)
-    detailRawEval.get
-
-  # get static eval of current position, but only when necessary
-  var detailStaticEval = none Value
-  template staticEval(): auto =
-    if detailStaticEval.isNone:
-      detailStaticEval = some state.corrHist.getCorrEval(position, rawEval = rawEval)#state.evaluation(position)
-    detailStaticEval.get
+  lazyEval: rawEval = state.evaluation(position)
+  lazyEval: staticEval = state.corrHist.getCorrEval(position, rawEval = rawEval)
 
   if alpha + 1 == beta and not inCheck and staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
     return staticEval
