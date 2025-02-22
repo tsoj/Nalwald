@@ -237,8 +237,7 @@ func search(
           continue
 
     # first explore with null window
-    if hashResult.isEmpty or hashResult.bestMove != move or
-        hashResult.nodeType == allNode:
+    if hashResult.bestMove != move:
       newBeta = alpha + 1
 
     # stop search if we exceeded maximum nodes or we got a stop signal from outside
