@@ -184,7 +184,7 @@ func search(
     return staticEval
 
   # null move reduction
-  if height > 0 and (depth < iirMinDepth() or hashResult.nodeType == cutNode) and
+  if height > 0 and (hashResult.isEmpty or hashResult.nodeType == cutNode) and
       not inCheck and
       ((position[king] or position[pawn]) and position[us]) != position[us]:
     let newPosition = position.doNullMove
@@ -299,7 +299,7 @@ func search(
         state.historyTable.update(
           bestMove, previous, position.us, depth, raisedAlpha = true
         )
-      if nodeType == cutNode:
+
         state.killerTable.update(height, bestMove)
 
       if not bestMove.isTactical:
