@@ -46,7 +46,7 @@ jobs:
           submodules: false
 
       - name: Setup Nim
-        uses: alaviss/setup-nim@0.1.1
+        uses: alaviss/setup-nim@f81f2a6d1505ab32f440ec9d8adbb81e949d3bf0 # 0.1.1
         with:
           path: 'nim'
           version: ${{ matrix.target.nim_branch }}
@@ -69,7 +69,7 @@ jobs:
           mv bin/Nalwald-modern${{ runner.os == 'Windows' && '.exe' || '' }} bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}-modern${{ runner.os == 'Windows' && '.exe' || '' }}
 
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # 2.2.1
         with:
           files: |
             ./Nalwald/bin/Nalwald-${{ github.event.release.tag_name }}-${{ matrix.target.os }}-${{ matrix.target.cpu }}${{ runner.os == 'Windows' && '.exe' || '' }}

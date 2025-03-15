@@ -17,7 +17,7 @@ jobs:
           submodules: false
 
       - name: Setup Nim
-        uses: alaviss/setup-nim@0.1.1
+        uses: alaviss/setup-nim@f81f2a6d1505ab32f440ec9d8adbb81e949d3bf0 # 0.1.1
         with:
           path: 'nim'
           version: devel
