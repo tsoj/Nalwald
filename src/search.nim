@@ -41,7 +41,6 @@ func shouldStop(state: SearchState): bool =
     state.externalStopFlag[].store(true)
   state.externalStopFlag[].load or state.threadStop[].load
 
-
 func quiesce(
     position: Position,
     state: var SearchState,
@@ -57,7 +56,8 @@ func quiesce(
     return 0.Value
 
   # TODO make this nicer, think about other eval uses
-  let standPat = state.corrHist.getCorrEval(position, rawEval = state.evaluation(position))
+  let standPat =
+    state.corrHist.getCorrEval(position, rawEval = state.evaluation(position))
 
   var
     alpha = alpha
@@ -161,7 +161,6 @@ func search(
     # update alpha, beta or return immediatly based on hash table result
     var beta = beta
     if height > 0 and not hashResult.isEmpty:
-
       let margin = hashResultFutilityMargin(depth - hashResult.depth)
       if hashResult.nodeType != upperBound:
         alpha = max(alpha, hashResult.value - margin)
@@ -175,12 +174,14 @@ func search(
   if depth <= 0:
     return position.quiesce(state, alpha = alpha, beta = beta, height)
 
-
   # get static eval of current position, but only when necessary
-  lazyEval: rawEval = state.evaluation(position)
-  lazyEval: staticEval = state.corrHist.getCorrEval(position, rawEval = rawEval)
+  lazyEval:
+    rawEval = state.evaluation(position)
+  lazyEval:
+    staticEval = state.corrHist.getCorrEval(position, rawEval = rawEval)
 
-  if alpha + 1 == beta and not inCheck and staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
+  if alpha + 1 == beta and not inCheck and
+      staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
     return staticEval
 
   # null move reduction
@@ -219,6 +220,7 @@ func search(
     var
       newDepth = depth
       newBeta = beta
+      newAlpha = alpha
 
     if not givingCheck:
       # late move reduction
@@ -239,6 +241,8 @@ func search(
     # first explore with null window
     if hashResult.bestMove != move:
       newBeta = alpha + 1
+    elif hashResult.nodeType == cutNode:
+      newAlpha = beta - 1
 
     # stop search if we exceeded maximum nodes or we got a stop signal from outside
     if state.shouldStop:
@@ -249,14 +253,15 @@ func search(
       -newPosition.search(
         state,
         alpha = -newBeta,
-        beta = -alpha,
+        beta = -newAlpha,
         depth = newDepth - 1.Ply,
         height = height + 1.Ply,
         previous = move,
       )
 
     # re-search with full window and full depth
-    if value > alpha and value < beta and (newDepth < depth or newBeta < beta):
+    if (value > alpha and (newDepth < depth or newBeta < beta)) or
+        (value < beta and newAlpha > alpha):
       newDepth = depth
       value =
         -newPosition.search(
@@ -292,19 +297,24 @@ func search(
     else:
       bestValue = 0.Value
 
-
   if bestMove != noMove and bestValue.abs < valueInfinity and not state.threadStop[].load:
-      state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
-      if nodeType != allNode:
-        state.historyTable.update(
-          bestMove, previous, position.us, depth, raisedAlpha = true
-        )
+    state.hashTable[].add(position.zobristKey, nodeType, bestValue, depth, bestMove)
+    if nodeType != allNode:
+      state.historyTable.update(
+        bestMove, previous, position.us, depth, raisedAlpha = true
+      )
 
-        state.killerTable.update(height, bestMove)
+      state.killerTable.update(height, bestMove)
 
-      if not bestMove.isTactical:
-        # TODO check if it's unnecessary to make staticEval in search fancy lazy, if it is called here anyway
-        state.corrHist.update(position, rawEval = rawEval, searchEval = bestValue, nodeType = nodeType, depth = depth)
+    if not bestMove.isTactical:
+      # TODO check if it's unnecessary to make staticEval in search fancy lazy, if it is called here anyway
+      state.corrHist.update(
+        position,
+        rawEval = rawEval,
+        searchEval = bestValue,
+        nodeType = nodeType,
+        depth = depth,
+      )
 
   bestValue
 
