@@ -256,7 +256,7 @@ func search(
       )
 
     # re-search with full window and full depth
-    if value > alpha and (newDepth < depth or newBeta < beta):
+    if value > alpha and value < beta and (newDepth < depth or newBeta < beta):
       newDepth = depth
       value =
         -newPosition.search(
