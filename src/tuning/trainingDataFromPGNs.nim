@@ -7,7 +7,7 @@ doAssert commandLineParams().len > 0,
 
 const
   workDir = "src/tuning/dataFromPGNsWorkDir/"
-  outDir = "res/trainingSets/"
+  outDir = "res/trainingSets/fens/"
   pgnExtractPath = "res/pgn-extract"
 
 let
@@ -34,7 +34,7 @@ for pgnFilename in commandLineParams():
   mergeDuplicateAndSelect(
     readFilename = workDir & "extracted.epd",
     writeFilename = outputFilename,
-    selectFactor = 0.05,
+    selectFactor = 0.1,
     outFileMode = fmAppend,
   )
   removeDir workDir

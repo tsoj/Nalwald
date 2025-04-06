@@ -20,7 +20,7 @@ func validTrainingPosition*(position: Position): bool =
 proc loadDataEpd*(
     data: var seq[Entry], fileName: string, maxLen = int.high, suppressOutput = false
 ) =
-  doAssert fileExists fileName, "File should exist"
+  doAssert fileExists fileName, "File should exist: " & fileName
 
   let f = open(fileName)
   var
@@ -47,7 +47,7 @@ proc loadDataEpd*(
 proc loadDataBin*(
     data: var seq[Entry], fileName: string, maxLen = int.high, suppressOutput = false
 ) =
-  doAssert fileExists fileName, "File should exist"
+  doAssert fileExists fileName, "File should exist: " & fileName
 
   var
     inFileStream = newFileStream(fileName, fmRead)

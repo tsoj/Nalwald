@@ -13,7 +13,7 @@ type Relativity* = enum
 type SinglePhaseEvalParameters = object
   # here the pawn in the first dim stand for passed pawns
   pieceRelativePst*: array[2, array[4, array[Relativity, array[pawn..king, array[a1..h8, array[knight..king, array[a1..h8, float32]]]]]]]
-  pawnRelativePst*: array[2, array[4, array[knight..king, array[a1..h8, array[Relativity, array[a1..h8, array[a1..h8, float32]]]]]]]
+  pawnRelativePst*: array[2, array[4, array[knight..king, array[a1..h8, array[3, array[a2..h7, array[a2..h7, float32]]]]]]]
   pawnStructureBonus*: array[b3..g6, array[3*3*3 * 3*3*3 * 3*3*3, float32]]
   pieceComboBonus*: array[3*3*3*3*3 * 3*3*3*3*3, float32]
 #!fmt: on

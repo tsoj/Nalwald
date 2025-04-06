@@ -102,15 +102,14 @@ func pieceRelativePstForOtherPiece(
         ][otherPiece][otherSquare],
       )
 
-      when params is Gradient: # TODO check this (params is not defined anywhere???)
-        var dummy: array[Phase, Value]
+      when evalState is Gradient:
+        # TODO check this (params is not defined anywhere???)´
         let
           flippedOurSquare = ourSquare.mirrorHorizontally
           flippedOtherSquare = otherSquare.mirrorHorizontally
           flippedKingFile = 3 - roughEnemyKingFile
-        dummy.addValue(
-          params,
-          us,
+        evalState.addValue(
+          goodFor = us,
           pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][
             flippedOurSquare
           ][otherPiece][flippedOtherSquare],
@@ -157,40 +156,6 @@ func pieceRelativePst(
       otherPiece = otherPiece,
     )
 
-# func pawnRelativePstWithInfo(
-#     evalState: EvalState,
-#     position: Position,
-#     ourPiece: static Piece,
-#     ourSquare: Square,
-#     us: static Color,
-#     otherPawns: array[Relativity, Bitboard],
-#     roughEnemyKingFile: int,
-#     roughEnemyKingRank: int,
-# ) =
-#   for relativity2 in relativeToUs .. relativeToEnemy:
-#     for otherSquare2 in otherPawns[relativity2]:
-#       let otherSquare2 = otherSquare2.colorConditionalMirrorVertically(us)
-
-#       evalState.addValue(
-#         goodFor = us,
-#         pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][ourSquare][relativity2][otherSquare2],
-#       )
-
-# when params is Gradient: # TODO check this (params is not defined anywhere???)
-#   var dummy: array[Phase, Value]
-#   let
-#     flippedOurSquare = ourSquare.mirrorHorizontally
-#     flippedOtherSquare1 = otherSquare1.mirrorHorizontally
-#     flippedOtherSquare2 = otherSquare2.mirrorHorizontally
-#     flippedKingFile = 3 - roughEnemyKingFile
-#   dummy.addValue(
-#     goodFor = us,
-#     pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][
-#       ourSquare
-#     ][relativity1][otherSquare1][relativity2][otherSquare2],
-#   )
-#
-
 func pawnRelativePstWithInfo(
     evalState: EvalState,
     position: Position,
@@ -202,32 +167,35 @@ func pawnRelativePstWithInfo(
     roughEnemyKingFile: int,
     roughEnemyKingRank: int,
 ) =
-  for relativity in relativeToUs .. relativeToEnemy:
-    for otherSquare1 in otherPieces[relativity] and position[pawn]:
+  for relativityMode, (relativity1, relativity2) in [
+    (relativeToUs, relativeToEnemy),
+    (relativeToUs, relativeToUs),
+    (relativeToEnemy, relativeToEnemy),
+  ].pairs:
+    for otherSquare1 in otherPieces[relativity1] and position[pawn]:
       let otherSquare1 = otherSquare1.colorConditionalMirrorVertically(us)
 
-      for otherSquare2 in otherPieces[relativity] and position[pawn]:
+      for otherSquare2 in otherPieces[relativity2] and position[pawn]:
         let otherSquare2 = otherSquare2.colorConditionalMirrorVertically(us)
         evalState.addValue(
           goodFor = us,
           pawnRelativePst[roughEnemyKingRank][roughEnemyKingFile][ourPiece][ourSquare][
-            relativity
+            relativityMode
           ][otherSquare1][otherSquare2],
         )
 
-      # when params is Gradient: # TODO check this (params is not defined anywhere???)
-      #   var dummy: array[Phase, Value]
-      #   let
-      #     flippedOurSquare = ourSquare.mirrorHorizontally
-      #     flippedOtherSquare = otherSquare.mirrorHorizontally
-      #     flippedKingFile = 3 - roughEnemyKingFile
-      #   dummy.addValue(
-      #     params,
-      #     us,
-      #     pieceRelativePst[roughEnemyKingRank][flippedKingFile][relativity][ourPiece][
-      #       flippedOurSquare
-      #     ][otherPiece][flippedOtherSquare],
-      #   )
+        when evalState is Gradient:
+          let
+            flippedOurSquare = ourSquare.mirrorHorizontally
+            flippedOtherSquare1 = otherSquare1.mirrorHorizontally
+            flippedOtherSquare2 = otherSquare2.mirrorHorizontally
+            flippedKingFile = 3 - roughEnemyKingFile
+          evalState.addValue(
+            goodFor = us,
+            pawnRelativePst[roughEnemyKingRank][flippedKingFile][ourPiece][
+              flippedOurSquare
+            ][relativityMode][flippedOtherSquare1][flippedOtherSquare2],
+          )
 
 func pawnRelativePst(
     evalState: EvalState,
@@ -245,18 +213,7 @@ func pawnRelativePst(
     roughEnemyKingFile = (enemyKingSquare.int mod 8) div 2
     roughEnemyKingRank = (enemyKingSquare.int div 8) div 4
 
-  # evalState.pawnRelativePstWithInfo(
-  #   position = position,
-  #   ourPiece = ourPiece,
-  #   ourSquare = ourSquare,
-  #   us = us,
-  #   otherPieces = otherPieces,
-  #   enemyKingSquare = enemyKingSquare,
-  #   roughEnemyKingFile = roughEnemyKingFile,
-  #   roughEnemyKingRank = roughEnemyKingRank,
-  # )
-
-  when evalState is Gradient: # TODO what happens when it's a gradient
+  when evalState is Gradient:
     evalState.pawnRelativePstWithInfo(
       position = position,
       ourPiece = ourPiece,
@@ -276,8 +233,6 @@ func pawnRelativePst(
         zobristPieceBitmasks[us][ourPiece][ourSquare]
       )
       let index = (key.uint64 mod pawnRelativityHash.len.uint64).int
-
-      #   # if pawnPatternHash[index].key != position.pawnKey:
 
       if pawnRelativityHash[index].key != key:
         pawnRelativityHash[index].value = default(array[Phase, float32])
@@ -350,7 +305,7 @@ func pawnMaskIndex*(position: Position, square: static Square): int =
 func evaluate3x3PawnStructureFromWhitesPerspective(
     evalState: EvalState, position: Position
 ) =
-  when params is Gradient:
+  when evalState is Gradient:
     let flippedPosition = position.mirrorVertically
 
   for square in (
@@ -361,7 +316,7 @@ func evaluate3x3PawnStructureFromWhitesPerspective(
       let index = position.pawnMaskIndex(square)
       evalState.addValue(goodFor = white, pawnStructureBonus[square][index])
 
-      when params is Gradient:
+      when evalState is Gradient:
         const flippedSquare = square.mirrorVertically
         let flippedIndex = flippedPosition.pawnMaskIndex(flippedSquare)
 
@@ -383,14 +338,14 @@ func pieceComboBonusWhitePerspective(evalState: EvalState, position: Position) =
     let index = position.pieceComboIndex
     evalState.addValue(goodFor = white, pieceComboBonus[index])
 
-    when params is Gradient:
+    when evalState is Gradient:
       let
         flippedPosition = position.mirrorVertically
         flippedIndex = flippedPosition.pieceComboIndex
-      var dummy: array[Phase, Value]
-      dummy.addValue(params, black, pieceComboBonus[flippedIndex])
+      evalState.addValue(goodFor = black, pieceComboBonus[flippedIndex])
 
 func absoluteEvaluate*(position: Position, evalState: EvalState) {.inline.} =
+  # TODO try to add more draw conditions (insufficient material), it might make training easier
   if position.halfmoveClock >= 100:
     return
 
@@ -428,7 +383,7 @@ func absoluteEvaluate*(position: Position, params: EvalParameters): Value {.inli
     forOpening = value[opening].Value, forEndgame = value[endgame].Value
   )
 
-  doAssert result.abs < valueCheckmate
+  # doAssert result.abs < valueCheckmate # TODO add this again, or add clamping
 
 func absoluteEvaluate*(position: Position): Value =
   position.absoluteEvaluate(defaultEvalParameters)
