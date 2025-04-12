@@ -47,6 +47,15 @@ writeFile "cutechess.json",
     "threads": {numThreads},
     "pgnout": "{outGamesFile}",
     "use_fastchess": {useFastchess}
-}}"""
+  }}"""
+
+writeFile "spsa.json",
+  fmt"""{{
+      "a": 1.0,
+      "c": 1.0,
+      "A": 10000,
+      "alpha": 0.601,
+      "gamma": 0.102
+  }}"""
 
 doAssert execCmd(fmt"python3 main.py") == 0
