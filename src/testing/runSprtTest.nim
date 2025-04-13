@@ -8,7 +8,7 @@ const
   engineTournamentBinary = "fastchess"
   nalwaldBinaryFile = "bin/Nalwald-native"
   sprtBook = "res/openings/Pohl.epd"
-  progressionBook = "res/openings/blitzTesting-4moves-openings.epd"
+  progressionBook = "res/openings/8moves_v3.epd"
   pgnOutDir = "res/pgns/"
   pgnOutFile = pgnOutDir & "sprtGames.pgn"
   maxNumGames = 100_000
