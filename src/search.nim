@@ -181,7 +181,7 @@ func search(
     staticEval = state.corrHist.getCorrEval(position, rawEval = rawEval)
 
   if alpha + 1 == beta and not inCheck and
-      staticEval - rfpMarginMultiplier().cp * depth.Value >= beta:
+      staticEval - rfpMarginMultiplier().cp * (depth - 1).Value >= beta:
     return staticEval
 
   # null move reduction
