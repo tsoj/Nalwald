@@ -7,7 +7,8 @@ const
   workDir = "src/testing/sprtWorkdir/"
   engineTournamentBinary = "fastchess"
   nalwaldBinaryFile = "bin/Nalwald-native"
-  openingBook = "res/openings/Pohl.epd"
+  sprtBook = "res/openings/Pohl.epd"
+  progressionBook = "res/openings/blitzTesting-4moves-openings.epd"
   pgnOutDir = "res/pgns/"
   pgnOutFile = pgnOutDir & "sprtGames.pgn"
   maxNumGames = 100_000
@@ -36,6 +37,7 @@ let
   timeControlSeconds = if "--ltc" in commandLineParams(): ltcTimeControlSeconds else: stcTimeControlSeconds
   hashSizeMB = (stcHashSizeMB.float * timeControlSeconds / stcTimeControlSeconds).int
   useSPRT = "--progression" notin commandLineParams()
+  openingBook = if useSPRT: sprtBook else: progressionBook
   useRegressionBounds = "--regression" in commandLineParams()
   bounds = if useRegressionBounds: regressionBounds else: improveBounds
 
