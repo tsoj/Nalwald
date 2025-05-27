@@ -11,3 +11,6 @@ bin           = @["Nalwald"]
 # Dependencies
 
 requires "nim >= 2.2.4"
+
+task test, "Runs the project's tests":
+  exec "nim c -r tests/test.nim"
