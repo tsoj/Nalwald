@@ -12,5 +12,20 @@ bin           = @["Nalwald"]
 
 requires "nim >= 2.2.4"
 
-task test, "Runs the project's tests":
-  exec "nim c -r tests/test.nim"
+# task test, "Runs the project's tests":
+#   echo "hi"
+#   exec "nim r tests/test.nim"
+#   echo "hi2"
+
+
+task test1, "Runs the project's tests":
+  echo "hi"
+  exec "nim r tests/test.nim"
+  echo "hi2"
+
+
+task test2, "Runs the project's tests":
+  # echo "hi"
+  # exec "nim r tests/test.nim"
+  # echo "hi2"
+  setCommand "c", "tests/test.nim"
