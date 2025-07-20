@@ -27,15 +27,15 @@ func getAsInt[T](a: T): int =
     a.int
 
 macro addParam[T](
-    name: untyped, default, min, max, step: T, tunable: bool = true
+    name: untyped, default, min, max, step: T, tunable: static bool = true
 ): untyped =
   let
     varName: NimNode = getVarName(name)
     varString: NimNode = getVarString(name)
-  quote:
-    var `varName`: int = `default`.getAsInt
+  if tunable and tunableSearchParams:
+    result = quote:
+      var `varName`: int = `default`.getAsInt
 
-    if `tunable` and tunableSearchParams:
       paramTable[`varString`] = ParamEntry(
         address: addr `varName`,
         min: `min`.getAsInt,
@@ -43,13 +43,25 @@ macro addParam[T](
         step: `step`.getAsInt,
       )
 
-    func `name`*(): auto =
-      type R = typeof(`default`)
-      {.cast(noSideEffect).}:
-        when distinctBase(R) is SomeFloat:
-          R(R(`varName`).float / floatQuantizer)
-        else:
-          R(`varName`)
+      func `name`*(): auto =
+        type R = typeof(`default`)
+        {.cast(noSideEffect).}:
+          when distinctBase(R) is SomeFloat:
+            R(R(`varName`).float / floatQuantizer)
+          else:
+            R(`varName`)
+  else:
+    result = quote:
+      func `name`*(): auto =
+        type R = typeof(`default`)
+        const value = block:
+          let `varName`: int = `default`.getAsInt
+          when distinctBase(R) is SomeFloat:
+            R(R(`varName`).float / floatQuantizer)
+          else:
+            R(`varName`)
+        value
+
 
 proc hasSearchOption*(name: string): bool =
   name in paramTable
