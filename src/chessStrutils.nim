@@ -51,7 +51,7 @@ func fen*(position: Position): string =
   else:
     result &= "-"
 
-  result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2)
+  result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2 + 1)
 
 func `$`*(position: Position): string =
   result =
@@ -238,7 +238,9 @@ proc toPosition*(fen: string, suppressWarnings = false): Position =
     )
 
   try:
-    result.halfmovesPlayed = fullmoveNumber.parseInt.int16 * 2
+    result.halfmovesPlayed = (fullmoveNumber.parseInt - 1) * 2
+    if result.us == black:
+      result.halfmovesPlayed += 1
   except ValueError:
     raise newException(
       ValueError,

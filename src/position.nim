@@ -134,7 +134,7 @@ func calculateZobristKeys*(
 
     for side in queenside .. kingside:
       let rookSource = position.rookSource[color][side]
-      result.zobristKey ^= rookSource.Key
+      result.zobristKey ^= rookSourceBitmasks[rookSource]
 
 func zobristKeysAreOk*(position: Position): bool =
   (position.zobristKey, position.pawnKey) == position.calculateZobristKeys
@@ -184,6 +184,7 @@ func mirrorVertically*(
   when swapColors:
     swap result.rookSource[white], result.rookSource[black]
     swap result.colors[white], result.colors[black]
+    result.halfmovesPlayed += (if result.us == black: -1 else: +1)
     result.us = result.enemy
 
   when not skipKeyCalculation:

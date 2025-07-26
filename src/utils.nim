@@ -1,6 +1,6 @@
 import types
 
-import std/[options, strutils, times, os, math, macros]
+import std/[options, strutils, times, os, osproc, math, macros]
 
 const megaByteToByte* = 1_048_576
 
@@ -120,3 +120,12 @@ macro lazyEval*(assignmentStmt: untyped): untyped =
       if `storageIdent`.isNone:
         `storageIdent` = some `initExpr`
       `storageIdent`.get()
+
+proc getCpuInfo*(): string =
+  when defined(posix):
+    var cpuName = execCmdEx(
+      """
+        cat /proc/cpuinfo | awk -F '\\s*: | @' '/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ { cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' "$cpu_file"
+        """
+    ).output
+    return cpuName.strip

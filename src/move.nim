@@ -262,20 +262,20 @@ func doMove*(position: Position, move: Move): Position =
   result.zobristKey ^= result.enPassantTarget.Key
 
   if moved == king:
-    result.zobristKey ^= result.rookSource[us][queenside].Key
-    result.zobristKey ^= result.rookSource[us][kingside].Key
+    result.zobristKey ^= rookSourceBitmasks[result.rookSource[us][queenside]]
+    result.zobristKey ^= rookSourceBitmasks[result.rookSource[us][kingside]]
     result.rookSource[us] = [noSquare, noSquare]
     # We should xor by noSquare twice, but that's basically a no-op
 
   for side in queenside .. kingside:
     if result.rookSource[us][side] == source:
-      result.zobristKey ^= result.rookSource[us][side].Key
+      result.zobristKey ^= rookSourceBitmasks[result.rookSource[us][side]]
       result.rookSource[us][side] = noSquare
-      result.zobristKey ^= noSquare.Key
+      result.zobristKey ^= rookSourceBitmasks[noSquare]
     if result.rookSource[enemy][side] == target:
-      result.zobristKey ^= result.rookSource[enemy][side].Key
+      result.zobristKey ^= rookSourceBitmasks[result.rookSource[enemy][side]]
       result.rookSource[enemy][side] = noSquare
-      result.zobristKey ^= noSquare.Key
+      result.zobristKey ^= rookSourceBitmasks[noSquare]
 
   # en passant
   if move.isEnPassantCapture:
@@ -319,6 +319,13 @@ func doMove*(position: Position, move: Move): Position =
 
   result.zobristKey ^= zobristSideToMoveBitmasks[white]
   result.zobristKey ^= zobristSideToMoveBitmasks[black]
+
+
+  # debugEcho "########################"
+  # debugEcho position
+  # debugEcho "--------------"
+  # debugEcho result
+  # debugEcho move
 
   assert result.zobristKeysAreOk
 
