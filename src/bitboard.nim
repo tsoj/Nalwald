@@ -220,11 +220,6 @@ func homeRank*(color: Color): Bitboard =
   of white: ranks(a1)
   of black: ranks(a8)
 
-func pawnHomeRank*(color: Color): Bitboard =
-  case color:
-  of white: ranks(a2)
-  of black: ranks(a7)
-
 func attackMaskPawnQuiet*(square: Square, color: Color): Bitboard =
   attackTablePawnQuiet(color, square)
 

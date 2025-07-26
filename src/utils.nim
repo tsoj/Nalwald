@@ -41,12 +41,12 @@ func `$`*(coloredPiece: ColoredPiece): string =
       pawn: "♙", knight: "♘", bishop: "♗", rook: "♖", queen: "♕", king: "♔"
     ],
   ]
-  if coloredPiece.piece == noPiece or coloredPiece.color == noColor:
+  if coloredPiece.piece == noPiece:
     return " "
   return t[coloredPiece.color][coloredPiece.piece]
 
 func toColoredPiece*(s: char): ColoredPiece =
-  var piece: Piece
+  var piece: pawn..king
   case s
   of 'P', 'p':
     piece = pawn
