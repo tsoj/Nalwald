@@ -153,3 +153,49 @@ func isChess960*(position: Position): bool =
           [noSquare, classicalRookSource[color][side]]:
         return true
   false
+
+
+func mirror(
+    position: Position,
+    mirrorFn: proc(bitboard: Bitboard): Bitboard {.noSideEffect.},
+): Position =
+  result = position
+
+  for bitboard in result.pieces.mitems:
+    bitboard = bitboard.mirrorFn
+  for bitboard in result.colors.mitems:
+    bitboard = bitboard.mirrorFn
+
+  result.enPassantTarget = result.enPassantTarget.toBitboard.mirrorFn.toSquare
+
+  for color in white .. black:
+    for castlingSide in queenside .. kingside:
+      if result.rookSource[color][castlingSide] != noSquare:
+        result.rookSource[color][castlingSide] =
+          result.rookSource[color][castlingSide].toBitboard.mirrorFn.toSquare
+
+func mirrorVertically*(
+    position: Position,
+    swapColors: static bool = true,
+    skipKeyCalculation: static bool = false,
+): Position =
+  result = position.mirror(mirrorVertically)
+
+  when swapColors:
+    swap result.rookSource[white], result.rookSource[black]
+    swap result.colors[white], result.colors[black]
+    result.us = result.enemy
+
+  when not skipKeyCalculation:
+    result.setZobristKeys
+
+func mirrorHorizontally*(
+    position: Position, skipKeyCalculation: static bool = false
+): Position =
+  result = position.mirror(mirrorHorizontally)
+
+  for color in white .. black:
+    swap result.rookSource[color][kingside], result.rookSource[color][queenside]
+
+  when not skipKeyCalculation:
+    result.setZobristKeys
