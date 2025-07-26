@@ -159,26 +159,26 @@ const
   kingAttackTable = kingKnightAttackTable(0x8380000000000383u64.Bitboard)
 
 func attackTablePawnQuiet*(color: Color, square: Square): Bitboard =
-  const attackTablePawnQuietTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+  const table: array[white .. black, array[a1 .. h8, Bitboard]] = block:
     var attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]]
     for square in a2 .. h7:
       attackTablePawnQuiet[white][square] = square.toBitboard shl 8
       attackTablePawnQuiet[black][square] = square.toBitboard shr 8
     attackTablePawnQuiet
-  attackTablePawnQuietTable[color][square]
+  table[color][square]
 
 func attackTablePawnCapture*(color: Color, square: Square): Bitboard =
-  const attackTablePawnCaptureTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+  const table: array[white .. black, array[a1 .. h8, Bitboard]] = block:
     var attackTablePawnCapture: array[white .. black, array[a1 .. h8, Bitboard]]
     for (color, range) in [(white, a1 .. h7), (black, a2 .. h8)]:
       for square in range:
         let attacks = diagonals[square] or antiDiagonals[square]
         attackTablePawnCapture[color][square] = attacks and ranks(square.up(color))
     attackTablePawnCapture
-  attackTablePawnCaptureTable[color][square]
+  table[color][square]
 
 func isPassedMask*(color: Color, square: Square): Bitboard =
-  const isPassedMaskTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+  const table: array[white .. black, array[a1 .. h8, Bitboard]] = block:
     var isPassedMask: array[white .. black, array[a1 .. h8, Bitboard]]
     for square in a1 .. h8:
       isPassedMask[white][square] = files(square)
@@ -196,33 +196,34 @@ func isPassedMask*(color: Color, square: Square): Bitboard =
           isPassedMask[black][square] =
             isPassedMask[black][square] and not ranks((j * 8).Square)
     isPassedMask
-  isPassedMaskTable[color][square]
+  table[color][square]
 
 func mask3x3*(square: Square): Bitboard =
-  const mask3x3Table: array[a1 .. h8, Bitboard] = block:
+  const table: array[a1 .. h8, Bitboard] = block:
     var mask3x3: array[a1 .. h8, Bitboard]
     for square in a1 .. h8:
       mask3x3[square] = kingAttackTable[square] or square.toBitboard
     mask3x3
-  mask3x3Table[square]
+  table[square]
 
 func mask5x5*(square: Square): Bitboard =
-  const mask5x5Table: array[a1 .. h8, Bitboard] = block:
+  const table: array[a1 .. h8, Bitboard] = block:
     var mask5x5: array[a1 .. h8, Bitboard]
     for square in a1 .. h8:
       for a in mask3x3(square):
         mask5x5[square] = mask5x5[square] or mask3x3(a)
     mask5x5
-  mask5x5Table[square]
+  table[square]
 
 func homeRank*(color: Color): Bitboard =
-  const homeRankTable: array[white .. black, Bitboard] = [white: ranks(a1), black: ranks(a8)]
-  homeRankTable[color]
+  case color:
+  of white: ranks(a1)
+  of black: ranks(a8)
 
 func pawnHomeRank*(color: Color): Bitboard =
-  const pawnHomeRankTable: array[white .. black, Bitboard] =
-    [white: ranks(a2), black: ranks(a7)]
-  pawnHomeRankTable[color]
+  case color:
+  of white: ranks(a2)
+  of black: ranks(a7)
 
 func attackMaskPawnQuiet*(square: Square, color: Color): Bitboard =
   attackTablePawnQuiet(color, square)

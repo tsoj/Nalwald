@@ -1,4 +1,4 @@
-# from system import int8, int32, high
+# fr  om system import int8, int32, high
 import std/math
 #!fmt: off
 type Square* = enum
@@ -17,7 +17,6 @@ type
   Color* = enum
     white
     black
-    noColor
 
   Piece* = enum
     pawn
@@ -29,8 +28,11 @@ type
     noPiece
 
   ColoredPiece* = object
-    piece*: Piece
-    color*: Color
+    case piece*: Piece
+    of noPiece:
+      discard
+    else:
+      color*: Color
 
   Height* = 0.uint8 .. uint8.high
   Depth* = Height.low.float32 .. Height.high.float32
