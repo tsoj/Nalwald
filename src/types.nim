@@ -63,6 +63,21 @@ func right*(square: Square): Square =
 func up*(square: Square, color: Color): Square =
   if color == white: square.up else: square.down
 
+func isLeftEdge*(square: Square): bool =
+  square.int8 mod 8 == 0
+
+func isRightEdge*(square: Square): bool =
+  square.int8 mod 8 == 7
+
+func isUpperEdge*(square: Square): bool =
+  square >= a8
+
+func isLowerEdge*(square: Square): bool =
+  square <= h1
+
+func isEdge*(square: Square): bool =
+  square.isLeftEdge or square.isRightEdge or square.isUpperEdge or square.isLowerEdge
+
 func opposite*(color: Color): Color =
   (color.uint8 xor 1).Color
 

@@ -53,19 +53,23 @@ func `$`*(b: Bitboard): string =
   )
 
 
-const ranks*: array[a1 .. h8, Bitboard] = block:
-  var ranks: array[a1 .. h8, Bitboard]
-  for square in a1 .. h8:
-    ranks[square] = 0b11111111u64.Bitboard shl ((square.int8 div 8) * 8)
-  ranks
+func ranks*(square: Square): Bitboard =
+  const ranksTable: array[a1 .. h8, Bitboard] = block:
+    var ranks: array[a1 .. h8, Bitboard]
+    for square in a1 .. h8:
+      ranks[square] = 0b11111111u64.Bitboard shl ((square.int8 div 8) * 8)
+    ranks
+  ranksTable[square]
 
-const files*: array[a1 .. h8, Bitboard] = block:
-  var files: array[a1 .. h8, Bitboard]
-  for square in a1 .. h8:
-    files[square] =
-      0b0000000100000001000000010000000100000001000000010000000100000001u64.Bitboard shl
-      (square.int8 mod 8)
-  files
+func files*(square: Square): Bitboard =
+  const filesTable: array[a1 .. h8, Bitboard] = block:
+    var files: array[a1 .. h8, Bitboard]
+    for square in a1 .. h8:
+      files[square] =
+        0b0000000100000001000000010000000100000001000000010000000100000001u64.Bitboard shl
+        (square.int8 mod 8)
+    files
+  filesTable[square]
 
 
 func mirrorVertically*(bitboard: Bitboard): Bitboard =
@@ -76,8 +80,8 @@ func mirrorHorizontally*(bitboard: Bitboard): Bitboard =
   result = 0.Bitboard
   for i in 0 .. 3:
     let
-      f1 = files[i.Square]
-      f2 = files[(7 - i).Square]
+      f1 = files(i.Square)
+      f2 = files((7 - i).Square)
       shiftAmount = 7 - 2 * i
     result = result or ((bitboard and f1) shl shiftAmount)
     result = result or ((bitboard and f2) shr shiftAmount)
@@ -118,11 +122,11 @@ const
 func hashkeyRank(square: Square, occupancy: Bitboard): uint8 =
   (((occupancy shr ((square.int8 div 8) * 8)) shr 1) and 0b111111.Bitboard).uint8
 func hashkeyFile(square: Square, occupancy: Bitboard): uint8 =
-  ((((((occupancy shr (square.int8 mod 8)) and files[a1]).uint64 * mainDiagonal.uint64) shr 56) shr 1) and 0b111111).uint8
+  ((((((occupancy shr (square.int8 mod 8)) and files(a1)).uint64 * mainDiagonal.uint64) shr 56) shr 1) and 0b111111).uint8
 func hashkeyDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (((((occupancy and diagonals[square]).uint64 * files[a1].uint64) shr 56) shr 1) and 0b111111).uint8
+  (((((occupancy and diagonals[square]).uint64 * files(a1).uint64) shr 56) shr 1) and 0b111111).uint8
 func hashkeyAntiDiagonal(square: Square, occupancy: Bitboard): uint8 =
-  (((((occupancy and antiDiagonals[square]).uint64 * files[a1].uint64) shr 56) shr 1) and 0b111111).uint8
+  (((((occupancy and antiDiagonals[square]).uint64 * files(a1).uint64) shr 56) shr 1) and 0b111111).uint8
 #!fmt: on
 
 
@@ -154,63 +158,77 @@ const
   knightAttackTable = kingKnightAttackTable(0x442800000028440u64.Bitboard)
   kingAttackTable = kingKnightAttackTable(0x8380000000000383u64.Bitboard)
 
-const attackTablePawnQuiet*: array[white .. black, array[a1 .. h8, Bitboard]] = block:
-  var attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]]
-  for square in a2 .. h7:
-    attackTablePawnQuiet[white][square] = square.toBitboard shl 8
-    attackTablePawnQuiet[black][square] = square.toBitboard shr 8
-  attackTablePawnQuiet
+func attackTablePawnQuiet*(color: Color, square: Square): Bitboard =
+  const attackTablePawnQuietTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+    var attackTablePawnQuiet: array[white .. black, array[a1 .. h8, Bitboard]]
+    for square in a2 .. h7:
+      attackTablePawnQuiet[white][square] = square.toBitboard shl 8
+      attackTablePawnQuiet[black][square] = square.toBitboard shr 8
+    attackTablePawnQuiet
+  attackTablePawnQuietTable[color][square]
 
-const attackTablePawnCapture*: array[white .. black, array[a1 .. h8, Bitboard]] = block:
-  var attackTablePawnCapture: array[white .. black, array[a1 .. h8, Bitboard]]
-  for (color, range) in [(white, a1 .. h7), (black, a2 .. h8)]:
-    for square in range:
-      let attacks = diagonals[square] or antiDiagonals[square]
-      attackTablePawnCapture[color][square] = attacks and ranks[square.up(color)]
-  attackTablePawnCapture
+func attackTablePawnCapture*(color: Color, square: Square): Bitboard =
+  const attackTablePawnCaptureTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+    var attackTablePawnCapture: array[white .. black, array[a1 .. h8, Bitboard]]
+    for (color, range) in [(white, a1 .. h7), (black, a2 .. h8)]:
+      for square in range:
+        let attacks = diagonals[square] or antiDiagonals[square]
+        attackTablePawnCapture[color][square] = attacks and ranks(square.up(color))
+    attackTablePawnCapture
+  attackTablePawnCaptureTable[color][square]
 
-const isPassedMask*: array[white .. black, array[a1 .. h8, Bitboard]] = block:
-  var isPassedMask: array[white .. black, array[a1 .. h8, Bitboard]]
-  for square in a1 .. h8:
-    isPassedMask[white][square] = files[square]
-    if not square.isLeftEdge:
-      isPassedMask[white][square] = isPassedMask[white][square] or files[square.left]
-    if not square.isRightEdge:
-      isPassedMask[white][square] = isPassedMask[white][square] or files[square.right]
-    isPassedMask[black][square] = isPassedMask[white][square]
+func isPassedMask*(color: Color, square: Square): Bitboard =
+  const isPassedMaskTable: array[white .. black, array[a1 .. h8, Bitboard]] = block:
+    var isPassedMask: array[white .. black, array[a1 .. h8, Bitboard]]
+    for square in a1 .. h8:
+      isPassedMask[white][square] = files(square)
+      if not square.isLeftEdge:
+        isPassedMask[white][square] = isPassedMask[white][square] or files(square.left)
+      if not square.isRightEdge:
+        isPassedMask[white][square] = isPassedMask[white][square] or files(square.right)
+      isPassedMask[black][square] = isPassedMask[white][square]
 
-    for j in 0 .. 7:
-      if j <= (square.int8 div 8):
-        isPassedMask[white][square] =
-          isPassedMask[white][square] and not ranks[(j * 8).Square]
-      if j >= (square.int8 div 8):
-        isPassedMask[black][square] =
-          isPassedMask[black][square] and not ranks[(j * 8).Square]
-  isPassedMask
+      for j in 0 .. 7:
+        if j <= (square.int8 div 8):
+          isPassedMask[white][square] =
+            isPassedMask[white][square] and not ranks((j * 8).Square)
+        if j >= (square.int8 div 8):
+          isPassedMask[black][square] =
+            isPassedMask[black][square] and not ranks((j * 8).Square)
+    isPassedMask
+  isPassedMaskTable[color][square]
 
-const mask3x3*: array[a1 .. h8, Bitboard] = block:
-  var mask3x3: array[a1 .. h8, Bitboard]
-  for square in a1 .. h8:
-    mask3x3[square] = kingAttackTable[square] or square.toBitboard
-  mask3x3
+func mask3x3*(square: Square): Bitboard =
+  const mask3x3Table: array[a1 .. h8, Bitboard] = block:
+    var mask3x3: array[a1 .. h8, Bitboard]
+    for square in a1 .. h8:
+      mask3x3[square] = kingAttackTable[square] or square.toBitboard
+    mask3x3
+  mask3x3Table[square]
 
-const mask5x5*: array[a1 .. h8, Bitboard] = block:
-  var mask5x5: array[a1 .. h8, Bitboard]
-  for square in a1 .. h8:
-    for a in mask3x3[square]:
-      mask5x5[square] = mask5x5[square] or mask3x3[a]
-  mask5x5
+func mask5x5*(square: Square): Bitboard =
+  const mask5x5Table: array[a1 .. h8, Bitboard] = block:
+    var mask5x5: array[a1 .. h8, Bitboard]
+    for square in a1 .. h8:
+      for a in mask3x3(square):
+        mask5x5[square] = mask5x5[square] or mask3x3(a)
+    mask5x5
+  mask5x5Table[square]
 
-const homeRank*: array[white .. black, Bitboard] = [white: ranks[a1], black: ranks[a8]]
+func homeRank*(color: Color): Bitboard =
+  const homeRankTable: array[white .. black, Bitboard] = [white: ranks(a1), black: ranks(a8)]
+  homeRankTable[color]
 
-const pawnHomeRank*: array[white .. black, Bitboard] =
-  [white: ranks[a2], black: ranks[a7]]
+func pawnHomeRank*(color: Color): Bitboard =
+  const pawnHomeRankTable: array[white .. black, Bitboard] =
+    [white: ranks(a2), black: ranks(a7)]
+  pawnHomeRankTable[color]
 
 func attackMaskPawnQuiet*(square: Square, color: Color): Bitboard =
-  attackTablePawnQuiet[color][square]
+  attackTablePawnQuiet(color, square)
 
 func attackMaskPawnCapture*(square: Square, color: Color): Bitboard =
-  attackTablePawnCapture[color][square]
+  attackTablePawnCapture(color, square)
 
 func attackMaskKnight*(square: Square, occupancy: Bitboard): Bitboard =
   knightAttackTable[square]
