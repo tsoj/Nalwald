@@ -40,6 +40,7 @@ func `[]`*(position: Position, piece: Piece, color: Color): Bitboard =
 func `[]`*(position: Position, color: Color, piece: Piece): Bitboard =
   position[color] and position[piece]
 
+
 func addPiece*(
     position: var Position, color: Color, piece: Piece, target: Square
 ) =
@@ -47,12 +48,20 @@ func addPiece*(
   position[piece] |= bit
   position[color] |= bit
 
+  position.zobristKey ^= zobristPieceBitmasks[color][piece][target]
+  if piece == pawn:
+    position.pawnKey ^= zobristPieceBitmasks[color][piece][target]
+
 func removePiece*(
     position: var Position, color: Color, piece: Piece, source: Square
 ) =
   let bit = not source.toBitboard
   position[piece] &= bit
   position[color] &= bit
+
+  position.zobristKey ^= zobristPieceBitmasks[color][piece][source]
+  if piece == pawn:
+    position.pawnKey ^= zobristPieceBitmasks[color][piece][source]
 
 func movePiece*(
     position: var Position, color: Color, piece: Piece, source, target: Square
@@ -98,17 +107,31 @@ func coloredPieceAt*(position: Position, square: Square): ColoredPiece =
     let piece: pawn..king = piece
     ColoredPiece(piece: piece, color: if position[white].isSet(square): white else: black)
 
-func calculateZobristKey*(position: Position): Key =
-  result =
-    position.enPassantTarget.Key xor zobristSideToMoveBitmasks[position.us]
+
+func calculateZobristKeys*(
+    position: Position
+): tuple[zobristKey: Key, pawnKey: Key] =
+  result = (
+    zobristKey:
+      position.enPassantTarget.Key xor zobristSideToMoveBitmasks[position.us],
+    pawnKey: 0.Key,
+  )
   for color in white .. black:
     for piece in pawn .. king:
       for square in position[piece, color]:
-        result ^= zobristPieceBitmasks[color][piece][square]
+        result.zobristKey ^= zobristPieceBitmasks[color][piece][square]
+        if piece == pawn:
+          result.pawnKey ^= zobristPieceBitmasks[color][piece][square]
 
     for side in queenside .. kingside:
       let rookSource = position.rookSource[color][side]
-      result ^= rookSource.Key
+      result.zobristKey ^= rookSource.Key
+
+func zobristKeysAreOk*(position: Position): bool =
+  (position.zobristKey, position.pawnKey) == position.calculateZobristKeys
+
+func setZobristKeys*(position: var Position) =
+  (position.zobristKey, position.pawnKey) = position.calculateZobristKeys
 
 
 func isChess960*(position: Position): bool =
