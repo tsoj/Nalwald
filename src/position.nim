@@ -107,6 +107,15 @@ func coloredPieceAt*(position: Position, square: Square): ColoredPiece =
     let piece: pawn..king = piece
     ColoredPiece(piece: piece, color: if position[white].isSet(square): white else: black)
 
+func addColoredPiece*(
+    position: var Position, coloredPiece: ColoredPiece, square: Square
+) =
+  for color in position.colors.mitems:
+    color &= not square.toBitboard
+  for piece in position.pieces.mitems:
+    piece &= not square.toBitboard
+
+  position.addPiece(coloredPiece.color, coloredPiece.piece, square)
 
 func calculateZobristKeys*(
     position: Position
