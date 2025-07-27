@@ -1,6 +1,6 @@
 import types, position, move, movegen, utils, bitboard, castling
 
-import std/[strutils, options, strformat, streams]
+import std/[strutils, options, strformat]
 
 export move, position, utils
 
@@ -54,7 +54,7 @@ func fen*(position: Position, alwaysShowEnPassantSquare: bool = false ): string 
     enPassantStr = $position.enPassantTarget
   result &= enPassantStr
 
-  result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2 + 1)
+  result &= " " & $position.halfmoveClock & " " & $position.currentFullmoveNumber
 
 func `$`*(position: Position): string =
   result =

@@ -154,6 +154,8 @@ func isChess960*(position: Position): bool =
         return true
   false
 
+func currentFullmoveNumber*(position: Position): int =
+  position.halfmovesPlayed div 2 + 1
 
 func mirror(
     position: Position,

@@ -2,7 +2,6 @@ import unittest
 import ../src/position
 import ../src/chessStrutils
 import ../src/perft
-import ../src/types
 import ../src/utils
 import testData/exampleFens
 

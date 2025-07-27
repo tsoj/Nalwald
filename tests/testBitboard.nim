@@ -1,7 +1,6 @@
 import unittest
 import ../src/bitboard
 import ../src/types
-import std/[sequtils, sets, strutils]
 
 suite "Bitboard Tests":
 

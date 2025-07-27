@@ -1,5 +1,4 @@
 import types, bitboard, utils, position, zobristBitmasks
-import std/[strutils]
 export types
 
 type

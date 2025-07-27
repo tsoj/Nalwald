@@ -1,9 +1,12 @@
 import chessStrutils, movegen, position
 
-import std/[strutils, options, strformat, streams, tables, sequtils, os]
+import std/[strutils, options, strformat, streams, tables, sequtils]
 
 
 func toSAN*(move: Move, position: Position): string =
+  if move == noMove:
+    return "Z0"
+
   result = ""
 
   let
@@ -330,3 +333,51 @@ proc parseGamesFromString*(content: string, suppressWarnings = false): seq[PgnGa
 proc parseGamesFromFile*(filename: string, suppressWarnings = false): seq[PgnGame] =
   let content = readFile(filename)
   return parseGamesFromString(content, suppressWarnings = suppressWarnings)
+
+func toPgnString*(game: PgnGame): string =
+  result = ""
+
+  # Add headers
+  for key, value in game.headers:
+    result &= &"[{key} \"{value}\"]\n"
+
+  # Add empty line after headers
+  if game.headers.len > 0:
+    result &= "\n"
+
+  # Add moves
+  var position = game.startPosition
+
+  if position.us == black:
+    result &= fmt"{position.currentFullmoveNumber}... "
+
+
+  for i, move in game.moves:
+    # Add move number for white moves
+    if position.us == white:
+      result &= fmt"{position.currentFullmoveNumber}. "
+
+    # Add the move in SAN notation
+    result &= move.toSAN(position)
+
+    # Add space after move (except for last move)
+    if i < game.moves.len - 1:
+      result &= " "
+
+    # Add line break every few moves for readability
+    if i mod 16 == 15:  # Line break every 8 move pairs
+      result &= "\n"
+
+    position = position.doMove(move, allowNullMove = true)
+
+  # Add result
+  if game.result != "":
+    if game.moves.len > 0:
+      result &= " "
+    result &= game.result
+
+  result &= "\n"
+
+func toPgnString*(games: seq[PgnGame]): string =
+  for game in games:
+    result &= game.toPgnString & "\n\n"

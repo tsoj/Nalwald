@@ -1,5 +1,5 @@
-import ../src/[pgn, chessStrutils, position]
-import std/[unittest, tables, streams, strutils, strformat, os]
+import ../src/[pgn, chessStrutils]
+import std/[unittest, tables, streams, strutils]
 
 suite "PGN Parser Tests":
 
@@ -408,30 +408,32 @@ e5 2. Nf3 { Multi-line
 
   test "PGN position validation against ground truth FENs":
     # Load the test PGN file and expected FEN positions
-    let games = parseGamesFromFile("tests/testData/testPgns.pgn")
+    let games1 = parseGamesFromFile("tests/testData/testPgns.pgn")
+    let games2 = games1.toPgnString.parseGamesFromString
     let expectedFens = readFile("tests/testData/testPgns.epd").strip().splitLines()
 
     var fenIndex = 0
 
-    for game in games:
-      var currentPosition = game.startPosition
+    for games in [games1, games2]:
+      for game in games:
+        var currentPosition = game.startPosition
 
-      # Check starting position FEN
-      if fenIndex < expectedFens.len:
-        check currentPosition.fen == expectedFens[fenIndex].toPosition.fen
-        fenIndex += 1
-
-      # Check FEN after each move
-      for moveIndex, move in game.moves:
-        currentPosition = currentPosition.doMove(move, allowNullMove = true)
-
+        # Check starting position FEN
         if fenIndex < expectedFens.len:
           check currentPosition.fen == expectedFens[fenIndex].toPosition.fen
           fenIndex += 1
-        else:
-          # Stop if we've run out of expected FENs
-          break
 
-      # Stop processing games if we've exhausted all expected FENs
-      if fenIndex >= expectedFens.len:
-        break
+        # Check FEN after each move
+        for moveIndex, move in game.moves:
+          currentPosition = currentPosition.doMove(move, allowNullMove = true)
+
+          if fenIndex < expectedFens.len:
+            check currentPosition.fen == expectedFens[fenIndex].toPosition.fen
+            fenIndex += 1
+          else:
+            # Stop if we've run out of expected FENs
+            break
+
+        # Stop processing games if we've exhausted all expected FENs
+        if fenIndex >= expectedFens.len:
+          break

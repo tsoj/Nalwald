@@ -3,7 +3,7 @@ import ../src/position
 import ../src/chessStrutils
 import ../src/types
 import testData/exampleFens
-import std/[strutils, strformat]
+import std/[strutils]
 
 suite "FEN Parsing Tests":
 
