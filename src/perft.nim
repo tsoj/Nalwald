@@ -11,7 +11,7 @@ func perft*(position: Position, depth: int, printRootMoveNodes: static bool = fa
       moves[i]
 
     let newPosition = position.doMove(move)
-    if not newPosition.checkCheck(position.us):
+    if not newPosition.inCheck(position.us):
       let nodes = newPosition.perft(depth - 1)
       when printRootMoveNodes and not defined smallBuild:
         debugEcho "    ", move, " ", nodes, " ", newPosition.fen

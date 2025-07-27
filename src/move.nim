@@ -240,7 +240,28 @@ func isPseudoLegal*(position: Position, move: Move): bool =
   assert source != noSquare and target != noSquare and moved != noPiece
   true
 
-func doMove*(position: Position, move: Move): Position =
+func doNullMove*(position: Position): Position =
+  result = position
+
+  result.zobristKey ^= result.enPassantTarget.Key
+  result.enPassantTarget = noSquare
+  result.zobristKey ^= result.enPassantTarget.Key
+
+  result.zobristKey ^= zobristSideToMoveBitmasks[white]
+  result.zobristKey ^= zobristSideToMoveBitmasks[black]
+
+  result.halfmovesPlayed += 1
+  result.halfmoveClock += 1
+
+  result.us = result.enemy
+
+  assert result.zobristKeysAreOk
+
+func doMove*(position: Position, move: Move, allowNullMove: static bool = false): Position =
+  when allowNullMove:
+    if move == noMove:
+      return position.doNullMove()
+
   result = position
   assert result.zobristKeysAreOk
   assert result.isPseudoLegal(move), $position & ", " & $move
@@ -333,4 +354,4 @@ func isLegal*(position: Position, move: Move): bool =
   if not position.isPseudoLegal(move):
     return false
   let newPosition = position.doMove(move)
-  return not newPosition.checkCheck(position.us)
+  return not newPosition.inCheck(position.us)

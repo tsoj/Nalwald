@@ -2,7 +2,7 @@ import unittest
 import ../src/position
 import ../src/chessStrutils
 import ../src/types
-import exampleFens
+import testData/exampleFens
 
 
 suite "Position Transform Tests":
@@ -56,7 +56,7 @@ suite "Position Transform Tests":
 
       # Test vertical mirror
       let vertMirrored = position.mirrorVertically
-      let vertMirroredFen = vertMirrored.fen
+      let vertMirroredFen = vertMirrored.fen(alwaysShowEnPassantSquare = true)
 
       # echo vertMirroredFen.toPosition.debugString
       # echo vertMirrored.debugString

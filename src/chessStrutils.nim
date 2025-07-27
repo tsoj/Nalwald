@@ -1,11 +1,10 @@
 import types, position, move, movegen, utils, bitboard, castling
 
-export move, position
-
 import std/[strutils, options, strformat, streams]
 
+export move, position, utils
 
-func fen*(position: Position): string =
+func fen*(position: Position, alwaysShowEnPassantSquare: bool = false ): string =
   result = ""
   var emptySquareCounter = 0
   for rank in countdown(7, 0):
@@ -46,10 +45,14 @@ func fen*(position: Position): string =
 
   result &= " "
 
-  if position.enPassantTarget != noSquare:
-    result &= $position.enPassantTarget
-  else:
-    result &= "-"
+  var enPassantStr = "-"
+  for move in position.legalMoves:
+    if move.isEnPassantCapture:
+      assert move.target == position.enPassantTarget
+      enPassantStr = $position.enPassantTarget
+  if alwaysShowEnPassantSquare and position.enPassantTarget != noSquare:
+    enPassantStr = $position.enPassantTarget
+  result &= enPassantStr
 
   result &= " " & $position.halfmoveClock & " " & $(position.halfmovesPlayed div 2 + 1)
 

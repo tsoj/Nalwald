@@ -2,7 +2,7 @@ import unittest
 import ../src/position
 import ../src/chessStrutils
 import ../src/types
-import exampleFens
+import testData/exampleFens
 import std/[strutils, strformat]
 
 suite "FEN Parsing Tests":
@@ -17,7 +17,7 @@ suite "FEN Parsing Tests":
           else:
             fen.len
 
-      check fen[0 ..< fenTestLen] == position.fen[0 ..< fenTestLen]
+      check fen[0 ..< fenTestLen] == position.fen(alwaysShowEnPassantSquare = true)[0 ..< fenTestLen]
 
   test "Chess960 FEN conversion":
     const

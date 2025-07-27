@@ -4,7 +4,7 @@ import ../src/chessStrutils
 import ../src/perft
 import ../src/types
 import ../src/utils
-import exampleFens
+import testData/exampleFens
 
 import std/terminal
 
@@ -13,7 +13,6 @@ const maxNumPerftNodes {.intdefine.} = int.high
 suite "Perft Tests":
 
   test "Basic perft correctness":
-    const weirdFen = "QQQQQQBk/Q6B/Q6Q/Q6Q/Q6Q/Q6Q/Q6Q/KQQQQQQQ w - - 0 1"
 
     for (fen, trueNumNodesList) in perftFens:
       let position = fen.toPosition

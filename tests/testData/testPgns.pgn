@@ -1,0 +1,517 @@
+[Event "World Senior Teams +50"]
+[Site "Radebeul GER"]
+[Date "2016.07.03"]
+[Round "8.2"]
+[White "Anastasian, A."]
+[Black "Lewis, An"]
+[Result "1-0"]
+[ECO "E90"]
+[WhiteElo "2532"]
+[BlackElo "2269"]
+[PlyCount "84"]
+[EventDate "2016.06.26"]
+
+1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. h3 e5 7. d5 Na6 8. Be3 Nh5
+9. Nh2 Qe8 10. Be2 Nf4 11. Bf3 f5 12. a3 Nc5 13. Bxc5 dxc5 14. O-O Qe7 15. Re1
+a6 16. Ne2 Qd6 17. Nf1 Bd7 18. Rb1 b6 19. Nd2 Bh6 20. Nxf4 Bxf4 21. b4 Rae8 22.
+Qc2 Rf6 23. Qc3 Qf8 24. Nb3 cxb4 25. axb4 Bg5 26. Rb2 Rf7 27. Nc1 Qh6 28. Nd3
+fxe4 29. Bxe4 Bxh3 30. gxh3 Qxh3 31. Bg2 Qh4 32. Re4 Qh5 33. Rbe2 Ref8 34. c5
+Bf4 35. Nxe5 Qh2+ 36. Kf1 Rf5 37. Nf3 Qh5 38. Re7 Bh6 39. R2e5 bxc5 40. bxc5
+Rxf3 41. Bxf3 Z0 42. Ke1 Qh1+ 1-0
+[Event "AlphaZero vs. Stockfish"]
+
+[Date "2017.12.04"]
+[Round "1"]
+[White "Stockfish 8"]
+[Black "AlphaZero"]
+[Result "0-1"]
+[Board "1"]
+[WhiteCountry "NOR"]
+[WhiteFideId "stockfish"]
+[BlackCountry "ENG"]
+[BlackFideId "deepmind"]
+
+1. e4  e5  2. Nf3  Nc6  3. Bb5  Nf6  4. d3  Bc5
+ 5. Bxc6  dxc6  6. O-O  Nd7  7. Nbd2  O-O  8.
+Qe1  f6  9. Nc4  Rf7  10. a4  Bf8  11. Kh1
+Nc5  12. a5  Ne6  13. Ncxe5
+ fxe5  14. Nxe5  Rf6  15. Ng4  Rf7  16. Ne5
+Re7  17. a6  c5  18. f4  Qe8  19. axb7  Bxb7
+20. Qa5  Nd4  21. Qc3  Re6  22. Be3  Rb6  23. Nc4
+Rb4  24. b3  a5  25. Rxa5  Rxa5  26. Nxa5  Ba6
+27. Bxd4  Rxd4  28. Nc4  Rd8
+ 29. g3  h6  30. Qa5  Bc8  31. Qxc7  Bh3  32.
+Rg1  Rd7  33. Qe5  Qxe5  34. Nxe5  Ra7  35. Nc4
+g5  36. Rc1  Bg7  37. Ne5  Ra8  38. Nf3  Bb2  39.
+Rb1  Bc3  40. Ng1  Bd7  41. Ne2  Bd2  42. Rd1
+Be3  43. Kg2  Bg4  44. Re1  Bd2  45. Rf1  Ra2  46.
+h3  Bxe2  47. Rf2  Bxf4  48. Rxe2  Be5  49. Rf2
+Kg7  50. g4  Bd4  51. Re2  Kf6  52. e5+  Bxe5  53.
+Kf3  Ra1  54. Rf2  Re1  55. Kg2+  Bf4  56. c3
+Rc1  57. d4  Rxc3  58. dxc5
+ Rxc5  59. b4  Rc3  60. h4  Ke5  61. hxg5
+hxg5  62. Re2+  Kf6  63. Kf2
+ Be5  64. Ra2  Rc4  65. Ra6+  Ke7  66. Ra5
+Ke6  67. Ra6+  Bd6  0-1
+[Event "?"]
+[Site "?"]
+[Date "2016.07.28"]
+[Round "1"]
+[White "Maverick 1.5"]
+[Black "Stockfish 7"]
+[Result "0-1"]
+[FEN "nbbrknrq/pppppppp/8/8/8/8/PPPPPPPP/NBBRKNRQ w KQkq - 0 1"]
+[PlyCount "120"]
+[SetUp "1"]
+[TimeControl "10+0.05"]
+[Variant "fischerandom"]
+
+1. d4 {+0.13/12 0.29s} d5 {-0.17/15 0.30s} 2. c3 {+0.22/13 0.28s}
+Nb6 {-0.17/14 0.14s} 3. e4 {+0.21/13 0.95s} dxe4 {+0.14/13 0.29s}
+4. Bxe4 {+0.25/12 0.22s} g6 {-0.03/15 0.69s} 5. g4 {+0.31/11 0.30s}
+c6 {+0.26/13 0.19s} 6. Qf3 {+0.29/11 0.30s} Ne6 {+0.25/15 0.67s}
+7. Nb3 {+0.22/10 0.35s} Qf6 {+0.23/15 0.14s} 8. Qxf6 {+0.34/12 0.27s}
+exf6 {+0.25/15 0.13s} 9. h4 {+0.32/12 0.39s} O-O {+0.20/15 0.073s}
+10. Be3 {+0.15/11 0.33s} Nf4 {+0.68/14 0.60s} 11. Nc5 {+0.21/10 0.17s}
+Rfe8 {+0.77/15 0.34s} 12. Nd2 {0.00/10 0.25s} Nbd5 {+1.24/14 0.27s}
+13. c4 {0.00/10 0.16s} b6 {+1.51/14 0.19s} 14. cxd5 {-0.26/10 0.15s}
+cxd5 {+1.69/12 0.030s} 15. Bc2 {-1.01/10 0.23s} bxc5 {+2.00/14 0.29s}
+16. Nb3 {-1.29/11 0.17s} c4 {+1.82/15 0.50s} 17. Nc5 {-1.25/13 0.22s}
+Bd6 {+2.05/15 0.19s} 18. Ba4 {-1.31/10 0.20s} Re7 {+1.91/15 0.27s}
+19. Bc2 {-1.46/10 0.15s} h5 {+2.11/16 0.82s} 20. gxh5 {-1.62/12 0.20s}
+Nxh5 {+1.89/16 0.43s} 21. O-O-O {-1.50/11 0.22s} Nf4 {+2.04/15 0.36s}
+22. Rde1 {-1.74/10 0.13s} Kg7 {+2.14/15 0.20s} 23. h5 {-1.65/11 0.15s}
+Nxh5 {+2.23/12 0.030s} 24. Kd2 {-1.92/10 0.19s} f5 {+2.43/14 0.36s}
+25. Bg5 {-1.74/10 0.15s} Rxe1 {+2.37/15 0.22s} 26. Rxe1 {-2.13/11 0.17s}
+f6 {+3.39/15 0.20s} 27. Bh4 {-2.74/13 0.14s} g5 {+3.22/13 0.13s}
+28. Rg1 {-2.88/13 0.15s} Rh8 {+4.22/15 0.44s} 29. Bd1 {-2.88/10 0.15s}
+Kf8 {+4.10/16 0.24s} 30. Bg3 {-3.61/12 0.14s} f4 {+4.29/16 0.25s}
+31. Bh2 {-3.70/13 0.15s} Ng7 {+4.40/14 0.038s} 32. Rh1 {-4.06/14 0.23s}
+Nf5 {+4.48/16 0.17s} 33. Bg4 {-4.56/13 0.11s} Ke7 {+4.60/14 0.021s}
+34. Bxf5 {-4.14/11 0.13s} Bxf5 {+4.70/16 0.16s} 35. f3 {-4.34/12 0.25s}
+Rh3 {+4.84/15 0.092s} 36. Ke2 {-5.89/12 0.32s} g4 {+4.83/13 0.025s}
+37. fxg4 {-4.74/11 0.13s} Bg6 {+4.91/15 0.079s} 38. Ke1 {-4.95/10 0.12s}
+Bxc5 {+5.01/13 0.038s} 39. dxc5 {-5.95/12 0.14s} Be4 {+5.22/14 0.11s}
+40. a4 {-6.42/12 0.38s} Bxh1 {+5.82/13 0.079s} 41. Bxf4 {-7.92/12 0.12s}
+d4 {+5.91/13 0.033s} 42. Kd2 {-6.92/10 0.083s} Kd7 {+6.10/14 0.082s}
+43. g5 {-7.26/10 0.11s} fxg5 {+6.57/15 0.11s} 44. Bxg5 {-8.34/10 0.091s}
+Kc6 {+6.81/13 0.026s} 45. Bf4 {-8.56/11 0.20s} Kxc5 {+7.90/15 0.14s}
+46. a5 {-8.94/11 0.17s} Be4 {+11.14/16 0.22s} 47. a6 {-9.64/10 0.10s}
+Rb3 {+15.84/15 0.094s} 48. Kc1 {-11.49/13 0.12s} c3 {+48.50/24 0.078s}
+49. bxc3 {-10.88/13 0.088s} dxc3 {+48.54/23 0.018s} 50. Kd1 {-11.10/13 0.17s}
+c2+ {+M35/23 0.14s} 51. Ke2 {-10.72/12 0.16s} Rb1 {+M31/23 0.024s}
+52. Bd2 {-11.36/12 0.080s} c1=Q {+M21/24 0.076s} 53. Bxc1 {-12.14/14 0.11s}
+Rxc1 {+M19/23 0.025s} 54. Ke3 {-12.35/13 0.072s} Kd5 {+M15/23 0.10s}
+55. Kf2 {-M18/13 0.14s} Kd4 {+M11/24 0.070s} 56. Kg3 {-M10/12 0.026s}
+Ke3 {+M9/24 0.016s} 57. Kg4 {-M8/8 0.001s} Rg1+ {+M7/40 0.063s}
+58. Kh5 {-M6/6 0.001s} Kf4 {+M5/91 0.015s} 59. Kh6 {-M4/4 0.002s}
+Rg2 {+M3/127 0.004s} 60. Kh5 {-M2/2 0.001s} Rh2# {+M1/127 0.003s, Black mates}
+0-1
+
+[Event "?"]
+[Site "?"]
+[Date "2016.07.28"]
+[Round "1"]
+[White "Stockfish 7"]
+[Black "Maverick 1.5"]
+[Result "1-0"]
+[FEN "rqkrbnnb/pppppppp/8/8/8/8/PPPPPPPP/RQKRBNNB w KQkq - 0 1"]
+[PlyCount "99"]
+[SetUp "1"]
+[TimeControl "10+0.05"]
+[Variant "fischerandom"]
+
+1. g3 {+0.14/14 0.54s} g6 {-0.11/13 0.39s} 2. e4 {+0.12/14 0.31s}
+Ne6 {+0.01/12 0.22s} 3. c3 {+0.32/15 0.54s} d6 {+0.31/12 0.25s}
+4. d4 {+0.64/15 0.64s} Nf6 {+0.15/12 0.27s} 5. Ne3 {+0.55/14 0.29s}
+Bg7 {+0.02/12 0.39s} 6. f4 {+0.72/15 1.1s} h5 {-0.25/11 0.32s}
+7. Bf3 {+0.87/14 0.27s} Ba4 {-0.57/11 0.38s} 8. b3 {+0.94/13 0.18s}
+Bd7 {-0.67/13 0.25s} 9. Kb2 {+0.91/14 0.65s} Nf8 {-0.44/11 0.31s}
+10. h3 {+1.22/12 0.10s} e5 {-0.29/12 0.46s} 11. dxe5 {+1.53/13 0.27s}
+dxe5 {-0.44/13 0.19s} 12. fxe5 {+1.49/14 0.51s} Ng8 {-0.40/12 0.30s}
+13. g4 {+1.65/13 0.16s} hxg4 {-0.58/11 0.27s} 14. Bxg4 {+1.86/14 0.33s}
+Bxe5 {-0.50/12 0.19s} 15. Nf3 {+2.20/14 0.23s} Bf4 {-0.79/12 0.19s}
+16. Bh4 {+2.73/14 0.17s} Re8 {-0.87/12 0.16s} 17. Qd3 {+4.34/14 0.17s}
+f5 {-2.56/13 0.17s} 18. Nxf5 {+4.28/15 0.30s} gxf5 {-2.69/14 0.17s}
+19. Bxf5 {+4.68/15 0.061s} Bd6 {-3.08/14 0.22s} 20. e5 {+5.62/14 0.23s}
+Nh6 {-3.56/13 0.37s} 21. Bxd7+ {+6.66/14 0.15s} Nxd7 {-3.81/12 0.13s}
+22. Qg6 {+7.05/14 0.060s} Rf8 {-4.75/11 0.17s} 23. e6 {+8.47/15 0.36s}
+b5 {-5.56/12 0.46s} 24. exd7+ {+9.50/15 0.28s} Kxd7 {-6.15/12 0.24s}
+25. Ne5+ {+10.51/18 0.10s} Kc8 {-6.52/11 0.036s} 26. Qe6+ {+10.58/15 0.021s}
+Kb7 {-5.07/8 0.021s} 27. Rxd6 {+11.11/19 0.24s} cxd6 {-10.56/11 0.22s}
+28. Qd5+ {+11.15/16 0.062s} Kc8 {-11.09/15 0.24s} 29. Qc6+ {+11.23/17 0.13s}
+Qc7 {-11.23/15 0.034s} 30. Qxa8+ {+11.31/15 0.066s} Qb8 {-11.23/15 0.038s}
+31. Qxb8+ {+11.41/16 0.14s} Kxb8 {-11.23/13 0.030s} 32. Nd7+ {+11.39/15 0.034s}
+Kb7 {-11.74/14 0.51s} 33. Nxf8 {+11.46/16 0.12s} Nf5 {-11.71/13 0.25s}
+34. Bg5 {+11.51/15 0.032s} Kc6 {-11.69/11 0.26s} 35. h4 {+11.75/15 0.095s}
+Ng3 {-12.05/11 0.12s} 36. Ne6 {+12.06/14 0.31s} Ne4 {-12.04/10 0.17s}
+37. Nd4+ {+12.31/13 0.090s} Kb6 {-12.39/11 0.14s} 38. Bf4 {+12.75/15 0.22s}
+a6 {-11.93/9 0.13s} 39. h5 {+15.20/16 0.20s} Kc5 {-13.49/11 0.26s}
+40. h6 {+21.53/15 0.24s} Nf6 {-14.72/12 0.12s} 41. Re1 {+22.26/13 0.053s}
+b4 {-14.64/11 0.13s} 42. Bxd6+ {+M21/19 0.20s} Kxd6 {-17.58/12 0.10s}
+43. Re6+ {+M17/21 0.095s} Kd7 {-17.90/12 0.12s} 44. Rxf6 {+M15/21 0.047s}
+Ke7 {-M18/11 0.25s} 45. Rf5 {+M13/19 0.069s} Kd6 {-M12/12 0.12s}
+46. h7 {+M11/20 0.085s} a5 {-M10/10 0.010s} 47. h8=Q {+M9/20 0.076s}
+Kc7 {-M8/8 0.007s} 48. Qg7+ {+M5/127 0.031s} Kd6 {-M4/4 0.001s}
+49. Nb5+ {+M3/127 0.003s} Kc6 {-M2/2 0s} 50. Qc7# {+M1/127 0.003s, White mates}
+1-0
+
+[Event "?"]
+[Site "?"]
+[Date "2016.07.28"]
+[Round "1"]
+[White "Maverick 1.5"]
+[Black "Stockfish 7"]
+[Result "0-1"]
+[FEN "rnkqnbbr/pppppppp/8/8/8/8/PPPPPPPP/RNKQNBBR w KQkq - 0 1"]
+[PlyCount "70"]
+[SetUp "1"]
+[TimeControl "10+0.05"]
+[Variant "fischerandom"]
+
+1. f4 {+0.30/11 0.23s} d5 {-0.09/13 0.15s} 2. Nc3 {+0.50/11 0.35s}
+Nf6 {+0.03/14 0.27s} 3. Nf3 {+0.41/13 0.40s} e6 {+0.08/13 0.18s}
+4. Bd4 {+0.33/12 0.42s} h6 {+0.32/13 0.29s} 5. e3 {+0.30/11 0.23s}
+Ng4 {+0.24/13 0.16s} 6. Qe1 {+0.26/12 0.35s} c5 {+0.61/14 0.11s}
+7. Be5 {+0.37/13 0.23s} Nc6 {+0.60/14 0.30s} 8. Bb5 {+0.23/13 0.54s}
+Ngxe5 {+0.66/14 0.30s} 9. fxe5 {+0.10/13 0.23s} Bh7 {+0.55/13 0.069s}
+10. Bxc6 {+0.28/11 0.20s} bxc6 {+0.76/14 0.35s} 11. Rf1 {+0.08/11 0.58s}
+Rb8 {+1.28/13 0.22s} 12. b3 {0.00/10 0.32s} Rb7 {+1.54/13 0.20s}
+13. e4 {-0.03/9 0.17s} c4 {+1.73/15 0.53s} 14. Qe3 {-0.31/9 0.19s}
+Qa5 {+1.85/14 0.76s} 15. Nd4 {-0.57/8 0.19s} c5 {+3.82/13 0.34s}
+16. Nxe6 {-1.50/10 0.18s} cxb3 {+3.82/15 0.45s} 17. cxb3 {-1.25/10 0.23s}
+fxe6 {+4.14/13 0.15s} 18. exd5 {-1.72/10 0.17s} exd5 {+4.05/13 0.23s}
+19. Qh3+ {-1.57/10 0.39s} Kb8 {+4.59/14 0.20s} 20. Nxd5 {-1.62/10 0.14s}
+c4 {+8.22/14 0.32s} 21. Qe6 {-4.82/10 0.34s} Bc5 {+11.06/14 0.26s}
+22. Kd1 {-6.91/10 0.48s} cxb3 {+12.77/14 0.20s} 23. d4 {-8.16/10 0.24s}
+b2 {+21.67/14 0.23s} 24. Rb1 {-14.22/11 0.36s} Qa4+ {+23.31/14 0.24s}
+25. Ke1 {-14.18/11 0.14s} Qxd4 {+30.39/15 0.80s} 26. Rf3 {-18.19/9 0.11s}
+Qe4+ {+30.58/13 0.026s} 27. Ne3 {-21.85/11 0.16s} Qxb1+ {+40.76/14 0.84s}
+28. Kf2 {-24.98/12 0.26s} Qe4 {+41.45/13 0.047s} 29. Kg3 {-24.92/12 0.56s}
+b1=Q {+M21/13 0.18s} 30. Qg4 {-42.56/12 0.49s} Bxe3 {+M11/17 0.16s}
+31. Qxe4 {-M18/10 0.11s} Qxe4 {+M9/20 0.022s} 32. a3 {-M8/11 0.32s}
+g5 {+M7/30 0.094s} 33. h3 {-M6/6 0.005s} Qxe5+ {+M5/46 0.021s}
+34. Kg4 {-M8/8 0.003s} h5+ {+M3/127 0.004s} 35. Kxh5 {-M2/2 0s}
+Bf5# {+M1/127 0.003s, Black mates} 0-1
+
+[Event "?"]
+[Site "?"]
+[Date "2016.07.28"]
+[Round "1"]
+[White "Stockfish 7"]
+[Black "Maverick 1.5"]
+[Result "1-0"]
+[FEN "nbrnbkqr/pppppppp/8/8/8/8/PPPPPPPP/NBRNBKQR w KQkq - 0 1"]
+[PlyCount "107"]
+[SetUp "1"]
+[TimeControl "10+0.05"]
+[Variant "fischerandom"]
+
+1. c4 {+0.13/15 0.38s} c5 {-0.41/13 0.34s} 2. f3 {+0.17/14 0.36s}
+Be5 {-0.27/13 0.29s} 3. Nb3 {+0.26/14 0.20s} d6 {-0.30/14 0.34s}
+4. e3 {+0.11/15 0.67s} Nb6 {+0.08/12 0.32s} 5. d4 {0.00/14 0.60s}
+cxd4 {+0.02/13 0.22s} 6. exd4 {+0.05/15 0.22s} Bf4 {-0.07/13 0.25s}
+7. Bd2 {-0.05/12 0.029s} Bxd2 {-0.08/13 0.25s} 8. Nxd2 {+0.50/13 0.16s}
+Bd7 {-0.12/12 0.23s} 9. b3 {+0.69/13 0.15s} Nc6 {-0.23/11 0.37s}
+10. Nc3 {+0.85/14 0.35s} f6 {-0.33/11 0.23s} 11. d5 {+1.24/14 0.39s}
+Ne5 {-0.83/11 0.19s} 12. f4 {+1.51/15 0.57s} Ng6 {-0.85/11 0.28s}
+13. Qf2 {+1.67/16 0.36s} Qf7 {-0.67/11 0.17s} 14. a4 {+1.74/15 0.36s}
+Rc7 {-0.99/11 0.29s} 15. Bd3 {+1.89/16 0.43s} O-O {-1.09/11 0.39s}
+16. O-O {+1.80/15 0.077s} f5 {-1.07/11 0.19s} 17. g3 {+1.96/15 0.25s}
+Nc8 {-1.09/10 0.18s} 18. Nf3 {+1.87/14 0.33s} a5 {-1.18/11 0.60s}
+19. Ng5 {+2.46/14 0.24s} Qf6 {-1.35/14 0.19s} 20. Nb5 {+2.37/13 0.040s}
+Bxb5 {-2.07/14 0.16s} 21. axb5 {+3.17/15 0.41s} Rd7 {-2.19/13 0.16s}
+22. Ne6 {+3.39/14 0.11s} Re8 {-2.69/13 0.34s} 23. Qc2 {+3.75/15 0.34s}
+Nb6 {-2.58/12 0.17s} 24. Bxf5 {+4.00/14 0.26s} Rc8 {-3.29/11 0.21s}
+25. Ng5 {+4.98/13 0.099s} Kh8 {-4.05/11 0.20s} 26. Be6 {+4.99/12 0.024s}
+Qd4+ {-4.27/11 0.12s} 27. Kh1 {+5.51/15 0.19s} Nf8 {-4.33/11 0.15s}
+28. Rfe1 {+5.56/14 0.031s} a4 {-5.63/11 0.37s} 29. bxa4 {+5.70/15 0.16s}
+g6 {-4.90/10 0.11s} 30. Re4 {+6.24/14 0.13s} Qf6 {-5.64/13 0.17s}
+31. a5 {+6.28/13 0.031s} Nxd5 {-5.63/12 0.38s} 32. Bxd5 {+6.81/14 0.37s}
+h6 {-6.27/12 0.60s} 33. Ne6 {+7.60/15 0.15s} Nh7 {-6.31/11 0.10s}
+34. a6 {+8.36/16 0.23s} b6 {-6.96/12 0.20s} 35. Qa2 {+9.66/16 0.24s}
+Ra7 {-7.23/12 0.13s} 36. Qf2 {+9.66/16 0.18s} Rb8 {-8.02/12 0.17s}
+37. Nd4 {+9.86/15 0.029s} Ng5 {-9.02/12 0.19s} 38. Nc6 {+10.75/15 0.12s}
+Nxe4 {-8.81/12 0.15s} 39. Bxe4 {+10.89/13 0.029s} d5 {-9.34/13 0.16s}
+40. Bxd5 {+11.75/15 0.15s} Rba8 {-10.57/13 0.21s} 41. Nxa7 {+13.36/17 0.31s}
+Rxa7 {-10.97/12 0.13s} 42. c5 {+13.46/14 0.023s} Rc7 {-10.67/11 0.13s}
+43. Bc6 {+16.80/14 0.17s} Rxc6 {-11.13/9 0.094s} 44. bxc6 {+18.21/13 0.11s}
+Qxc6+ {-14.47/9 0.17s} 45. Qg2 {+21.11/14 0.31s} Qa4 {-17.24/10 0.17s}
+46. cxb6 {+27.63/15 0.41s} Qxa6 {-17.80/9 0.10s} 47. Qb2+ {+56.80/14 0.085s}
+Kh7 {-19.85/10 0.19s} 48. b7 {+M19/15 0.045s} Qd6 {-17.43/11 0.31s}
+49. b8=Q {+M13/17 0.060s} Qxb8 {-M12/13 0.25s} 50. Qxb8 {+M9/28 0.063s}
+g5 {-M8/8 0.001s} 51. Qe8 {+M7/31 0.058s} Kg7 {-M6/6 0.001s}
+52. Rc6 {+M5/77 0.014s} g4 {-M4/4 0.001s} 53. Qxe7+ {+M3/127 0.002s}
+Kg8 {-M2/2 0.001s} 54. Rc8# {+M1/127 0.002s, White mates} 1-0
+[Event "IBM Man-Machine, New York USA"]
+[Site "01"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1-0"]
+[White "Garry Kasparov"]
+[Black "Deep Blue (Computer)"]
+[ECO "A06"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "89"]
+
+1.Nf3 d5 2.g3 Bg4 3.b3 Nd7 4.Bb2 e6 5.Bg2 Ngf6 6.O-O c6 7.d3
+Bd6 8.Nbd2 O-O 9.h3 Bh5 10.e3 h6 11.Qe1 Qa5 12.a3 Bc7 13.Nh4
+g5 14.Nhf3 e5 15.e4 Rfe8 16.Nh2 Qb6 17.Qc1 a5 18.Re1 Bd6
+19.Ndf1 dxe4 20.dxe4 Bc5 21.Ne3 Rad8 22.Nhf1 g4 23.hxg4 Nxg4
+24.f3 Nxe3 25.Nxe3 Be7 26.Kh1 Bg5 27.Re2 a4 28.b4 f5 29.exf5
+e4 30.f4 Bxe2 31.fxg5 Ne5 32.g6 Bf3 33.Bc3 Qb5 34.Qf1 Qxf1+
+35.Rxf1 h5 36.Kg1 Kf8 37.Bh3 b5 38.Kf2 Kg7 39.g4 Kh6 40.Rg1
+hxg4 41.Bxg4 Bxg4 42.Nxg4+ Nxg4+ 43.Rxg4 Rd5 44.f6 Rd1 45.g7
+1-0
+
+[Event "IBM Man-Machine, New York USA"]
+[Site "02"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1-0"]
+[White "Deep Blue (Computer)"]
+[Black "Garry Kasparov"]
+[ECO "C93"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "89"]
+
+1.e4 e5 2.Nf3 Nc6 3.Bb5 a6 4.Ba4 Nf6 5.O-O Be7 6.Re1 b5 7.Bb3
+d6 8.c3 O-O 9.h3 h6 10.d4 Re8 11.Nbd2 Bf8 12.Nf1 Bd7 13.Ng3
+Na5 14.Bc2 c5 15.b3 Nc6 16.d5 Ne7 17.Be3 Ng6 18.Qd2 Nh7 19.a4
+Nh4 20.Nxh4 Qxh4 21.Qe2 Qd8 22.b4 Qc7 23.Rec1 c4 24.Ra3 Rec8
+25.Rca1 Qd8 26.f4 Nf6 27.fxe5 dxe5 28.Qf1 Ne8 29.Qf2 Nd6
+30.Bb6 Qe8 31.R3a2 Be7 32.Bc5 Bf8 33.Nf5 Bxf5 34.exf5 f6
+35.Bxd6 Bxd6 36.axb5 axb5 37.Be4 Rxa2 38.Qxa2 Qd7 39.Qa7 Rc7
+40.Qb6 Rb7 41.Ra8+ Kf7 42.Qa6 Qc7 43.Qc6 Qb6+ 44.Kf1 Rb8
+45.Ra6 1-0
+
+[Event "IBM Man-Machine, New York USA"]
+[Site "03"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1/2-1/2"]
+[White "Garry Kasparov"]
+[Black "Deep Blue (Computer)"]
+[ECO "A00"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "95"]
+
+1.d3 e5 2.Nf3 Nc6 3.c4 Nf6 4.a3 d6 5.Nc3 Be7 6.g3 O-O 7.Bg2
+Be6 8.O-O Qd7 9.Ng5 Bf5 10.e4 Bg4 11.f3 Bh5 12.Nh3 Nd4 13.Nf2
+h6 14.Be3 c5 15.b4 b6 16.Rb1 Kh8 17.Rb2 a6 18.bxc5 bxc5 19.Bh3
+Qc7 20.Bg4 Bg6 21.f4 exf4 22.gxf4 Qa5 23.Bd2 Qxa3 24.Ra2 Qb3
+25.f5 Qxd1 26.Bxd1 Bh7 27.Nh3 Rfb8 28.Nf4 Bd8 29.Nfd5 Nc6
+30.Bf4 Ne5 31.Ba4 Nxd5 32.Nxd5 a5 33.Bb5 Ra7 34.Kg2 g5
+35.Bxe5+ dxe5 36.f6 Bg6 37.h4 gxh4 38.Kh3 Kg8 39.Kxh4 Kh7
+40.Kg4 Bc7 41.Nxc7 Rxc7 42.Rxa5 Rd8 43.Rf3 Kh8 44.Kh4 Kg8
+45.Ra3 Kh8 46.Ra6 Kh7 47.Ra3 Kh8 48.Ra6 1/2-1/2
+
+[Event "IBM Man-Machine, New York USA"]
+[Site "04"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1/2-1/2"]
+[White "Deep Blue (Computer)"]
+[Black "Garry Kasparov"]
+[ECO "B10"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "111"]
+
+1.e4 c6 2.d4 d6 3.Nf3 Nf6 4.Nc3 Bg4 5.h3 Bh5 6.Bd3 e6 7.Qe2 d5
+8.Bg5 Be7 9.e5 Nfd7 10.Bxe7 Qxe7 11.g4 Bg6 12.Bxg6 hxg6 13.h4
+Na6 14.O-O-O O-O-O 15.Rdg1 Nc7 16.Kb1 f6 17.exf6 Qxf6 18.Rg3
+Rde8 19.Re1 Rhf8 20.Nd1 e5 21.dxe5 Qf4 22.a3 Ne6 23.Nc3 Ndc5
+24.b4 Nd7 25.Qd3 Qf7 26.b5 Ndc5 27.Qe3 Qf4 28.bxc6 bxc6 29.Rd1
+Kc7 30.Ka1 Qxe3 31.fxe3 Rf7 32.Rh3 Ref8 33.Nd4 Rf2 34.Rb1 Rg2
+35.Nce2 Rxg4 36.Nxe6+ Nxe6 37.Nd4 Nxd4 38.exd4 Rxd4 39.Rg1 Rc4
+40.Rxg6 Rxc2 41.Rxg7+ Kb6 42.Rb3+ Kc5 43.Rxa7 Rf1+ 44.Rb1 Rff2
+45.Rb4 Rc1+ 46.Rb1 Rcc2 47.Rb4 Rc1+ 48.Rb1 Rxb1+ 49.Kxb1 Re2
+50.Re7 Rh2 51.Rh7 Kc4 52.Rc7 c5 53.e6 Rxh4 54.e7 Re4 55.a4 Kb3
+56.Kc1 1/2-1/2
+
+[Event "IBM Man-Machine, New York USA"]
+[Site "05"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1/2-1/2"]
+[White "Garry Kasparov"]
+[Black "Deep Blue (Computer)"]
+[ECO "A07"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "98"]
+
+1.Nf3 d5 2.g3 Bg4 3.Bg2 Nd7 4.h3 Bxf3 5.Bxf3 c6 6.d3 e6 7.e4
+Ne5 8.Bg2 dxe4 9.Bxe4 Nf6 10.Bg2 Bb4+ 11.Nd2 h5 12.Qe2 Qc7
+13.c3 Be7 14.d4 Ng6 15.h4 e5 16.Nf3 exd4 17.Nxd4 O-O-O 18.Bg5
+Ng4 19.O-O-O Rhe8 20.Qc2 Kb8 21.Kb1 Bxg5 22.hxg5 N6e5 23.Rhe1
+c5 24.Nf3 Rxd1+ 25.Rxd1 Nc4 26.Qa4 Rd8 27.Re1 Nb6 28.Qc2 Qd6
+29.c4 Qg6 30.Qxg6 fxg6 31.b3 Nxf2 32.Re6 Kc7 33.Rxg6 Rd7
+34.Nh4 Nc8 35.Bd5 Nd6 36.Re6 Nb5 37.cxb5 Rxd5 38.Rg6 Rd7
+39.Nf5 Ne4 40.Nxg7 Rd1+ 41.Kc2 Rd2+ 42.Kc1 Rxa2 43.Nxh5 Nd2
+44.Nf4 Nxb3+ 45.Kb1 Rd2 46.Re6 c4 47.Re3 Kb6 48.g6 Kxb5 49.g7
+Kb4 1/2-1/2
+
+[Event "IBM Man-Machine, New York USA"]
+[Site "06"]
+[Date "1997.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "1-0"]
+[White "Deep Blue (Computer)"]
+[Black "Garry Kasparov"]
+[ECO "B17"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "37"]
+
+1.e4 c6 2.d4 d5 3.Nc3 dxe4 4.Nxe4 Nd7 5.Ng5 Ngf6 6.Bd3 e6
+7.N1f3 h6 8.Nxe6 Qe7 9.O-O fxe6 10.Bg6+ Kd8 11.Bf4 b5 12.a4
+Bb7 13.Re1 Nd5 14.Bg3 Kc8 15.axb5 cxb5 16.Qd3 Bc6 17.Bf5 exf5
+18.Rxe7 Bxe7 19.c4 1-0
+[Event "cr"]
+[Site "cr"]
+[Date "1979.??.??"]
+[EventDate "?"]
+[Round "?"]
+[Result "0-1"]
+[White "Molinari"]
+[Black "Bordais"]
+[ECO "B20"]
+[WhiteElo "?"]
+[BlackElo "?"]
+[PlyCount "10"]
+
+1. e4 c5 2. c4 Nc6 3. Ne2 Nf6 4. Nbc3 Nb4 5. g3 Nd3# 0-1
+[Event "FIDE World Championship 2023"]
+[Site "Astana KAZ"]
+[Date "2023.04.09"]
+[Round "1"]
+[White "Nepomniachtchi, Ian"]
+[Black "Liren, Ding"]
+[Result "1/2-1/2"]
+[TimeControl "40/7200:20/3600:900+30"]
+[WhiteFideId "4168119"]
+[BlackFideId "8603677"]
+[WhiteElo "2795"]
+[BlackElo "2788"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Bxc6 dxc6
+7. Re1 Nd7 8. d4 exd4 9. Qxd4 O-O 10. Bf4 Nc5 11. Qe3 Bg4 12. Nd4
+Qd7 13. Nc3 Rad8 14. Nf5 Ne6 15. Nxe7+ Qxe7 16. Bg3 Bh5 17. f3 f6
+18. h3 h6 19. Kh2 Bf7 20. Rad1 b6 21. a3 a5 22. Ne2 Rxd1 23. Rxd1
+Rd8 24. Rd3 c5 25. Qd2 c6 26. Rxd8+ Nxd8 27. Qf4 b5 28. Qb8 Kh7
+29. Bd6 Qd7 30. Ng3 Ne6 31. f4 h5 32. c3 c4 33. h4 Qd8 34. Qb7
+Be8 35. Nf5 Qd7 36. Qb8 Qd8 37. Qxd8 Nxd8 38. Nd4 Nb7 39. e5 Kg8
+40. Kg3 Bd7 41. Bc7 Nc5 42. Bxa5 Kf7 43. Bb4 Nd3 44. e6+ Bxe6
+45. Nxc6 Bd7 46. Nd4 Nxb2 47. Kf3 Nd3 48. g3 Nc1 49. Ke3 1/2-1/2
+
+[Event "?"]
+[Site "?"]
+[Date "2019.01.14"]
+[Round "1"]
+[White "Stockfish-reference"]
+[Black "Stockfish-learning"]
+[Result "1-0"]
+[ECO "B00"]
+[Opening "St. George (Baker) defense"]
+[GameDuration "00:40:54"]
+[GameEndTime "2019-01-14T07:27:30.802 PST"]
+[GameStartTime "2019-01-14T06:46:35.929 PST"]
+[PlyCount "154"]
+[Termination "adjudication"]
+[TimeControl "900+5"]
+
+1. e4 {book} a6 {book} 2. c4 {book} e5 {0.00/31 48s} 3. Nf3 {+0.69/29 36s}
+Nc6 {0.00/31 12s} 4. Nc3 {+0.56/28 14s} Nf6 {0.00/30 9.3s} 5. a3 {+0.50/28 29s}
+d6 {+0.12/28 21s} 6. Be2 {+0.43/26 16s} Bg4 {+0.14/25 8.8s} 7. d3 {+0.43/28 34s}
+g6 {0.00/28 14s} 8. O-O {+0.30/28 20s} Bg7 {+0.15/31 47s} 9. b4 {+0.24/27 13s}
+O-O {0.00/26 14s} 10. Rb1 {+0.45/30 24s} Nd7 {-0.03/29 35s}
+11. Bg5 {+0.68/25 6.8s} Bf6 {0.00/27 7.9s} 12. Be3 {+0.55/29 16s}
+Bg7 {-0.05/30 44s} 13. Bg5 {+0.61/29 26s} Bf6 {0.00/32 8.7s}
+14. Be3 {+0.51/29 11s} Bg7 {0.00/34 16s} 15. Qd2 {+0.50/30 22s} a5 {0.00/32 67s}
+16. b5 {+0.45/29 7.9s} Bxf3 {0.00/32 6.0s} 17. Bxf3 {+0.51/32 9.4s}
+Nd4 {0.00/34 8.9s} 18. Bd1 {+0.66/31 9.5s} Nc5 {-0.09/35 18s}
+19. Bxd4 {+0.65/31 12s} exd4 {-0.32/34 37s} 20. Na4 {+0.83/32 29s}
+Nd7 {-0.27/32 28s} 21. f4 {+0.78/32 27s} h5 {-0.35/32 21s}
+22. Bf3 {+0.85/29 12s} Rb8 {-0.33/29 24s} 23. g3 {+0.81/30 30s}
+b6 {-0.48/29 21s} 24. Bg2 {+0.88/29 21s} Nf6 {-0.58/33 46s}
+25. Nb2 {+1.03/34 9.1s} Ng4 {-0.58/36 19s} 26. Nd1 {+1.03/34 11s}
+Qe7 {-0.58/38 16s} 27. Bf3 {+1.03/37 13s} Nf6 {-0.58/38 7.6s}
+28. Nf2 {+1.03/38 12s} Nd7 {-0.58/39 26s} 29. Bg2 {+1.03/38 17s}
+Nc5 {-0.58/38 11s} 30. h4 {+1.03/38 15s} Rbe8 {-0.67/38 71s}
+31. Kh2 {+1.03/39 15s} Qd8 {-0.67/34 18s} 32. Rbe1 {+1.03/35 12s}
+Nd7 {-0.77/38 125s} 33. Qd1 {+1.03/36 16s} Nc5 {-0.87/34 30s}
+34. Nh3 {+1.03/37 13s} Kh8 {-0.77/30 14s} 35. Qe2 {+1.03/37 25s}
+Nd7 {-0.77/33 5.2s} 36. Ng5 {+1.13/35 44s} Bh6 {-0.77/33 7.8s}
+37. Qf2 {+1.24/34 15s} Bg7 {-0.77/34 7.1s} 38. Rd1 {+1.42/31 14s}
+Nc5 {-0.87/34 46s} 39. Kh1 {+1.33/32 24s} Kg8 {-0.77/32 9.1s}
+40. Nf3 {+1.38/30 9.7s} Nb3 {-0.77/30 4.8s} 41. Bh3 {+1.68/28 14s}
+Kh8 {-1.10/31 53s} 42. Rg1 {+1.86/32 46s} Nc5 {-1.01/27 5.0s}
+43. g4 {+1.73/30 12s} Qf6 {-1.04/28 18s} 44. Ng5 {+1.78/31 21s}
+hxg4 {-1.53/28 8.1s} 45. Rxg4 {+1.87/29 9.6s} Bh6 {-1.45/26 6.1s}
+46. Qg3 {+1.86/29 15s} Rg8 {-1.50/29 15s} 47. Rg1 {+1.71/32 44s}
+Rg7 {-1.32/29 4.7s} 48. h5 {+1.86/29 6.2s} Kg8 {-1.41/28 6.2s}
+49. hxg6 {+1.46/32 27s} fxg6 {-1.25/28 7.8s} 50. Qh4 {+1.61/33 20s}
+Bxg5 {-1.42/29 6.6s} 51. Rxg5 {+1.61/35 7.0s} Ne6 {-1.19/28 4.8s}
+52. Bxe6+ {+1.61/38 10.0s} Rxe6 {-1.39/32 13s} 53. Kg2 {+1.61/39 15s}
+Rh7 {-1.49/29 8.5s} 54. Qg4 {+1.61/41 9.0s} Kf8 {-2.00/31 19s}
+55. Rh1 {+2.24/32 7.8s} Rxh1 {-2.01/28 2.5s} 56. Kxh1 {+2.36/35 12s}
+Qh8+ {-1.93/29 5.9s} 57. Kg2 {+2.41/36 9.8s} Kf7 {-1.57/29 1.9s}
+58. Qf3 {+2.46/37 14s} Rf6 {-2.27/33 13s} 59. e5 {+2.50/33 9.1s}
+dxe5 {-2.25/30 2.5s} 60. Qd5+ {+2.87/33 18s} Kg7 {-2.43/30 4.3s}
+61. Qd7+ {+2.92/33 7.1s} Rf7 {-2.55/31 5.7s} 62. Qe6 {+3.02/32 8.4s}
+Qh6 {-2.48/28 3.7s} 63. Qxe5+ {+3.14/32 7.6s} Kh7 {-2.24/27 1.7s}
+64. Qe4 {+3.13/35 13s} Qg7 {-2.39/30 8.2s} 65. Re5 {+3.45/32 6.9s}
+Qf8 {-2.65/30 10s} 66. Re8 {+3.78/31 9.5s} Qc5 {-2.65/30 5.5s}
+67. Kg3 {+3.99/31 7.7s} a4 {-2.92/31 5.2s} 68. Rd8 {+4.10/31 7.1s}
+Re7 {-3.27/29 5.0s} 69. Qxd4 {+4.37/32 9.1s} Qxd4 {-3.28/27 2.5s}
+70. Rxd4 {+4.41/29 7.3s} Kg7 {-3.62/31 7.5s} 71. Re4 {+5.72/31 7.3s}
+Rd7 {-4.53/29 5.0s} 72. d4 {+6.17/33 8.0s} Rd8 {-5.41/32 5.0s}
+73. Kg4 {+6.31/39 6.0s} Kf7 {-5.92/29 5.0s} 74. d5 {+7.67/39 36s}
+Rh8 {-6.63/29 5.0s} 75. Re6 {+7.97/28 6.8s} Rh1 {-7.12/26 5.0s}
+76. Rc6 {+8.52/27 8.6s} Rg1+ {-7.80/24 5.0s} 77. Kf3 {+8.86/27 6.4s}
+Rf1+ {-8.11/24 5.0s, White wins by adjudication} 1-0
+[Event "CCRL 40/4"]
+[Site "CCRL"]
+[Date "2006.05.24"]
+[Round "1"]
+[White "Aristarch 4.50"]
+[Black "Chess Tiger 15"]
+[Result "1/2-1/2"]
+
+g1f3 c7c5 e2e4 d7d6 d2d4 c5d4 f3d4 g8f6 b1c3 e7e6 c1e3 a7a6 g2g4 h7h6 d1f3 b8d7 f1e2 d8c7 f3h3 d6d5 e4d5 f8b4 e3d2 c7b6 d5e6 b6d4 e6d7 c8d7 e1c1 d4b6 d2e3 b4c5 h3g3 c5e3 f2e3 e8g8 g4g5 h6g5 g3g5 f8e8 d1d3 f6h7 c3d5 h7g5 d5b6 d7c6 h1g1 g5h3 g1g3 h3f2 b6a8 f2d3 c2d3 e8a8 g3g5 g7g6 g5c5 g8g7 h2h4 a8h8 h4h5 f7f5 d3d4 g6h5 d4d5 c6e8 c5c7 e8f7 d5d6 g7f6 d6d7 h8d8 c7b7 f6e7 e2a6 f7d5 b7b6 d8d7 a6e2 d7c7 c1d2 d5a2 b6h6 c7d7 d2e1 a2b3 h6h7 e7e6 h7d7 e6d7 e2h5 d7e6 h5d1 b3a2 e1f2 e6e5 f2f3 a2f7 d1c2 f7d5 f3g3 d5c4 c2b1 c4d5 b1d3 d5b3 d3b5 e5e4 g3f2 f5f4 b5c6 e4e5 e3e4 1/2-1/2
+[Event "A"]
+[Site "?"]
+[Date "2024.04.25"]
+[Round "?"]
+[White "White vs 1...c5"]
+[Black "?"]
+[Result "*"]
+[ECO "A00"]
+[PlyCount "0"]
+[SourceVersionDate "2024.04.25"]
+
+ *
+
+[Event "B"]
+[Site "?"]
+[Date "2024.04.25"]
+[Round "?"]
+[White "White vs 1...c5"]
+[Black "?"]
+[Result "*"]
+[ECO "A00"]
+[PlyCount "0"]
+[SourceVersionDate "2024.04.25"]
+
+ *

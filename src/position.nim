@@ -89,7 +89,7 @@ func kingSquare*(position: Position, color: Color): Square =
   assert (position[king] and position[color]).countSetBits == 1
   (position[king] and position[color]).toSquare
 
-func checkCheck*(position: Position, us: Color): bool =
+func inCheck*(position: Position, us: Color): bool =
   position.isAttacked(us, position.kingSquare(us))
 
 func pieceAt*(position: Position, square: Square): Piece =

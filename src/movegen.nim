@@ -221,7 +221,7 @@ func legalMoves*(position: Position): seq[Move] =
       pseudoLegalMoves.setLen(numMoves)
       for move in pseudoLegalMoves:
         let newPosition = position.doMove(move)
-        if newPosition.checkCheck(position.us):
+        if newPosition.inCheck(position.us):
           continue
         result.add move
       break

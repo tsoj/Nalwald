@@ -2,7 +2,7 @@ import unittest
 import ../src/position
 import ../src/chessStrutils
 import ../src/types
-import exampleFens
+import testData/exampleFens
 
 suite "Zobrist Key Tests":
 

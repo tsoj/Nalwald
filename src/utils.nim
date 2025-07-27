@@ -61,7 +61,7 @@ func toColoredPiece*(s: char): ColoredPiece =
   of 'K', 'k':
     piece = king
   else:
-    raise newException(ValueError, "Piece notation doesn't exists: " & s)
+    raise newException(ValueError, "Piece notation doesn't exist: " & s)
 
   let color = if s.isLowerAscii: black else: white
   ColoredPiece(color: color, piece: piece)
