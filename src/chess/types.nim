@@ -1,5 +1,6 @@
 # fr  om system import int8, int32, high
-import std/math
+import std/[math, options, strutils]
+
 #!fmt: off
 type Square* = enum
   a1, b1, c1, d1, e1, f1, g1, h1,
@@ -195,3 +196,66 @@ static:
   assert positiveMate > negativeMate
   assert positiveMate > valueDraw
   assert negativeMate < valueDraw
+
+
+func boardString*(f: proc(square: Square): Option[string] {.noSideEffect.}): string =
+  result = " _ _ _ _ _ _ _ _\n"
+  for rank in countdown(7, 0):
+    for file in 0 .. 7:
+      result &= "|"
+      let s = f((8 * rank + file).Square)
+      if s.isSome:
+        result &= s.get()
+      else:
+        result &= "_"
+    result &= "|" & intToStr(rank + 1) & "\n"
+  result &= " A B C D E F G H"
+
+func notation*(piece: Piece): string =
+  case piece
+  of pawn: "p"
+  of knight: "n"
+  of bishop: "b"
+  of rook: "r"
+  of queen: "q"
+  of king: "k"
+  of noPiece: "-"
+
+func notation*(coloredPiece: ColoredPiece): string =
+  result = coloredPiece.piece.notation
+  if coloredPiece.color == white:
+    result = result.toUpperAscii
+
+func `$`*(coloredPiece: ColoredPiece): string =
+  const t = [
+    white: [
+      pawn: "♟", knight: "♞", bishop: "♝", rook: "♜", queen: "♛", king: "♚"
+    ],
+    black: [
+      pawn: "♙", knight: "♘", bishop: "♗", rook: "♖", queen: "♕", king: "♔"
+    ],
+  ]
+  if coloredPiece.piece == noPiece:
+    return " "
+  return t[coloredPiece.color][coloredPiece.piece]
+
+func toColoredPiece*(s: char): ColoredPiece =
+  var piece: pawn..king
+  case s
+  of 'P', 'p':
+    piece = pawn
+  of 'N', 'n':
+    piece = knight
+  of 'B', 'b':
+    piece = bishop
+  of 'R', 'r':
+    piece = rook
+  of 'Q', 'q':
+    piece = queen
+  of 'K', 'k':
+    piece = king
+  else:
+    raise newException(ValueError, "Piece notation doesn't exist: " & s)
+
+  let color = if s.isLowerAscii: black else: white
+  ColoredPiece(color: color, piece: piece)

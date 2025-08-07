@@ -1,4 +1,4 @@
-import ../src/[pgn, chessStrutils]
+import ../src/chess/[pgn, chessStrutils]
 import std/[unittest, tables, streams, strutils]
 
 suite "PGN Parser Tests":

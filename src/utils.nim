@@ -1,70 +1,120 @@
-import types
+import std/[terminal, strutils, osproc, os, times, macros]
 
-import std/[options, strutils, times, os, osproc, math, macros]
+proc printMarkdownSubsetNoNewline(markdown: string) =
+  var
+    markdown = markdown
+    isTitle = false
+    isInlineCode = false
+    isCodeBlock = false
+    isBright = false
+    isItalic = false
+    isUnderscore = false
+    isBulletPoint = false
+    couldBeBulletPoint = true
+    currentString = ""
 
-const megaByteToByte* = 1_048_576
+  func popFront(s: var string) =
+    if s.len >= 1:
+      s = s[1 ..^ 1]
+    else:
+      s = ""
 
-func boardString*(f: proc(square: Square): Option[string] {.noSideEffect.}): string =
-  result = " _ _ _ _ _ _ _ _\n"
-  for rank in countdown(7, 0):
-    for file in 0 .. 7:
-      result &= "|"
-      let s = f((8 * rank + file).Square)
-      if s.isSome:
-        result &= s.get()
-      else:
-        result &= "_"
-    result &= "|" & intToStr(rank + 1) & "\n"
-  result &= " A B C D E F G H"
+  proc printCurrentString() =
+    stdout.resetAttributes()
+    if isCodeBlock or isInlineCode:
+      stdout.setStyle {styleDim}
 
-func notation*(piece: Piece): string =
-  case piece
-  of pawn: "p"
-  of knight: "n"
-  of bishop: "b"
-  of rook: "r"
-  of queen: "q"
-  of king: "k"
-  of noPiece: "-"
+    if isItalic:
+      stdout.setStyle {styleItalic}
 
-func notation*(coloredPiece: ColoredPiece): string =
-  result = coloredPiece.piece.notation
-  if coloredPiece.color == white:
-    result = result.toUpperAscii
+    if isUnderscore:
+      stdout.setStyle {styleUnderscore}
 
-func `$`*(coloredPiece: ColoredPiece): string =
-  const t = [
-    white: [
-      pawn: "♟", knight: "♞", bishop: "♝", rook: "♜", queen: "♛", king: "♚"
-    ],
-    black: [
-      pawn: "♙", knight: "♘", bishop: "♗", rook: "♖", queen: "♕", king: "♔"
-    ],
-  ]
-  if coloredPiece.piece == noPiece:
-    return " "
-  return t[coloredPiece.color][coloredPiece.piece]
+    if isBright:
+      stdout.setStyle {styleBright}
 
-func toColoredPiece*(s: char): ColoredPiece =
-  var piece: pawn..king
-  case s
-  of 'P', 'p':
-    piece = pawn
-  of 'N', 'n':
-    piece = knight
-  of 'B', 'b':
-    piece = bishop
-  of 'R', 'r':
-    piece = rook
-  of 'Q', 'q':
-    piece = queen
-  of 'K', 'k':
-    piece = king
-  else:
-    raise newException(ValueError, "Piece notation doesn't exist: " & s)
+    if isTitle:
+      stdout.setStyle {styleBright, styleUnderscore}
 
-  let color = if s.isLowerAscii: black else: white
-  ColoredPiece(color: color, piece: piece)
+    if isBulletPoint:
+      stdout.setStyle {styleDim}
+
+    stdout.write currentString
+    stdout.resetAttributes()
+    currentString = ""
+
+  if markdown.len > 0 and markdown[0] == '#':
+    isTitle = true
+
+  while markdown.len > 0:
+    if markdown[0] != '-' and markdown[0] notin Whitespace:
+      couldBeBulletPoint = false
+
+    if markdown[0] == '\n':
+      printCurrentString()
+      isTitle = false
+      stdout.write "\n"
+      markdown.popFront
+      if isCodeBlock and markdown.len > 0:
+        stdout.write "    "
+      elif markdown.len > 1 and not isInlineCode:
+        if markdown[0] == '#':
+          isTitle = true
+        if not isTitle:
+          couldBeBulletPoint = true
+    elif markdown.len >= 2 and markdown[0 .. 1] == "**":
+      printCurrentString()
+      isBright = not isBright
+      markdown.popFront
+      markdown.popFront
+    elif markdown[0] == '*':
+      printCurrentString()
+      isItalic = not isItalic
+      markdown.popFront
+    elif markdown.len >= 4 and markdown[0 .. 3] == "````":
+      printCurrentString()
+      isUnderscore = not isUnderscore
+      markdown.popFront
+      markdown.popFront
+      markdown.popFront
+      markdown.popFront
+    elif markdown.len >= 3 and markdown[0 .. 2] == "```":
+      printCurrentString()
+      isCodeBlock = not isCodeBlock
+      markdown.popFront
+      markdown.popFront
+      markdown.popFront
+    elif markdown[0] == '`':
+      printCurrentString()
+      isInlineCode = not isInlineCode
+      markdown.popFront
+    elif markdown[0] == '-' and couldBeBulletPoint:
+      currentString &= "•"
+      isBulletPoint = true
+      printCurrentString()
+      isBulletPoint = false
+      couldBeBulletPoint = false
+      markdown.popFront
+    elif markdown[0] == '\\' and markdown.len >= 2 and markdown[1] in ['#', '*', '`', '-']:
+      markdown.popFront
+      currentString &= markdown[0]
+      markdown.popFront
+    else:
+      currentString &= markdown[0]
+      markdown.popFront
+
+
+proc printMarkdownSubset*(markdownLines: varargs[string]) =
+  var markdown = ""
+  for line in markdownLines:
+    markdown &= line
+
+  if markdown.len > 0:
+    if markdown[^1] != '\n':
+      markdown &= "\n"
+    printMarkdownSubsetNoNewline markdown
+
+
 
 type Seconds* = distinct float
 
@@ -102,6 +152,17 @@ func secondsSince1970*(): Seconds =
   {.cast(noSideEffect).}:
     epochTime().Seconds
 
+proc getCpuInfo*(): string =
+  when defined(posix):
+    var cpuName = execCmdEx(
+      """
+        cat /proc/cpuinfo | awk -F '\\s*: | @' '/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ { cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' "$cpu_file"
+        """
+    ).output
+    return cpuName.strip
+
+
+
 macro lazyEval*(assignmentStmt: untyped): untyped =
   expectKind(assignmentStmt, nnkStmtList)
   expectLen(assignmentStmt, 1)
@@ -120,12 +181,3 @@ macro lazyEval*(assignmentStmt: untyped): untyped =
       if `storageIdent`.isNone:
         `storageIdent` = some `initExpr`
       `storageIdent`.get()
-
-proc getCpuInfo*(): string =
-  when defined(posix):
-    var cpuName = execCmdEx(
-      """
-        cat /proc/cpuinfo | awk -F '\\s*: | @' '/model name|Hardware|Processor|^cpu model|chip type|^cpu type/ { cpu=$2; if ($1 == "Hardware") exit } END { print cpu }' "$cpu_file"
-        """
-    ).output
-    return cpuName.strip

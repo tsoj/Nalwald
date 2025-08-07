@@ -1,4 +1,4 @@
-import types, bitboard, utils, position, zobristBitmasks
+import types, bitboard, position, zobristBitmasks
 export types
 
 type

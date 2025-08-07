@@ -1,8 +1,8 @@
-import types, position, move, movegen, utils, bitboard, castling
+import types, position, move, movegen, bitboard, castling
 
 import std/[strutils, options, strformat]
 
-export move, position, utils
+export move, position
 
 func fen*(position: Position, alwaysShowEnPassantSquare: bool = false ): string =
   result = ""

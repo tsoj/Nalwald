@@ -1,4 +1,4 @@
-import types, utils
+import types
 
 import std/[options, bitops, endians, sugar]
 

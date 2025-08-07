@@ -1,7 +1,5 @@
 import unittest
-import ../src/position
-import ../src/chessStrutils
-import ../src/types
+import ../src/chess/[position, chessStrutils, types]
 import testData/exampleFens
 
 

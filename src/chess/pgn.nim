@@ -1,7 +1,8 @@
-import chessStrutils, movegen, position
+import chessStrutils, movegen, position, game
 
 import std/[strutils, options, strformat, streams, tables, sequtils]
 
+export game
 
 func toSAN*(move: Move, position: Position): string =
   if move == noMove:
@@ -153,13 +154,6 @@ func toMoveFromSAN*(sanMove: string, position: Position): Move =
     except ValueError:
       raise newException(ValueError, fmt"Illegal SAN notation: {sanMove}")
 
-type
-  PgnGame* = object
-    headers*: Table[string, string]
-    moves*: seq[Move]
-    startPosition*: Position
-    result*: string
-
 proc parseHeaders(stream: StringStream): Table[string, string] =
   result = initTable[string, string]()
   var line = ""
@@ -271,7 +265,7 @@ proc parseMoveText(stream: StringStream, startPos: Position): (seq[Move], string
 
   return (moves, gameResult.get(otherwise = "*"))
 
-proc parseGame*(stream: StringStream): PgnGame =
+proc parseGame*(stream: StringStream): Game =
   if stream.atEnd():
     raise newException(ValueError, "Can't read PGN from finished stream")
 
@@ -285,14 +279,14 @@ proc parseGame*(stream: StringStream): PgnGame =
 
   let (moves, gameResult) = parseMoveText(stream, startPos)
 
-  result = PgnGame(
+  result = Game(
     headers: headers,
     moves: moves,
     startPosition: startPos,
     result: gameResult
   )
 
-proc parseGamesFromStream*(stream: StringStream, suppressWarnings = false): seq[PgnGame] =
+proc parseGamesFromStream*(stream: StringStream, suppressWarnings = false): seq[Game] =
   result = @[]
 
   while not stream.atEnd():
@@ -325,16 +319,16 @@ proc parseGamesFromStream*(stream: StringStream, suppressWarnings = false): seq[
 
 
 
-proc parseGamesFromString*(content: string, suppressWarnings = false): seq[PgnGame] =
+proc parseGamesFromString*(content: string, suppressWarnings = false): seq[Game] =
   let stream = newStringStream(content)
   defer: stream.close()
   return parseGamesFromStream(stream, suppressWarnings = suppressWarnings)
 
-proc parseGamesFromFile*(filename: string, suppressWarnings = false): seq[PgnGame] =
+proc parseGamesFromFile*(filename: string, suppressWarnings = false): seq[Game] =
   let content = readFile(filename)
   return parseGamesFromString(content, suppressWarnings = suppressWarnings)
 
-func toPgnString*(game: PgnGame): string =
+func toPgnString*(game: Game): string =
   result = ""
 
   # Add headers
@@ -378,6 +372,6 @@ func toPgnString*(game: PgnGame): string =
 
   result &= "\n"
 
-func toPgnString*(games: seq[PgnGame]): string =
+func toPgnString*(games: seq[Game]): string =
   for game in games:
     result &= game.toPgnString & "\n\n"

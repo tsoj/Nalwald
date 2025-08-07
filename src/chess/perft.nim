@@ -1,4 +1,4 @@
-import position, chessStrutils, move, movegen, utils
+import position, chessStrutils, move, movegen
 
 func perft*(position: Position, depth: int, printRootMoveNodes: static bool = false): int64 =
   if depth <= 0:

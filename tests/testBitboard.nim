@@ -1,6 +1,5 @@
 import unittest
-import ../src/bitboard
-import ../src/types
+import ../src/chess/[bitboard, types]
 
 suite "Bitboard Tests":
 
