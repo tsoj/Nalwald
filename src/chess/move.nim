@@ -1,6 +1,8 @@
 import types, bitboard, position, zobristBitmasks
 export types
 
+import std/strformat
+
 type
   MoveType = enum
     notSomeMove
@@ -79,7 +81,14 @@ func newMove*(
 const noMove*: Move = Move(notSomeMove.uint16 shl 12)
 
 func moveType(move: Move): MoveType =
-  MoveType((move.uint16 shr 12) and 0b1111u16)
+  let i = (move.uint16 shr 12) and 0b1111u16
+  if i in (MoveType.low.uint16 .. MoveType.high.uint16):
+    MoveType(i)
+  else:
+    notSomeMove
+
+func isNoMove*(move: Move): bool =
+  move.moveType == notSomeMove
 
 func source*(move: Move): Square =
   Square(move.uint16 and 0b111111u16)
@@ -98,7 +107,7 @@ func promoted*(move: Move): Piece =
 func isCapture*(move: Move): bool =
   move.moveType in [
     captureMove, capturePromotionKnightMove, capturePromotionBishopMove,
-    capturePromotionRookMove, capturePromotionQueenMove,
+    capturePromotionRookMove, capturePromotionQueenMove, enPassantMove
   ]
 
 func isTactical*(move: Move): bool =
@@ -111,7 +120,7 @@ func isEnPassantCapture*(move: Move): bool =
   move.moveType == enPassantMove
 
 func `$`*(move: Move): string =
-  if move == noMove:
+  if move.isNoMove:
     return "0000"
   assert move.moveType != notSomeMove
   result = $move.source & $move.target
@@ -119,8 +128,13 @@ func `$`*(move: Move): string =
     result &= move.promoted.notation
 
 func moved*(move: Move, position: Position): Piece =
-  assert position.coloredPieceAt(move.source).color == position.us
-  position.pieceAt(move.source)
+  result = position.pieceAt(move.source)
+  # if result != noPiece:
+  #   debugEcho position
+  #   debugEcho move
+  #   debugEcho result
+  #   debugEcho position.coloredPieceAt(move.source).color
+  #   assert result == noPiece or position.coloredPieceAt(move.source).color == position.us
 
 func captured*(move: Move, position: Position): Piece =
   if move.isCastling:
@@ -128,7 +142,7 @@ func captured*(move: Move, position: Position): Piece =
   elif move.isEnPassantCapture:
     pawn
   elif move.isCapture:
-    assert position.coloredPieceAt(move.target).color == position.enemy
+    # assert position.coloredPieceAt(move.target).color == position.enemy
     position.pieceAt(move.target)
   else:
     noPiece
@@ -150,7 +164,7 @@ func enPassantTargetSquare*(move: Move, position: Position): Square =
     noSquare
 
 func isPseudoLegal*(position: Position, move: Move): bool =
-  if move == noMove:
+  if move.isNoMove:
     return false
 
   let
@@ -163,6 +177,9 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     us = position.us
     enemy = position.enemy
     occupancy = position.occupancy
+
+  if move.isCapture != (captured != noPiece):
+    return false
 
   if moved notin pawn .. king or source notin a1 .. h8 or target notin a1 .. h8:
     return false
@@ -189,17 +206,22 @@ func isPseudoLegal*(position: Position, move: Move): bool =
       return false
     if not empty(target.toBitboard and occupancy):
       return false
+    if moved != pawn or captured != pawn:
+      return false
 
-  if (moved == bishop or moved == rook or moved == queen) and
+  if (moved in [knight, bishop, rook, queen] or (moved == king and not move.isCastling)) and
       empty(target.toBitboard and moved.attackMask(source, occupancy)):
     return false
 
   if moved == pawn:
+    if homeRank(enemy).isSet(target) and promoted == noPiece:
+      return false
     if captured != noPiece and
         empty(target.toBitboard and attackMaskPawnCapture(source, us)):
       return false
     elif captured == noPiece:
-      doAssert move.moveType != captureMove
+      if move.moveType == captureMove:
+        return false
       if target.toBitboard != attackMaskPawnQuiet(source, us):
         if not empty(occupancy and attackMaskPawnQuiet(source, us)):
           return false
@@ -223,8 +245,11 @@ func isPseudoLegal*(position: Position, move: Move): bool =
     let castlingSide = move.castlingSide(position)
 
     let
-      kingSource = (position[us] and position[king]).toSquare
+      kingSource = position[us, king].toSquare
       rookSource = position.rookSource[us][castlingSide]
+
+    if kingSource != source:
+      return false
 
     if rookSource != target or
         not empty(
@@ -258,7 +283,7 @@ func doNullMove*(position: Position): Position =
 
 func doMove*(position: Position, move: Move, allowNullMove: static bool = false): Position =
   when allowNullMove:
-    if move == noMove:
+    if move.isNoMove:
       return position.doNullMove()
 
   result = position
@@ -339,13 +364,6 @@ func doMove*(position: Position, move: Move, allowNullMove: static bool = false)
 
   result.zobristKey ^= zobristSideToMoveBitmasks[white]
   result.zobristKey ^= zobristSideToMoveBitmasks[black]
-
-
-  # debugEcho "########################"
-  # debugEcho position
-  # debugEcho "--------------"
-  # debugEcho result
-  # debugEcho move
 
   assert result.zobristKeysAreOk
 

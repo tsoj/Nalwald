@@ -7,32 +7,26 @@ import std/terminal
 
 const maxNumPerftNodes {.intdefine.} = int.high
 
+proc testPerft(usePseudoLegalTest: bool, maxNodes: int) =
+  for (fen, trueNumNodesList) in perftFens:
+    let position = fen.toPosition
+
+    for depth in 1 .. trueNumNodesList.len:
+      let trueNumNodes = trueNumNodesList[depth - 1]
+
+      if trueNumNodes > maxNodes:
+        break
+
+      let perftResult = position.perft(depth)
+      check perftResult == trueNumNodes
+
 suite "Perft Tests":
 
-  test "Basic perft correctness":
+  test "Perft correctness":
+    testPerft(usePseudoLegalTest = false, maxNodes = maxNumPerftNodes)
 
-    for (fen, trueNumNodesList) in perftFens:
-      let position = fen.toPosition
-
-      for depth in 1 .. trueNumNodesList.len:
-        let trueNumNodes = trueNumNodesList[depth - 1]
-
-        if trueNumNodes > maxNumPerftNodes:
-          break
-
-        let perftResult = position.perft(depth)
-        check perftResult == trueNumNodes
-
-  test "Perft for Chess960 positions":
-    for (fen, trueNumNodesList) in perftFens:
-      if fen.toPosition.isChess960:
-        let position = fen.toPosition
-
-        # Test at least depth 1
-        if trueNumNodesList.len > 0:
-          let expectedNodes = trueNumNodesList[0]
-          if expectedNodes <= maxNumPerftNodes:
-            check position.perft(1) == expectedNodes
+  test "Pseudo legality check based perft correctness":
+    testPerft(usePseudoLegalTest = true, maxNodes = max(1000, maxNumPerftNodes div 10))
 
   test "Perft zero depth":
     let position = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1".toPosition

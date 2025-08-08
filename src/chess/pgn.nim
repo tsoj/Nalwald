@@ -5,7 +5,7 @@ import std/[strutils, options, strformat, streams, tables, sequtils]
 export game
 
 func toSAN*(move: Move, position: Position): string =
-  if move == noMove:
+  if move.isNoMove:
     return "Z0"
 
   result = ""
@@ -141,14 +141,14 @@ func toMoveFromSAN*(sanMove: string, position: Position): Move =
   result = noMove
   for move in position.legalMoves:
     if validSANMove(position, move, sanMove):
-      if result != noMove:
+      if not result.isNoMove:
         raise newException(
           ValueError,
           fmt"Ambiguous SAN move notation: {sanMove} (possible moves: {result}, {move}",
         )
       result = move
 
-  if result == noMove:
+  if result.isNoMove:
     try:
       result = sanMove.toMove(position)
     except ValueError:
