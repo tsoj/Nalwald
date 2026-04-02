@@ -1,3 +1,4 @@
-import uci
+import nimchess
+import Nalwald/uci
 
-uciLoop()
+uci.uciServer.uciLoop()
