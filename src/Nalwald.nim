@@ -1,4 +1,8 @@
+import std/[os, strutils]
 import nimchess
 import Nalwald/uci
 
-uci.uciServer.uciLoop()
+if paramCount() >= 1:
+  uci.uciServer.runCommand(commandLineParams().join(" "))
+else:
+  uci.uciServer.uciLoop()

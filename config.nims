@@ -6,14 +6,6 @@ when withDir(thisDir(), system.fileExists("nimble.paths")):
 import std/strutils
 import src/Nalwald/version
 
-var binaryName = "Nalwald"
-when defined(buildRelease):
-  binaryName &= "-" & versionOrId()
-when defined(buildDebug):
-  binaryName &= "-debug"
-when defined(buildModern):
-  binaryName &= "-modern"
-
 # Common flags
 switch("cc", "clang")
 switch("mm", "arc")
@@ -45,6 +37,21 @@ else:
   when not defined(buildModern) and not defined(buildGeneric):
     switch("passC", "-march=native -mtune=native")
 
-echo binaryName
+var binaryName = "Nalwald"
+when defined(buildRelease):
+  binaryName &= "-" & versionOrId()
+when defined(buildDebug):
+  binaryName &= "-debug"
+when defined(buildModern):
+  binaryName &= "-modern"
+
+for i in 1 .. paramCount():
+  let p = paramStr(i)
+  if p.startsWith("--out:"):
+    binaryName = p.split(":")[1]
+    break
+  elif p.startsWith("-o:"):
+    binaryName = p[3 ..^ 1]
+    break
 
 switch("out", binaryName)
