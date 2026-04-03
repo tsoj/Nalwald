@@ -8,7 +8,7 @@ type SearchState = object
   stopTime: Seconds
   countedNodes: int
   maxNodes: int
-
+  bestRootMove: Move = noMove
 
 func shouldStop(state: SearchState): bool =
   if state.countedNodes >= state.maxNodes or
@@ -17,37 +17,58 @@ func shouldStop(state: SearchState): bool =
   state.externalStopFlag[].load
 
 func allocatedTime(params: GoParams): tuple[softLimit: Seconds, hardLimit: Seconds] =
-
   if params.limit.movetimeSeconds.isSome:
     return (Seconds.high, params.limit.movetimeSeconds.get.Seconds)
 
   let
     us = params.game.currentPosition.us
     estimatedMovesToGo = max(2, min(params.limit.movesToGo, 20))
-    remainingTime = params.limit.timeSeconds[us].Seconds + params.limit.incSeconds[us].Seconds * estimatedMovesToGo
+    remainingTime =
+      params.limit.timeSeconds[us].Seconds +
+      params.limit.incSeconds[us].Seconds * estimatedMovesToGo
   result.softLimit = remainingTime / estimatedMovesToGo
   result.hardLimit = remainingTime / 4
 
-func minimax(position: Position, searchState: var SearchState, depth: Ply): tuple[move: Move, value: Value] =
+func alphabeta(
+    position: Position,
+    searchState: var SearchState,
+    depth: Ply,
+    height: int,
+    alpha, beta: Value,
+): Value =
   searchState.countedNodes += 1
 
   if searchState.shouldStop:
     return
 
-  if depth <= 0.Ply:
-    return (noMove, position.eval)
+  var
+    alpha = alpha
+    bestValue = -Inf
 
-  result = (move: noMove, value: -Inf)
+  if depth <= 0.Ply:
+    return position.eval
 
   for newPosition, move in position.treeSearchMoveIterator:
-    let value = -newPosition.minimax(searchState, depth - 1.Ply).value
+    let value = -newPosition.alphabeta(
+      searchState,
+      depth = depth - 1.Ply,
+      height = height + 1,
+      alpha = -beta,
+      beta = -alpha,
+    )
 
-    if value >= result.value:
-      result = (move: move, value: value)
+    if value > bestValue:
+      bestValue = value
 
+      if height == 0 and not searchState.shouldStop:
+        searchState.bestRootMove = move
 
+    if value > alpha:
+      alpha = value
+    if value >= beta:
+      break
 
-
+  return bestValue
 
 proc search*(params: GoParams) {.nimcall, gcsafe.} =
   let position = params.game.currentPosition
@@ -55,7 +76,6 @@ proc search*(params: GoParams) {.nimcall, gcsafe.} =
   if params.searchMoves.len == 0:
     sendBestMove(noMove, position)
     return
-
 
   let
     startTime = secondsSince1970()
@@ -65,28 +85,32 @@ proc search*(params: GoParams) {.nimcall, gcsafe.} =
     externalStopFlag: params.stopFlag,
     stopTime: startTime + hardTime,
     countedNodes: 0,
-    maxNodes: int.high
+    maxNodes: int.high,
   )
 
   var finalBestMove = noMove
 
-  for intDepth in 1..100:
+  for intDepth in 1 .. 100:
     let depth = intDepth.Ply
 
     let prevNodes = searchState.countedNodes.float
 
-    let (bestMove, bestValue) = position.minimax(searchState, depth)
+    let bestValue = position.alphabeta(
+      searchState, depth = depth, height = 0, alpha = -Inf, beta = Inf
+    )
 
     let
       currNodes = searchState.countedNodes.float
       nps = currNodes / (secondsSince1970() - startTime).float
 
     if not searchState.shouldStop:
-      finalBestMove = bestMove
+      finalBestMove = searchState.bestRootMove
 
       sendUciInfo(
         UciInfo(
-          depth: some(depth.int), score: some(Score(kind: skCp, cp: (bestValue * 100.0).int)), pv: some(@[bestMove])
+          depth: some(depth.int),
+          score: some(Score(kind: skCp, cp: (bestValue * 100.0).int)),
+          pv: some(@[finalBestMove]),
         ),
         position,
       )
@@ -96,17 +120,12 @@ proc search*(params: GoParams) {.nimcall, gcsafe.} =
       estimatedTotalNodesByNextIter = currNodes * perIterMultiplier
 
     if softTime <= (estimatedTotalNodesByNextIter / nps).Seconds and prevNodes > 0:
-    #   debugEcho softTime, " <= ", (estimatedTotalNodesByNextIter / nps).Seconds
-    #   debugEcho "prevNodes: ", prevNodes
-    #   debugEcho "currNodes: ", currNodes
-    #   debugEcho "nps: ", nps
-    #   debugEcho "perIterMultiplier: ", perIterMultiplier
-    #   debugEcho "estimatedTotalNodesByNextIter: ", estimatedTotalNodesByNextIter
+      #   debugEcho softTime, " <= ", (estimatedTotalNodesByNextIter / nps).Seconds
+      #   debugEcho "prevNodes: ", prevNodes
+      #   debugEcho "currNodes: ", currNodes
+      #   debugEcho "nps: ", nps
+      #   debugEcho "perIterMultiplier: ", perIterMultiplier
+      #   debugEcho "estimatedTotalNodesByNextIter: ", estimatedTotalNodesByNextIter
       break
-
-
-
-
-
 
   sendBestMove(finalBestMove, position)

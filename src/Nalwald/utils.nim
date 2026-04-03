@@ -1,6 +1,4 @@
-
 import std/times
-
 
 type Seconds* = distinct float
 

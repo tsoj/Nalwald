@@ -1,8 +1,6 @@
 import nimchess
 
-iterator treeSearchMoveIterator*(
-    position: Position
-): (Position, Move) =
+iterator treeSearchMoveIterator*(position: Position): (Position, Move) =
   ## This iterator is optimized for speed and for good move ordering.
   ## It does not guarantee to list all legal moves and may include
   ## illegal moves that leave our own king in check.
