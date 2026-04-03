@@ -36,6 +36,9 @@ func quiesce(
 
   state.countedNodes += 1
 
+  if state.shouldStop:
+    return -Inf
+
   if height >= 100:
     return 0.Value
 
