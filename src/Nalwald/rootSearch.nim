@@ -74,7 +74,7 @@ func alphabeta(
   state.countedNodes += 1
 
   if state.shouldStop:
-    return
+    return -Inf
 
   var
     alpha = alpha
@@ -133,19 +133,21 @@ proc search*(params: GoParams): int =
       currNodes = state.countedNodes.float
       nps = currNodes / (secondsSince1970() - startTime).float
 
-    if not state.shouldStop:
-      finalBestMove = state.bestRootMove
+    if state.shouldStop:
+      break
 
-      sendUciInfo(
-        UciInfo(
-          depth: some depth.int,
-          score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
-          pv: some @[finalBestMove],
-          nps: some nps.int,
-          nodes: some currNodes.int,
-        ),
-        position,
-      )
+    finalBestMove = state.bestRootMove
+
+    sendUciInfo(
+      UciInfo(
+        depth: some depth.int,
+        score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
+        pv: some @[finalBestMove],
+        nps: some nps.int,
+        nodes: some currNodes.int,
+      ),
+      position,
+    )
 
     let
       perIterMultiplier = currNodes / prevNodes
