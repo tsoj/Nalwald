@@ -29,16 +29,51 @@ func allocatedTime(params: GoParams): tuple[softLimit: Seconds, hardLimit: Secon
   result.softLimit = remainingTime / estimatedMovesToGo
   result.hardLimit = remainingTime / 4
 
+func quiesce(
+    position: Position, state: var SearchState, alpha, beta: Value, height: int
+): Value =
+  assert alpha < beta
+
+  state.countedNodes += 1
+
+  if height >= 100:
+    return 0.Value
+
+  let standPat = position.eval
+
+  var
+    alpha = alpha
+    bestValue = standPat
+
+  if standPat >= beta:
+    return standPat
+  if standPat > alpha:
+    alpha = standPat
+
+  for newPosition, move in position.treeSearchMoveIterator(doQuiets = false):
+    let value = -newPosition.quiesce(state, alpha = -beta, beta = -alpha, height + 1)
+
+    if value > bestValue:
+      bestValue = value
+    if value >= beta:
+      return bestValue
+    if value > alpha:
+      alpha = value
+
+  bestValue
+
 func alphabeta(
     position: Position,
-    searchState: var SearchState,
+    state: var SearchState,
+    alpha, beta: Value,
     depth: Ply,
     height: int,
-    alpha, beta: Value,
 ): Value =
-  searchState.countedNodes += 1
+  assert alpha < beta
 
-  if searchState.shouldStop:
+  state.countedNodes += 1
+
+  if state.shouldStop:
     return
 
   var
@@ -46,22 +81,18 @@ func alphabeta(
     bestValue = -Inf
 
   if depth <= 0.Ply:
-    return position.eval
+    return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
   for newPosition, move in position.treeSearchMoveIterator:
     let value = -newPosition.alphabeta(
-      searchState,
-      depth = depth - 1.Ply,
-      height = height + 1,
-      alpha = -beta,
-      beta = -alpha,
+      state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
     )
 
     if value > bestValue:
       bestValue = value
 
-      if height == 0 and not searchState.shouldStop:
-        searchState.bestRootMove = move
+      if height == 0 and not state.shouldStop:
+        state.bestRootMove = move
 
     if value > alpha:
       alpha = value
@@ -70,18 +101,18 @@ func alphabeta(
 
   return bestValue
 
-proc search*(params: GoParams) {.nimcall, gcsafe.} =
+proc search*(params: GoParams): int =
   let position = params.game.currentPosition
 
   if params.searchMoves.len == 0:
     sendBestMove(noMove, position)
-    return
+    return 0
 
   let
     startTime = secondsSince1970()
     (softTime, hardTime) = allocatedTime(params)
 
-  var searchState = SearchState(
+  var state = SearchState(
     externalStopFlag: params.stopFlag,
     stopTime: startTime + hardTime,
     countedNodes: 0,
@@ -90,27 +121,28 @@ proc search*(params: GoParams) {.nimcall, gcsafe.} =
 
   var finalBestMove = noMove
 
-  for intDepth in 1 .. 100:
+  for intDepth in 1 .. params.limit.depth:
     let depth = intDepth.Ply
 
-    let prevNodes = searchState.countedNodes.float
+    let prevNodes = state.countedNodes.float
 
-    let bestValue = position.alphabeta(
-      searchState, depth = depth, height = 0, alpha = -Inf, beta = Inf
-    )
+    let bestValue =
+      position.alphabeta(state, alpha = -Inf, beta = Inf, depth = depth, height = 0)
 
     let
-      currNodes = searchState.countedNodes.float
+      currNodes = state.countedNodes.float
       nps = currNodes / (secondsSince1970() - startTime).float
 
-    if not searchState.shouldStop:
-      finalBestMove = searchState.bestRootMove
+    if not state.shouldStop:
+      finalBestMove = state.bestRootMove
 
       sendUciInfo(
         UciInfo(
-          depth: some(depth.int),
-          score: some(Score(kind: skCp, cp: (bestValue * 100.0).int)),
-          pv: some(@[finalBestMove]),
+          depth: some depth.int,
+          score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
+          pv: some @[finalBestMove],
+          nps: some nps.int,
+          nodes: some currNodes.int,
         ),
         position,
       )
@@ -129,3 +161,7 @@ proc search*(params: GoParams) {.nimcall, gcsafe.} =
       break
 
   sendBestMove(finalBestMove, position)
+  state.countedNodes
+
+proc searchHandler*(params: GoParams) {.nimcall, gcsafe.} =
+  discard search(params)
