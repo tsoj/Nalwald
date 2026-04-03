@@ -1,6 +1,5 @@
-import std/[times, strutils]
+import std/[times, strutils, atomics]
 import nimchess
-import nimchess/perft
 import version, rootSearch
 
 const benchFens = [
@@ -13,18 +12,30 @@ const benchFens = [
 ]
 
 proc benchCommand(game: var Game, params: seq[string]) =
+  const defaultDepth = 3
   let depth =
     if params.len >= 1:
       try:
         parseInt(params[0])
       except ValueError:
-        4
+        defaultDepth
     else:
-      4
+      defaultDepth
   var totalNodes: int64 = 0
   let start = epochTime()
   for fen in benchFens:
-    totalNodes += fen.toPosition.perft(depth)
+    var stopFlag: Atomic[bool]
+    stopFlag.store(false)
+    let position = fen.toPosition
+    totalNodes +=
+      search(
+        GoParams(
+          game: newGame(startPosition = position),
+          searchMoves: position.legalMoves,
+          limit: Limit(depth: depth),
+          stopFlag: addr stopFlag,
+        )
+      )
   let elapsed = epochTime() - start
   let nps =
     if elapsed > 0.0:
@@ -40,7 +51,7 @@ var uciServer* = newUciServer(
     EngineOption(name: "Hash", kind: eotSpin, defaultInt: 16, minVal: 1, maxVal: 512),
     EngineOption(name: "Threads", kind: eotSpin, defaultInt: 1, minVal: 1, maxVal: 1),
   ],
-  onGo = search,
+  onGo = searchHandler,
   onSetOption = nil,
   onNewGame = nil,
   onQuit = nil,
