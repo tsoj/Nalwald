@@ -2,4 +2,4 @@ EXE = Nalwald
 
 .PHONY: build
 build:
-	nim c -o:"$(EXE)" src/Nalwald.nim
+	nimble build && nim c -o:"$(EXE)" src/Nalwald.nim
