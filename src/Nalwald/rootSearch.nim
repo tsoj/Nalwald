@@ -1,4 +1,4 @@
-import std/[random, os, atomics, options]
+import std/[random, os, atomics, options, sequtils]
 import nimchess/[uciserver, movegen, position, types]
 
 import eval, utils, moveIterator, types
@@ -105,15 +105,17 @@ func alphabeta(
   return bestValue
 
 proc search*(params: GoParams): int =
-  let position = params.game.currentPosition
 
+  let
+    position = params.game.currentPosition
+    legalMoves = position.legalMoves
+    startTime = secondsSince1970()
+    (softTime, hardTime) = allocatedTime(params)
+
+  doAssert params.searchMoves.allIt(it in legalMoves)
   if params.searchMoves.len == 0:
     sendBestMove(noMove, position)
     return 0
-
-  let
-    startTime = secondsSince1970()
-    (softTime, hardTime) = allocatedTime(params)
 
   var state = SearchState(
     externalStopFlag: params.stopFlag,
@@ -122,7 +124,8 @@ proc search*(params: GoParams): int =
     maxNodes: int.high,
   )
 
-  var finalBestMove = noMove
+
+  var finalBestMove = params.searchMoves[0]
 
   for intDepth in 1 .. params.limit.depth:
     let depth = intDepth.Ply
@@ -157,12 +160,6 @@ proc search*(params: GoParams): int =
       estimatedTotalNodesByNextIter = currNodes * perIterMultiplier
 
     if softTime <= (estimatedTotalNodesByNextIter / nps).Seconds and prevNodes > 0:
-      #   debugEcho softTime, " <= ", (estimatedTotalNodesByNextIter / nps).Seconds
-      #   debugEcho "prevNodes: ", prevNodes
-      #   debugEcho "currNodes: ", currNodes
-      #   debugEcho "nps: ", nps
-      #   debugEcho "perIterMultiplier: ", perIterMultiplier
-      #   debugEcho "estimatedTotalNodesByNextIter: ", estimatedTotalNodesByNextIter
       break
 
   sendBestMove(finalBestMove, position)
