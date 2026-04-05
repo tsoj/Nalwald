@@ -17,17 +17,15 @@ Pre-compiled executables for Windows and Linux can be found [here](https://githu
 
 You need the [Nim](https://nim-lang.org/) compiler (version 2.2.4 or higher) and the [Clang](https://clang.llvm.org/) compiler.
 
-**Prerequisites**
-TODO
-
 **Compiling for native CPU**
-TODO
+```bash
+nimble build
+```
 
-**Compiling for generic CPUs**
-TODO
-
-**Compiling for modern CPUs (BMI2 and POPCNT)**
-TODO
+**Compiling release builds**
+```bash
+nimble release
+```
 
 ### Features
 
