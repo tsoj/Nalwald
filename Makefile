@@ -2,6 +2,6 @@ EXE = Nalwald
 
 .PHONY: build
 build:
-	nimble install nimchess@#head
-	nimble build
+	nimble setup
+	nimble develop nimchess
 	nim c -o:"$(EXE)" src/Nalwald.nim
