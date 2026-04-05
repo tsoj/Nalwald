@@ -27,15 +27,15 @@ proc benchCommand(game: var Game, params: seq[string]) =
     var stopFlag: Atomic[bool]
     stopFlag.store(false)
     let position = fen.toPosition
-    totalNodes +=
-      search(
-        GoParams(
-          game: newGame(startPosition = position),
-          searchMoves: position.legalMoves,
-          limit: Limit(depth: depth),
-          stopFlag: addr stopFlag,
-        )
+    let (_, nodes) = search(
+      GoParams(
+        game: newGame(startPosition = position),
+        searchMoves: position.legalMoves,
+        limit: Limit(depth: depth),
+        stopFlag: addr stopFlag,
       )
+    )
+    totalNodes += nodes
   let elapsed = epochTime() - start
   let nps =
     if elapsed > 0.0:
@@ -43,6 +43,10 @@ proc benchCommand(game: var Game, params: seq[string]) =
     else:
       0
   echo totalNodes, " nodes ", nps, " nps"
+
+proc searchHandler(params: GoParams): Move {.nimcall, gcsafe.} =
+  let (bestMove, _) = search(params)
+  bestMove
 
 var uciServer* = newUciServer(
   name = "Nalwald " & versionOrId(),

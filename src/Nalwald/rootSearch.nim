@@ -104,8 +104,7 @@ func alphabeta(
 
   return bestValue
 
-proc search*(params: GoParams): int =
-
+proc search*(params: GoParams): (Move, int) =
   let
     position = params.game.currentPosition
     legalMoves = position.legalMoves
@@ -114,8 +113,7 @@ proc search*(params: GoParams): int =
 
   doAssert params.searchMoves.allIt(it in legalMoves)
   if params.searchMoves.len == 0:
-    sendBestMove(noMove, position)
-    return 0
+    return (noMove, 0)
 
   var state = SearchState(
     externalStopFlag: params.stopFlag,
@@ -123,7 +121,6 @@ proc search*(params: GoParams): int =
     countedNodes: 0,
     maxNodes: int.high,
   )
-
 
   var finalBestMove = params.searchMoves[0]
 
@@ -162,8 +159,8 @@ proc search*(params: GoParams): int =
     if softTime <= (estimatedTotalNodesByNextIter / nps).Seconds and prevNodes > 0:
       break
 
-  sendBestMove(finalBestMove, position)
-  state.countedNodes
+  (finalBestMove, state.countedNodes)
 
-proc searchHandler*(params: GoParams) {.nimcall, gcsafe.} =
-  discard search(params)
+proc searchHandler*(params: GoParams): Move {.nimcall, gcsafe.} =
+  let (bestMove, _) = search(params)
+  bestMove
