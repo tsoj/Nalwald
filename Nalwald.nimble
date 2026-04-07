@@ -10,7 +10,7 @@ bin = @["Nalwald"]
 # Dependencies
 
 requires "nim >= 2.2.8"
-requires "https://github.com/tsoj/nimchess#50b0966"
+requires "https://github.com/tsoj/nimchess#head"
 
 # Tasks
 

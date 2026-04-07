@@ -119,7 +119,7 @@ proc search*(params: GoParams): (Move, int) =
     externalStopFlag: params.stopFlag,
     stopTime: startTime + hardTime,
     countedNodes: 0,
-    maxNodes: int.high,
+    maxNodes: params.limit.nodes,
   )
 
   var finalBestMove = params.searchMoves[0]
