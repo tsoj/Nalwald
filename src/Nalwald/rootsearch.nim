@@ -1,7 +1,37 @@
 import std/[atomics, options, sequtils]
 import nimchess/[uciserver, movegen, position, types]
 
-import eval, utils, moveiterator, types
+import eval, utils, moveiterator, types, zobristkey
+
+type SearchPos* = object
+  pos*: Position
+  key*: ZobristKey
+
+func searchPos*(position: Position): SearchPos =
+  SearchPos(pos: position, key: position.zobristKey)
+
+func doMove*(searchPos: SearchPos, move: Move): SearchPos =
+  result.pos = searchPos.pos.doMove(move)
+  result.key = searchPos.key
+
+  result.key =
+    result.key xor zobristSideToMoveBitmasks[white] xor zobristSideToMoveBitmasks[black]
+
+  result.key =
+    result.key xor searchPos.pos.enPassantTarget.ZobristKey xor
+    result.pos.enPassantTarget.ZobristKey
+
+  for color in white .. black:
+    for piece in pawn .. king:
+      for square in searchPos.pos[color, piece] xor result.pos[color, piece]:
+        result.key = result.key xor zobristPieceBitmasks[color][piece][square]
+
+    for side in queenside .. kingside:
+      result.key =
+        result.key xor rookSourceBitmasks[searchPos.pos.rookSource[color][side]] xor
+        rookSourceBitmasks[result.pos.rookSource[color][side]]
+
+  assert result.key == result.pos.zobristKey
 
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
@@ -87,10 +117,9 @@ func alphabeta(
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
   for newPosition, move in position.treeSearchMoveIterator:
-    let value =
-      -newPosition.alphabeta(
-        state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
-      )
+    let value = -newPosition.alphabeta(
+      state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
+    )
 
     if value > bestValue:
       bestValue = value

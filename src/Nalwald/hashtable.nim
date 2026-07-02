@@ -42,15 +42,7 @@ func add*(
     bestMove: Move,
 ) =
   let entry = HashTableEntry(
-    zobristKey: ZobristKey
-    nodeType
-    upperZobristKeyAndNodeTypeAndValue: (
-      (zobristKey and not eighteenBitMask) or
-      ((cast[uint64](nodeType.int64) shl 16) and eighteenBitMask and not sixteenBitMask) or
-      (cast[uint64](value.int64) and sixteenBitMask)
-    ),
-    depth: depth,
-    bestMove: bestMove,
+    zobristKey: ZobristKey, nodeType: nodeType, depth: depth, bestMove: bestMove
   )
   doAssert entry.value == value
   doAssert entry.nodeType == nodeType

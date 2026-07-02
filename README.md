@@ -97,7 +97,9 @@ TODO
 TODO
 
 **Run tests**
-TODO
+```bash
+nimble test
+```
 
 ### License
 
