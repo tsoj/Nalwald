@@ -70,6 +70,13 @@ TODO
 
 ### Other commands
 
+**Set up for development**
+```bash
+nimble setup
+nimble develop nimchess
+# Now if you need to edit parts of nimchess, you can do that in vendor/nimchess
+```
+
 
 **Generate training data**
 TODO

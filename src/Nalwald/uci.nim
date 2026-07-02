@@ -1,6 +1,6 @@
 import std/[times, strutils, atomics]
 import nimchess
-import version, rootSearch
+import version, rootsearch
 
 const benchFens = [
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -44,21 +44,20 @@ proc benchCommand(game: var Game, params: seq[string]) =
       0
   echo totalNodes, " nodes ", nps, " nps"
 
-proc searchHandler(params: GoParams): Move {.nimcall, gcsafe.} =
+type NalwaldEngine = ref object of EngineBase
+
+method onGo(engine: NalwaldEngine, params: GoParams): Move =
   let (bestMove, _) = search(params)
   bestMove
 
 var uciServer* = newUciServer(
   name = "Nalwald " & versionOrId(),
   author = "Jost Triller",
+  engine = NalwaldEngine(),
   options = [
     EngineOption(name: "Hash", kind: eotSpin, defaultInt: 16, minVal: 1, maxVal: 512),
     EngineOption(name: "Threads", kind: eotSpin, defaultInt: 1, minVal: 1, maxVal: 1),
   ],
-  onGo = searchHandler,
-  onSetOption = nil,
-  onNewGame = nil,
-  onQuit = nil,
   customCommands = [
     CustomCommand(
       name: "bench",

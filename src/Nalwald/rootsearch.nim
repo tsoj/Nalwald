@@ -1,7 +1,7 @@
-import std/[random, os, atomics, options, sequtils]
+import std/[atomics, options, sequtils]
 import nimchess/[uciserver, movegen, position, types]
 
-import eval, utils, moveIterator, types
+import eval, utils, moveiterator, types
 
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
@@ -87,9 +87,10 @@ func alphabeta(
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
   for newPosition, move in position.treeSearchMoveIterator:
-    let value = -newPosition.alphabeta(
-      state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
-    )
+    let value =
+      -newPosition.alphabeta(
+        state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
+      )
 
     if value > bestValue:
       bestValue = value
