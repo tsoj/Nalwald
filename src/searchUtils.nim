@@ -152,17 +152,14 @@ func checkForRepetitionAndAdd*(
   gameHistory.dynamicHistory[height] = position.zobristKey
 
   var count = position.halfmoveClock
-  for i in countdown(height - 1.Ply, 1.Ply):
-    if count <= 0:
-      return false
-    if position.zobristKey == gameHistory.dynamicHistory[i]:
-      return true
-    count -= 1
 
-  for i in countdown(gameHistory.staticHistory.len - 1, 0):
-    if count <= 0:
-      return false
-    if position.zobristKey == gameHistory.staticHistory[i]:
-      return true
-    count -= 1
-  false
+  template scan(history, a, b: untyped) =
+    for i in countdown(a, b):
+      if count <= 0:
+        return false
+      if position.zobristKey == gameHistory.history[i]:
+        return true
+      count -= 1
+
+  scan dynamicHistory, height - 1.Ply, 1.Ply
+  scan staticHistory, gameHistory.staticHistory.len - 1, 0
