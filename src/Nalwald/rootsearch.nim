@@ -85,26 +85,14 @@ func alphabeta(
   if depth <= 0.Ply:
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
-  if height > 0:
-    let entry = state.hashTable[].get(position.key)
-    if not entry.isEmpty and entry.depth >= depth:
-      case entry.nodeType
-      of exact:
-        return entry.value
-      of lowerBound:
-        if entry.value >= beta:
-          return entry.value
-      of upperBound:
-        if entry.value <= alpha:
-          return entry.value
+  let entry = state.hashTable[].get(position.key)
 
   var
     alpha = alpha
     bestValue = -Inf
     bestMove = noMove
-    nodeType = allNode
 
-  for newPosition, move in position.treeSearchMoveIterator:
+  for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
     let value = -newPosition.alphabeta(
       state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
     )
@@ -118,20 +106,12 @@ func alphabeta(
 
     if value > alpha:
       alpha = value
-      nodeType = pvNode
 
     if value >= beta:
-      nodeType = cutNode
       break
 
   if not state.shouldStop:
-    state.hashTable[].add(
-      position.key,
-      nodeType = nodeType,
-      value = bestValue,
-      depth = depth,
-      bestMove = bestMove,
-    )
+    state.hashTable[].add(position.key, bestMove = bestMove)
 
   return bestValue
 
@@ -161,9 +141,8 @@ proc search*(params: GoParams, hashTable: var HashTable): (Move, int) =
 
     let prevNodes = state.countedNodes.float
 
-    let bestValue = position.alphabeta(
-      state, alpha = -Inf, beta = Inf, depth = depth, height = 0
-    )
+    let bestValue =
+      position.alphabeta(state, alpha = -Inf, beta = Inf, depth = depth, height = 0)
 
     let
       currNodes = state.countedNodes.float

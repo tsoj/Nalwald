@@ -27,10 +27,10 @@ proc benchCommand(game: var Game, params: seq[string]) =
     var
       stopFlag: Atomic[bool]
       hashTable = newHashTable()
-      
+
     stopFlag.store(false)
     hashTable.setByteSize(defaultHashSizeMB * megaByte)
-    
+
     let position = fen.toPosition
     let (_, nodes) = search(
       GoParams(
@@ -42,7 +42,7 @@ proc benchCommand(game: var Game, params: seq[string]) =
       hashTable,
     )
     totalNodes += nodes
-    
+
   let elapsed = epochTime() - start
   let nps =
     if elapsed > 0.0:

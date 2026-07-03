@@ -7,9 +7,6 @@ import std/tables
 type
   HashTableEntry* {.packed.} = object
     zobristKey: ZobristKey
-    nodeType*: NodeType
-    value*: Value
-    depth*: Ply
     bestMove*: Move
 
   HashTable* = object
@@ -17,7 +14,7 @@ type
     hashFullCounter: int64
 
 const
-  noEntry = HashTableEntry(zobristKey: 0, depth: 0.Ply, bestMove: noMove)
+  noEntry = HashTableEntry(zobristKey: 0, bestMove: noMove)
   megaByte* = 1024 * 1024
   defaultHashSizeMB* = 16
 
@@ -40,18 +37,8 @@ func newHashTable*(len = 0): HashTable =
 template isEmpty*(entry: HashTableEntry): bool =
   entry == noEntry
 
-func add*(
-    ht: var HashTable,
-    zobristKey: ZobristKey,
-    nodeType: NodeType,
-    value: Value,
-    depth: Ply,
-    bestMove: Move,
-) =
-  let entry = HashTableEntry(
-    zobristKey: zobristKey, nodeType: nodeType, value: value, depth: depth,
-    bestMove: bestMove
-  )
+func add*(ht: var HashTable, zobristKey: ZobristKey, bestMove: Move) =
+  let entry = HashTableEntry(zobristKey: zobristKey, bestMove: bestMove)
 
   doAssert ht.table.len > 0
   let i = zobristKey mod ht.table.len.ZobristKey
