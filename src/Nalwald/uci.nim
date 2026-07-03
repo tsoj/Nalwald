@@ -1,6 +1,6 @@
 import std/[times, strutils, atomics]
 import nimchess
-import version, rootsearch
+import version, rootsearch, hashtable
 
 const benchFens = [
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -24,8 +24,13 @@ proc benchCommand(game: var Game, params: seq[string]) =
   var totalNodes: int64 = 0
   let start = epochTime()
   for fen in benchFens:
-    var stopFlag: Atomic[bool]
+    var
+      stopFlag: Atomic[bool]
+      hashTable = newHashTable()
+
     stopFlag.store(false)
+    hashTable.setByteSize(defaultHashSizeMB * megaByte)
+
     let position = fen.toPosition
     let (_, nodes) = search(
       GoParams(
@@ -33,9 +38,11 @@ proc benchCommand(game: var Game, params: seq[string]) =
         searchMoves: position.legalMoves,
         limit: Limit(depth: depth),
         stopFlag: addr stopFlag,
-      )
+      ),
+      hashTable,
     )
     totalNodes += nodes
+
   let elapsed = epochTime() - start
   let nps =
     if elapsed > 0.0:
@@ -45,15 +52,27 @@ proc benchCommand(game: var Game, params: seq[string]) =
   echo totalNodes, " nodes ", nps, " nps"
 
 type NalwaldEngine = ref object of EngineBase
+  hashTable: HashTable
 
 method onGo(engine: NalwaldEngine, params: GoParams): Move =
-  let (bestMove, _) = search(params)
+  let (bestMove, _) = search(params, engine.hashTable)
   bestMove
+
+method onSetOption(engine: NalwaldEngine, name, value: string) =
+  if name == "Hash":
+    engine.hashTable.setByteSize(value.parseInt * megaByte)
+
+method onNewGame(engine: NalwaldEngine) =
+  engine.hashTable.clear
+
+func newNalwaldEngine(): NalwaldEngine =
+  result = NalwaldEngine()
+  result.hashTable.setByteSize(defaultHashSizeMB * megaByte)
 
 var uciServer* = newUciServer(
   name = "Nalwald " & versionOrId(),
   author = "Jost Triller",
-  engine = NalwaldEngine(),
+  engine = newNalwaldEngine(),
   options = [
     EngineOption(name: "Hash", kind: eotSpin, defaultInt: 16, minVal: 1, maxVal: 512),
     EngineOption(name: "Threads", kind: eotSpin, defaultInt: 1, minVal: 1, maxVal: 1),
@@ -66,5 +85,3 @@ var uciServer* = newUciServer(
     )
   ],
 )
-
-# uciServer.uciLoop()

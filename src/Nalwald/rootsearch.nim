@@ -1,40 +1,13 @@
 import std/[atomics, options, sequtils]
 import nimchess/[uciserver, movegen, position, types]
 
-import eval, utils, moveiterator, types, zobristkey
+import eval, utils, moveiterator, searchpos, types, hashtable
 
-type SearchPos* = object
-  pos*: Position
-  key*: ZobristKey
-
-func searchPos*(position: Position): SearchPos =
-  SearchPos(pos: position, key: position.zobristKey)
-
-func doMove*(searchPos: SearchPos, move: Move): SearchPos =
-  result.pos = searchPos.pos.doMove(move)
-  result.key = searchPos.key
-
-  result.key =
-    result.key xor zobristSideToMoveBitmasks[white] xor zobristSideToMoveBitmasks[black]
-
-  result.key =
-    result.key xor searchPos.pos.enPassantTarget.ZobristKey xor
-    result.pos.enPassantTarget.ZobristKey
-
-  for color in white .. black:
-    for piece in pawn .. king:
-      for square in searchPos.pos[color, piece] xor result.pos[color, piece]:
-        result.key = result.key xor zobristPieceBitmasks[color][piece][square]
-
-    for side in queenside .. kingside:
-      result.key =
-        result.key xor rookSourceBitmasks[searchPos.pos.rookSource[color][side]] xor
-        rookSourceBitmasks[result.pos.rookSource[color][side]]
-
-  assert result.key == result.pos.zobristKey
+export searchpos
 
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
+  hashTable: ptr HashTable
   stopTime: Seconds
   countedNodes: int
   maxNodes: int
@@ -60,7 +33,7 @@ func allocatedTime(params: GoParams): tuple[softLimit: Seconds, hardLimit: Secon
   result.hardLimit = remainingTime / 4
 
 func quiesce(
-    position: Position, state: var SearchState, alpha, beta: Value, height: int
+    position: SearchPos, state: var SearchState, alpha, beta: Value, height: int
 ): Value =
   assert alpha < beta
 
@@ -96,7 +69,7 @@ func quiesce(
   bestValue
 
 func alphabeta(
-    position: Position,
+    position: SearchPos,
     state: var SearchState,
     alpha, beta: Value,
     depth: Ply,
@@ -109,34 +82,42 @@ func alphabeta(
   if state.shouldStop:
     return -Inf
 
-  var
-    alpha = alpha
-    bestValue = -Inf
-
   if depth <= 0.Ply:
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
-  for newPosition, move in position.treeSearchMoveIterator:
+  let entry = state.hashTable[].get(position.key)
+
+  var
+    alpha = alpha
+    bestValue = -Inf
+    bestMove = noMove
+
+  for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
     let value = -newPosition.alphabeta(
       state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
     )
 
     if value > bestValue:
       bestValue = value
+      bestMove = move
 
       if height == 0 and not state.shouldStop:
         state.bestRootMove = move
 
     if value > alpha:
       alpha = value
+
     if value >= beta:
       break
 
+  if not state.shouldStop:
+    state.hashTable[].add(position.key, bestMove = bestMove)
+
   return bestValue
 
-proc search*(params: GoParams): (Move, int) =
+proc search*(params: GoParams, hashTable: var HashTable): (Move, int) =
   let
-    position = params.game.currentPosition
+    position = params.game.currentPosition.searchPos
     legalMoves = position.legalMoves
     startTime = secondsSince1970()
     (softTime, hardTime) = allocatedTime(params)
@@ -147,6 +128,7 @@ proc search*(params: GoParams): (Move, int) =
 
   var state = SearchState(
     externalStopFlag: params.stopFlag,
+    hashTable: addr hashTable,
     stopTime: startTime + hardTime,
     countedNodes: 0,
     maxNodes: params.limit.nodes,
@@ -190,7 +172,3 @@ proc search*(params: GoParams): (Move, int) =
       break
 
   (finalBestMove, state.countedNodes)
-
-proc searchHandler*(params: GoParams): Move {.nimcall, gcsafe.} =
-  let (bestMove, _) = search(params)
-  bestMove
