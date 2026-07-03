@@ -1,19 +1,22 @@
-import zobristkey
+import zobristkey, types
 
 import nimchess
 
 type SearchPos* = object
   pos*: Position
-  key*: ZobristKey
+  zobristKey*: ZobristKey
 
 func us*(position: SearchPos): Color =
   position.pos.us
+
+func halfmoveClock*(position: SearchPos): int =
+  position.pos.halfmoveClock
 
 converter toPosition*(searchPos: SearchPos): lent Position =
   searchPos.pos
 
 func searchPos*(position: Position): SearchPos =
-  SearchPos(pos: position, key: position.zobristKey)
+  SearchPos(pos: position, zobristKey: position.zobristKey)
 
 func updatedKey(key: ZobristKey, oldPos, newPos: Position): ZobristKey =
   result = key
@@ -38,4 +41,4 @@ func updatedKey(key: ZobristKey, oldPos, newPos: Position): ZobristKey =
 
 func doMove*(searchPos: SearchPos, move: Move): SearchPos =
   result.pos = searchPos.pos.doMove(move)
-  result.key = searchPos.key.updatedKey(searchPos.pos, result.pos)
+  result.zobristKey = searchPos.zobristKey.updatedKey(searchPos.pos, result.pos)

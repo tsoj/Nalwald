@@ -1,8 +1,6 @@
 import nimchess
-
+import types
 import std/random
-
-type ZobristKey* = uint64
 
 const
   allZobristBitmasks = block:

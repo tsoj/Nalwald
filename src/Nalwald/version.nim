@@ -26,6 +26,9 @@ when "git version" notin staticExec("git --version") or
 
   func commitHash*(): string =
     "unspecified"
+
+  func shortCommitHash*(): string =
+    "unspecified"
 else:
   const
     gitHasUnstagedChanges* = staticExec("git status -suno").strip != ""
@@ -50,6 +53,9 @@ else:
     result = gitHash
     when gitHasUnstagedChanges:
       result &= " + unstaged changes"
+
+  func shortCommitHash*(): string =
+    gitShortHash
 
 func versionOrId*(): string =
   version().get(otherwise = id())
