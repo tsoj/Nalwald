@@ -5,3 +5,8 @@ type
     pvNode
     allNode
     cutNode
+
+const
+  exact* = pvNode
+  upperBound* = allNode
+  lowerBound* = cutNode
