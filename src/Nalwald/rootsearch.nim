@@ -1,13 +1,14 @@
 import std/[atomics, options, sequtils]
 import nimchess/[uciserver, movegen, position, types]
 
-import eval, utils, moveiterator, searchpos, types, hashtable
+import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
 
 export searchpos
 
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
   hashTable: ptr HashTable
+  gameHistory: GameHistory
   stopTime: Seconds
   countedNodes: int
   maxNodes: int
@@ -33,7 +34,7 @@ func allocatedTime(params: GoParams): tuple[softLimit: Seconds, hardLimit: Secon
   result.hardLimit = remainingTime / 4
 
 func quiesce(
-    position: SearchPos, state: var SearchState, alpha, beta: Value, height: int
+    position: SearchPos, state: var SearchState, alpha, beta: Value, height: Ply
 ): Value =
   assert alpha < beta
 
@@ -42,7 +43,7 @@ func quiesce(
   if state.shouldStop:
     return -Inf
 
-  if height >= 100:
+  if height >= maxPly:
     return 0.Value
 
   let standPat = position.eval
@@ -72,8 +73,8 @@ func alphabeta(
     position: SearchPos,
     state: var SearchState,
     alpha, beta: Value,
-    depth: Ply,
-    height: int,
+    depth: Effort,
+    height: Ply,
 ): Value =
   assert alpha < beta
 
@@ -82,10 +83,16 @@ func alphabeta(
   if state.shouldStop:
     return -Inf
 
-  if depth <= 0.Ply:
+  if height > 0 and (
+    height > maxPly or position.insufficientMaterial or position.halfmoveClock >= 100 or
+    state.gameHistory.checkForRepetitionAndAdd(position, height)
+  ):
+    return 0.Value
+
+  if depth <= 0.Effort:
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
-  let entry = state.hashTable[].get(position.key)
+  let entry = state.hashTable[].get(position.zobristKey)
 
   var
     alpha = alpha
@@ -94,7 +101,7 @@ func alphabeta(
 
   for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
     let value = -newPosition.alphabeta(
-      state, alpha = -beta, beta = -alpha, depth = depth - 1.Ply, height = height + 1
+      state, alpha = -beta, beta = -alpha, depth = depth - 1.Effort, height = height + 1
     )
 
     if value > bestValue:
@@ -111,11 +118,16 @@ func alphabeta(
       break
 
   if not state.shouldStop:
-    state.hashTable[].add(position.key, bestMove = bestMove)
+    state.hashTable[].add(position.zobristKey, bestMove = bestMove)
 
   return bestValue
 
-proc search*(params: GoParams, hashTable: var HashTable): (Move, int) =
+proc search*(
+    params: GoParams,
+    hashTable: var HashTable,
+    softNodes: int = int.high,
+    printUciInfo: bool = true,
+): tuple[bestMove: Move, value: Value, nodes: int] =
   let
     position = params.game.currentPosition.searchPos
     legalMoves = position.legalMoves
@@ -124,20 +136,23 @@ proc search*(params: GoParams, hashTable: var HashTable): (Move, int) =
 
   doAssert params.searchMoves.allIt(it in legalMoves)
   if params.searchMoves.len == 0:
-    return (noMove, 0)
+    return (noMove, 0.Value, 0)
 
   var state = SearchState(
     externalStopFlag: params.stopFlag,
     hashTable: addr hashTable,
+    gameHistory: newGameHistory(params.game),
     stopTime: startTime + hardTime,
     countedNodes: 0,
     maxNodes: params.limit.nodes,
   )
 
-  var finalBestMove = params.searchMoves[0]
+  var
+    finalBestMove = params.searchMoves[0]
+    finalValue = 0.Value
 
   for intDepth in 1 .. params.limit.depth:
-    let depth = intDepth.Ply
+    let depth = intDepth.Effort
 
     let prevNodes = state.countedNodes.float
 
@@ -152,23 +167,31 @@ proc search*(params: GoParams, hashTable: var HashTable): (Move, int) =
       break
 
     finalBestMove = state.bestRootMove
+    finalValue = bestValue
 
-    sendUciInfo(
-      UciInfo(
-        depth: some depth.int,
-        score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
-        pv: some @[finalBestMove],
-        nps: some nps.int,
-        nodes: some currNodes.int,
-      ),
-      position,
-    )
+    if printUciInfo:
+      sendUciInfo(
+        UciInfo(
+          depth: some depth.int,
+          score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
+          pv: some @[finalBestMove],
+          nps: some nps.int,
+          nodes: some currNodes.int,
+        ),
+        position,
+      )
 
     let
       perIterMultiplier = currNodes / prevNodes
       estimatedTotalNodesByNextIter = currNodes * perIterMultiplier
 
-    if softTime <= (estimatedTotalNodesByNextIter / nps).Seconds and prevNodes > 0:
+    if currNodes >= softNodes.float:
       break
 
-  (finalBestMove, state.countedNodes)
+    if prevNodes > 0 and (
+      softTime <= (estimatedTotalNodesByNextIter / nps).Seconds or
+      estimatedTotalNodesByNextIter >= softNodes.float
+    ):
+      break
+
+  (finalBestMove, finalValue, state.countedNodes)

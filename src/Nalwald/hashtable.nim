@@ -1,4 +1,4 @@
-import types, zobristkey
+import types
 
 import nimchess
 

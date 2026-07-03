@@ -1,6 +1,6 @@
-import std/[times, strutils, atomics]
+import std/[times, strutils, atomics, cpuinfo]
 import nimchess
-import version, rootsearch, hashtable
+import version, rootsearch, hashtable, datagen
 
 const benchFens = [
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -32,7 +32,7 @@ proc benchCommand(game: var Game, params: seq[string]) =
     hashTable.setByteSize(defaultHashSizeMB * megaByte)
 
     let position = fen.toPosition
-    let (_, nodes) = search(
+    let (_, _, nodes) = search(
       GoParams(
         game: newGame(startPosition = position),
         searchMoves: position.legalMoves,
@@ -51,11 +51,27 @@ proc benchCommand(game: var Game, params: seq[string]) =
       0
   echo totalNodes, " nodes ", nps, " nps"
 
+proc datagenCommand(game: var Game, params: seq[string]) =
+  if params.len notin 1 .. 2:
+    echo "Usage: datagen <targetGames> [numThreads]"
+    return
+  try:
+    let
+      targetGames = parseInt(params[0])
+      numThreads =
+        if params.len >= 2:
+          parseInt(params[1])
+        else:
+          countProcessors()
+    datagen(targetGames, numThreads)
+  except ValueError:
+    echo "Usage: datagen <targetGames> [numThreads]"
+
 type NalwaldEngine = ref object of EngineBase
   hashTable: HashTable
 
 method onGo(engine: NalwaldEngine, params: GoParams): Move =
-  let (bestMove, _) = search(params, engine.hashTable)
+  let (bestMove, _, _) = search(params, engine.hashTable)
   bestMove
 
 method onSetOption(engine: NalwaldEngine, name, value: string) =
@@ -82,6 +98,11 @@ var uciServer* = newUciServer(
       name: "bench",
       helpText: "bench [depth] -- Run benchmark positions",
       handler: benchCommand,
-    )
+    ),
+    CustomCommand(
+      name: "datagen",
+      helpText: "datagen <targetGames> [numThreads] -- Generate training games",
+      handler: datagenCommand,
+    ),
   ],
 )
