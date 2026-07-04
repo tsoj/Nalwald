@@ -4,4 +4,6 @@
 /nimble.paths
 /nimbledeps
 /vendor
-tests/Nalwald
+/tests/Nalwald
+/res/data/
+/datagen

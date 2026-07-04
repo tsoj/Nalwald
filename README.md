@@ -79,7 +79,14 @@ nimble develop nimchess
 
 
 **Generate training data**
-TODO
+
+Self-play games are written as annotated PGNs (with per-move scores) into a new
+`datagen-<commit>-<date>` folder. Requires a clean git working tree (no unstaged
+changes) so the generating commit is reproducible.
+```bash
+nim r src/Nalwald/datagen/datagen.nim <targetGames> [numThreads]
+```
+`numThreads` defaults to the number of available CPU cores.
 
 **Create training data from PGNs**
 TODO

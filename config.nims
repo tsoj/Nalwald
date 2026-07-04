@@ -10,6 +10,7 @@ import src/Nalwald/version
 switch("cc", "clang")
 switch("mm", "arc")
 switch("define", "useMalloc")
+# switch("passL", "-lm")
 
 when defined(buildDebug):
   switch("define", "release")
@@ -37,7 +38,7 @@ else:
   when not defined(buildModern) and not defined(buildGeneric):
     switch("passC", "-march=native -mtune=native")
 
-var binaryName = "Nalwald"
+var binaryName = projectName()
 when defined(buildRelease):
   binaryName &= "-" & versionOrId()
 when defined(buildDebug):

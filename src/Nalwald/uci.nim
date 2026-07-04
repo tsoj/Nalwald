@@ -1,6 +1,6 @@
-import std/[times, strutils, atomics, cpuinfo]
+import std/[times, strutils, atomics]
 import nimchess
-import version, rootsearch, hashtable, datagen
+import version, rootsearch, hashtable
 
 const benchFens = [
   "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
@@ -51,22 +51,6 @@ proc benchCommand(game: var Game, params: seq[string]) =
       0
   echo totalNodes, " nodes ", nps, " nps"
 
-proc datagenCommand(game: var Game, params: seq[string]) =
-  if params.len notin 1 .. 2:
-    echo "Usage: datagen <targetGames> [numThreads]"
-    return
-  try:
-    let
-      targetGames = parseInt(params[0])
-      numThreads =
-        if params.len >= 2:
-          parseInt(params[1])
-        else:
-          countProcessors()
-    datagen(targetGames, numThreads)
-  except ValueError:
-    echo "Usage: datagen <targetGames> [numThreads]"
-
 type NalwaldEngine = ref object of EngineBase
   hashTable: HashTable
 
@@ -98,11 +82,6 @@ var uciServer* = newUciServer(
       name: "bench",
       helpText: "bench [depth] -- Run benchmark positions",
       handler: benchCommand,
-    ),
-    CustomCommand(
-      name: "datagen",
-      helpText: "datagen <targetGames> [numThreads] -- Generate training games",
-      handler: datagenCommand,
-    ),
+    )
   ],
 )

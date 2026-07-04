@@ -1,68 +1,22 @@
-import std/[atomics, locks, os, random, sets, strformat, strutils, times]
+import
+  std/[atomics, cpuinfo, os, random, sequtils, strformat, strutils, terminal, times]
 
 import nimchess
 
-import hashtable, rootsearch, version
+import ../hashtable, ../rootsearch, ../version, ../utils
+import openings, dashboard
 
 const
   hardNodeLimit = 20_000
   softNodeLimit = 5_000
-  initialOpeningRandomPlies = 8
   datagenHashSizeMB = defaultHashSizeMB
 
-var
-  openingsLock: Lock
-  knownOpenings: HashSet[string]
-  consecutiveOpeningSkips = 0
-  openingRandomPlies = initialOpeningRandomPlies
-  claimedGames: Atomic[int]
-  finishedGames: Atomic[int]
-
-proc randomOpening(
-    rng: var Rand, rootPosition: Position, plies: int
-): Option[Position] =
-  var position = rootPosition
-  for _ in 1 .. plies:
-    let moves = position.legalMoves
-    if moves.len == 0:
-      return none Position
-    position = position.doMove(rng.sample(moves))
-
-  if position.legalMoves.len == 0 or position.insufficientMaterial:
-    return none Position
-
-  position.halfmovesPlayed = 0
-  position.halfmoveClock = 0
-  some position
-
-proc nextOpening(rng: var Rand, rootPosition: Position): Position =
-  while true:
-    var plies: int
-    withLock openingsLock:
-      plies = openingRandomPlies
-
-    let opening = rng.randomOpening(rootPosition, plies)
-    if opening.isNone:
-      continue
-
-    let position = opening.get
-
-    var isNew = false
-    withLock openingsLock:
-      if position.fen in knownOpenings:
-        consecutiveOpeningSkips += 1
-        if consecutiveOpeningSkips >= 2:
-          openingRandomPlies += 1
-          consecutiveOpeningSkips = 0
-      else:
-        knownOpenings.incl position.fen
-        consecutiveOpeningSkips = 0
-        isNew = true
-
-    if isNew:
-      return position
-
-proc playGame(opening: Position, hashTable: var HashTable, gameIndex: int): Game =
+proc playGame(
+    opening: Position,
+    hashTable: var HashTable,
+    gameIndex: int,
+    dashboard: ptr Dashboard,
+): Game =
   result = newGame(
     event = "Nalwald datagen",
     date = now().format("yyyy'.'MM'.'dd"),
@@ -79,7 +33,8 @@ proc playGame(opening: Position, hashTable: var HashTable, gameIndex: int): Game
   )
   :
     stopFlag.store(false)
-    let (move, value, _) = search(
+    let moverIsWhite = result.currentPosition.us == white
+    let (move, value, nodes) = search(
       GoParams(
         game: result,
         searchMoves: result.currentPosition.legalMoves,
@@ -96,6 +51,15 @@ proc playGame(opening: Position, hashTable: var HashTable, gameIndex: int): Game
       annotation = (if score >= 0: "+" else: "") & score.formatFloat(ffDecimal, 2)
     result.addMove(move, annotation)
 
+    dashboard[].recordSearchedPosition(nodes)
+    dashboard[].updateLiveView(
+      $result.currentPosition,
+      if moverIsWhite:
+        score
+      else:
+        -score,
+    )
+
   if result.result == "*":
     # Game ended by a claimable draw rule (50 move rule or threefold
     # repetition), which addMove doesn't apply automatically.
@@ -107,6 +71,7 @@ type DatagenThreadParams = object
   rootPosition: Position
   pgnFileName: string
   seed: int64
+  dashboard: ptr Dashboard
 
 proc datagenThread(params: DatagenThreadParams) {.thread.} =
   {.cast(gcsafe).}:
@@ -116,20 +81,19 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
     hashTable.setByteSize(datagenHashSizeMB * megaByte)
 
     while true:
-      let gameIndex = claimedGames.fetchAdd(1)
+      let gameIndex = params.dashboard[].claimGameIndex()
       if gameIndex >= params.targetGames:
         break
 
       let
         opening = rng.nextOpening(params.rootPosition)
-        game = playGame(opening, hashTable, gameIndex + 1)
+        game = playGame(opening, hashTable, gameIndex + 1, params.dashboard)
 
       let file = open(params.pgnFileName, fmAppend)
       file.write game.toPgnString & "\n"
       file.close
 
-      let numFinished = finishedGames.fetchAdd(1) + 1
-      echo fmt"Finished game {numFinished}/{params.targetGames}: {game.result} ({game.moves.len} moves)"
+      params.dashboard[].recordFinishedGame(game.result, game.moves.len)
 
 proc datagen*(targetGames: int, numThreads: int) =
   when not defined(datagenAllowDirtyGit):
@@ -143,7 +107,8 @@ proc datagen*(targetGames: int, numThreads: int) =
     rootPosition = classicalStartPos
     launchDate = now()
     outDir =
-      "datagen-" & shortCommitHash() & "-" & launchDate.format("yyyy-MM-dd-HH-mm-ss")
+      "res/data/datagen-" & shortCommitHash() & "-" &
+      launchDate.format("yyyy-MM-dd-HH-mm-ss")
 
   if dirExists(outDir) or fileExists(outDir):
     raise newException(IOError, "Datagen output folder already exists: " & outDir)
@@ -168,11 +133,15 @@ score annotation: pawns from the perspective of the side to move
 
   echo fmt"Writing datagen games to {outDir}/"
 
-  initLock openingsLock
-  claimedGames.store(0)
-  finishedGames.store(0)
+  initOpenings()
 
-  let baseSeed = (epochTime() * 1000.0).int64
+  let
+    useDashboard = isatty(stdout)
+    baseSeed = (secondsSince1970() * 1000.0).int64
+
+  var dashboard: Dashboard
+  dashboard.initDashboard(targetGames, startTime = secondsSince1970())
+
   var threads = newSeq[Thread[DatagenThreadParams]](numThreads)
   for i in 0 ..< numThreads:
     createThread(
@@ -183,8 +152,45 @@ score annotation: pawns from the perspective of the side to move
         rootPosition: rootPosition,
         pgnFileName: outDir / fmt"games-thread-{i}.pgn",
         seed: baseSeed + i,
+        dashboard: addr dashboard,
       ),
     )
+
+  if useDashboard:
+    var prevFrameLines = 0
+    stdout.hideCursor
+
+    proc redraw() =
+      let frame = dashboard.frame()
+      if prevFrameLines > 0:
+        stdout.write "\x1b[" & $prevFrameLines & "F\x1b[J"
+      stdout.write frame & "\n"
+      stdout.flushFile
+      prevFrameLines = frame.splitLines.len
+
+    while threads.anyIt(it.running):
+      redraw()
+      sleep 1000
+    redraw()
+    stdout.showCursor
+
   joinThreads threads
 
-  echo fmt"Finished datagen: {finishedGames.load} games written to {outDir}/"
+  echo fmt"Finished datagen: {dashboard.numFinishedGames()} games written to {outDir}/"
+
+when isMainModule:
+  const usage = "Usage: datagen <targetGames> [numThreads]"
+  let params = commandLineParams()
+  if params.len notin 1 .. 2:
+    quit usage
+  try:
+    let
+      targetGames = parseInt(params[0])
+      numThreads =
+        if params.len >= 2:
+          parseInt(params[1])
+        else:
+          countProcessors()
+    datagen(targetGames, numThreads)
+  except ValueError:
+    quit usage

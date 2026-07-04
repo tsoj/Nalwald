@@ -92,14 +92,19 @@ func alphabeta(
   if depth <= 0.Effort:
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
-  let entry = state.hashTable[].get(position.zobristKey)
+  let
+    us = position.us
+    entry = state.hashTable[].get(position.zobristKey)
 
   var
     alpha = alpha
     bestValue = -Inf
     bestMove = noMove
+    moveCounter = 0
 
   for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
+    moveCounter += 1
+
     let value = -newPosition.alphabeta(
       state, alpha = -beta, beta = -alpha, depth = depth - 1.Effort, height = height + 1
     )
@@ -116,6 +121,14 @@ func alphabeta(
 
     if value >= beta:
       break
+
+  if moveCounter == 0:
+    # checkmate
+    if position.inCheck(us):
+      bestValue = -(height.checkmateValue)
+    # stalemate
+    else:
+      bestValue = 0.Value
 
   if not state.shouldStop:
     state.hashTable[].add(position.zobristKey, bestMove = bestMove)
