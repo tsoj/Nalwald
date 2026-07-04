@@ -3,7 +3,7 @@ import
 
 import nimchess
 
-import ../hashtable, ../rootsearch, ../version, ../utils
+import ../hashtable, ../rootsearch, ../version, ../utils, ../types
 import openings, dashboard
 
 const
@@ -34,7 +34,7 @@ proc playGame(
   :
     stopFlag.store(false)
     let moverIsWhite = result.currentPosition.us == white
-    let (move, value, nodes) = search(
+    let (move, value, nodes, depth) = search(
       GoParams(
         game: result,
         searchMoves: result.currentPosition.legalMoves,
@@ -46,18 +46,15 @@ proc playGame(
       printUciInfo = false,
     )
     doAssert not move.isNoMove
-    let
-      score = if value == 0: 0.0 else: value.float # avoid negative zero
-      annotation = (if score >= 0: "+" else: "") & score.formatFloat(ffDecimal, 2)
-    result.addMove(move, annotation)
+    result.addMove(move, $value)
 
-    dashboard[].recordSearchedPosition(nodes)
+    dashboard[].recordSearchedPosition(nodes, depth)
     dashboard[].updateLiveView(
       $result.currentPosition,
       if moverIsWhite:
-        score
+        value
       else:
-        -score,
+        -value,
     )
 
   if result.result == "*":
@@ -107,8 +104,8 @@ proc datagen*(targetGames: int, numThreads: int) =
     rootPosition = classicalStartPos
     launchDate = now()
     outDir =
-      "res/data/datagen-" & shortCommitHash() & "-" &
-      launchDate.format("yyyy-MM-dd-HH-mm-ss")
+      "res/data/datagen_" & launchDate.format("yyyy-MM-dd-HH-mm-ss") & "_" &
+      shortCommitHash()
 
   if dirExists(outDir) or fileExists(outDir):
     raise newException(IOError, "Datagen output folder already exists: " & outDir)

@@ -32,7 +32,7 @@ proc benchCommand(game: var Game, params: seq[string]) =
     hashTable.setByteSize(defaultHashSizeMB * megaByte)
 
     let position = fen.toPosition
-    let (_, _, nodes) = search(
+    let (_, _, nodes, _) = search(
       GoParams(
         game: newGame(startPosition = position),
         searchMoves: position.legalMoves,
@@ -55,7 +55,7 @@ type NalwaldEngine = ref object of EngineBase
   hashTable: HashTable
 
 method onGo(engine: NalwaldEngine, params: GoParams): Move =
-  let (bestMove, _, _) = search(params, engine.hashTable)
+  let (bestMove, _, _, _) = search(params, engine.hashTable)
   bestMove
 
 method onSetOption(engine: NalwaldEngine, name, value: string) =

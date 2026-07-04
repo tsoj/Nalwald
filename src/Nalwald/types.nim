@@ -27,7 +27,7 @@ func plysUntilCheckmate*(value: Value): Ply =
     for height in 0 .. maxPly:
       t[checkmateValue(height)] = height
     t
-  table[value]
+  table[value.abs]
 
 static:
   doAssert maxPly.checkmateValue >= valueCheckmate
@@ -38,3 +38,8 @@ static:
   doAssert 10.Ply.checkmateValue.plysUntilCheckmate == 10.Ply
   doAssert 100.Ply.checkmateValue.plysUntilCheckmate == 100.Ply
   doAssert 100.Ply.checkmateValue < 99.Ply.checkmateValue
+  # doAssert $(9.Ply.checkmateValue) == "mate +5"
+  # doAssert $(-(1.Ply.checkmateValue)) == "mate -1"
+  # doAssert $(2.Ply.checkmateValue) == "mate +1"
+  # doAssert $(-(3.Ply.checkmateValue)) == "mate -2"
+  # doAssert $(maxPly.Ply.checkmateValue) == "mate +100"

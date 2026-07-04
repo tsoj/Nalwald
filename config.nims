@@ -10,7 +10,6 @@ import src/Nalwald/version
 switch("cc", "clang")
 switch("mm", "arc")
 switch("define", "useMalloc")
-# switch("passL", "-lm")
 
 when defined(buildDebug):
   switch("define", "release")

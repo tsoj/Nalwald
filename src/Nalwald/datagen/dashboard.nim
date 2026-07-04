@@ -1,6 +1,6 @@
 import std/[atomics, locks, strformat, strutils]
 
-import ../utils
+import ../utils, ../types
 
 type Dashboard* = object
   ## Shared, thread-safe progress/statistics tracker for a datagen run.
@@ -12,13 +12,14 @@ type Dashboard* = object
   finishedGames: Atomic[int]
   totalPositions: Atomic[int]
   totalNodes: Atomic[int]
+  totalDepth: Atomic[int]
   totalGamePlies: Atomic[int]
   whiteWins: Atomic[int]
   blackWins: Atomic[int]
   draws: Atomic[int]
   liveLock: Lock
   liveBoard: string
-  liveWhiteScore: float
+  liveWhiteScore: Value
 
 proc `=copy`*(dest: var Dashboard, source: Dashboard) {.error.}
 
@@ -34,9 +35,10 @@ proc claimGameIndex*(dashboard: var Dashboard): int =
 proc numFinishedGames*(dashboard: var Dashboard): int =
   dashboard.finishedGames.load
 
-proc recordSearchedPosition*(dashboard: var Dashboard, nodes: int) =
+proc recordSearchedPosition*(dashboard: var Dashboard, nodes: int, depth: int) =
   dashboard.totalPositions.atomicInc
   discard dashboard.totalNodes.fetchAdd(nodes)
+  discard dashboard.totalDepth.fetchAdd(depth)
 
 proc recordFinishedGame*(dashboard: var Dashboard, gameResult: string, plies: int) =
   case gameResult
@@ -79,6 +81,11 @@ proc frame*(dashboard: var Dashboard): string =
         (dashboard.totalGamePlies.load / finished).formatFloat(ffDecimal, 1)
       else:
         "-"
+    avgSearchDepth =
+      if positions > 0:
+        (dashboard.totalDepth.load / positions).formatFloat(ffDecimal, 1)
+      else:
+        "-"
 
   func percent(part: int): string =
     if finished > 0:
@@ -87,20 +94,18 @@ proc frame*(dashboard: var Dashboard): string =
       "-"
 
   result =
-    fmt"{progressBar(fraction, 40)} {finished}/{targetGames} ({100.0 * fraction:.1f}%) | {positions.stringForHuman} positions" &
+    fmt"{progressBar(fraction, 40)} {finished}/{targetGames} ({100.0 * fraction:.1f}%)" &
     "\n"
   result &=
-    fmt"elapsed {elapsedSeconds.stringForHuman} | ETA {eta} | {positionsPerSecond.stringForHuman} positions/s | {nps.stringForHuman} nps"
+    fmt"elapsed {elapsedSeconds.stringForHuman} | ETA {eta} | {positionsPerSecond.stringForHuman} positions/s | {nps.stringForHuman} nps | {positions.stringForHuman} positions"
   result &= "\n"
   result &=
-    fmt"white/draw/black: {percent(numWhiteWins)}/{percent(numDraws)}/{percent(numBlackWins)} | avg game length: {avgGameLength} plies"
+    fmt"white/draw/black: {percent(numWhiteWins)}/{percent(numDraws)}/{percent(numBlackWins)} | avg game length: {avgGameLength} plies | avg search depth: {avgSearchDepth}"
   result &= "\n\n"
 
   withLock dashboard.liveLock:
     if dashboard.liveBoard.len > 0:
-      let whiteScore =
-        (if dashboard.liveWhiteScore >= 0: "+" else: "") &
-        dashboard.liveWhiteScore.formatFloat(ffDecimal, 2)
+      let whiteScore = $dashboard.liveWhiteScore
       # Drop the trailing FEN-like state line of `$position`, keep only the board
       result &=
         dashboard.liveBoard.strip(leading = false).splitLines[0 ..^ 2].join("\n") & "\n"

@@ -140,7 +140,7 @@ proc search*(
     hashTable: var HashTable,
     softNodes: int = int.high,
     printUciInfo: bool = true,
-): tuple[bestMove: Move, value: Value, nodes: int] =
+): tuple[bestMove: Move, value: Value, nodes: int, depth: int] =
   let
     position = params.game.currentPosition.searchPos
     legalMoves = position.legalMoves
@@ -149,7 +149,7 @@ proc search*(
 
   doAssert params.searchMoves.allIt(it in legalMoves)
   if params.searchMoves.len == 0:
-    return (noMove, 0.Value, 0)
+    return (noMove, 0.Value, 0, 0)
 
   var state = SearchState(
     externalStopFlag: params.stopFlag,
@@ -163,6 +163,7 @@ proc search*(
   var
     finalBestMove = params.searchMoves[0]
     finalValue = 0.Value
+    finalDepth = 0
 
   for intDepth in 1 .. params.limit.depth:
     let depth = intDepth.Effort
@@ -181,6 +182,7 @@ proc search*(
 
     finalBestMove = state.bestRootMove
     finalValue = bestValue
+    finalDepth = intDepth
 
     if printUciInfo:
       sendUciInfo(
@@ -207,4 +209,4 @@ proc search*(
     ):
       break
 
-  (finalBestMove, finalValue, state.countedNodes)
+  (finalBestMove, finalValue, state.countedNodes, finalDepth)

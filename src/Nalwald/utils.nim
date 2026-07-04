@@ -1,6 +1,8 @@
-import std/times
+import std/[times, strformat, strutils, math]
 
-import std/[strformat, strutils]
+import types
+
+import nimchess
 
 type Seconds* = distinct float
 
@@ -61,3 +63,22 @@ func stringForHuman*(n: SomeNumber): string =
     (x / 1e3).formatFloat(ffDecimal, 1) & "k"
   else:
     x.formatFloat(ffDecimal, 1)
+
+func toScore*(value: Value): Score =
+  if value.abs < valueCheckmate:
+    Score(kind: skCp, cp: int(value * 100))
+  else:
+    Score(
+      kind: skMate,
+      mate: (if value > 0: 1 else: -1) * ceilDiv(plysUntilCheckmate(value.abs), 2),
+    )
+
+func `$`*(value: Value): string =
+  $value.toScore
+
+static:
+  doAssert $(9.Ply.checkmateValue) == "mate 5"
+  doAssert $(-(1.Ply.checkmateValue)) == "mate -1"
+  doAssert $(2.Ply.checkmateValue) == "mate 1"
+  doAssert $(-(3.Ply.checkmateValue)) == "mate -2"
+  doAssert $(maxPly.Ply.checkmateValue) == "mate 100"
