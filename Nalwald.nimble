@@ -10,7 +10,8 @@ bin = @["Nalwald"]
 # Dependencies
 
 requires "nim >= 2.2.8"
-requires "nimchess >= 0.10.0"
+requires "nimchess >= 0.9.0"
+requires "zstd == 0.9"
 
 # Tasks
 

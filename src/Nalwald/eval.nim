@@ -1,6 +1,6 @@
 import nimchess
 
-import types
+import types, evalparams
 
 # Piece square tables from white's perspective.
 # For black, squares are transformed using mirrorVertically.

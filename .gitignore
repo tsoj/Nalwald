@@ -1,9 +1,10 @@
 /Nalwald
 /Nalwald-*
+/datagen
 /nimble.develop
 /nimble.paths
 /nimbledeps
 /vendor
 /tests/Nalwald
 /res/data/
-/datagen
+/res/params/
