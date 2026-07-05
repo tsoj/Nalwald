@@ -10,8 +10,8 @@ bin = @["Nalwald"]
 # Dependencies
 
 requires "nim >= 2.2.8"
-requires "nimchess >= 0.9.0"
-requires "zstd == 0.9"
+requires "nimchess >= 0.10.0"
+requires "https://github.com/tsoj/nim_zstd#dd22d4c" #"zstd == 0.9"
 
 # Tasks
 
@@ -21,3 +21,17 @@ task debug, "Build debug version":
 task release, "Build release versions":
   exec "nim c -d:buildRelease -d:buildGeneric src/Nalwald.nim"
   exec "nim c -d:buildRelease -d:buildModern src/Nalwald.nim"
+
+task datagen, "Play chess games and write them to PGNs":
+  var
+    args = ""
+    compilerParam = ""
+  for param in commandLineParams:
+    if "--" notin param:
+      args.add " " & param
+    if param == "--allowDirtyGit":
+      compilerParam = "-d:datagenAllowDirtyGit"
+
+  exec "nim r " & compilerParam & " src/Nalwald/datagen/datagen.nim " & args
+
+  echo commandLineParams

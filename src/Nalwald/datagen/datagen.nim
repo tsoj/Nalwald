@@ -1,10 +1,14 @@
 import
-  std/[atomics, cpuinfo, os, random, sequtils, strformat, strutils, terminal, times]
+  std/[
+    atomics, cpuinfo, os, random, sequtils, streams, strformat, strutils, terminal,
+    times,
+  ]
 
 import nimchess
+import zstd/compress
 
 import ../hashtable, ../rootsearch, ../version, ../utils, ../types
-import openings, dashboard, zstdFileWriter
+import openings, dashboard
 
 const
   hardNodeLimit = 20_000
@@ -76,10 +80,13 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
     var
       rng = initRand(params.seed)
       hashTable = newHashTable()
-      pgnWriter = openZstdFileWriter(params.pgnFileName)
+      pgnFileStream = newFileStream(params.pgnFileName, fmWrite)
+      pgnStream = newCompressStream(pgnFileStream)
+    doAssert pgnFileStream != nil, "Failed to open " & params.pgnFileName
     hashTable.setByteSize(datagenHashSizeMB * megaByte)
     defer:
-      pgnWriter.close
+      pgnStream.close()
+      pgnFileStream.close()
 
     while true:
       let gameIndex = params.dashboard[].claimGameIndex()
@@ -90,13 +97,14 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
         opening = params.openings[].nextOpening(rng, params.rootPosition)
         game = playGame(opening, hashTable, gameIndex + 1, params.dashboard)
 
-      pgnWriter.write game.toPgnString & "\n"
+      pgnStream.compress game.toPgnString & "\n"
+      pgnFileStream.flush()
 
       params.dashboard[].recordFinishedGame(game.result, game.moves.len)
 
 proc datagen*(targetGames: int, numThreads: int) =
-  when not defined(datagenAllowDirtyGit):
-    doAssert not gitHasUnstagedChanges,
+  static:
+    doAssert not gitHasUnstagedChanges or defined(datagenAllowDirtyGit),
       "datagen must be compiled without unstaged git changes"
 
   doAssert targetGames >= 1, "targetGames must be at least 1"

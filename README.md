@@ -72,8 +72,8 @@ TODO
 
 **Set up for development**
 ```bash
-nimble setup
-nimble develop nimchess
+nimble setup --nimbleDir:./nimbledeps
+nimble develop nimchess --nimbleDir:./nimbledeps
 # Now if you need to edit parts of nimchess, you can do that in vendor/nimchess
 ```
 
@@ -81,10 +81,10 @@ nimble develop nimchess
 **Generate training data**
 
 Self-play games are written as annotated PGNs (with per-move scores) into a new
-`datagen-<commit>-<date>` folder. Requires a clean git working tree (no unstaged
+`res/data/datagen_<date>_<commit>` folder. Requires a clean git working tree (no unstaged
 changes) so the generating commit is reproducible.
 ```bash
-nim r src/Nalwald/datagen/datagen.nim <targetGames> [numThreads]
+nimble datagen <targetGames> [numThreads]
 ```
 `numThreads` defaults to the number of available CPU cores.
 

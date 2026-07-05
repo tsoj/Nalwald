@@ -1,5 +1,5 @@
 import std/[atomics, options, sequtils]
-import nimchess/[uciserver, movegen, position, types]
+import nimchess
 
 import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
 

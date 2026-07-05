@@ -2,6 +2,18 @@ import nimchess
 
 import types, evalparams
 
+type
+  Gradient* {.requiresInit.} = object
+    gradient*: ptr EvalParameters
+    g*: float32
+    gamePhaseFactor*: float32
+
+  EvalValue {.requiresInit.} = object
+    params: ptr EvalParameters
+    absoluteValue: ptr float32
+
+  EvalState = Gradient or EvalValue
+
 # Piece square tables from white's perspective.
 # For black, squares are transformed using mirrorVertically.
 # Material value is included directly in each entry.
@@ -77,8 +89,8 @@ const pieceSquareTable: array[pawn .. king, array[a1 .. h8, Value]] = [
 ]
 #!fmt: on
 
-func value*(piece: Piece): Value =
-  pieceSquareTable[piece][d4]
+# func value*(piece: Piece): Value =
+#   pieceSquareTable[piece][d4]
 
 func eval*(pos: Position): Value =
   result = 0
