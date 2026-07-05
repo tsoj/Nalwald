@@ -4,7 +4,7 @@ import
 import nimchess
 
 import ../hashtable, ../rootsearch, ../version, ../utils, ../types
-import openings, dashboard
+import openings, dashboard, zstdFileWriter
 
 const
   hardNodeLimit = 20_000
@@ -75,7 +75,10 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
     var
       rng = initRand(params.seed)
       hashTable = newHashTable()
+      pgnWriter = openZstdFileWriter(params.pgnFileName)
     hashTable.setByteSize(datagenHashSizeMB * megaByte)
+    defer:
+      pgnWriter.close
 
     while true:
       let gameIndex = params.dashboard[].claimGameIndex()
@@ -86,9 +89,7 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
         opening = rng.nextOpening(params.rootPosition)
         game = playGame(opening, hashTable, gameIndex + 1, params.dashboard)
 
-      let file = open(params.pgnFileName, fmAppend)
-      file.write game.toPgnString & "\n"
-      file.close
+      pgnWriter.write game.toPgnString & "\n"
 
       params.dashboard[].recordFinishedGame(game.result, game.moves.len)
 
@@ -147,7 +148,7 @@ score annotation: pawns from the perspective of the side to move
       DatagenThreadParams(
         targetGames: targetGames,
         rootPosition: rootPosition,
-        pgnFileName: outDir / fmt"games-thread-{i}.pgn",
+        pgnFileName: outDir / fmt"games-thread-{i}.pgn.zst",
         seed: baseSeed + i,
         dashboard: addr dashboard,
       ),

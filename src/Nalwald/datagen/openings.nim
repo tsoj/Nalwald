@@ -2,7 +2,7 @@ import std/[locks, options, random, sets]
 
 import nimchess
 
-const initialOpeningRandomPlies* = 8
+const initialOpeningRandomPlies* = 1
 
 var
   openingsLock: Lock

@@ -11,7 +11,7 @@ type EvalParameters = object
 
 func newEvalParameters*(): EvalParameters =
   discard
-  
+
 const numFloats = sizeof(EvalParameters) div sizeof(Value)
 
 static:
