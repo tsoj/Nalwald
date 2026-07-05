@@ -81,7 +81,7 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
       rng = initRand(params.seed)
       hashTable = newHashTable()
       pgnFileStream = newFileStream(params.pgnFileName, fmWrite)
-      pgnStream = newCompressStream(pgnFileStream)
+      pgnStream = newCompressStream(pgnFileStream, level=22)
     doAssert pgnFileStream != nil, "Failed to open " & params.pgnFileName
     hashTable.setByteSize(datagenHashSizeMB * megaByte)
     defer:

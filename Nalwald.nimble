@@ -11,7 +11,7 @@ bin = @["Nalwald"]
 
 requires "nim >= 2.2.8"
 requires "nimchess >= 0.10.0"
-requires "https://github.com/tsoj/nim_zstd#dd22d4c" #"zstd == 0.9"
+requires "https://github.com/tsoj/nim_zstd#2510a0b" #"zstd == 0.10"
 
 # Tasks
 
@@ -33,5 +33,3 @@ task datagen, "Play chess games and write them to PGNs":
       compilerParam = "-d:datagenAllowDirtyGit"
 
   exec "nim r " & compilerParam & " src/Nalwald/datagen/datagen.nim " & args
-
-  echo commandLineParams
