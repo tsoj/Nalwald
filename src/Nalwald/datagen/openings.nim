@@ -1,17 +1,22 @@
-import std/[locks, options, random, sets]
+import std/[locks, options, random, sets, strformat]
 
 import nimchess
 
-const initialOpeningRandomPlies* = 1
+const
+  openingRandomPlies* = 8
+  maxConsecutiveOpeningSkips = 100
 
-var
-  openingsLock: Lock
+type Openings* = object
+  ## Thread-safe registry of openings already handed out, shared by all datagen
+  ## workers via pointer. It holds a `Lock`, so it must never be copied.
+  lock: Lock
   knownOpenings: HashSet[string]
-  consecutiveOpeningSkips = 0
-  openingRandomPlies = initialOpeningRandomPlies
+  consecutiveSkips: int
 
-proc initOpenings*() =
-  initLock openingsLock
+proc `=copy`*(dest: var Openings, source: Openings) {.error.}
+
+proc initOpenings*(openings: var Openings) =
+  initLock openings.lock
 
 proc randomOpening(
     rng: var Rand, rootPosition: Position, plies: int
@@ -30,31 +35,34 @@ proc randomOpening(
   position.halfmoveClock = 0
   some position
 
-proc nextOpening*(rng: var Rand, rootPosition: Position): Position =
+proc nextOpening*(
+    openings: var Openings, rng: var Rand, rootPosition: Position
+): Position =
   ## Generates a fresh opening position by playing random moves from the root
   ## position. Positions already handed out before are skipped; if positions
-  ## have to be skipped repeatedly, the number of random plies is increased.
+  ## have to be skipped too many times in a row, the opening pool is considered
+  ## exhausted and an error is raised.
   while true:
-    var plies: int
-    withLock openingsLock:
-      plies = openingRandomPlies
-
-    let opening = rng.randomOpening(rootPosition, plies)
+    let opening = rng.randomOpening(rootPosition, openingRandomPlies)
     if opening.isNone:
       continue
 
     let position = opening.get
 
     var isNew = false
-    withLock openingsLock:
-      if position.fen in knownOpenings:
-        consecutiveOpeningSkips += 1
-        if consecutiveOpeningSkips >= 2:
-          openingRandomPlies += 1
-          consecutiveOpeningSkips = 0
+    withLock openings.lock:
+      if position.fen in openings.knownOpenings:
+        openings.consecutiveSkips += 1
+        if openings.consecutiveSkips > maxConsecutiveOpeningSkips:
+          raise newException(
+            CatchableError,
+            fmt"Failed to find a new opening after {maxConsecutiveOpeningSkips} " &
+              fmt"consecutive skips ({openingRandomPlies} random plies). " &
+              "The opening pool seems exhausted.",
+          )
       else:
-        knownOpenings.incl position.fen
-        consecutiveOpeningSkips = 0
+        openings.knownOpenings.incl position.fen
+        openings.consecutiveSkips = 0
         isNew = true
 
     if isNew:

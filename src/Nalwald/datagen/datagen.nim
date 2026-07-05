@@ -69,6 +69,7 @@ type DatagenThreadParams = object
   pgnFileName: string
   seed: int64
   dashboard: ptr Dashboard
+  openings: ptr Openings
 
 proc datagenThread(params: DatagenThreadParams) {.thread.} =
   {.cast(gcsafe).}:
@@ -86,7 +87,7 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
         break
 
       let
-        opening = rng.nextOpening(params.rootPosition)
+        opening = params.openings[].nextOpening(rng, params.rootPosition)
         game = playGame(opening, hashTable, gameIndex + 1, params.dashboard)
 
       pgnWriter.write game.toPgnString & "\n"
@@ -124,18 +125,19 @@ soft node limit: {softNodeLimit}
 hash size: {datagenHashSizeMB} MB (shared by both sides of a game, cleared between games)
 adjudication: none (games end by checkmate, stalemate, insufficient material, 50 move rule, threefold repetition)
 root opening position: {rootPosition.fen} (classical)
-initial opening random plies: {initialOpeningRandomPlies}
+opening random plies: {openingRandomPlies}
 score annotation: pawns from the perspective of the side to move
 """,
   )
 
   echo fmt"Writing datagen games to {outDir}/"
 
-  initOpenings()
-
   let
     useDashboard = isatty(stdout)
     baseSeed = (secondsSince1970() * 1000.0).int64
+
+  var openings: Openings
+  openings.initOpenings()
 
   var dashboard: Dashboard
   dashboard.initDashboard(targetGames, startTime = secondsSince1970())
@@ -151,6 +153,7 @@ score annotation: pawns from the perspective of the side to move
         pgnFileName: outDir / fmt"games-thread-{i}.pgn.zst",
         seed: baseSeed + i,
         dashboard: addr dashboard,
+        openings: addr openings,
       ),
     )
 

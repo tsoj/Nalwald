@@ -1,6 +1,7 @@
 import std/[atomics, locks, strformat, strutils]
 
 import ../utils, ../types
+import openings
 
 type Dashboard* = object
   ## Shared, thread-safe progress/statistics tracker for a datagen run.
