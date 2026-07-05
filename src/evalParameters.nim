@@ -20,99 +20,69 @@ type SinglePhaseEvalParameters = object
 
 type EvalParameters* {.requiresInit.} = seq[SinglePhaseEvalParameters]
 
+const singlePhaseNumFloats = sizeof(SinglePhaseEvalParameters) div sizeof(float32)
+static:
+  # SinglePhaseEvalParameters must be a flat blob of float32 for the
+  # cast in `floats` to be valid
+  doAssert sizeof(SinglePhaseEvalParameters) == singlePhaseNumFloats * sizeof(float32)
+
+template floats(phase: SinglePhaseEvalParameters): untyped =
+  cast[ptr array[singlePhaseNumFloats, float32]](addr phase)[]
+
+iterator iter(
+    a: var EvalParameters, b: EvalParameters | bool = false
+): (var float32, float32) =
+  when b isnot bool:
+    doAssert a.len == b.len
+  for i in 0 ..< a.len:
+    for j in 0 ..< singlePhaseNumFloats:
+      when b is bool:
+        yield (a[i].floats[j], 0'f32)
+      else:
+        yield (a[i].floats[j], b[i].floats[j])
+
 func newEvalParameters*(): EvalParameters =
   newSeq[SinglePhaseEvalParameters](2)
 
-func doForAll[T](
-    output: var T,
-    input: T,
-    operation: proc(a: var float32, b: float32) {.noSideEffect.},
-) =
-  when T is AtomType:
-    var tmp = output.float32
-    operation(tmp, input.float32)
-    output = tmp.T
-  elif T is object:
-    for name, inValue, outValue in fieldPairs(input, output):
-      doForAll(outValue, inValue, operation)
-  elif T is array:
-    for index in T.low .. T.high:
-      doForAll(output[index], input[index], operation)
-  elif T is seq:
-    for index in 0 ..< output.len:
-      doForAll(output[index], input[index], operation)
-  else:
-    static:
-      doAssert false, "Type is not not implemented for doForAll: " & $typeof(T)
-
 func `+=`*(a: var EvalParameters, b: EvalParameters) =
-  proc op(x: var float32, y: float32) =
+  for (x, y) in iter(a, b):
     x += y
 
-  doForAll(a, b, op)
-
 func `*=`*(a: var EvalParameters, b: EvalParameters) =
-  proc op(x: var float32, y: float32) =
+  for (x, y) in iter(a, b):
     x *= y
 
-  doForAll(a, b, op)
-
 func `*=`*(a: var EvalParameters, b: float32) =
-  proc op(x: var float32, y: float32) =
+  for (x, _) in a.iter:
     x *= b
 
-  doForAll(a, a, op)
-
 func setAll*(a: var EvalParameters, b: float32) =
-  proc op(x: var float32, y: float32) =
+  for (x, _) in a.iter:
     x = b
 
-  doForAll(a, a, op)
-
 proc setRandom*(a: var EvalParameters, b: Slice[float64]) =
-  proc op(x: var float32, y: float32) =
-    {.cast(noSideEffect).}:
-      x = rand(b).float32
+  for (x, _) in a.iter:
+    x = rand(b).float32
 
-  doForAll(a, a, op)
-
-const
-  charWidth = 8
-  quantizeScalar: float32 = 10.0
+const quantizeScalar: float32 = 10.0
 
 proc toStringUncompressed(params: EvalParameters): string =
-  var
-    s: string = ""
-    params = params
-
-  proc op(x: var float32, y: float32) =
-    let value = x * quantizeScalar
+  var params = params
+  for (x, _) in params.iter:
+    let value = round(x * quantizeScalar)
     doAssert value in int16.low.float32 .. int16.high.float32
-    for i in 0 ..< sizeof(int16):
-      let
-        shift = charWidth * i
-        bits = cast[char]((value.int16 shr shift) and 0b1111_1111)
-      s.add bits
-
-  doForAll(params, params, op)
-  s
+    let quantized = value.int16
+    result.add cast[char](quantized and 0xff)
+    result.add cast[char]((quantized shr 8) and 0xff)
 
 proc toEvalParametersFromUncompressed(s: string): EvalParameters =
-  var
-    params = newEvalParameters()
-    n = 0
-
-  proc op(x: var float32, y: float32) =
-    var bits: int16 = 0
-    for i in 0 ..< sizeof(int16):
-      let shift = charWidth * i
-      bits = bits or (cast[int16](s[n]) shl shift)
-      n += 1
+  result = newEvalParameters()
+  doAssert s.len == 2 * result.len * singlePhaseNumFloats
+  var n = 0
+  for (x, _) in result.iter:
+    let bits = int16(s[n].uint8) or (int16(s[n + 1].uint8) shl 8)
+    n += 2
     x = bits.float32 / quantizeScalar
-
-  doForAll(params, params, op)
-
-  params
 
 proc toString*(params: EvalParameters): string =
   params.toStringUncompressed.compress
@@ -140,18 +110,10 @@ let defaultEvalParametersData* = block:
   var ep = newEvalParameters()
   try:
     ep = defaultEvalParametersString.toEvalParameters()
-  except ValueError:
+  except ValueError, ZippyError:
     echo "WARNING! Default eval params not used: ", getCurrentExceptionMsg()
   ep
 
 template defaultEvalParameters*(): EvalParameters =
   {.cast(noSideEffect).}:
     defaultEvalParametersData
-
-
-# const
-#   epDir = "res/params/"
-#   epFileName = epDir & "default.bin"
-
-# writeFile epFileName, defaultEvalParameters().toString
-# echo "Wrote to: ", epFileName
