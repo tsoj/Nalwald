@@ -7,7 +7,7 @@ import nimchess
 import types
 
 type EvalParameters* = object
-  psqt*: array[pawn .. king, array[a1 .. h8, Value]]
+  psqt*: array[white..black, array[pawn .. king, array[a1 .. h8, Value]]]
 
 func newEvalParameters*(): EvalParameters =
   discard
