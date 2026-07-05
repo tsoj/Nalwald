@@ -45,24 +45,22 @@ func setAll*(a: var EvalParameters, b: float32) =
   for (x, _) in a.iter:
     x = b
 
-const quantizeScalar: float32 = 10.0
-
 proc toStringUncompressed(params: EvalParameters): string =
   var params = params
   for (x, _) in params.iter:
-    let value = round(x * quantizeScalar)
-    doAssert value in int16.low.float32 .. int16.high.float32
-    let quantized = value.int16
-    result.add cast[char](quantized and 0xff)
-    result.add cast[char]((quantized shr 8) and 0xff)
+    let bits = cast[uint32](x)
+    for i in 0 ..< 4:
+      result.add cast[char]((bits shr (8 * i)) and 0xff)
 
 proc toEvalParametersFromUncompressed(s: string): EvalParameters =
   result = newEvalParameters()
   var n = 0
   for (x, _) in result.iter:
-    let bits = int16(s[n].uint8) or (int16(s[n + 1].uint8) shl 8)
-    n += 2
-    x = bits.float32 / quantizeScalar
+    var bits: uint32 = 0
+    for i in 0 ..< 4:
+      bits = bits or (uint32(s[n + i].uint8) shl (8 * i))
+    n += 4
+    x = cast[float32](bits)
 
 func asString(bytes: seq[byte]): string =
   result = newString(bytes.len)
@@ -81,15 +79,19 @@ proc toEvalParameters*(s: string): EvalParameters =
     raise newException(ValueError, "Incompatible params format")
   uncompressed.toEvalParametersFromUncompressed()
 
+const evalFile {.strdefine.} = "res/params/default.zst"
+
 const defaultEvalParametersString = block:
   var s = ""
 
-  const fileName = "res/params/default.zst"
-  if fileExists fileName:
-    # For some reason staticRead starts relative paths at the source file location
-    s = staticRead("../" & fileName)
+  if fileExists evalFile:
+    when evalFile.isAbsolute:
+      s = staticRead(evalFile)
+    else:
+      # For some reason staticRead starts relative paths at the source file location
+      s = staticRead("../" & evalFile)
   else:
-    echo "WARNING! Couldn't find default eval params at ", fileName
+    echo "WARNING! Couldn't find default eval params at ", evalFile
   s
 
 let defaultEvalParametersData* = block:

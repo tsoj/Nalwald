@@ -2,6 +2,8 @@ import nimchess
 
 import types, evalparams
 
+import std/[times, strformat, random, math, os, macros]
+
 type
   Gradient* {.requiresInit.} = object
     gradient*: ptr EvalParameters
@@ -18,90 +20,29 @@ type
 # For black, squares are transformed using mirrorVertically.
 # Material value is included directly in each entry.
 
-#!fmt: off
-const pieceSquareTable: array[pawn .. king, array[a1 .. h8, Value]] = [
-  # Pawn (base value: 1.0)
-  [
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-    1.05, 1.10, 1.10, 0.80, 0.80, 1.10, 1.10, 1.05,
-    1.05, 0.95, 0.90, 1.00, 1.00, 0.90, 0.95, 1.05,
-    1.00, 1.00, 1.00, 1.20, 1.20, 1.00, 1.00, 1.00,
-    1.05, 1.05, 1.10, 1.25, 1.25, 1.10, 1.05, 1.05,
-    1.10, 1.10, 1.20, 1.30, 1.30, 1.20, 1.10, 1.10,
-    1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50, 1.50,
-    0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00,
-  ],
-  # Knight (base value: 3.0)
-  [
-    2.50, 2.60, 2.70, 2.70, 2.70, 2.70, 2.60, 2.50,
-    2.60, 2.80, 3.00, 3.00, 3.00, 3.00, 2.80, 2.60,
-    2.70, 3.00, 3.10, 3.15, 3.15, 3.10, 3.00, 2.70,
-    2.70, 3.05, 3.15, 3.20, 3.20, 3.15, 3.05, 2.70,
-    2.70, 3.00, 3.15, 3.20, 3.20, 3.15, 3.00, 2.70,
-    2.70, 3.05, 3.10, 3.15, 3.15, 3.10, 3.05, 2.70,
-    2.60, 2.80, 3.00, 3.05, 3.05, 3.00, 2.80, 2.60,
-    2.50, 2.60, 2.70, 2.70, 2.70, 2.70, 2.60, 2.50,
-  ],
-  # Bishop (base value: 3.0)
-  [
-    2.80, 2.90, 2.90, 2.90, 2.90, 2.90, 2.90, 2.80,
-    2.90, 3.00, 3.00, 3.00, 3.00, 3.00, 3.00, 2.90,
-    2.90, 3.00, 3.05, 3.10, 3.10, 3.05, 3.00, 2.90,
-    2.90, 3.05, 3.05, 3.10, 3.10, 3.05, 3.05, 2.90,
-    2.90, 3.00, 3.10, 3.10, 3.10, 3.10, 3.00, 2.90,
-    2.90, 3.10, 3.10, 3.10, 3.10, 3.10, 3.10, 2.90,
-    2.90, 3.05, 3.00, 3.00, 3.00, 3.00, 3.05, 2.90,
-    2.80, 2.90, 2.90, 2.90, 2.90, 2.90, 2.90, 2.80,
-  ],
-  # Rook (base value: 5.0)
-  [
-    5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00,
-    4.95, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 4.95,
-    4.95, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 4.95,
-    4.95, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 4.95,
-    4.95, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 4.95,
-    4.95, 5.00, 5.00, 5.00, 5.00, 5.00, 5.00, 4.95,
-    5.05, 5.10, 5.10, 5.10, 5.10, 5.10, 5.10, 5.05,
-    5.00, 5.00, 5.00, 5.05, 5.05, 5.00, 5.00, 5.00,
-  ],
-  # Queen (base value: 9.0)
-  [
-    8.80, 8.90, 8.90, 8.95, 8.95, 8.90, 8.90, 8.80,
-    8.90, 9.00, 9.00, 9.00, 9.00, 9.00, 9.00, 8.90,
-    8.90, 9.00, 9.05, 9.05, 9.05, 9.05, 9.00, 8.90,
-    8.95, 9.00, 9.05, 9.05, 9.05, 9.05, 9.00, 8.95,
-    9.00, 9.00, 9.05, 9.05, 9.05, 9.05, 9.00, 8.95,
-    8.90, 9.05, 9.05, 9.05, 9.05, 9.05, 9.00, 8.90,
-    8.90, 9.00, 9.05, 9.00, 9.00, 9.00, 9.00, 8.90,
-    8.80, 8.90, 8.90, 8.95, 8.95, 8.90, 8.90, 8.80,
-  ],
-  # King (base value: 0.0, but positional value matters)
-  [
-     0.20,  0.30,  0.10,  0.00,  0.00,  0.10,  0.30,  0.20,
-     0.20,  0.20,  0.00,  0.00,  0.00,  0.00,  0.20,  0.20,
-    -0.10, -0.20, -0.20, -0.20, -0.20, -0.20, -0.20, -0.10,
-    -0.20, -0.30, -0.30, -0.40, -0.40, -0.30, -0.30, -0.20,
-    -0.30, -0.40, -0.40, -0.50, -0.50, -0.40, -0.40, -0.30,
-    -0.30, -0.40, -0.40, -0.50, -0.50, -0.40, -0.40, -0.30,
-    -0.30, -0.40, -0.40, -0.50, -0.50, -0.40, -0.40, -0.30,
-    -0.30, -0.40, -0.40, -0.50, -0.50, -0.40, -0.40, -0.30,
-  ],
-]
-#!fmt: on
+macro getParameter(structName, parameter: untyped): untyped =
+  let s = $structName.toStrLit & "." & $parameter.toStrLit
+  parseExpr(s)
 
-# func value*(piece: Piece): Value =
-#   pieceSquareTable[piece][d4]
+template addValue(evalState: EvalState, parameter: untyped) =
+  when evalState is Gradient:
+    getParameter(evalState.gradient[], parameter) += evalState.g
+  else:
+    static:
+      doAssert evalState is EvalValue
+    var value = getParameter(evalState.params[], parameter)
+    evalState.absoluteValue[phase] += value
 
 func eval*(pos: Position): Value =
   result = 0
   for piece in pawn .. king:
     for square in pos[piece, pos.us]:
       result +=
-        pieceSquareTable[piece][
+        defaultEvalParameters.psqt[piece][
           if pos.us == white: square else: square.mirrorVertically
         ]
     for square in pos[piece, pos.enemy]:
       result -=
-        pieceSquareTable[piece][
+        defaultEvalParameters.psqt[piece][
           if pos.enemy == white: square else: square.mirrorVertically
         ]

@@ -1,6 +1,10 @@
 EXE = Nalwald
 
+ifdef EVALFILE
+	NIM_FLAGS += -d:evalFile=$(abspath $(EVALFILE))
+endif
+
 .PHONY: build
 build:
-	nimble build --nimbleDir:./nimbledeps
+	nimble build --nimbleDir:./nimbledeps $(NIM_FLAGS)
 	[ "./Nalwald" = "./$(EXE)" ] || mv ./Nalwald "$(EXE)"
