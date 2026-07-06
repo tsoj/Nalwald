@@ -1,4 +1,4 @@
-import ../evalparams, ../eval, datautils, piecevaluecalc
+import ../evalparams, ../eval, ../version, datautils, piecevaluecalc
 
 import std/[times, strformat, strutils, random, math, os]
 
@@ -40,6 +40,9 @@ proc optimize(
   solution
 
 when isMainModule:
+  static:
+    doAssert not gitHasUnstagedChanges, "Git working tree must not be dirty"
+
   let startTime = now()
 
   # Datasets are given as "dir" or "dir=scoreTargetWeight" command line
@@ -73,6 +76,16 @@ when isMainModule:
   createDir epDir
   writeFile epFileName, ep.toString
   echo "Wrote to: ", epFileName
+
+  const settingsFileName = epDir & "settings.txt"
+  let settingsContent = &"""
+date: {startTime}
+commit: {commitHash()}
+datasets:
+{dataDirs.join("\n").indent(2)}
+"""
+  writeFile settingsFileName, settingsContent
+  echo "Wrote to: ", settingsFileName
 
   const pieceValueFileName = "src/Nalwald/piecevalues.nim"
   let
