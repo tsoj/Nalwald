@@ -29,7 +29,7 @@ task evaltrain, "Optimize evaluation parameters using datagen games":
     if "--" notin param:
       args.add " " & param
 
-  exec "nim r -d:danger src/Nalwald/evaltraining/optimization.nim" & args
+  exec "nim r src/Nalwald/evaltraining/optimization.nim" & args
 
 task datagen, "Play chess games and write them to PGNs":
   var
