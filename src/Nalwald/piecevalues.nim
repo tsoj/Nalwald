@@ -3,13 +3,5 @@ import nimchess
 import types
 
 func value*(piece: Piece): Value =
-  const table = [
-    pawn: 0.2907708.Value,
-    knight: 0.68735003.Value,
-    bishop: 0.73456645.Value,
-    rook: 1.1526169.Value,
-    queen: 2.1108224.Value,
-    king: valueCheckmate,
-    noPiece: 0.Value,
-  ]
+  const table = [pawn: 0.27285966.Value, knight: 0.81894535.Value, bishop: 0.8689812.Value, rook: 1.3323474.Value, queen: 2.7962947.Value, king: valueCheckmate, noPiece: 0.Value]
   table[piece]

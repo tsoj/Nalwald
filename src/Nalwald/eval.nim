@@ -7,24 +7,28 @@ import std/[times, strformat, random, math, os, macros]
 func winningProbability*(x: float, k: float = 1.0): float =
   1.0 / (1.0 + exp(-(k * x)))
 
-func winningProbabilityDerivative*(x: float, k: float = 1.0): float =
+func winningProbabilityDerivative(x: float, k: float = 1.0): float =
   let p = winningProbability(x, k)
   k * p * (1.0 - p)
 
 func error*(outcome, estimate: float): float =
   (outcome - estimate) ^ 2
 
-func errorDerivative*(outcome, estimate: float): float =
+func errorDerivative(outcome, estimate: float): float =
   2.0 * (outcome - estimate)
 
+func gamePhase(position: Position): float =
+  clamp(position.occupancy.countSetBits - 2, 0, 30).float / 32.0
+
 type
-  Gradient* {.requiresInit.} = object
-    gradient*: ptr EvalParameters
-    g*: float32
+  Gradient {.requiresInit.} = object
+    gradient: ptr EvalParameters
+    g: Value
+    gamePhaseFactor: Value
 
   EvalValue {.requiresInit.} = object
     params: ptr EvalParameters
-    whitePerspectiveScore: ptr float32
+    whitePerspectiveScore: ptr array[2, Value]
 
   EvalState = Gradient or EvalValue
 
@@ -38,12 +42,16 @@ macro getParameter(structName, parameter: untyped): untyped =
 
 template addValue(evalState: EvalState, parameter: untyped) =
   when evalState is Gradient:
-    getParameter(evalState.gradient[], parameter) += evalState.g
+    getParameter(evalState.gradient[][1], parameter) +=
+      evalState.g * evalState.gamePhaseFactor
+    getParameter(evalState.gradient[][0], parameter) +=
+      evalState.g * (1.0 - evalState.gamePhaseFactor)
   else:
     static:
       doAssert evalState is EvalValue
-    var value = getParameter(evalState.params[], parameter)
-    evalState.whitePerspectiveScore[] += value
+    for phase {.inject.} in 0 .. 1:
+      var value = getParameter(evalState.params[][phase], parameter)
+      evalState.whitePerspectiveScore[phase] += value
 
 func evalForWhite(pos: Position, evalState: EvalState) =
   assert pos.us == white, "White must be the player to move"
@@ -57,9 +65,13 @@ func evalForWhite(pos: Position, evalState: EvalState) =
 func evalForWhite(pos: Position, params: EvalParameters): Value =
   assert pos.us == white, "White must be the player to move"
 
-  result = 0
-  let evalValue = EvalValue(params: addr params, whitePerspectiveScore: addr result)
+  var value = default(array[2, Value])
+  let evalValue = EvalValue(params: addr params, whitePerspectiveScore: addr value)
+
   pos.evalForWhite(evalValue)
+
+  let phase = pos.gamePhase
+  value[0] * (1.0 - phase) + value[1] * phase
 
 func eval*(pos: Position, params: EvalParameters): Value =
   let pos = if pos.us == black: pos.mirrorVertically else: pos
@@ -73,6 +85,7 @@ func addGradient*(
 ) =
   let currentValue = position.evalForWhite(params)
   var currentGradient = Gradient(
+    gamePhaseFactor: position.gamePhase,
     g:
       errorDerivative(outcome, currentValue.winningProbability) *
       currentValue.winningProbabilityDerivative * lr,
