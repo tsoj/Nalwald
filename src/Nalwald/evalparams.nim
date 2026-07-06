@@ -1,4 +1,4 @@
-import std/[os, math]
+import std/[os, math, strutils]
 
 import zstd/[compress, decompress]
 
@@ -82,19 +82,38 @@ proc toEvalParameters*(s: string): EvalParameters =
     raise newException(ValueError, "Incompatible params format")
   uncompressed.toEvalParametersFromUncompressed()
 
-const evalFile {.strdefine.} = "res/params/default.zst"
+const evalFile {.strdefine.} = ""
+
+const resolvedEvalFile = block:
+  var f = evalFile
+  if f == "":
+    # Look up the current eval params file in the settings file written by
+    # the optimization program
+    const
+      paramsDir = "res/params/"
+      settingsFile = paramsDir & "settings.txt"
+    if fileExists settingsFile:
+      # For some reason staticRead starts relative paths at the source file location
+      for line in staticRead("../../" & settingsFile).splitLines:
+        if line.startsWith "file:":
+          f = paramsDir & line.split(':', maxsplit = 1)[1].strip
+          break
+      if f == "":
+        echo "WARNING! No 'file:' entry found in ", settingsFile
+    else:
+      echo "WARNING! Couldn't find eval params settings file at ", settingsFile
+  f
 
 const defaultEvalParametersString = block:
   var s = ""
 
-  if fileExists evalFile:
-    when evalFile.isAbsolute:
-      s = staticRead(evalFile)
+  if resolvedEvalFile != "" and fileExists resolvedEvalFile:
+    when resolvedEvalFile.isAbsolute:
+      s = staticRead(resolvedEvalFile)
     else:
-      # For some reason staticRead starts relative paths at the source file location
-      s = staticRead("../../" & evalFile)
-  else:
-    echo "WARNING! Couldn't find default eval params at ", evalFile
+      s = staticRead("../../" & resolvedEvalFile)
+  elif resolvedEvalFile != "":
+    echo "WARNING! Couldn't find default eval params at ", resolvedEvalFile
   s
 
 let defaultEvalParametersData* = block:

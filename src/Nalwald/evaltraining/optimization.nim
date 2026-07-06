@@ -70,16 +70,19 @@ when isMainModule:
 
   let (ep, finalError) = newEvalParameters().optimize(data)
 
-  const
-    epDir = "res/params/"
-    epFileName = epDir & "default.zst"
+  const epDir = "res/params/"
+  let
+    epFileName =
+      &"""default_{startTime.format("yyyy-MM-dd-HH-mm-ss")}_{versionOrId()}.zst"""
+    epFilePath = epDir & epFileName
 
   createDir epDir
-  writeFile epFileName, ep.toString
-  echo "Wrote to: ", epFileName
+  writeFile epFilePath, ep.toString
+  echo "Wrote to: ", epFilePath
 
   const settingsFileName = epDir & "settings.txt"
   let settingsContent = &"""
+file: {epFileName}
 date: {startTime}
 commit: {commitHash()}
 final error: {finalError}
