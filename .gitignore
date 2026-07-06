@@ -5,4 +5,5 @@
 /vendor
 /tests/Nalwald
 /res/data/
-/res/params/
+/res/params/*.zst
+res/old_data/

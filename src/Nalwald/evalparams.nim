@@ -6,28 +6,31 @@ import nimchess
 
 import types
 
-type EvalParameters* = object
+type SinglePhaseEvalParameters = object
   psqt*: array[white .. black, array[pawn .. king, array[a1 .. h8, Value]]]
 
-func newEvalParameters*(): EvalParameters =
-  discard
+type EvalParameters* {.requiresInit.} = seq[SinglePhaseEvalParameters]
 
-const numFloats = sizeof(EvalParameters) div sizeof(Value)
+func newEvalParameters*(): EvalParameters =
+  newSeq[SinglePhaseEvalParameters](2)
+
+const numFloats = sizeof(SinglePhaseEvalParameters) div sizeof(Value)
 
 static:
-  doAssert sizeof(EvalParameters) == numFloats * sizeof(Value)
+  doAssert sizeof(SinglePhaseEvalParameters) == numFloats * sizeof(Value)
 
-template floats(phase: EvalParameters): untyped =
+template floats(phase: SinglePhaseEvalParameters): untyped =
   cast[ptr array[numFloats, float32]](addr phase)[]
 
 iterator iter(
     a: var EvalParameters, b: EvalParameters | bool = false
 ): (var float32, float32) =
-  for j in 0 ..< numFloats:
-    when b is bool:
-      yield (a.floats[j], 0'f32)
-    else:
-      yield (a.floats[j], b.floats[j])
+  for i in a.low .. a.high:
+    for j in 0 ..< numFloats:
+      when b is bool:
+        yield (a[i].floats[j], 0'f32)
+      else:
+        yield (a[i].floats[j], b[i].floats[j])
 
 func `+=`*(a: var EvalParameters, b: EvalParameters) =
   for (x, y) in iter(a, b):
