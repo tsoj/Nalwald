@@ -96,7 +96,7 @@ func optimalK(raw: openArray[RawEntry]): float =
       lo = a
   (lo + hi) / 2.0
 
-proc loadDataDir*(data: var seq[Entry], dir: string, scoreTargetWeight = 0.0) =
+proc loadDataDir*(data: var seq[Entry], dir: string, scoreTargetWeight = 0.5) =
   ## Loads all datagen PGNs of the dataset `dir`. The training target is a
   ## linear combination of the game outcome and the search score converted to
   ## a winning probability, with the sigmoid scale k fitted on this dataset.

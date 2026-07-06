@@ -18,7 +18,7 @@ func errorDerivative(outcome, estimate: float): float =
   2.0 * (outcome - estimate)
 
 func gamePhase(position: Position): float =
-  clamp(position.occupancy.countSetBits - 2, 0, 30).float / 30.0
+  clamp(countSetBits(position[pawn]), 0, 16).float / 16.0
 
 type
   Gradient {.requiresInit.} = object
