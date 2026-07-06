@@ -2,14 +2,8 @@ import nimchess
 
 import types
 
+#!fmt: off
 func value*(piece: Piece): Value =
-  const table = [
-    pawn: 0.31304058.Value,
-    knight: 0.95035917.Value,
-    bishop: 1.0092459.Value,
-    rook: 1.5511856.Value,
-    queen: 3.290629.Value,
-    king: valueCheckmate,
-    noPiece: 0.Value,
-  ]
+  const table = [pawn: 0.32239842.Value, knight: 1.0803405.Value, bishop: 1.1097395.Value, rook: 1.6884761.Value, queen: 3.6470497.Value, king: valueCheckmate, noPiece: 0.Value]
   table[piece]
+#!fmt: on
