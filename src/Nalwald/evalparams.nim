@@ -6,8 +6,11 @@ import nimchess
 
 import types
 
+
+#!fmt: off
 type SinglePhaseEvalParameters = object
-  psqt*: array[white .. black, array[pawn .. king, array[a1 .. h8, Value]]]
+  psqt*: array[white..black, array[a1..h8, array[white .. black, array[pawn .. king, array[a1 .. h8, Value]]]]]
+#!fmt: on
 
 type EvalParameters* {.requiresInit.} = seq[SinglePhaseEvalParameters]
 
