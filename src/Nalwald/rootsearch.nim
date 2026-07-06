@@ -188,7 +188,7 @@ proc search*(
       sendUciInfo(
         UciInfo(
           depth: some depth.int,
-          score: some Score(kind: skCp, cp: (bestValue * 100.0).int),
+          score: some bestValue.toScore,
           pv: some @[finalBestMove],
           nps: some nps.int,
           nodes: some currNodes.int,

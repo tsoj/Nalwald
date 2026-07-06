@@ -1,6 +1,6 @@
 import std/[times, strformat, strutils, math]
 
-import types
+import types, piecevalues
 
 import nimchess
 
@@ -66,7 +66,7 @@ func stringForHuman*(n: SomeNumber): string =
 
 func toScore*(value: Value): Score =
   if value.abs < valueCheckmate:
-    Score(kind: skCp, cp: int(value * 100))
+    Score(kind: skCp, cp: int(100.0 * value / pawn.value))
   else:
     Score(
       kind: skMate,

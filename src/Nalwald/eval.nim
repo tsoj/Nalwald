@@ -47,13 +47,12 @@ template addValue(evalState: EvalState, parameter: untyped) =
 
 func evalForWhite(pos: Position, evalState: EvalState) =
   assert pos.us == white, "White must be the player to move"
-  
+
   for piece in pawn .. king:
     for square in pos[piece, black]:
       evalState.addValue psqt[black][piece][square.mirrorVertically]
     for square in pos[piece, white]:
       evalState.addValue psqt[white][piece][square]
-
 
 func evalForWhite(pos: Position, params: EvalParameters): Value =
   assert pos.us == white, "White must be the player to move"
@@ -61,12 +60,13 @@ func evalForWhite(pos: Position, params: EvalParameters): Value =
   result = 0
   let evalValue = EvalValue(params: addr params, whitePerspectiveScore: addr result)
   pos.evalForWhite(evalValue)
-      
-func eval*(pos: Position): Value =
+
+func eval*(pos: Position, params: EvalParameters): Value =
   let pos = if pos.us == black: pos.mirrorVertically else: pos
-  pos.evalForWhite(defaultEvalParameters)
+  pos.evalForWhite(params)
 
-
+func eval*(pos: Position): Value =
+  pos.eval(defaultEvalParameters)
 
 func addGradient*(
     params: var EvalParameters, lr: float, position: Position, outcome: float

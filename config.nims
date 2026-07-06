@@ -45,13 +45,18 @@ when defined(buildDebug):
 when defined(buildModern):
   binaryName &= "-modern"
 
-for i in 1 .. paramCount():
-  let p = paramStr(i)
-  if p.startsWith("--out:"):
-    binaryName = p.split(":")[1]
-    break
-  elif p.startsWith("-o:"):
-    binaryName = p[3 ..^ 1]
-    break
+var outOverridden = false
+block search:
+  for i in 1 .. paramCount():
+    let p = paramStr(i)
+    for prefix in ["--out:", "-o:"]:
+      if p.startsWith(prefix):
+        binaryName = p[prefix.len ..^ 1]
+        outOverridden = true
+        break search
+
+if not outOverridden:
+  mkDir "bin"
+  binaryName = "bin/" & binaryName
 
 switch("out", binaryName)

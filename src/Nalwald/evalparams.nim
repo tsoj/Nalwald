@@ -7,7 +7,7 @@ import nimchess
 import types
 
 type EvalParameters* = object
-  psqt*: array[white..black, array[pawn .. king, array[a1 .. h8, Value]]]
+  psqt*: array[white .. black, array[pawn .. king, array[a1 .. h8, Value]]]
 
 func newEvalParameters*(): EvalParameters =
   discard
@@ -89,7 +89,7 @@ const defaultEvalParametersString = block:
       s = staticRead(evalFile)
     else:
       # For some reason staticRead starts relative paths at the source file location
-      s = staticRead("../" & evalFile)
+      s = staticRead("../../" & evalFile)
   else:
     echo "WARNING! Couldn't find default eval params at ", evalFile
   s

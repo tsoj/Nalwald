@@ -88,11 +88,12 @@ nimble datagen <targetGames> [numThreads]
 ```
 `numThreads` defaults to the number of available CPU cores.
 
-**Create training data from PGNs**
-TODO
-
 **Optimize evaluation parameters**
-TODO
+
+Trains the piece square tables on datagen games and writes the result to `res/params/default.zst`.
+```bash
+nimble evaltrain [dataset ...]
+```
 
 **Optimize search parameters using weather-factory**
 TODO

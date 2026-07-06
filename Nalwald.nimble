@@ -6,6 +6,7 @@ description = "UCI chess engine written in Nim"
 license = "LGPL-3.0-linking-exception"
 srcDir = "src"
 bin = @["Nalwald"]
+binDir = "bin"
 
 # Dependencies
 
@@ -21,6 +22,14 @@ task debug, "Build debug version":
 task release, "Build release versions":
   exec "nim c -d:buildRelease -d:buildGeneric src/Nalwald.nim"
   exec "nim c -d:buildRelease -d:buildModern src/Nalwald.nim"
+
+task evaltrain, "Optimize evaluation parameters using datagen games":
+  var args = ""
+  for param in commandLineParams:
+    if "--" notin param:
+      args.add " " & param
+
+  exec "nim r -d:danger src/Nalwald/evaltraining/optimization.nim" & args
 
 task datagen, "Play chess games and write them to PGNs":
   var

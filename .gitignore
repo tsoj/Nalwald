@@ -1,6 +1,4 @@
-/Nalwald
-/Nalwald-*
-/datagen
+/bin
 /nimble.develop
 /nimble.paths
 /nimbledeps
@@ -8,4 +6,3 @@
 /tests/Nalwald
 /res/data/
 /res/params/
-/eval
