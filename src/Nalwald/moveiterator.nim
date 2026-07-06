@@ -24,7 +24,8 @@ iterator treeSearchMoveIterator*(
   for i in 0 ..< moveList.numMoves:
     let move = moveList.moves[i]
     moveList.scores[i] =
-      move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0
+      move.captured(pos).value + move.promoted.value -
+      min(queen.value, move.moved(pos).value) / 100.0
 
   for _ in 0 ..< moveList.numMoves:
     var bestIndex = 0
