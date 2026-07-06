@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Ensures the last commit message ends with an up-to-date "Bench: <number>" line.
+# - If missing: amends the commit to append it, pushes the amended commit itself,
+#   then aborts the original (now outdated) push.
+# - If present but stale: aborts the push.
+set -euo pipefail
+
+remote=$1
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Don't bench when nothing is being pushed (e.g. deleting a remote branch)
+if ! read -r local_ref local_sha remote_ref _remote_sha; then
+    exit 0
+fi
+if [[ "$local_sha" =~ ^0+$ ]]; then
+    exit 0
+fi
+
+echo "pre-push: running 'nimble run -- bench' ..." >&2
+bench_output=$(nimble run -- bench)
+last_line=$(printf '%s\n' "$bench_output" | tail -n 1)
+bench_number=$(printf '%s\n' "$last_line" | grep -oE '[0-9]+' | head -n 1)
+
+if [[ -z "$bench_number" ]]; then
+    echo "pre-push: could not extract a number from last bench output line: '$last_line'" >&2
+    exit 1
+fi
+
+commit_msg=$(git log -1 --format=%B "$local_sha")
+existing=$(printf '%s\n' "$commit_msg" | grep -oE 'Bench: [0-9]+' | tail -n 1 || true)
+
+if [[ -n "$existing" ]]; then
+    existing_number=${existing#Bench: }
+    if [[ "$existing_number" == "$bench_number" ]]; then
+        exit 0
+    fi
+    echo "pre-push: bench mismatch — commit says 'Bench: $existing_number' but bench produced '$bench_number'. Push aborted." >&2
+    exit 1
+fi
+
+if [[ "$local_sha" != "$(git rev-parse HEAD)" ]]; then
+    echo "pre-push: last commit has no 'Bench:' line and the pushed commit is not HEAD; cannot amend. Push aborted." >&2
+    exit 1
+fi
+
+git commit --amend --no-verify --no-edit -m "$commit_msg
+
+Bench: $bench_number"
+echo "pre-push: appended 'Bench: $bench_number' to the last commit message." >&2
+
+# The SHA of this push is now outdated, so push the amended commit ourselves and
+# abort the original push. --no-verify: the bench line was just added, no need to re-bench.
+echo "pre-push: pushing the amended commit ..." >&2
+git push --no-verify "$remote" "$local_ref:$remote_ref"
+echo "pre-push: done. The 'failed to push' error below refers to the original pre-amend commit and can be ignored." >&2
+exit 1

@@ -75,6 +75,9 @@ TODO
 nimble setup --nimbleDir:./nimbledeps
 nimble develop nimchess --nimbleDir:./nimbledeps
 # Now if you need to edit parts of nimchess, you can do that in vendor/nimchess
+
+git config core.hooksPath .githooks
+# Now a git hook is enabled that adds/verifies the `Bench:` line in commit messages on push
 ```
 
 
