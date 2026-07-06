@@ -39,6 +39,9 @@ proc addGame(raw: var seq[RawEntry], game: Game) =
       position = positions[i]
       annotation = game.annotatedMoves[i].annotation
 
+    if position.inCheck(white) or position.inCheck(black):
+      continue
+
     # The annotation is the UCI-style search score ("cp 59" or "mate 3") from
     # the perspective of the side to move (see datagen).
     let parts = annotation.splitWhitespace
