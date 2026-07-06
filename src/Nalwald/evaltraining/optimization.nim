@@ -6,9 +6,9 @@ proc optimize(
     start: EvalParameters,
     data: var seq[Entry],
     maxNumEpochs = 30,
-    startLr = 1.0,
-    finalLr = 0.002,
-): EvalParameters =
+    startLr = 0.1,
+    finalLr = 0.0002,
+): (EvalParameters, float) =
   var solution = start
 
   echo "starting error: ", fmt"{solution.error(data):>9.7f}", ", starting lr: ", startLr
@@ -37,11 +37,12 @@ proc optimize(
   let finalError = solution.error(data)
   echo fmt"Final error: {finalError:>9.7f}"
 
-  solution
+  (solution, finalError)
 
 when isMainModule:
   static:
-    doAssert not gitHasUnstagedChanges, "Git working tree must not be dirty"
+    doAssert not gitHasUnstagedChanges or defined(allowDirtyGit),
+      "optimization must be compiled without unstaged git changes"
 
   let startTime = now()
 
@@ -67,7 +68,7 @@ when isMainModule:
 
   echo "Total number of entries: ", data.len
 
-  let ep = newEvalParameters().optimize(data)
+  let (ep, finalError) = newEvalParameters().optimize(data)
 
   const
     epDir = "res/params/"
@@ -81,6 +82,7 @@ when isMainModule:
   let settingsContent = &"""
 date: {startTime}
 commit: {commitHash()}
+final error: {finalError}
 datasets:
 {dataDirs.join("\n").indent(2)}
 """
