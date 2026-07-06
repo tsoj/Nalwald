@@ -1,31 +1,49 @@
 import nimchess
 
-import searchpos
+import searchpos, piecevalues
 
 iterator treeSearchMoveIterator*(
-    position: SearchPos, hashMove: Move = noMove, doQuiets: static bool = true
+    pos: SearchPos, hashMove: Move = noMove, doQuiets: static bool = true
 ): (SearchPos, Move) =
   ## This iterator is optimized for speed and for good move ordering.
   ## It does not guarantee to list all legal moves and may include
   ## illegal moves that leave our own king in check.
 
-  if position.isPseudoLegal(hashMove):
-    yield (position.doMove(hashMove), hashMove)
+  type OrderedMoveList[maxMoves: static int] = object
+    moves: array[maxMoves, Move]
+    scores: array[maxMoves, float32]
+    numMoves: int
 
-  var pseudoLegalMoves: array[320, Move]
-  let numMoves = position.generateMoves(pseudoLegalMoves)
-  doAssert pseudoLegalMoves.len > numMoves
+  if pos.isPseudoLegal(hashMove):
+    yield (pos.doMove(hashMove), hashMove)
 
-  for move in pseudoLegalMoves[0 ..< numMoves]:
+  var moveList: OrderedMoveList[320]
+  moveList.numMoves = pos.generateMoves(moveList.moves)
+  doAssert moveList.moves.len > moveList.numMoves
+
+  for i in 0 ..< moveList.numMoves:
+    let move = moveList.moves[i]
+    moveList.scores[i] =
+      move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0
+
+  for _ in 0 ..< moveList.numMoves:
+    var bestIndex = 0
+    for i in 1 ..< moveList.numMoves:
+      if moveList.scores[i] > moveList.scores[bestIndex]:
+        bestIndex = i
+
+    let move = moveList.moves[bestIndex]
+    moveList.scores[bestIndex] = -Inf
+
     if move == hashMove:
-      continue
-
-    let newPosition = position.doMove move
-
-    if newPosition.inCheck(position.pos.us):
       continue
 
     if not doQuiets and not move.isTactical:
       continue
 
-    yield (newPosition, move)
+    let newPos = pos.doMove move
+
+    if newPos.inCheck(pos.pos.us):
+      continue
+
+    yield (newPos, move)

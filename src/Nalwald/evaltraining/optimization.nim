@@ -100,9 +100,11 @@ import nimchess
 
 import types
 
+#!fmt: off
 func value*(piece: Piece): Value =
   const table = [{pieceValueString}king: valueCheckmate, noPiece: 0.Value]
   table[piece]
+#!fmt: on
 """
 
   writeFile pieceValueFileName, pieceValueFileContent
