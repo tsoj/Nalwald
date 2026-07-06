@@ -18,7 +18,7 @@ func errorDerivative(outcome, estimate: float): float =
   2.0 * (outcome - estimate)
 
 func gamePhase(position: Position): float =
-  clamp(position.occupancy.countSetBits - 2, 0, 30).float / 32.0
+  clamp(position.occupancy.countSetBits - 2, 0, 30).float / 30.0
 
 type
   Gradient {.requiresInit.} = object
@@ -50,7 +50,7 @@ template addValue(evalState: EvalState, parameter: untyped) =
     static:
       doAssert evalState is EvalValue
     for phase {.inject.} in 0 .. 1:
-      var value = getParameter(evalState.params[][phase], parameter)
+      let value = getParameter(evalState.params[][phase], parameter)
       evalState.whitePerspectiveScore[phase] += value
 
 func evalForWhite(pos: Position, evalState: EvalState) =
@@ -71,7 +71,7 @@ func evalForWhite(pos: Position, params: EvalParameters): Value =
   pos.evalForWhite(evalValue)
 
   let phase = pos.gamePhase
-  value[0] * (1.0 - phase) + value[1] * phase
+  value[1] * phase + value[0] * (1.0 - phase)
 
 func eval*(pos: Position, params: EvalParameters): Value =
   let pos = if pos.us == black: pos.mirrorVertically else: pos

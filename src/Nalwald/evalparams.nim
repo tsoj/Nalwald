@@ -6,7 +6,7 @@ import nimchess
 
 import types
 
-type SinglePhaseEvalParameters* = object
+type SinglePhaseEvalParameters = object
   psqt*: array[white .. black, array[pawn .. king, array[a1 .. h8, Value]]]
 
 type EvalParameters* {.requiresInit.} = seq[SinglePhaseEvalParameters]
