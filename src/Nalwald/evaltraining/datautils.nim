@@ -56,8 +56,7 @@ proc addGame(raw: var seq[RawEntry], game: Game) =
       outcome: whiteResult.stmRelative(position.us),
     )
 
-proc loadRaw(raw: var seq[RawEntry], pgnZstFileName: string) =
-  let before = raw.len
+proc loadRaw(pgnZstFileName: string): seq[RawEntry] =
   # Datagen writes with a streaming compressor, so the frame content size is
   # unknown and we have to use streaming decompression too.
   let fileStream = newFileStream(pgnZstFileName, fmRead)
@@ -71,8 +70,15 @@ proc loadRaw(raw: var seq[RawEntry], pgnZstFileName: string) =
   fileStream.close()
 
   for game in content.readPgnFromString(suppressWarnings = true):
-    raw.addGame(game)
-  echo fmt"Loaded {raw.len - before} entries from {pgnZstFileName}"
+    result.addGame(game)
+  echo fmt"Loaded {result.len} entries from {pgnZstFileName}"
+
+type LoadRawThreadParams = object
+  pgnZstFileName: string
+  target: ptr seq[RawEntry]
+
+proc loadRawThread(params: LoadRawThreadParams) {.thread.} =
+  params.target[] = loadRaw(params.pgnZstFileName)
 
 func scorePredictionError(raw: openArray[RawEntry], k: float): float =
   for entry in raw:
@@ -102,9 +108,24 @@ proc loadDataDir*(data: var seq[Entry], dir: string, scoreTargetWeight = 0.5) =
   ## a winning probability, with the sigmoid scale k fitted on this dataset.
   doAssert scoreTargetWeight in 0.0 .. 1.0
 
-  var raw: seq[RawEntry]
+  var fileNames: seq[string]
   for file in walkFiles(dir / "*.pgn.zst"):
-    raw.loadRaw(file)
+    fileNames.add file
+
+  var
+    perFile = newSeq[seq[RawEntry]](fileNames.len)
+    threads = newSeq[Thread[LoadRawThreadParams]](fileNames.len)
+  for i, fileName in fileNames:
+    createThread(
+      threads[i],
+      loadRawThread,
+      LoadRawThreadParams(pgnZstFileName: fileName, target: addr perFile[i]),
+    )
+  joinThreads threads
+
+  var raw: seq[RawEntry]
+  for entries in perFile.mitems:
+    raw.add entries
   doAssert raw.len > 0, "No entries found in dataset " & dir
 
   let k = raw.optimalK
