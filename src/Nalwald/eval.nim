@@ -1,6 +1,6 @@
 import nimchess
 
-import types, evalparams
+import types, evalparams, piecevalues
 
 import std/[times, strformat, random, math, os, macros]
 
@@ -18,7 +18,14 @@ func errorDerivative(outcome, estimate: float): float =
   2.0 * (outcome - estimate)
 
 func gamePhase(position: Position): float =
-  clamp(countSetBits(position[pawn]), 0, 16).float / 16.0
+  func fullCount(pos: Position): float =
+    result = 0.0
+    for piece in [pawn, knight, bishop, rook, queen]:
+      result += pos[piece].countSetBits.float * piece.value.float
+
+  const maxGamePhase = classicalStartpos.fullCount
+
+  position.fullCount / maxGamePhase
 
 type
   Gradient {.requiresInit.} = object
