@@ -18,14 +18,7 @@ func errorDerivative(outcome, estimate: float): float =
   2.0 * (outcome - estimate)
 
 func gamePhase(position: Position): float =
-  func fullCount(pos: Position): float =
-    result = 0.0
-    for piece in [pawn, knight, bishop, rook, queen]:
-      result += pos[piece].countSetBits.float * piece.value.float
-
-  const maxGamePhase = classicalStartpos.fullCount
-
-  position.fullCount / maxGamePhase
+  clamp(position.occupancy.countSetBits - 2, 0, 30).float / 30.0
 
 type
   Gradient {.requiresInit.} = object
