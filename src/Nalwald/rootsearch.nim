@@ -105,9 +105,30 @@ func alphabeta(
   for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
     moveCounter += 1
 
-    let value = -newPosition.alphabeta(
-      state, alpha = -beta, beta = -alpha, depth = depth - 1.Effort, height = height + 1
+    var newBeta = beta
+
+    # first explore with null window
+    if entry.bestMove != move:
+      newBeta = alpha + 1
+
+    # search new position
+    var value = -newPosition.alphabeta(
+      state,
+      alpha = -newBeta,
+      beta = -alpha,
+      depth = depth - 1.Effort,
+      height = height + 1.Ply,
     )
+
+    # re-search with full window and full depth
+    if value > alpha and newBeta < beta:
+      value = -newPosition.alphabeta(
+        state,
+        alpha = -beta,
+        beta = -alpha,
+        depth = depth - 1.Effort,
+        height = height + 1.Ply,
+      )
 
     if value > bestValue:
       bestValue = value
