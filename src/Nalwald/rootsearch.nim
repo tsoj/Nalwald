@@ -9,6 +9,7 @@ type SearchState = object
   externalStopFlag: ptr Atomic[bool]
   hashTable: ptr HashTable
   gameHistory: GameHistory
+  historyTable: HistoryTable
   stopTime: Seconds
   countedNodes: int
   maxNodes: int
@@ -101,8 +102,11 @@ func alphabeta(
     bestValue = -Inf
     bestMove = noMove
     moveCounter = 0
+    nodeType = allNode
 
-  for newPosition, move in position.treeSearchMoveIterator(hashMove = entry.bestMove):
+  for newPosition, move in position.treeSearchMoveIterator(
+    hashMove = entry.bestMove, historyTable = state.historyTable
+  ):
     moveCounter += 1
 
     let value = -newPosition.alphabeta(
@@ -117,9 +121,11 @@ func alphabeta(
         state.bestRootMove = move
 
     if value > alpha:
+      nodeType = pvNode
       alpha = value
 
     if value >= beta:
+      nodeType = cutNode
       break
 
   if moveCounter == 0:
@@ -130,8 +136,11 @@ func alphabeta(
     else:
       bestValue = 0.Value
 
-  if not state.shouldStop:
+  if bestMove != noMove and not state.shouldStop:
     state.hashTable[].add(position.zobristKey, bestMove = bestMove)
+
+    if nodeType != allNode:
+      state.historyTable.update(position, bestMove, depth)
 
   return bestValue
 
