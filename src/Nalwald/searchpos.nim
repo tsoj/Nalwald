@@ -42,3 +42,7 @@ func updatedKey(key: ZobristKey, oldPos, newPos: Position): ZobristKey =
 func doMove*(searchPos: SearchPos, move: Move): SearchPos =
   result.pos = searchPos.pos.doMove(move)
   result.zobristKey = searchPos.zobristKey.updatedKey(searchPos.pos, result.pos)
+
+func doNullMove*(searchPos: SearchPos): SearchPos =
+  result.pos = searchPos.pos.doNullMove
+  result.zobristKey = searchPos.zobristKey.updatedKey(searchPos.pos, result.pos)

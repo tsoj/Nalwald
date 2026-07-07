@@ -47,9 +47,12 @@ func searchPosPerft(searchPos: SearchPos, depth: int): int64 =
   ## zobrist key gets exercised (and checked) for every visited node.
   if depth <= 0:
     return 1
+  if not searchPos.pos.inCheck(searchPos.pos.us):
+    let nullSearchPos = searchPos.doNullMove
+    doAssert nullSearchPos.zobristKey == nullSearchPos.pos.zobristKey
   for move in searchPos.pos.legalMoves:
     let newSearchPos = searchPos.doMove(move)
-    doAssert newSearchPos.key == newSearchPos.pos.zobristKey
+    doAssert newSearchPos.zobristKey == newSearchPos.pos.zobristKey
     result += newSearchPos.searchPosPerft(depth - 1)
 
 suite "SearchPos Tests":

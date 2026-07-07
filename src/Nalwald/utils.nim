@@ -73,12 +73,9 @@ func toScore*(value: Value): Score =
       mate: (if value > 0: 1 else: -1) * ceilDiv(plysUntilCheckmate(value.abs), 2),
     )
 
-func `$`*(value: Value): string =
-  $value.toScore
-
 static:
-  doAssert $(9.Ply.checkmateValue) == "mate 5"
-  doAssert $(-(1.Ply.checkmateValue)) == "mate -1"
-  doAssert $(2.Ply.checkmateValue) == "mate 1"
-  doAssert $(-(3.Ply.checkmateValue)) == "mate -2"
-  doAssert $(maxPly.Ply.checkmateValue) == "mate 100"
+  doAssert $toScore(9.Ply.checkmateValue) == "mate 5"
+  doAssert $toScore(-(1.Ply.checkmateValue)) == "mate -1"
+  doAssert $toScore(2.Ply.checkmateValue) == "mate 1"
+  doAssert $toScore(-(3.Ply.checkmateValue)) == "mate -2"
+  doAssert $toScore(maxPly.Ply.checkmateValue) == "mate 100"

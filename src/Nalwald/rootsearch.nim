@@ -5,6 +5,9 @@ import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
 
 export searchpos
 
+func nullMoveReduction(depth: Effort): Effort =
+  depth - 2.0 - depth / 3.0
+
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
   hashTable: ptr HashTable
@@ -95,6 +98,22 @@ func alphabeta(
   let
     us = position.us
     entry = state.hashTable[].get(position.zobristKey)
+    inCheck = position.inCheck(us)
+
+  # null move reduction
+  if height > 0 and not inCheck and
+      ((position[king] or position[pawn]) and position[us]) != position[us]:
+    let newPosition = position.doNullMove
+    let value = -newPosition.alphabeta(
+      state,
+      alpha = -beta,
+      beta = -beta + 1.Value,
+      depth = nullMoveReduction(depth),
+      height = height + 1.Ply,
+    )
+
+    if value >= beta:
+      return value
 
   var
     alpha = alpha
@@ -124,7 +143,7 @@ func alphabeta(
 
   if moveCounter == 0:
     # checkmate
-    if position.inCheck(us):
+    if inCheck:
       bestValue = -(height.checkmateValue)
     # stalemate
     else:

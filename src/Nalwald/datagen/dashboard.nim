@@ -20,7 +20,7 @@ type Dashboard* = object
   draws: Atomic[int]
   liveLock: Lock
   liveBoard: string
-  liveWhiteScore: Value
+  liveWhiteScore: Score
 
 proc `=copy`*(dest: var Dashboard, source: Dashboard) {.error.}
 
@@ -49,7 +49,7 @@ proc recordFinishedGame*(dashboard: var Dashboard, gameResult: string, plies: in
   discard dashboard.totalGamePlies.fetchAdd(plies)
   dashboard.finishedGames.atomicInc
 
-proc updateLiveView*(dashboard: var Dashboard, board: string, whiteScore: float) =
+proc updateLiveView*(dashboard: var Dashboard, board: string, whiteScore: Score) =
   withLock dashboard.liveLock:
     dashboard.liveBoard = board
     dashboard.liveWhiteScore = whiteScore

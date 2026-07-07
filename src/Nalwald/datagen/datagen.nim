@@ -50,15 +50,17 @@ proc playGame(
       printUciInfo = false,
     )
     doAssert not move.isNoMove
-    result.addMove(move, $value)
+    result.addMove(move, $value.toScore)
 
     dashboard[].recordSearchedPosition(nodes, depth)
     dashboard[].updateLiveView(
       $result.currentPosition,
-      if moverIsWhite:
-        value
-      else:
-        -value,
+      toScore(
+        if moverIsWhite:
+          value
+        else:
+          -value
+      ),
     )
 
   if result.result == "*":
