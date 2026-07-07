@@ -53,5 +53,5 @@ echo "pre-push: appended 'Bench: $bench_number' to the last commit message." >&2
 # abort the original push. --no-verify: the bench line was just added, no need to re-bench.
 echo "pre-push: pushing the amended commit ..." >&2
 git push --no-verify "$remote" "$local_ref:$remote_ref"
-echo "pre-push: done. The 'failed to push' error below refers to the original pre-amend commit and can be ignored." >&2
+printf '\033[1;32mpre-push: done. The '\''failed to push'\'' error below refers to the original pre-amend commit and can be ignored.\033[0m\n' >&2
 exit 1
