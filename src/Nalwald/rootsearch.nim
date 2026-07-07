@@ -130,7 +130,7 @@ func alphabeta(
     else:
       bestValue = 0.Value
 
-  if not state.shouldStop:
+  if bestMove != noMove and not state.shouldStop:
     state.hashTable[].add(position.zobristKey, bestMove = bestMove)
 
   return bestValue
