@@ -50,7 +50,7 @@ iterator treeSearchMoveIterator*(
 
   template captureScore(move: Move): float32 =
     move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0 +
-      queen.value * (
+      queen.value * 100.0 * (
         when historyTable is HistoryTable:
           historyTable.get(pos, move)
         else:
