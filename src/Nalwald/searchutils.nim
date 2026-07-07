@@ -34,7 +34,8 @@ func checkForRepetitionAndAdd*(
 #-------------- history heuristic --------------#
 
 type
-  HistoryArray = array[white .. black, array[pawn .. king, array[a1 .. h8, float]]]
+  HistoryArray =
+    array[Piece, array[white .. black, array[pawn .. king, array[a1 .. h8, float]]]]
   HistoryTable* = object
     table: HistoryArray
 
@@ -43,34 +44,34 @@ const maxHistoryTableValue = 135000.0
 func newHistoryTable*(): HistoryTable =
   result = default(HistoryTable)
 
-func halve(table: var HistoryArray, color: Color) =
+func halve(table: var HistoryArray, captured: Piece, color: Color) =
   for piece in pawn .. king:
     for square in a1 .. h8:
-      table[color][piece][square] /= 2.0
+      table[captured][color][piece][square] /= 2.0
 
 func update*(historyTable: var HistoryTable, pos: Position, move: Move, depth: Effort) =
-  if move.isTactical:
-    return
-
   let
     moved = move.moved(pos)
     color = pos.us
+    captured = move.captured(pos)
 
   doAssert moved in pawn .. king, "Is move a noMove? " & $(move == noMove)
 
   func add(table: var HistoryArray, addition: float) =
     template entry(): auto =
-      table[color][moved][move.target]
+      table[captured][color][moved][move.target]
 
     entry = clamp(entry + addition, -maxHistoryTableValue, maxHistoryTableValue)
 
     if entry.abs >= maxHistoryTableValue:
-      table.halve(color)
+      table.halve(captured, color)
 
   let addition = depth ^ 2
 
   historyTable.table.add(addition)
 
 func get*(historyTable: HistoryTable, pos: Position, move: Move): -1.0 .. 1.0 =
-  let moved = move.moved(pos)
-  historyTable.table[pos.us][moved][move.target] / maxHistoryTableValue
+  let
+    moved = move.moved(pos)
+    captured = move.captured(pos)
+  historyTable.table[captured][pos.us][moved][move.target] / maxHistoryTableValue
