@@ -5,6 +5,10 @@ type
   Effort* = float32
   Ply* = int
   ZobristKey* = uint64
+  NodeType* = enum
+    pvNode
+    allNode
+    cutNode
 
 const maxPly* = 200
 

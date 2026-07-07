@@ -1,9 +1,12 @@
 import nimchess
 
-import searchpos, piecevalues
+import searchpos, piecevalues, searchutils
 
 iterator treeSearchMoveIterator*(
-    pos: SearchPos, hashMove: Move = noMove, doQuiets: static bool = true
+    pos: SearchPos,
+    hashMove: Move = noMove,
+    historyTable: HistoryTable or tuple[] = (),
+    doQuiets: static bool = true,
 ): (SearchPos, Move) =
   ## This iterator is optimized for speed and for good move ordering.
   ## It does not guarantee to list all legal moves and may include
@@ -17,33 +20,44 @@ iterator treeSearchMoveIterator*(
   if pos.isPseudoLegal(hashMove):
     yield (pos.doMove(hashMove), hashMove)
 
-  var moveList: OrderedMoveList[320]
-  moveList.numMoves = pos.generateMoves(moveList.moves)
-  doAssert moveList.moves.len > moveList.numMoves
+  var moveList: OrderedMoveList[192]
 
-  for i in 0 ..< moveList.numMoves:
-    let move = moveList.moves[i]
-    moveList.scores[i] =
-      move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0
+  template yieldOrderedMoves(generate, scoreMove: untyped): untyped =
+    moveList.numMoves = pos.generate(moveList.moves)
+    doAssert moveList.moves.len > moveList.numMoves
 
-  for _ in 0 ..< moveList.numMoves:
-    var bestIndex = 0
-    for i in 1 ..< moveList.numMoves:
-      if moveList.scores[i] > moveList.scores[bestIndex]:
-        bestIndex = i
+    for i in 0 ..< moveList.numMoves:
+      moveList.scores[i] = scoreMove(moveList.moves[i])
 
-    let move = moveList.moves[bestIndex]
-    moveList.scores[bestIndex] = -Inf
+    for _ in 0 ..< moveList.numMoves:
+      var bestIndex = 0
+      for i in 1 ..< moveList.numMoves:
+        if moveList.scores[i] > moveList.scores[bestIndex]:
+          bestIndex = i
 
-    if move == hashMove:
-      continue
+      let move = moveList.moves[bestIndex]
+      moveList.scores[bestIndex] = -Inf
 
-    if not doQuiets and not move.isTactical:
-      continue
+      if move == hashMove:
+        continue
 
-    let newPos = pos.doMove move
+      let newPos = pos.doMove move
 
-    if newPos.inCheck(pos.pos.us):
-      continue
+      if newPos.inCheck(pos.pos.us):
+        continue
 
-    yield (newPos, move)
+      yield (newPos, move)
+
+  template captureScore(move: Move): float32 =
+    move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0
+
+  yieldOrderedMoves(generateCaptures, captureScore)
+
+  if doQuiets:
+    template quietScore(move: Move): float32 =
+      when historyTable is HistoryTable:
+        historyTable.get(pos, move)
+      else:
+        0.0
+
+    yieldOrderedMoves(generateQuiets, quietScore)
