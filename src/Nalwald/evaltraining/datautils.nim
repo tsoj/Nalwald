@@ -37,7 +37,11 @@ proc addGame(raw: var seq[RawEntry], game: Game) =
   for i in 0 ..< game.annotatedMoves.len:
     let
       position = positions[i]
-      annotation = game.annotatedMoves[i].annotation
+      (move, annotation) = game.annotatedMoves[i]
+
+    # Skip noisy positions where the played move is a capture or promotion.
+    if move.isTactical:
+      continue
 
     # The annotation is the UCI-style search score ("cp 59" or "mate 3") from
     # the perspective of the side to move (see datagen).
