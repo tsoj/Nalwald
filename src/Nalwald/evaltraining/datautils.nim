@@ -3,7 +3,7 @@ import std/[os, math, streams, strutils, strformat]
 import nimchess
 import zstd/decompress
 
-import ../evalparams, ../eval
+import ../evalparams, ../eval, ../piecevalues
 
 type
   Entry* = object
@@ -46,13 +46,20 @@ proc addGame(raw: var seq[RawEntry], game: Game) =
     # The annotation is the UCI-style search score ("cp 59" or "mate 3") from
     # the perspective of the side to move (see datagen).
     let parts = annotation.splitWhitespace
-    if parts.len != 2 or parts[0] != "cp": # skip mate scores and unknown formats
-      continue
-    var score: float
-    try:
-      score = parts[1].parseFloat / 100.0 # centipawns to pawns
-    except ValueError:
-      continue
+    doAssert parts.len == 2 or parts[0] notin ["cp", "mate"],
+      "Unknown annotation format: " & annotation
+    var score: float = parts[1].parseFloat
+
+    if parts[0] == "mate":
+      doAssert score != 0
+      score =
+        if score > 0:
+          Inf
+        else:
+          -Inf
+    else:
+      # roughly undo the centipawn scaling
+      score = pawn.value * score / 100.0
 
     raw.add RawEntry(
       position: if position.us == black: position.mirrorVertically else: position,
