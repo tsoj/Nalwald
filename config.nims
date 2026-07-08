@@ -10,9 +10,10 @@ import src/Nalwald/version
 switch("cc", "clang")
 switch("mm", "arc")
 switch("define", "useMalloc")
+switch("passL", "-lm")
 
 when defined(buildDebug):
-  switch("define", "release")
+  switch("define", "debug")
   switch("debugger", "native")
   switch("passC", "-fno-omit-frame-pointer -g")
 else:

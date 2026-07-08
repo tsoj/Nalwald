@@ -81,7 +81,7 @@ func alphabeta(
     depth: Effort,
     height: Ply,
 ): Value =
-  assert alpha < beta
+  doAssert alpha < beta, $alpha & ", " & $beta
 
   state.countedNodes += 1
 

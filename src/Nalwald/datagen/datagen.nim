@@ -50,7 +50,7 @@ proc playGame(
       printUciInfo = false,
     )
     doAssert not move.isNoMove
-    result.addMove(move, $value)
+    result.addMove(move, $toScore(value))
 
     dashboard[].recordSearchedPosition(nodes, depth)
     dashboard[].updateLiveView(

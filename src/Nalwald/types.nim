@@ -12,20 +12,13 @@ type
 
 const maxPly* = 200
 
-func isFinite(x: SomeFloat): bool =
-  x.abs != Inf and x == x
+func nextafterf(x, y: cfloat): cfloat {.importc: "nextafterf", header: "<math.h>".}
 
 func nextBelow*(value: Value): Value =
-  if value.isFinite:
-    cast[float32](cast[uint32](value) - 1)
-  else:
-    value
+  nextafterf(value, -Inf)
 
 func nextAbove*(value: Value): Value =
-  if value.isFinite:
-    cast[float32](cast[uint32](value) + 1)
-  else:
-    value
+  nextafterf(value, Inf)
 
 func checkmateValue*(height: Ply): Value =
   const table = block:
