@@ -1,7 +1,7 @@
 import std/[atomics, options, sequtils, math]
 import nimchess
 
-import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
+import eval, utils, moveiterator, searchpos, types, hashtable, searchutils, piecevalues
 
 export searchpos
 
@@ -123,7 +123,8 @@ func alphabeta(
     if not givingCheck and moveCounter >= 4 and not move.isTactical:
       newDepth = lmrDepth(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
-      newBeta = alpha.nextAbove
+      if alpha.abs < queen.value:
+        newBeta = min(beta, alpha + pawn.value * 0.1)
 
     var value = -newPosition.alphabeta(
       state,
