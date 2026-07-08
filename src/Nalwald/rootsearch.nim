@@ -122,6 +122,9 @@ func alphabeta(
       newDepth = lmrDepth(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
 
+      if newDepth <= 0:
+        break
+
     var value = -newPosition.alphabeta(
       state,
       alpha = -beta,
@@ -172,34 +175,6 @@ func alphabeta(
 
   return bestValue
 
-func alphabetaRoot*(
-    position: SearchPos, state: var SearchState, depth: Effort, previousValue: Value
-): Value =
-  result = 0
-
-  var
-    estimatedValue = previousValue
-    alphaOffset = 0.05 * pawn.value
-    betaOffset = 0.05 * pawn.value
-
-  # growing alpha beta window
-  while not state.shouldStop:
-    let
-      alpha = max(estimatedValue - alphaOffset, -Inf).Value
-      beta = min(estimatedValue + betaOffset, Inf).Value
-
-    result =
-      position.alphabeta(state, alpha = alpha, beta = beta, depth = depth, height = 0)
-    doAssert result.abs <= Inf
-
-    estimatedValue = result
-    if result <= alpha:
-      alphaOffset *= 3.0
-    elif result >= beta:
-      betaOffset *= 3.0
-    else:
-      break
-
 proc search*(
     params: GoParams,
     hashTable: var HashTable,
@@ -238,7 +213,7 @@ proc search*(
     let prevNodes = state.countedNodes.float
 
     let bestValue =
-      position.alphabetaRoot(state, depth = depth, previousValue = finalValue)
+      position.alphabeta(state, alpha = -Inf, beta = Inf, depth = depth, height = 0)
 
     let
       currNodes = state.countedNodes.float
