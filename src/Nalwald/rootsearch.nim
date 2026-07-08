@@ -197,7 +197,7 @@ proc search*(
     maxNodes: params.limit.nodes,
   )
 
-  const depthStep = 0.5
+  const depthStep = 1.5
 
   var
     finalBestMove = params.searchMoves[0]
