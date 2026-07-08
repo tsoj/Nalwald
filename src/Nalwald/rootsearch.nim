@@ -1,9 +1,19 @@
-import std/[atomics, options, sequtils]
+import std/[atomics, options, sequtils, math]
 import nimchess
 
 import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
 
 export searchpos
+
+# func lmrDepth1(depth: Effort, moveCounter: int): Effort =
+#   depth - (2.0 + ln(max(1.0, depth)) * ln(max(1.0, moveCounter.float)) / 2.0)
+
+# func lmrDepth2(depth: Effort, moveCounter: int): Effort =
+#   let halfLife = 35.0
+#   (depth * halfLife) / (halfLife + moveCounter.float) - 1.0
+
+func lmrDepth3(depth: Effort, moveCounter: int): Effort =
+  depth - 6.0 + pow(1.2, -moveCounter.float * 0.5) * 6.0
 
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
@@ -102,6 +112,7 @@ func alphabeta(
     bestValue = -Inf
     bestMove = noMove
     moveCounter = 0
+    lmrMoveCounter = 0
     nodeType = allNode
 
   for newPosition, move in position.treeSearchMoveIterator(
@@ -109,9 +120,32 @@ func alphabeta(
   ):
     moveCounter += 1
 
-    let value = -newPosition.alphabeta(
-      state, alpha = -beta, beta = -alpha, depth = depth - 1.Effort, height = height + 1
+    let givingCheck = newPosition.inCheck(newPosition.us)
+
+    var newDepth = depth
+
+    if not givingCheck and moveCounter >= 4 and not move.isTactical:
+      newDepth = lmrDepth3(newDepth, lmrMoveCounter)
+      lmrMoveCounter += 1
+
+    var value = -newPosition.alphabeta(
+      state,
+      alpha = -beta,
+      beta = -alpha,
+      depth = newDepth - 1.Effort,
+      height = height + 1,
     )
+
+    # re-search with full window and full depth
+    if value > alpha and newDepth < depth:
+      newDepth = depth
+      value = -newPosition.alphabeta(
+        state,
+        alpha = -beta,
+        beta = -alpha,
+        depth = newDepth - 1.Effort,
+        height = height + 1,
+      )
 
     if value > bestValue:
       bestValue = value
