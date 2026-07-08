@@ -98,7 +98,13 @@ func alphabeta(
     us = position.us
     inCheck = position.inCheck(us)
 
-  if depth <= 0.Effort and not inCheck:
+  let depth =
+    if inCheck:
+      depth + 1.Effort
+    else:
+      depth
+
+  if depth <= 0.Effort:
     return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
   let entry = state.hashTable[].get(position.zobristKey)
