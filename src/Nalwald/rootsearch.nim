@@ -5,12 +5,12 @@ import eval, utils, moveiterator, searchpos, types, hashtable, searchutils
 
 export searchpos
 
-# func lmrDepth1(depth: Effort, moveCounter: int): Effort =
-#   depth - (2.0 + ln(max(1.0, depth)) * ln(max(1.0, moveCounter.float)) / 2.0)
+func lmrDepth1(depth: Effort, moveCounter: int): Effort =
+  depth - (2.0 + ln(max(1.0, depth)) * ln(max(1.0, moveCounter.float)) / 2.0)
 
-func lmrDepth2(depth: Effort, moveCounter: int): Effort =
-  let halfLife = 35.0
-  (depth * halfLife) / (halfLife + moveCounter.float) - 1.0
+# func lmrDepth2(depth: Effort, moveCounter: int): Effort =
+#   let halfLife = 35.0
+#   (depth * halfLife) / (halfLife + moveCounter.float) - 1.0
 
 # func lmrDepth3(depth: Effort, moveCounter: int): Effort =
 #   depth - 6.0 + pow(1.2, -moveCounter.float * 0.5) * 6.0
@@ -125,7 +125,7 @@ func alphabeta(
     var newDepth = depth
 
     if not givingCheck and moveCounter >= 4 and not move.isTactical:
-      newDepth = lmrDepth2(newDepth, lmrMoveCounter)
+      newDepth = lmrDepth1(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
 
     var value = -newPosition.alphabeta(
