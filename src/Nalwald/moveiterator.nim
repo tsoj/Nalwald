@@ -49,7 +49,7 @@ iterator treeSearchMoveIterator*(
       yield (newPos, move)
 
   template captureScore(move: Move): float32 =
-    move.captured(pos).value + move.promoted.value - move.moved(pos).value / 10.0
+    move.mvvlva(pos)
 
   yieldOrderedMoves(generateCaptures, captureScore)
 

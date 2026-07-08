@@ -122,9 +122,6 @@ func alphabeta(
       newDepth = lmrDepth(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
 
-      if newDepth <= 0:
-        break
-
     var value = -newPosition.alphabeta(
       state,
       alpha = -beta,

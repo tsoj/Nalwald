@@ -1,5 +1,5 @@
 import std/math
-import types, searchpos, zobristkey
+import types, searchpos, zobristkey, piecevalues
 import nimchess
 
 #-------------- repetition detection --------------#
@@ -74,3 +74,9 @@ func update*(historyTable: var HistoryTable, pos: Position, move: Move, depth: E
 func get*(historyTable: HistoryTable, pos: Position, move: Move): -1.0 .. 1.0 =
   let moved = move.moved(pos)
   historyTable.table[pos.us][moved][move.target] / maxHistoryTableValue
+
+#-------------- other stuff --------------#
+
+func mvvlva*(move: Move, pos: Position): Value =
+  move.captured(pos).value + move.promoted.value -
+    max(queen.value, move.moved(pos).value) / 10.0
