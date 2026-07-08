@@ -104,7 +104,7 @@ proc datagenThread(params: DatagenThreadParams) {.thread.} =
 
 proc datagen*(targetGames: int, numThreads: int) =
   static:
-    doAssert not gitHasUnstagedChanges or defined(datagenAllowDirtyGit),
+    doAssert not gitHasUnstagedChanges or defined(allowDirtyGit),
       "datagen must be compiled without unstaged git changes"
 
   doAssert targetGames >= 1, "targetGames must be at least 1"

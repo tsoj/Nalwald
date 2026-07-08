@@ -9,6 +9,11 @@ remote=$1
 
 cd "$(git rev-parse --show-toplevel)"
 
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "pre-push: there are unstaged or uncommitted changes. Push aborted." >&2
+    exit 1
+fi
+
 # Don't bench when nothing is being pushed (e.g. deleting a remote branch)
 if ! read -r local_ref local_sha remote_ref _remote_sha; then
     exit 0

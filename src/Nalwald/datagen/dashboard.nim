@@ -13,7 +13,9 @@ type Dashboard* = object
   finishedGames: Atomic[int]
   totalPositions: Atomic[int]
   totalNodes: Atomic[int]
-  totalDepth: Atomic[int]
+  # Effort is a float, but atomics only support integer fetchAdd, so the
+  # accumulated depth is stored in thousandths.
+  totalMilliDepth: Atomic[int]
   totalGamePlies: Atomic[int]
   whiteWins: Atomic[int]
   blackWins: Atomic[int]
@@ -36,10 +38,10 @@ proc claimGameIndex*(dashboard: var Dashboard): int =
 proc numFinishedGames*(dashboard: var Dashboard): int =
   dashboard.finishedGames.load
 
-proc recordSearchedPosition*(dashboard: var Dashboard, nodes: int, depth: int) =
+proc recordSearchedPosition*(dashboard: var Dashboard, nodes: int, depth: Effort) =
   dashboard.totalPositions.atomicInc
   discard dashboard.totalNodes.fetchAdd(nodes)
-  discard dashboard.totalDepth.fetchAdd(depth)
+  discard dashboard.totalMilliDepth.fetchAdd((depth * 1000.0).int)
 
 proc recordFinishedGame*(dashboard: var Dashboard, gameResult: string, plies: int) =
   case gameResult
@@ -84,7 +86,9 @@ proc frame*(dashboard: var Dashboard): string =
         "-"
     avgSearchDepth =
       if positions > 0:
-        (dashboard.totalDepth.load / positions).formatFloat(ffDecimal, 1)
+        (dashboard.totalMilliDepth.load.float / 1000.0 / positions.float).formatFloat(
+          ffDecimal, 1
+        )
       else:
         "-"
 
