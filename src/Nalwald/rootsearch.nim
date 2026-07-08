@@ -94,13 +94,6 @@ func alphabeta(
   ):
     return 0.Value
 
-  if depth <= 0.Effort:
-    return position.quiesce(state, alpha = alpha, beta = beta, height = height)
-
-  let
-    us = position.us
-    entry = state.hashTable[].get(position.zobristKey)
-
   var
     alpha = alpha
     bestValue = -Inf
@@ -108,6 +101,27 @@ func alphabeta(
     moveCounter = 0
     lmrMoveCounter = 0
     nodeType = allNode
+
+  let
+    us = position.us
+    entry = state.hashTable[].get(position.zobristKey)
+
+  let beta = block:
+    # update alpha, beta or return immediatly based on hash table result
+    var beta = beta
+    if height > 0 and not entry.isEmpty and entry.depth >= depth:
+      if entry.nodeType != upperBound:
+        alpha = max(alpha, entry.value)
+      if entry.nodeType != lowerBound:
+        beta = min(beta, entry.value)
+
+      if alpha >= beta:
+        debugEcho "hiiii"
+        return alpha
+    beta
+
+  if depth <= 0.Effort:
+    return position.quiesce(state, alpha = alpha, beta = beta, height = height)
 
   for newPosition, move in position.treeSearchMoveIterator(
     hashMove = entry.bestMove, historyTable = state.historyTable
@@ -165,7 +179,13 @@ func alphabeta(
       bestValue = 0.Value
 
   if bestMove != noMove and not state.shouldStop:
-    state.hashTable[].add(position.zobristKey, bestMove = bestMove)
+    state.hashTable[].add(
+      position.zobristKey,
+      bestMove = bestMove,
+      value = bestValue,
+      depth = depth,
+      nodeType = nodeType,
+    )
 
     if nodeType != allNode:
       state.historyTable.update(position, bestMove, depth)

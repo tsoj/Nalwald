@@ -8,13 +8,18 @@ type
   HashTableEntry* {.packed.} = object
     zobristKey: ZobristKey
     bestMove*: Move
+    value*: Value
+    depth*: Effort
+    nodeType*: NodeType
 
   HashTable* = object
     table: seq[HashTableEntry]
     hashFullCounter: int64
 
 const
-  noEntry = HashTableEntry(zobristKey: 0, bestMove: noMove)
+  noEntry = HashTableEntry(
+    zobristKey: 0, bestMove: noMove, value: 0.0, depth: 0.0, nodeType: allNode
+  )
   megaByte* = 1024 * 1024
   defaultHashSizeMB* = 16
 
@@ -37,8 +42,21 @@ func newHashTable*(len = 0): HashTable =
 template isEmpty*(entry: HashTableEntry): bool =
   entry == noEntry
 
-func add*(ht: var HashTable, zobristKey: ZobristKey, bestMove: Move) =
-  let entry = HashTableEntry(zobristKey: zobristKey, bestMove: bestMove)
+func add*(
+    ht: var HashTable,
+    zobristKey: ZobristKey,
+    bestMove: Move,
+    value: Value,
+    depth: Effort,
+    nodeType: NodeType,
+) =
+  let entry = HashTableEntry(
+    zobristKey: zobristKey,
+    bestMove: bestMove,
+    value: value,
+    depth: depth,
+    nodeType: nodeType,
+  )
 
   doAssert ht.table.len > 0
   let i = zobristKey mod ht.table.len.ZobristKey

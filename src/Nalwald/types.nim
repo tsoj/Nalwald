@@ -12,6 +12,11 @@ type
 
 const maxPly* = 200
 
+const
+  exact* = pvNode
+  upperBound* = allNode
+  lowerBound* = cutNode
+
 func nextafterf(x, y: cfloat): cfloat {.importc: "nextafterf", header: "<math.h>".}
 
 func nextBelow*(value: Value): Value =
