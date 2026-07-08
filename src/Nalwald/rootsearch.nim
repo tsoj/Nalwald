@@ -94,12 +94,14 @@ func alphabeta(
   ):
     return 0.Value
 
-  if depth <= 0.Effort:
-    return position.quiesce(state, alpha = alpha, beta = beta, height = height)
-
   let
     us = position.us
-    entry = state.hashTable[].get(position.zobristKey)
+    inCheck = position.inCheck(us)
+
+  if depth <= 0.Effort and not inCheck:
+    return position.quiesce(state, alpha = alpha, beta = beta, height = height)
+
+  let entry = state.hashTable[].get(position.zobristKey)
 
   var
     alpha = alpha
@@ -158,7 +160,7 @@ func alphabeta(
 
   if moveCounter == 0:
     # checkmate
-    if position.inCheck(us):
+    if inCheck:
       bestValue = -(height.checkmateValue)
     # stalemate
     else:
