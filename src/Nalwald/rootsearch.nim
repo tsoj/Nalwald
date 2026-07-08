@@ -123,8 +123,6 @@ func alphabeta(
     if not givingCheck and moveCounter >= 4 and not move.isTactical:
       newDepth = lmrDepth(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
-
-    if moveCounter > 1:
       newBeta = alpha.nextAbove
 
     var value = -newPosition.alphabeta(

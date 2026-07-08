@@ -12,7 +12,7 @@ const benchFens = [
 ]
 
 proc benchCommand(game: var Game, params: seq[string]) =
-  const defaultDepth = 6
+  const defaultDepth = 10
   let depth =
     if params.len >= 1:
       try:
