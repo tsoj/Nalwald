@@ -12,6 +12,21 @@ type
 
 const maxPly* = 200
 
+func isFinite(x: SomeFloat): bool =
+  x.abs != Inf and x == x
+
+func nextBelow*(value: Value): Value =
+  if value.isFinite:
+    cast[float32](cast[uint32](value) - 1)
+  else:
+    value
+
+func nextAbove*(value: Value): Value =
+  if value.isFinite:
+    cast[float32](cast[uint32](value) + 1)
+  else:
+    value
+
 func checkmateValue*(height: Ply): Value =
   const table = block:
     var

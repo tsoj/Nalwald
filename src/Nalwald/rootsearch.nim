@@ -116,22 +116,27 @@ func alphabeta(
 
     let givingCheck = newPosition.inCheck(newPosition.us)
 
-    var newDepth = depth
+    var
+      newDepth = depth
+      newBeta = beta
 
     if not givingCheck and moveCounter >= 4 and not move.isTactical:
       newDepth = lmrDepth(newDepth, lmrMoveCounter)
       lmrMoveCounter += 1
 
+    if moveCounter > 1:
+      newBeta = alpha.nextAbove
+
     var value = -newPosition.alphabeta(
       state,
-      alpha = -beta,
+      alpha = -newBeta,
       beta = -alpha,
       depth = newDepth - 1.Effort,
       height = height + 1,
     )
 
     # re-search with full window and full depth
-    if value > alpha and newDepth < depth:
+    if value > alpha and (newDepth < depth or newBeta < beta):
       newDepth = depth
       value = -newPosition.alphabeta(
         state,
