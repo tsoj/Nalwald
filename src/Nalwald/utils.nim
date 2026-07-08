@@ -1,4 +1,4 @@
-import std/[times, strformat, strutils, math]
+import std/[times, strformat, strutils, math, macros]
 
 import types, piecevalues
 
@@ -72,6 +72,25 @@ func toScore*(value: Value): Score =
       kind: skMate,
       mate: (if value > 0: 1 else: -1) * ceilDiv(plysUntilCheckmate(value.abs), 2),
     )
+
+macro lazyEval*(assignmentStmt: untyped): untyped =
+  expectKind(assignmentStmt, nnkStmtList)
+  expectLen(assignmentStmt, 1)
+
+  let assignment = assignmentStmt[0]
+  expectKind(assignment, nnkAsgn)
+
+  let
+    identifier = assignment[0]
+    initExpr = assignment[1]
+    storageIdent = genSym(nskVar, "lazy" & $identifier)
+
+  quote:
+    var `storageIdent` = none(type(`initExpr`))
+    template `identifier`(): auto =
+      if `storageIdent`.isNone:
+        `storageIdent` = some `initExpr`
+      `storageIdent`.get()
 
 static:
   doAssert $toScore(9.Ply.checkmateValue) == "mate 5"

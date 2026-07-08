@@ -9,6 +9,9 @@ func lmrDepth(depth: Effort, moveCounter: int): Effort =
   let halfLife = 35.0
   (depth * halfLife) / (halfLife + moveCounter.float) - 1.0
 
+func futilityReduction(value: Value): Effort =
+  value.clamp(0, queen.value) / 1.5 * pawn.value
+
 type SearchState = object
   externalStopFlag: ptr Atomic[bool]
   hashTable: ptr HashTable
@@ -109,6 +112,9 @@ func alphabeta(
     lmrMoveCounter = 0
     nodeType = allNode
 
+  lazyEval:
+    staticEval = position.eval
+
   for newPosition, move in position.treeSearchMoveIterator(
     hashMove = entry.bestMove, historyTable = state.historyTable
   ):
@@ -118,9 +124,15 @@ func alphabeta(
 
     var newDepth = depth
 
-    if not givingCheck and moveCounter >= 4 and not move.isTactical:
-      newDepth = lmrDepth(newDepth, lmrMoveCounter)
-      lmrMoveCounter += 1
+    if not givingCheck:
+      # late move reduction
+      if moveCounter >= 4 and not move.isTactical:
+        newDepth = lmrDepth(newDepth, lmrMoveCounter)
+        lmrMoveCounter += 1
+
+      # futility reduction
+      if moveCounter >= 4 and newDepth > 0:
+        newDepth -= futilityReduction(alpha - staticEval - move.mvvlva(position))
 
     var value = -newPosition.alphabeta(
       state,
