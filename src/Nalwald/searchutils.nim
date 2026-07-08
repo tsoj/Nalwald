@@ -79,4 +79,4 @@ func get*(historyTable: HistoryTable, pos: Position, move: Move): -1.0 .. 1.0 =
 
 func mvvlva*(move: Move, pos: Position): Value =
   move.captured(pos).value + move.promoted.value -
-    max(queen.value, move.moved(pos).value) / 10.0
+    min(queen.value, move.moved(pos).value) / 10.0
