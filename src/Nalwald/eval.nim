@@ -60,11 +60,11 @@ func evalForWhite(pos: Position, evalState: EvalState) =
     for color in white .. black:
       for square in pos[piece, color]:
         for otherColor in white .. black:
-          let kingSquare = pos[king, otherColor].toSquare
-          evalState.addValue kingPsqt[color][piece][square][otherColor][kingSquare]
-
-          for pawnSquare in pos[pawn, otherColor]:
-            evalState.addValue pawnPsqt[color][piece][square][otherColor][pawnSquare]
+          for otherPiece in pawn .. king:
+            for otherSquare in pos[otherPiece, otherColor]:
+              evalState.addValue(
+                psqt[color][piece][square][otherColor][otherPiece][otherSquare]
+              )
 
 func evalForWhite(pos: Position, params: EvalParameters): Value =
   assert pos.us == white, "White must be the player to move"
