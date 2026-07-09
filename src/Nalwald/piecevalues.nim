@@ -4,6 +4,6 @@ import types
 
 #!fmt: off
 func value*(piece: Piece): Value =
-  const table = [pawn: 0.40566006.Value, knight: 1.4273093.Value, bishop: 1.4881091.Value, rook: 2.1888201.Value, queen: 5.363045.Value, king: valueCheckmate, noPiece: 0.Value]
+  const table = [pawn: 0.41407838.Value, knight: 1.4636368.Value, bishop: 1.5286024.Value, rook: 2.2442784.Value, queen: 5.581564.Value, king: valueCheckmate, noPiece: 0.Value]
   table[piece]
 #!fmt: on
