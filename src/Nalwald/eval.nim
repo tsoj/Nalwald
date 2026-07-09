@@ -56,12 +56,15 @@ template addValue(evalState: EvalState, parameter: untyped) =
 func evalForWhite(pos: Position, evalState: EvalState) =
   assert pos.us == white, "White must be the player to move"
 
-  for kingColor in white .. black:
-    let kingSquare = pos[king, kingColor].toSquare
-    for piece in pawn .. king:
-      for color in white .. black:
-        for square in pos[piece, color]:
-          evalState.addValue psqt[kingColor][kingSquare][color][piece][square]
+  for piece in pawn .. king:
+    for color in white .. black:
+      for square in pos[piece, color]:
+        for otherColor in white .. black:
+          let kingSquare = pos[king, otherColor].toSquare
+          evalState.addValue kingPsqt[color][piece][square][otherColor][kingSquare]
+
+          for pawnSquare in pos[pawn, otherColor]:
+            evalState.addValue pawnPsqt[color][piece][square][otherColor][pawnSquare]
 
 func evalForWhite(pos: Position, params: EvalParameters): Value =
   assert pos.us == white, "White must be the player to move"
