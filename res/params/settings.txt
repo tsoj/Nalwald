@@ -1,6 +1,6 @@
-file: default_2026-07-09-17-06-24_93ec2b7.zst
-date: 2026-07-09T17:06:24+02:00
-commit: 93ec2b7ea7ffff25d429cb387c2e6194aa7adb84
-final error: 0.02216095292494174
+file: default_2026-07-09-19-19-14_196f983.zst
+date: 2026-07-09T19:19:14+02:00
+commit: 196f9837e38f8301cce1723aebc0d87cf13b481b
+final error: 0.02163438248323686
 datasets:
   res/data/datagen_2026-07-09-01-22-32_9706a9f
