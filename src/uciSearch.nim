@@ -137,20 +137,20 @@ proc printInfoString(
   stdout.write "info"
 
   if multiPvIndex != -1:
-    printKeyValue "multipv", fmt"{multiPvIndex:>2}"
-  printKeyValue "depth", fmt"{iteration+1:>2}"
-  printKeyValue "time", fmt"{int(time * 1000.0):>6}"
-  printKeyValue "nodes", fmt"{nodes:>9}"
+    printKeyValue "multipv", $multiPvIndex
+  printKeyValue "depth", $(iteration + 1)
+  printKeyValue "time", $int(time * 1000.0)
+  printKeyValue "nodes", $nodes
 
   let nps = int(nodes.float / max(0.0001, time.float))
-  printKeyValue "nps", fmt"{nps:>7}"
+  printKeyValue "nps", $nps
 
-  printKeyValue "hashfull", fmt"{hashFull:>4}"
+  printKeyValue "hashfull", $hashFull
 
   let (scoreType, scoreValue) = value.mateOrScore
 
   if scoreType == centipawnScore:
-    printKeyValue "score cp", fmt"{scoreValue:>4}"
+    printKeyValue "score cp", $scoreValue
   else:
     stdout.write " ", (if scoreType == mated: "score mate -" else: "score mate "), scoreValue
 
